@@ -2036,27 +2036,25 @@
     const version=$('test-version');
     const save=$('save-draft');
     const protectedSource=state.sourceProtectedVersion===true;
-    const developerEditing=protectedSource&&developerUnlocked;
+    const developerEditing=protectedSource;
     const exportV1=$('developer-export-v1');
     const stateText=$('developer-mode-status');
-    if(exportV1)exportV1.hidden=!developerEditing;
-    if(stateText)stateText.textContent=developerUnlocked
-      ? 'Mode Développeur actif — V1 modifiables et exportables'
-      : 'V1 protégées — déverrouillage Développeur nécessaire';
+    if(exportV1)exportV1.hidden=!(developerEditing&&developerUnlocked);
+    if(stateText)stateText.textContent='V1 modifiables et enregistrables en session Administrateur';
     if(version){
       // Le numéro de V1 reste 1.0.0 même en mode Développeur.
       version.readOnly=protectedSource;
       version.setAttribute('aria-readonly',protectedSource?'true':'false');
       version.title=protectedSource
         ? (developerEditing
-          ? 'V1 officielle : son numéro reste 1.0.0, export possible vers TESTS_V1.'
+          ? 'V1 modifiable, numéro conservé : 1.0.0.'
           : 'Version KALONÉO protégée. Les modifications seront enregistrées sous une nouvelle version.')
         : '';
     }
     if(save){
       save.textContent=developerEditing?'Enregistrer V1':protectedSource?'Créer une nouvelle version':'Enregistrer';
       save.title=developerEditing
-        ? 'Enregistrer cette V1 corrigée localement (avec copie de sécurité). Puis exporter vers TESTS_V1.'
+        ? 'Enregistrer la V1 en conservant sa version et une copie de sécurité.'
         : protectedSource
           ? 'V1 protégée : enregistrer les modifications sous la prochaine version disponible.'
           : 'Enregistrer le test dans la bibliothèque.';
@@ -2152,7 +2150,7 @@
       const meta=document.createElement('span');
       const duplicated=testLibraryAdminName(item,items)!==item.title;
       meta.textContent=libraryCategoryLabel(item.category)+' • v'+item.version+
-        (item.protectedVersion===true?' • protégée':'')+
+        (item.protectedVersion===true?' • V1 modifiable':'')+
         (item.category==='activite_pratique'?' • activité pratique':(item.scored?' • noté':' • non noté'))+
         (duplicated?' • ID : '+item.id:'');
       text.append(title,meta);
@@ -2172,7 +2170,7 @@
           loadDefinition(
             result.definition,
             item.protectedVersion===true
-              ? 'Version KALONÉO protégée — modifiez-la puis enregistrez sous V2 ou supérieure'
+              ? 'V1 modifiable : enregistrez directement votre correction'
               : 'Test KALTEST ouvert depuis la bibliothèque',
             { protectedVersion:item.protectedVersion===true }
           );
@@ -2237,7 +2235,7 @@
 
   async function saveToLibrary(options={}) {
     const protectedClone=state.sourceProtectedVersion===true;
-    const developerEditing=protectedClone&&developerUnlocked;
+    const developerEditing=protectedClone;
     const createNewVersion=protectedClone&&!developerEditing;
     const originalVersion=$('test-version')?.value||'1.0.0';
     if(createNewVersion){
