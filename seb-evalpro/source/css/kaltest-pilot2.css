@@ -3451,3 +3451,27 @@ body[data-seb-kaltest-id="traitement_texte_bureautique"] #toolbar .kaltest-word-
 body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2 .kaltest-word-group {
   flex:0 0 auto;
 }
+
+/* R54 — NWTEXT : deux rangées compactes et remplies à largeur égale.
+   Aucun contrôle fonctionnel ni moteur Quill modifié. */
+body[data-seb-kaltest-id="traitement_texte_bureautique"] #toolbar.kaltest-word-topbar,
+body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2.kaltest-word-formatbar {
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  flex-wrap:nowrap!important;gap:7px!important;width:100%!important;min-width:0!important;
+}
+body[data-seb-kaltest-id="traitement_texte_bureautique"] #toolbar .kaltest-word-empty-slots,
+body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2 .kaltest-word-empty-slots {
+  display:flex!important;flex:1 1 0!important;justify-content:space-evenly!important;
+  align-items:center!important;gap:6px!important;min-width:65px!important;
+}
+body[data-seb-kaltest-id="traitement_texte_bureautique"] #toolbar .kaltest-word-empty-slots span,
+body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2 .kaltest-word-empty-slots span {
+  flex:1 1 0!important;min-width:28px!important;max-width:64px!important;
+  height:34px!important;background:#fff!important;
+}
+body[data-seb-kaltest-id="traitement_texte_bureautique"] #toolbar .kaltest-word-file,
+body[data-seb-kaltest-id="traitement_texte_bureautique"] #toolbar .kaltest-word-clipboard,
+body[data-seb-kaltest-id="traitement_texte_bureautique"] #toolbar .kaltest-word-font,
+body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2 .kaltest-word-group {
+  flex:0 0 auto!important;
+}
