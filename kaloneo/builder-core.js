@@ -774,7 +774,7 @@
         }
         if(['image','audio','video'].includes(type)){
           const resource=item.resource||{};
-          if(!resource.data&&!resource.name) errors.push('média Builder sans ressource: bloc '+(index+1));
+          if(!resource.data&&!resource.name&&!resource.placeholder) errors.push('média Builder sans ressource: bloc '+(index+1));
         }
         if(type==='table-grid'){
           const table=item.table||{};
