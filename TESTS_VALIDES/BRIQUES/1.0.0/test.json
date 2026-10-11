@@ -1,0 +1,120 @@
+{
+  "kaltestFormat": 1,
+  "minSebEvalPro": "0.1.0-dev",
+  "builderVersion": "2.0.0",
+  "id": "construction_briques",
+  "version": "1.0.0",
+  "title": "Construction à base de briques",
+  "category": "technique",
+  "description": "Assembler un modèle, chronométrer le temps, saisir le nombre d’erreurs, valider par un administrateur puis compléter une autoévaluation.",
+  "kind": "complex",
+  "scored": false,
+  "sourceMigration": {
+    "baseline": "SEB EvalPro 0.3.10 Build #20",
+    "sourcePage": "brique.html",
+    "sourceScript": "source/js/brique-page.js",
+    "legacyParcoursId": "brique"
+  },
+  "calculator": {
+    "compatible": false,
+    "defaultEnabled": false
+  },
+  "chrono": {
+    "enabled": true,
+    "engine": "seb-common",
+    "mode": "simple",
+    "minMeasures": 1,
+    "maxMeasures": 1,
+    "autoReset": false,
+    "focusAfterStop": true,
+    "showTime": true
+  },
+  "adminIntervention": {
+    "enabled": true,
+    "instructions": "Après évaluation du modèle, l’administrateur valide l’exercice avec son code."
+  },
+  "autoevaluation": true,
+  "externalMaterial": {
+    "enabled": true,
+    "material": "Boîte de briques et modèle à reproduire."
+  },
+  "scenario": "Le week-end prochain, l’entreprise organise une porte ouverte pour présenter ses nouveaux modèles en fabrication. Votre tâche : assembler le dernier modèle de voiture pour le présenter, puis évaluer le temps nécessaire à son assemblage. Réclamez votre boîte de briques avant de commencer.",
+  "instruction": "Démarrez le compteur au début de l’assemblage. Arrêtez-le lorsque le modèle est terminé. Faites ensuite évaluer votre modèle et renseigner le nombre d’erreurs. Un administrateur débloque la validation avant de poursuivre.",
+  "presentation": {
+    "layout": "50-50",
+    "bricksStation": {
+      "image": "imageqcm/kaloneo-lego-f1-orange.webp",
+      "imageAlt": "Modèle de construction à base de briques",
+      "errorMin": 0,
+      "autoStatements": [
+        {
+          "value": "ease_br",
+          "label": "Je me suis senti(e) à l’aise dans l’exercice proposé."
+        },
+        {
+          "value": "difficulties_br",
+          "label": "J’ai rencontré des difficultés. J'ai eu besoin d'aide."
+        },
+        {
+          "value": "progress_br",
+          "label": "J’ai pu progresser dans mon assemblage."
+        },
+        {
+          "value": "motivation_br",
+          "label": "J’ai été fatigué(e) par cet exercice."
+        },
+        {
+          "value": "stress_br",
+          "label": "Je me suis senti(e) stressé(e) ou bloqué(e) à certains moments."
+        }
+      ]
+    }
+  },
+  "evaluation": {
+    "bricksRules": true
+  },
+  "runtime": {
+    "start": true,
+    "save": true,
+    "restore": true,
+    "finish": true
+  },
+  "outputs": [
+    {
+      "id": "temps",
+      "type": "duration"
+    },
+    {
+      "id": "erreurs",
+      "type": "integer"
+    },
+    {
+      "id": "autoevaluation",
+      "type": "json"
+    }
+  ],
+  "bilanContributions": [
+    {
+      "lineId": "bilan.competences_techniques.briques.identifier_schema",
+      "bindings": {
+        "erreurs": "erreurs"
+      }
+    },
+    {
+      "lineId": "bilan.competences_techniques.briques.manipuler_assembler",
+      "bindings": {
+        "erreurs": "erreurs"
+      }
+    }
+  ],
+  "features": [
+    "runtime.basic",
+    "layout.split",
+    "media.image",
+    "host.chrono",
+    "host.admin-intervention",
+    "host.autoevaluation",
+    "host.external-material",
+    "bilan.bindings"
+  ]
+}

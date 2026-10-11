@@ -1,0 +1,125 @@
+{
+  "kaltestFormat": 1,
+  "minSebEvalPro": "0.1.0-dev",
+  "builderVersion": "2.0.0",
+  "id": "tri_chevilles",
+  "version": "1.0.0",
+  "title": "Tri de chevilles",
+  "category": "technique",
+  "description": "Chronométrer de trois à cinq tris, saisir les erreurs puis compléter une autoévaluation.",
+  "kind": "questionnaire",
+  "scored": false,
+  "sourceMigration": {
+    "baseline": "SEB EvalPro 0.3.10 Build #20",
+    "sourcePage": "tri_de_cheville.html",
+    "sourceScript": "source/js/tri-page.js",
+    "legacyParcoursId": "tri-de-cheville"
+  },
+  "calculator": {
+    "compatible": false,
+    "defaultEnabled": false
+  },
+  "chrono": {
+    "enabled": true,
+    "engine": "seb-common",
+    "mode": "repeated",
+    "minMeasures": 3,
+    "maxMeasures": 5,
+    "autoReset": true,
+    "focusAfterStop": true,
+    "showTime": true
+  },
+  "autoevaluation": true,
+  "scenario": "Une mauvaise manipulation a provoqué la chute d’une caisse entière de chevilles au chargement du camion, semant le désordre : tout est mélangé. Un client important attend sa commande en urgence et la production est à l’arrêt. Toute l’équipe est mobilisée pour remettre de l’ordre, trier les boîtes de chevilles par couleurs et permettre à la livraison d’être honorée dans les temps. Chacun des employés doit trier de trois à cinq boîtes de chevilles, selon le temps disponible, et noter les temps passés.",
+  "instruction": "Pour chaque boîte, démarrez le compteur au début du tri puis arrêtez-le à la fin. Le temps est reporté automatiquement. Saisissez ensuite le nombre d’erreurs, même s’il est égal à 0. Effectuez entre 3 et 5 tris, puis affichez les résultats et complétez l’autoévaluation.",
+  "presentation": {
+    "layout": "50-50",
+    "triStation": {
+      "minTris": 3,
+      "maxTris": 5,
+      "autoStatements": [
+        {
+          "value": "ease",
+          "label": "Je me suis senti(e) à l’aise dans les exercices proposés."
+        },
+        {
+          "value": "difficulties",
+          "label": "J’ai rencontré des difficultés."
+        },
+        {
+          "value": "progress",
+          "label": "Je pense avoir progressé dans mes temps."
+        },
+        {
+          "value": "motivation",
+          "label": "Cette activité m’a donné mal au dos ou au bras."
+        },
+        {
+          "value": "stress",
+          "label": "Je me suis senti(e) stressé(e) ou bloqué(e) à certains moments."
+        }
+      ]
+    }
+  },
+  "evaluation": {
+    "triRules": true
+  },
+  "runtime": {
+    "start": true,
+    "save": true,
+    "restore": true,
+    "finish": true
+  },
+  "questions": [
+    {
+      "id": "tri_ready",
+      "prompt": "Tri et autoévaluation terminés",
+      "response": {
+        "type": "text"
+      },
+      "points": 0
+    }
+  ],
+  "outputs": [
+    {
+      "id": "temps_moyen",
+      "type": "duration"
+    },
+    {
+      "id": "temps_essais",
+      "type": "duration-list"
+    },
+    {
+      "id": "moyenne_erreurs",
+      "type": "number"
+    },
+    {
+      "id": "erreurs_total",
+      "type": "integer"
+    }
+  ],
+  "bilanContributions": [
+    {
+      "lineId": "bilan.competences_techniques.tri_chevilles.temps",
+      "bindings": {
+        "temps_moyen": "temps_moyen",
+        "temps_essais": "temps_essais"
+      }
+    },
+    {
+      "lineId": "bilan.competences_techniques.tri_chevilles.erreurs",
+      "bindings": {
+        "moyenne_erreurs": "moyenne_erreurs",
+        "erreurs_total": "erreurs_total"
+      }
+    }
+  ],
+  "features": [
+    "runtime.basic",
+    "questionnaire.basic",
+    "layout.split",
+    "host.chrono",
+    "host.autoevaluation",
+    "bilan.bindings"
+  ]
+}
