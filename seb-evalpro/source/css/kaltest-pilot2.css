@@ -3378,3 +3378,31 @@ body[data-seb-kaltest-id="traitement_texte_bureautique"] .kaltest-word-empty-slo
   display:block;width:32px;height:34px;box-sizing:border-box;
   border:1px solid #b9cad8;border-radius:5px;background:#fff;
 }
+
+/* R51 — Restaurant : les six colonnes (libellé + lundi à vendredi)
+   doivent tenir dans le bloc de gauche, sans défilement horizontal.
+   Correctif limité au planning de la cantine. */
+body[data-seb-kaltest-id="planning_cantine"] .kaltest-planning-work,
+body[data-seb-kaltest-id="planning_cantine"] .kaltest-builder-runtime-zone,
+body[data-seb-kaltest-id="planning_cantine"] .kaltest-builder-grid-wrap {
+  min-width:0;max-width:100%;box-sizing:border-box;
+}
+body[data-seb-kaltest-id="planning_cantine"] .kaltest-planning-table,
+body[data-seb-kaltest-id="planning_cantine"] .kaltest-builder-grid {
+  width:100%;max-width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;
+}
+body[data-seb-kaltest-id="planning_cantine"] .kaltest-planning-table th,
+body[data-seb-kaltest-id="planning_cantine"] .kaltest-planning-table td,
+body[data-seb-kaltest-id="planning_cantine"] .kaltest-builder-grid th,
+body[data-seb-kaltest-id="planning_cantine"] .kaltest-builder-grid td {
+  box-sizing:border-box;min-width:0;max-width:none;padding:3px 2px!important;
+  overflow:hidden;overflow-wrap:anywhere;
+}
+body[data-seb-kaltest-id="planning_cantine"] .kaltest-planning-table select,
+body[data-seb-kaltest-id="planning_cantine"] .kaltest-builder-grid select {
+  display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;
+  padding:2px 1px;font-size:13px!important;
+}
+body[data-seb-kaltest-id="planning_cantine"] .kaltest-builder-grid-wrap {
+  overflow-x:hidden;
+}
