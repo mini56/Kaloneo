@@ -67,7 +67,7 @@ jobs:
           if ('${{ steps.full_journey.outcome }}' -ne 'success') {
             throw 'Parcours complet non valide : la publication reste bloquee, meme si les autres controles passent.'
           }
-- name: Build Windows Setup R60
+      - name: Build Windows Setup R60
         run: npx electron-builder --win nsis --config build/kaloneo-v1-fixes-r60-builder.yml --publish never
 
       - name: Verify R60 Setup and calculate SHA256
