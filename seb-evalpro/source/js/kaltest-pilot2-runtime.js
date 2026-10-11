@@ -2181,12 +2181,19 @@
           display.textContent = '00:00';
           start.disabled = Number(tri.currentTri) > maxTris;
           stop.disabled = true;
-          setTimeout(()=>start.focus(),0);
+          // Conserver le focus sur Erreurs : le candidat peut saisir 10, 12,
+          // etc., sans être interrompu après le premier chiffre.
         }
         tri.ready = false;
         refreshResultsButton();
         refreshReady();
         persist();
+      });
+      err.addEventListener('keydown', event => {
+        if (event.key === 'Enter' && !start.disabled) {
+          event.preventDefault();
+          start.focus();
+        }
       });
       errorInputs.push(err);
       row.append(number,min,sec,err);
