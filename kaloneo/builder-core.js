@@ -232,6 +232,7 @@
   function withBuilderStyle(block,item){
     const style=item?.style||{};
     block.fontSize=Number(style.fontSize)||'';
+    if(block.type==='image')block.imageScale=Number.isFinite(Number(style.imageScale))&&Number(style.imageScale)>=10&&Number(style.imageScale)<=100?Number(style.imageScale):100;
     block.backgroundColor=String(style.backgroundColor||'');
     block.textAlign=block.type==='text' && ['left','center','right'].includes(style.textAlign)?style.textAlign:'';
     block.lineHeight=block.type==='text' && ['1','1.2','1.5','1.8'].includes(String(style.lineHeight||''))?String(style.lineHeight):'';
@@ -248,6 +249,7 @@
     const backgroundColor=String(block?.backgroundColor||'').trim();
     if(Number.isFinite(fontSize)&&fontSize>=10&&fontSize<=40) style.fontSize=fontSize;
     if(backgroundColor) style.backgroundColor=backgroundColor;
+    if(block?.type==='image'&&Number(block.imageScale)>=10&&Number(block.imageScale)<100)style.imageScale=Math.round(Number(block.imageScale));
     if(block?.type==='text'){
       if(['left','center','right'].includes(block.textAlign))style.textAlign=block.textAlign;
       if(['1','1.2','1.5','1.8'].includes(String(block.lineHeight||'')))style.lineHeight=String(block.lineHeight);
