@@ -11,6 +11,7 @@ function fail(message, details) {
 let state = {version:1,sessionStorage:{},localStorage:{},lastPage:'kaltest-pilot2.html',lastEvaluationPage:'kaltest-pilot2.html'};
 let previewDefinition = null;
 let savedLibraryDefinition = null;
+let savedLibraryPayload = null;
 let savedImageCalls = 0;
 let zipImportCalls = 0;
 let protectedLibraryMode = false;
@@ -74,6 +75,7 @@ ipcMain.handle('kaloneo-library:get-test',(_e,payload)=>{
 });
 ipcMain.handle('kaloneo-library:save-test',(_e,payload)=>{
   savedLibraryDefinition=JSON.parse(JSON.stringify(payload?.definition||null));
+  savedLibraryPayload={overwrite:payload?.overwrite,developerOverride:payload?.developerOverride};
   return {ok:true,replaced:false,test:{id:savedLibraryDefinition?.id,version:savedLibraryDefinition?.version,title:savedLibraryDefinition?.title}};
 });
 ipcMain.handle('kaloneo-library:list-images',()=>({ok:true,images:[
@@ -512,6 +514,7 @@ app.whenReady().then(async()=>{
 
     protectedLibraryMode=true;
     savedLibraryDefinition=null;
+    savedLibraryPayload=null;
     const protectedV1=await win.webContents.executeJavaScript(`(async()=>{
       window.confirm=()=>true;
       document.getElementById('open-library-test').click();
@@ -552,16 +555,17 @@ app.whenReady().then(async()=>{
     if(!protectedV1.ok||
        protectedV1.before.version!=='1.0.0'||
        !protectedV1.before.versionReadOnly||
-       protectedV1.before.saveLabel!=='Créer une nouvelle version'||
-       !/protégée/i.test(protectedV1.before.saveTitle)||
-       protectedV1.after.version!=='3.0.0'||
-       protectedV1.after.versionReadOnly||
-       protectedV1.after.saveLabel!=='Enregistrer'||
+       protectedV1.before.saveLabel!=='Enregistrer V1'||
+       !/copie de sécurité/i.test(protectedV1.before.saveTitle)||
+       protectedV1.after.version!=='1.0.0'||
+       !protectedV1.after.versionReadOnly||
+       protectedV1.after.saveLabel!=='Enregistrer V1'||
        !savedLibraryDefinition||
        savedLibraryDefinition.id!=='organisation_demenagement'||
-       savedLibraryDefinition.version!=='3.0.0'||
+       savedLibraryDefinition.version!=='1.0.0'||
+       savedLibraryPayload?.overwrite!==true||
        !String(savedLibraryDefinition.scenario||'').includes('modification smoke')) {
-      return fail('sécurité UI V1 protégée / création automatique nouvelle version incorrecte',{protectedV1,savedLibraryDefinition});
+      return fail('V1 administrateur : ouverture, édition ou sauvegarde sans Développeur incorrecte',{protectedV1,savedLibraryDefinition,savedLibraryPayload});
     }
 
 
@@ -633,7 +637,7 @@ app.whenReady().then(async()=>{
     console.log('R48_2_RESTAURANT_NO_SCROLL_ELECTRON=OK',JSON.stringify(restaurantFit));
 
     console.log('KALONEO_PROTECTED_V1_UI=OK');
-    console.log('KALONEO_PROTECTED_V1_NEXT_VERSION=3.0.0');
+    console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
     console.log('KALONEO_BUILDER_PREVIEW_ELECTRON=OK');
     console.log(JSON.stringify({setup,shown,returned,definitionId:previewDefinition&&previewDefinition.id}));
     clearTimeout(timeout);win.destroy();app.exit(0);
