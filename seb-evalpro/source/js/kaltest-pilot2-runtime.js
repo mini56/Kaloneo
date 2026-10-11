@@ -3166,7 +3166,7 @@
             <select id="nw-font" title="Changer la police"><option value="Arial">Arial</option><option value="Calibri" selected>Calibri</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option><option value="Georgia">Georgia</option></select>
             <select id="nw-size" title="Taille du texte"><option value="10pt">10</option><option value="12pt">12</option><option value="14pt" selected>14</option><option value="16pt">16</option><option value="18pt">18</option><option value="24pt">24</option><option value="32pt">32</option><option value="48pt">48</option></select>
           </div>
-          <div class="kaltest-word-empty-slots" aria-hidden="true"><span></span><span></span></div>
+          <div class="kaltest-word-end-fill" aria-hidden="true"></div>
         </div>
         <div class="toolbar-row2 kaltest-word-formatbar kaltest-text-editor-toolbar">
           <div class="kaltest-word-group kaltest-word-style"><span class="kaltest-word-group-label">Style</span>
@@ -3184,7 +3184,7 @@
             <select id="nw-line-height" title="Interligne"><option value="1">Simple</option><option value="1.15">1.15</option><option value="1.5">1.5</option><option value="2">Double</option></select>
           </div>
           <div class="kaltest-word-group kaltest-word-insert"><span class="kaltest-word-group-label">Insérer</span><button id="nw-image-button" type="button" title="Insérer une image">🖼️</button></div>
-          <div class="kaltest-word-empty-slots" aria-hidden="true"><span></span></div>
+          <div class="kaltest-word-end-fill" aria-hidden="true"></div>
         </div>
       </div>
       <div class="kaltest-word-paper-surface"><div id="editor" class="kaltest-text-editor-paper" spellcheck="false"></div></div>
