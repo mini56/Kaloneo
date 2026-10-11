@@ -1773,6 +1773,7 @@
     const secondInput = measure('Secondes', String((Number(brique.chronoSeconds)||0)%60), true);
     const errorInput = measure('Nombre d’erreur(s)', brique.errors===null||brique.errors===undefined?'':String(brique.errors), false);
     errorInput.id = 'nivDiff';
+    errorInput.inputMode = 'numeric';
     errorInput.disabled = testState.status === 'COMPLETED';
     right.appendChild(fieldsCard);
 
@@ -1843,7 +1844,9 @@
 
     errorInput.addEventListener('input', () => {
       const raw = String(errorInput.value || '').trim();
-      brique.errors = /^\d+$/.test(raw) ? Math.max(0,Math.min(Number(definition.errorMax??10),Math.floor(Number(raw)))) : null;
+      // Conserver toute la valeur saisie (0-99), sans la tronquer pendant la frappe.
+      const maxErrors = Number(definition.errorMax ?? 99);
+      brique.errors = /^\d{1,2}$/.test(raw) && Number(raw) <= maxErrors ? Number(raw) : null;
       brique.adminValidated = false;
       brique.autoValidated = false;
       delete testState.answers.brique_ready;
@@ -2159,6 +2162,8 @@
       const err = document.createElement('input');
       err.type = 'number';
       err.min = '0';
+      err.max = '99';
+      err.inputMode = 'numeric';
       err.step = '1';
       err.value = tri.rows[index].errors === null || tri.rows[index].errors === undefined ? '' : String(tri.rows[index].errors);
       err.disabled = testState.status === 'COMPLETED';
@@ -2167,7 +2172,7 @@
       // a zero ou sortir du champ pendant la saisie de plusieurs chiffres.
       const validateTriErrors = () => {
         const raw = String(err.value || '').trim();
-        if (!/^\d+$/.test(raw)) {
+        if (!/^\d{1,2}$/.test(raw)) {
           tri.rows[index].errors = null;
           tri.ready = false;
           refreshResultsButton();

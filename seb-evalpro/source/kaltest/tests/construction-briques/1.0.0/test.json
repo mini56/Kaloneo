@@ -46,7 +46,7 @@
       "image": "imageqcm/kaloneo-lego-f1-orange.webp",
       "imageAlt": "Modèle de construction à base de briques",
       "errorMin": 0,
-      "errorMax": 10,
+      "errorMax": 99,
       "autoStatements": [
         {
           "value": "ease_br",
