@@ -470,9 +470,10 @@ function createKaloneoLibrary(options = {}) {
       const seedJson = JSON.stringify(seedDefinition);
       const key=v1DraftKey(seedDefinition);
       const draft=developerDrafts[key];
-      // Pendant les travaux, conserver localement la V1 retouchée.
-      // Quand la V1 officielle GitHub change, elle reprend priorité.
-      if(draft?.seedHash===sha256(seedJson) && currentDefinition &&
+      // Pendant les corrections V1, un enregistrement Admin accompagné de
+      // sa sauvegarde ne doit pas être effacé silencieusement par un Setup.
+      // Le verrouillage final des V1 sera une décision explicite.
+      if(draft && currentDefinition?.kaloneoLibrary?.adminModified===true &&
           currentJson!==seedJson)continue;
       if(draft){
         delete developerDrafts[key];
