@@ -6,6 +6,7 @@ on:
     paths:
       - 'kaloneo/icons-tests/**'
       - 'kaloneo/icon-library.js'
+      - '.github/workflows/build-r61-windows.yml'
   workflow_dispatch:
 
 permissions:
@@ -111,7 +112,7 @@ jobs:
           - Les V1 modifiees localement restent conservees lors de la synchronisation des seeds.
           - Tri : deux chiffres 0-99 et validation avant rearmement du chronometre.
           - Briques : erreurs de 0 a 99.
-          - 100 icones : 70 d origine et 30 nouvelles icones de tests en PNG HD.
+          - 100 icones : 70 d origine et 30 nouvelles icones de tests en PNG 96x96.
           - Aucun autre test ni bareme modifie.
           - Controle Windows Electron du Tri, du parcours complet, du Builder, des V1, icones, texte, mail, bilan.
           SHA256 Setup : $env:SETUP_SHA256
