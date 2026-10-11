@@ -3506,3 +3506,12 @@ body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2 .kaltest-
   border:1px solid #b9cad8!important;border-radius:5px!important;
   pointer-events:none!important;box-sizing:border-box!important;
 }
+
+/* R57 — Icône définie dans le test : affichage réellement candidat et miniature fidèle.
+   Sans icône : la mise en page et les dimensions historiques du titre sont inchangées. */
+#page-exercise .kaltest-heading #kaltest-title {
+  display:flex;align-items:center;justify-content:center;gap:9px;
+}
+#page-exercise .kaltest-heading #kaltest-test-icon {
+  flex:0 0 29px;width:29px;height:29px;object-fit:contain;
+}

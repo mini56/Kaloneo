@@ -3883,7 +3883,20 @@
     window.sebNwtexteContext = null;
 
     applyTestPageStyle(test);
-    document.getElementById('kaltest-title').textContent = test.title || 'Exercice';
+    // R57 : l'icône choisie et embarquée dans le JSON par le Test Builder
+    // doit aussi apparaître dans la véritable page candidat / aperçu fidèle.
+    const testTitle = document.getElementById('kaltest-test-title-text');
+    testTitle.textContent = test.title || 'Exercice';
+    const testIcon = document.getElementById('kaltest-test-icon');
+    const iconData = typeof test.icon?.data === 'string' ? test.icon.data : '';
+    testIcon.hidden = true;
+    testIcon.removeAttribute('src');
+    if (/^data:image\//i.test(iconData)) {
+      testIcon.alt = '';
+      testIcon.onerror = () => { testIcon.hidden = true; testIcon.removeAttribute('src'); };
+      testIcon.src = iconData;
+      testIcon.hidden = false;
+    }
     document.getElementById('kaltest-progress').textContent =
       'Exercice ' + (state.testIndex + 1) + ' / ' + ACTIVE_TESTS.length;
     renderRichContext(document.getElementById('kaltest-scenario'), test.scenario || '');
