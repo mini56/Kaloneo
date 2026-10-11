@@ -28,6 +28,8 @@ jobs:
         run: |
           node --check source/js/kaltest-pilot2-runtime.js
           node --check scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
+      - name: Generate historical KALTEST pilot data
+        run: node scripts/build-kaltest-pilot2-data.js
       - name: Prepare authentic KALTEST candidate application
         run: npm run prepare:web
       - name: Verify Admin V1 save backups and persistence across app upgrades
