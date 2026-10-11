@@ -1188,7 +1188,7 @@ ipcMain.handle('kaloneo-transfer:export-test', async (_event, payload) => {
   try {
     const result = getKaloneoLibrary().getTest(payload && payload.id, payload && payload.version);
     if (!result.ok) return result;
-    const { definition } = embedTestImages(result.definition, path.resolve(__dirname, '../source'));
+    const { definition } = embedTestImages(result.definition, path.resolve(__dirname, '../app/web'));
     const chosen = await dialog.showSaveDialog(mainWindow, {
       title:'Exporter un test KALONÉO',
       defaultPath:String(definition.id || 'test') + '-' + String(definition.version || '1.0.0') + '-test.json',
