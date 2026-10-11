@@ -3369,3 +3369,12 @@ body[data-seb-kaltest-id="traitement_texte_bureautique"] .kaltest-builder-runtim
  background-image:url("../assets/typewriter-reference.png");background-size:min(80%,440px) auto;
  background-position:center bottom 5px;background-repeat:no-repeat;padding-bottom:300px;
 }
+
+/* Cases blanches neutres pour équilibrer les deux rangées : aucune action ni réponse suggérée. */
+body[data-seb-kaltest-id="traitement_texte_bureautique"] .kaltest-word-empty-slots {
+  display:flex;align-items:center;gap:4px;flex:0 0 auto;pointer-events:none;
+}
+body[data-seb-kaltest-id="traitement_texte_bureautique"] .kaltest-word-empty-slots span {
+  display:block;width:32px;height:34px;box-sizing:border-box;
+  border:1px solid #b9cad8;border-radius:5px;background:#fff;
+}
