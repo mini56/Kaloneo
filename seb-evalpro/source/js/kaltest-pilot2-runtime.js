@@ -2049,6 +2049,7 @@
 
     const guide = document.createElement('div');
     guide.className = 'kaltest-tri-guide';
+    guide.hidden = Boolean(tri.resultsShown || testState.status === 'COMPLETED');
     guide.innerHTML = '<h3>Comment ça fonctionne ?</h3><ul>' +
       '<li>Démarrez le compteur au moment où vous commencez un tri.</li>' +
       '<li>Arrêtez-le lorsque le tri est terminé : Minutes et Secondes sont remplis automatiquement.</li>' +
@@ -2291,6 +2292,7 @@
     resultsButton.addEventListener('click', () => {
       if (!canShowResults()) return;
       tri.resultsShown = true;
+      guide.hidden = true;
       auto.hidden = false;
       results.hidden = false;
       refreshResults();
@@ -2362,7 +2364,7 @@
 
     if (testState.status === 'COMPLETED') {
       start.disabled=true;stop.disabled=true;resultsButton.disabled=true;
-      auto.hidden=false;results.hidden=false;refreshResults();
+      guide.hidden=true;auto.hidden=false;results.hidden=false;refreshResults();
       const next=document.getElementById('kaltest-next');if(next){next.disabled=false;next.classList.remove('seb-exercise-nav-locked');}
     } else {
       if (tri.awaitingError!==null) {start.disabled=true;stop.disabled=true;}

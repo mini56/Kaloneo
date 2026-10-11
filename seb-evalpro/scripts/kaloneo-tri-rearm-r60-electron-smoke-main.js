@@ -109,13 +109,17 @@ app.whenReady().then(async()=>{
     assert.equal(after.count,3);
     assert.deepEqual(after.errorValues,[0,12,125]);
     assert.equal(after.disabled,false,'Voir les résultats must unlock after 3 completed tris');
-    // La présentation validée reste toujours 50/50, même après « Voir les résultats ».
-    const review=await win.webContents.executeJavaScript("(()=>{document.querySelector('.kaltest-tri-results-button').click();const layout=document.querySelector('.kaltest-tri-layout');const left=layout.querySelector('.kaltest-tri-left');const right=layout.querySelector('.kaltest-tri-right');const auto=layout.querySelector('.kaltest-tri-autoeval');const summary=right.querySelector('.kaltest-tri-results');return {leftRatio:left.getBoundingClientRect().width/layout.getBoundingClientRect().width,rightRatio:right.getBoundingClientRect().width/layout.getBoundingClientRect().width,autoInLeft:left.contains(auto),summaryInRight:right.contains(summary),guideVisible:getComputedStyle(layout.querySelector('.kaltest-tri-guide')).display!=='none',rightVisible:getComputedStyle(right).display!=='none',autoVisible:!auto.hidden,summaryVisible:!summary.hidden,summaryText:summary.textContent,tableRows:right.querySelectorAll('.kaltest-tri-row:not(.head)').length,chronoPresent:!!right.querySelector('.kaltest-tri-chrono-card'),autoInputs:auto.querySelectorAll('input[type=checkbox]').length};})()",true);
+    const beforeReview=await win.webContents.executeJavaScript("(()=>{const guide=document.querySelector('.kaltest-tri-guide');const auto=document.querySelector('.kaltest-tri-autoeval');return {guideVisible:getComputedStyle(guide).display!=='none',autoHidden:auto.hidden};})()",true);
+    assert.equal(beforeReview.guideVisible,true,'Guide must remain visible during the attempts');
+    assert.equal(beforeReview.autoHidden,true,'Autoevaluation must remain hidden before results');
+    // Avant résultats : consignes à gauche. Après clic : autoévaluation à gauche,
+    // plus de consignes; chronomètre, 5 tris et résultats toujours à droite.
+    const review=await win.webContents.executeJavaScript("(()=>{document.querySelector('.kaltest-tri-results-button').click();const layout=document.querySelector('.kaltest-tri-layout');const left=layout.querySelector('.kaltest-tri-left');const right=layout.querySelector('.kaltest-tri-right');const auto=layout.querySelector('.kaltest-tri-autoeval');const summary=right.querySelector('.kaltest-tri-results');return {leftRatio:left.getBoundingClientRect().width/layout.getBoundingClientRect().width,rightRatio:right.getBoundingClientRect().width/layout.getBoundingClientRect().width,autoInLeft:left.contains(auto),summaryInRight:right.contains(summary),guideHidden:getComputedStyle(layout.querySelector('.kaltest-tri-guide')).display==='none',rightVisible:getComputedStyle(right).display!=='none',autoVisible:!auto.hidden,summaryVisible:!summary.hidden,summaryText:summary.textContent,tableRows:right.querySelectorAll('.kaltest-tri-row:not(.head)').length,chronoPresent:!!right.querySelector('.kaltest-tri-chrono-card'),autoInputs:auto.querySelectorAll('input[type=checkbox]').length};})()",true);
     assert.ok(review.leftRatio>0.40&&review.leftRatio<0.60,'Autoévaluation must remain on left half');
     assert.ok(review.rightRatio>0.40&&review.rightRatio<0.60,'Tri table must remain on right half');
     assert.equal(review.autoInLeft,true,'Autoévaluation must stay in left column');
     assert.equal(review.summaryInRight,true,'Results must stay in right column');
-    assert.equal(review.guideVisible,true,'Tri guide must not disappear');
+    assert.equal(review.guideHidden,true,'On Voir les résultats, the guide must disappear and be replaced by autoevaluation');
     assert.equal(review.rightVisible,true,'Tri right side must not disappear');
     assert.equal(review.autoVisible,true);
     assert.equal(review.summaryVisible,true);
