@@ -1165,7 +1165,7 @@ ipcMain.handle('kaloneo-library:save-test', (_event, payload) => {
   try {
     return getKaloneoLibrary().saveTest(payload && payload.definition, {
       overwrite:payload && payload.overwrite === true,
-      allowSeedOverwrite:developerSessionUnlocked && payload?.developerOverride===true
+      allowSeedOverwrite:payload?.overwrite===true && adminSessionUnlocked
     });
   } catch (error) {
     return { ok:false, error:error && error.message ? error.message : String(error) };
