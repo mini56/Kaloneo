@@ -106,6 +106,20 @@ function applyColumn(node,col){
   node.classList.add(col.align==='left'?'left':'center');
 }
 
+function equalAutomaticColumns(t){
+  const count=Math.max(
+    Number(t?.cols)||0,
+    Array.isArray(t?.headers)?t.headers.length:0,
+    ...((t?.cells||[]).map(row=>Array.isArray(row)?row.length:0))
+  );
+  if(count<2||t.layoutOnly===true)return 0;
+  if(Array.from({length:count},(_,i)=>t.columns?.[i])
+    .some(col=>Number(col?.widthChars)>=3))return 0;
+  if((t.cells||[]).some(row=>(row||[]).some(cell=>
+    Number(cell?.rowSpan)>1||Number(cell?.colSpan)>1)))return 0;
+  return count;
+}
+
 function renderGrid(block){
   const t=block.table||{};
   const rows=Array.isArray(t.cells)?t.cells:[];
@@ -114,6 +128,17 @@ function renderGrid(block){
   if(t.title) wrap.append(el('div','kb-question-label',t.title));
   const table=el('table','kb-table');
   if(t.compact===true)table.classList.add('kb-compact-grid');
+  const equal=equalAutomaticColumns(t);
+  if(equal){
+    table.classList.add('kb-grid-equal-auto');
+    const group=el('colgroup');
+    for(let i=0;i<equal;i++){
+      const column=el('col');
+      column.style.width=(100/equal)+'%';
+      group.appendChild(column);
+    }
+    table.appendChild(group);
+  }
   if(t.layoutOnly===true){table.classList.add('kaloneo-layout-only');table.style.border='0';table.style.background='transparent';}
   if(Array.isArray(t.headers)&&t.headers.length){
     const thead=el('thead');const tr=el('tr');

@@ -177,3 +177,10 @@ body{font-family:Calibri,"Segoe UI",Arial,sans-serif;background:linear-gradient(
 .kb-compact-grid th{padding:3px 5px;}
 .kb-compact-grid td{padding:2px 3px;}
 .kb-compact-grid .kb-select,.kb-compact-grid .kb-input{height:28px;min-height:28px;padding:2px 4px;}
+
+/* R48.10 : aperçus tableaux, largeurs automatiques égales. */
+.kb-grid-equal-auto{table-layout:fixed!important;width:100%;max-width:100%;}
+.kb-grid-equal-auto th,.kb-grid-equal-auto td{min-width:0!important;box-sizing:border-box;}
+.kb-grid-equal-auto td>select,.kb-grid-equal-auto td>input{
+ box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;
+}

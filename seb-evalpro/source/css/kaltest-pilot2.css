@@ -3407,32 +3407,8 @@ body[data-seb-kaltest-id="planning_cantine"] .kaltest-builder-grid-wrap {
   overflow-x:hidden;
 }
 
-/* R52 : correctif sur le vrai Restaurant R48 (ID distinct de la V1 système).
-   Six colonnes fixes : libellé + cinq jours, sans scrollbar horizontale. */
-body[data-seb-kaltest-id="planning_cantine_r48_demo"] .kaltest-builder-runtime-zone,
-body[data-seb-kaltest-id="planning_cantine_r48_demo"] .kaltest-builder-grid-wrap {
-  min-width:0;max-width:100%;width:100%;box-sizing:border-box;overflow-x:hidden;
-}
-body[data-seb-kaltest-id="planning_cantine_r48_demo"] .kaltest-builder-grid {
-  width:100%;min-width:0;max-width:100%;table-layout:fixed;border-collapse:collapse;
-}
-body[data-seb-kaltest-id="planning_cantine_r48_demo"] .kaltest-builder-grid th,
-body[data-seb-kaltest-id="planning_cantine_r48_demo"] .kaltest-builder-grid td {
-  width:auto;min-width:0;max-width:none;box-sizing:border-box;
-  padding:2px 1px!important;overflow:hidden;
-}
-body[data-seb-kaltest-id="planning_cantine_r48_demo"] .kaltest-builder-grid th:first-child,
-body[data-seb-kaltest-id="planning_cantine_r48_demo"] .kaltest-builder-grid td:first-child {
-  width:12%;
-}
-body[data-seb-kaltest-id="planning_cantine_r48_demo"] .kaltest-builder-grid th:not(:first-child),
-body[data-seb-kaltest-id="planning_cantine_r48_demo"] .kaltest-builder-grid td:not(:first-child) {
-  width:17.6%;
-}
-body[data-seb-kaltest-id="planning_cantine_r48_demo"] .kaltest-builder-grid select {
-  display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;
-  font-size:15px!important;padding:1px 0!important;
-}
+/* R58 : retrait de la règle spécifique Restaurant R52, remplacée par la
+   même répartition automatique R48.10 pour tous les tableaux Builder. */
 /* NWTEXT : réellement répartir les commandes sur deux rangées complètes. */
 body[data-seb-kaltest-id="traitement_texte_bureautique"] #toolbar.kaltest-word-topbar,
 body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2.kaltest-word-formatbar {
@@ -3514,4 +3490,20 @@ body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2 .kaltest-
 }
 #page-exercise .kaltest-heading #kaltest-test-icon {
   flex:0 0 29px;width:29px;height:29px;object-fit:contain;
+}
+
+/* R58 : règle R48.10 générale; n'affecte pas le ruban NWTEXT R55. */
+.kaltest-builder-grid-equal-auto{
+ width:100%!important;max-width:100%!important;min-width:0!important;
+ table-layout:fixed!important;
+}
+.kaltest-builder-grid-equal-auto th,
+.kaltest-builder-grid-equal-auto td{
+ min-width:0!important;box-sizing:border-box;
+}
+.kaltest-builder-grid-equal-auto td>select.step,
+.kaltest-builder-grid-equal-auto td>input.step,
+.kaltest-builder-grid-equal-auto td>textarea.step{
+ display:block;box-sizing:border-box!important;width:100%!important;
+ max-width:100%!important;min-width:0!important;margin:0!important;
 }

@@ -1264,6 +1264,21 @@
     }
   }
 
+  // R48.10 : règle de mise en page générale, indépendante de l'ID du test.
+  function equalAutomaticColumns(definition) {
+    const columnsCount=Math.max(
+      Number(definition?.cols)||0,
+      Array.isArray(definition?.headers)?definition.headers.length:0,
+      ...((definition?.cells||[]).map(row=>Array.isArray(row)?row.length:0))
+    );
+    if(columnsCount<2||definition.layoutOnly===true) return 0;
+    if(Array.from({length:columnsCount},(_,i)=>definition.columns?.[i])
+      .some(column=>Number(column?.widthChars)>=3))return 0;
+    if((definition.cells||[]).some(row=>(row||[]).some(cell=>
+      Number(cell?.rowSpan)>1||Number(cell?.colSpan)>1)))return 0;
+    return columnsCount;
+  }
+
   function renderBuilderGrid(test, item) {
     const definition = item.table || {};
     const wrapper = document.createElement('div');
@@ -1278,6 +1293,17 @@
     const table = document.createElement('table');
     table.className = 'kaltest-table kaltest-builder-grid';
     if(definition.compact===true)table.classList.add('kaltest-builder-grid-compact');
+    const equalColumns=equalAutomaticColumns(definition);
+    if(equalColumns){
+      table.classList.add('kaltest-builder-grid-equal-auto');
+      const group=document.createElement('colgroup');
+      for(let i=0;i<equalColumns;i++){
+        const column=document.createElement('col');
+        column.style.width=(100/equalColumns)+'%';
+        group.appendChild(column);
+      }
+      table.appendChild(group);
+    }
     if (definition.layoutOnly === true) {table.classList.add('kaloneo-layout-only');table.style.border='0';table.style.background='transparent';}
 
     if (Array.isArray(definition.headers) && definition.headers.length) {

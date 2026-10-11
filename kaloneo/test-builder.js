@@ -819,6 +819,22 @@
     table.columns.forEach((col,i)=>col.remainder=i===newCols-1 && !col.widthChars);
   }
 
+  // R48.10 validé : colonnes égales si toutes automatiques,
+  // sauf tableau de mise en page, cellules fusionnées ou largeur manuelle.
+  function equalAutomaticColumns(table) {
+    const count=Math.max(
+      Number(table?.cols)||0,
+      Array.isArray(table?.headers)?table.headers.length:0,
+      ...((table?.cells||[]).map(row=>Array.isArray(row)?row.length:0))
+    );
+    if(count<2||table.layoutOnly===true)return 0;
+    if(Array.from({length:count},(_,i)=>table.columns?.[i])
+      .some(column=>Number(column?.widthChars)>=3))return 0;
+    if((table.cells||[]).some(row=>(row||[]).some(cell=>
+      Number(cell?.rowSpan)>1||Number(cell?.colSpan)>1)))return 0;
+    return count;
+  }
+
   function renderGridEditor(block,body) {
     const table=block.table||(block.table=Core.createGridBlock(3,3).table);
     resizeGrid(table,table.rows||3,table.cols||3);
@@ -868,6 +884,18 @@
       columns.appendChild(row);
     });
     body.appendChild(columns);
+    const widthExplanation=document.createElement('p');
+    widthExplanation.className='muted builder-grid-width-explanation';
+    const updateWidthExplanation=()=>{
+      const equal=equalAutomaticColumns(table);
+      widthExplanation.textContent=equal?
+        'Largeurs automatiques : les '+equal+' colonnes ont exactement la même largeur.':
+        'Les largeurs saisies sont prioritaires ; une colonne sans largeur peut prendre le reste.';
+    };
+    updateWidthExplanation();
+    columns.querySelectorAll('input[type="number"]').forEach(input=>
+      input.addEventListener('input',updateWidthExplanation));
+    body.appendChild(widthExplanation);
 
     const columnNavigation=document.createElement('div');
     columnNavigation.className='grid-column-navigation';
@@ -1553,6 +1581,17 @@
     if(t.title) {const h=document.createElement('h3');h.textContent=t.title;wrap.appendChild(h);}
     const table=document.createElement('table');
     table.className='preview-grid-table';
+    const equal=equalAutomaticColumns(t);
+    if(equal){
+      table.classList.add('preview-grid-equal-auto');
+      const group=document.createElement('colgroup');
+      for(let i=0;i<equal;i++){
+        const col=document.createElement('col');
+        col.style.width=(100/equal)+'%';
+        group.appendChild(col);
+      }
+      table.appendChild(group);
+    }
     if(t.layoutOnly===true){table.classList.add('kaloneo-layout-only');table.style.border='0';table.style.background='transparent';}
     if(Array.isArray(t.headers)&&t.headers.length) {
       const tr=document.createElement('tr');

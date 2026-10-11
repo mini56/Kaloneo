@@ -994,3 +994,11 @@ body{
 .developer-password-dialog>label{display:grid;gap:8px;margin-top:12px}
 .developer-password-dialog input{height:36px;padding:6px}
 .developer-password-actions{margin-top:14px;display:flex;justify-content:flex-end}
+
+/* R48.10 restauré : répartition générique des largeurs dans l'éditeur. */
+.builder-grid-width-explanation{margin:4px 0 8px;font-size:12px;}
+.preview-grid-equal-auto{table-layout:fixed!important;width:100%;max-width:100%;}
+.preview-grid-equal-auto th,.preview-grid-equal-auto td{min-width:0!important;box-sizing:border-box;}
+.preview-grid-equal-auto td>select,.preview-grid-equal-auto td>input{
+ box-sizing:border-box!important;min-width:0!important;width:100%!important;max-width:100%!important;
+}
