@@ -52,7 +52,7 @@ async function waitForPilotEngine(win, expectedTestId=null, timeout=15000){
         (expectedTestId ? seen.current===expectedTestId : seen.visible && seen.active.length===4)) return seen;
     await sleep(100);
   }
-  throw new Error('Parcours pilot non initialise apres reload: '+JSON.stringify(seen));
+  throw new Error('Parcours pilot non initialise apres reload: '+JSON.stringify(seen)+'; URL='+win.webContents.getURL());
 }
 
 app.commandLine.appendSwitch('disable-gpu');
@@ -88,9 +88,9 @@ app.whenReady().then(async()=>{
         tests:{},
         replay:[]
       }));
-      location.reload();
       true;
     `,true);
+    await win.loadFile(kaltest,{query:{fullParcours:'1'}});
     await waitForPilotEngine(win);
 
     const intro=await win.webContents.executeJavaScript(`
@@ -129,9 +129,9 @@ app.whenReady().then(async()=>{
         tests:{},
         replay:[]
       }));
-      location.reload();
       true;
     `,true);
+    await win.loadFile(kaltest,{query:{fullParcours:'1'}});
     await waitForPilotEngine(win,'texte_a_trous_stage_logistique');
 
     const initialLast=await win.webContents.executeJavaScript(`
