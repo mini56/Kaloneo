@@ -2891,6 +2891,20 @@ body[data-seb-kaltest-id="tri_chevilles"] #kaltest-content{padding:5px 7px}
 .kaltest-tri-table{display:flex;flex-direction:column;gap:3px}.kaltest-tri-row{display:grid;grid-template-columns:64px repeat(3,minmax(0,1fr));gap:5px;align-items:center}.kaltest-tri-row.head{font-weight:700;color:#475569;text-align:center;font-size:13px}.kaltest-tri-row>span{text-align:center}.kaltest-tri-row input{min-width:0;height:31px;padding:3px 5px;border:1px solid #aeb8c3;border-radius:6px;text-align:center;font-size:15px;box-sizing:border-box}.kaltest-tri-row input[readonly]{background:#f1f5f9}
 .kaltest-tri-results-button{align-self:center;padding:7px 14px;border:1px solid #1a73e8;border-radius:7px;background:#fff;color:#1a73e8;font-weight:700;cursor:pointer}.kaltest-tri-results-button:disabled{opacity:.45;cursor:not-allowed}
 .kaltest-tri-results{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:7px;border-radius:8px;background:#eef6fa;text-align:center;font-size:14px}.kaltest-tri-results[hidden]{display:none!important}
+/* Tri uniquement : après « Voir les résultats », afficher le bilan et
+   l'autoévaluation sur toute la largeur, sans colonne droite vide. */
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-layout.kaltest-tri-review{grid-template-columns:minmax(0,1fr)}
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-review .kaltest-tri-right,
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-review .kaltest-tri-guide{display:none}
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-review .kaltest-tri-left{padding:16px 22px}
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-review .kaltest-tri-autoeval{width:100%;max-width:1050px;margin:0 auto;gap:10px}
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-review .kaltest-tri-autoeval h3{font-size:21px;margin:4px 0}
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-review .kaltest-tri-results{font-size:17px;padding:12px 16px}
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-review .kaltest-tri-auto-choice{font-size:16px;padding:9px 12px;gap:10px}
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-review .kaltest-tri-comment{font-size:15px;gap:7px}
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-review .kaltest-tri-comment textarea{min-height:95px}
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-review .kaltest-tri-auto-validate{margin-top:8px}
+@media(max-height:760px){body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-review .kaltest-tri-left{padding:9px 14px}body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-review .kaltest-tri-auto-choice{font-size:15px;padding:6px 9px}body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-review .kaltest-tri-comment textarea{min-height:70px}}
 @media(max-height:760px){.kaltest-tri-left,.kaltest-tri-right{padding:6px}.kaltest-tri-guide ul{font-size:12.5px}.kaltest-tri-guide li{margin:2px 0}.kaltest-tri-row input{height:27px}.kaltest-tri-display{font-size:40px!important}.kaltest-tri-auto-choice{font-size:12.5px;padding:3px 5px}.kaltest-tri-comment textarea{min-height:42px}}
 
 

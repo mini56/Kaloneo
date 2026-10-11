@@ -1762,7 +1762,7 @@
       input.readOnly = Boolean(readOnly);
       if (!readOnly) {
         input.min = String(definition.errorMin ?? 0);
-        input.max = String(definition.errorMax ?? 10);
+        // Les erreurs sont un entier positif sans plafond artificiel.
         input.step = '1';
       }
       label.append(span, input);
@@ -1844,9 +1844,9 @@
 
     errorInput.addEventListener('input', () => {
       const raw = String(errorInput.value || '').trim();
-      // Conserver toute la valeur saisie (0-99), sans la tronquer pendant la frappe.
-      const maxErrors = Number(definition.errorMax ?? 99);
-      brique.errors = /^\d{1,2}$/.test(raw) && Number(raw) <= maxErrors ? Number(raw) : null;
+      // 125, 999, etc. doivent être conservés, pas rejetés à 99.
+      const errors = Number(raw);
+      brique.errors = /^\d+$/.test(raw) && Number.isSafeInteger(errors) ? errors : null;
       brique.adminValidated = false;
       brique.autoValidated = false;
       delete testState.answers.brique_ready;
@@ -2162,7 +2162,6 @@
       const err = document.createElement('input');
       err.type = 'number';
       err.min = '0';
-      err.max = '99';
       err.inputMode = 'numeric';
       err.step = '1';
       err.value = tri.rows[index].errors === null || tri.rows[index].errors === undefined ? '' : String(tri.rows[index].errors);
@@ -2172,7 +2171,7 @@
       // a zero ou sortir du champ pendant la saisie de plusieurs chiffres.
       const validateTriErrors = () => {
         const raw = String(err.value || '').trim();
-        if (!/^\d{1,2}$/.test(raw)) {
+        if (!/^\d+$/.test(raw) || !Number.isSafeInteger(Number(raw))) {
           tri.rows[index].errors = null;
           tri.ready = false;
           refreshResultsButton();
@@ -2228,6 +2227,15 @@
     const errorsLine = document.createElement('div');
     results.append(averageLine,errorsLine);
     right.appendChild(results);
+
+    function showFullWidthTriReview() {
+      // Bilan + autoévaluation occupent toute la page, pas une demi-colonne.
+      results.hidden = false;
+      auto.hidden = false;
+      refreshResults();
+      auto.prepend(results);
+      shell.classList.add('kaltest-tri-review');
+    }
 
     function completedRows() {
       return tri.rows.slice(0,maxTris).filter(row =>
@@ -2286,9 +2294,7 @@
     resultsButton.addEventListener('click', () => {
       if (!canShowResults()) return;
       tri.resultsShown = true;
-      auto.hidden = false;
-      results.hidden = false;
-      refreshResults();
+      showFullWidthTriReview();
       persist();
     });
     autoValidate.addEventListener('click', () => {
@@ -2357,13 +2363,13 @@
 
     if (testState.status === 'COMPLETED') {
       start.disabled=true;stop.disabled=true;resultsButton.disabled=true;
-      auto.hidden=false;results.hidden=false;refreshResults();
+      showFullWidthTriReview();
       const next=document.getElementById('kaltest-next');if(next){next.disabled=false;next.classList.remove('seb-exercise-nav-locked');}
     } else {
       if (tri.awaitingError!==null) {start.disabled=true;stop.disabled=true;}
       else {start.disabled=Number(tri.currentTri)>maxTris;stop.disabled=true;}
       refreshResultsButton();
-      if(tri.resultsShown){results.hidden=false;refreshResults();}
+      if(tri.resultsShown) showFullWidthTriReview();
       refreshReady();
     }
 

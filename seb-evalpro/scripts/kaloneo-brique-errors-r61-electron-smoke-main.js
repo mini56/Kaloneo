@@ -27,21 +27,22 @@ function done(code,label,error){if(ended)return;ended=true;clearTimeout(timeout)
 app.commandLine.appendSwitch('disable-gpu');
 app.whenReady().then(async()=>{
 try{
-assert.equal(brick.presentation.bricksStation.errorMax,99);
+assert.equal(brick.presentation.bricksStation.errorMax,undefined,'Aucune limite artificielle sur les erreurs Briques');
 win=new BrowserWindow({show:false,width:1366,height:768,webPreferences:{preload:path.join(root,'src','preload.js'),contextIsolation:true,nodeIntegration:false,sandbox:false}});
 await win.loadFile(path.join(web,'kaltest-pilot2.html'),{query:{kaloneoPreview:'1'}});
 let ready=false;
 for(let i=0;i<120;i++){ready=await win.webContents.executeJavaScript("Boolean(document.querySelector('.kaltest-brique-layout #nivDiff')&&document.querySelector('.kaltest-brique-layout #validBtn'))",true).catch(()=>false);if(ready)break;await wait(50);}
 assert.equal(ready,true,'KALTEST Briques must render');
-const js="(()=>{const el=document.querySelector('.kaltest-brique-layout #nivDiff');el.focus();el.value='1';el.dispatchEvent(new Event('input',{bubbles:true}));const first={value:el.value,stored:window.sebKaltestPilot2.state.tests.construction_briques.brique.errors,focused:document.activeElement===el};el.value='12';el.dispatchEvent(new Event('input',{bubbles:true}));const second={value:el.value,stored:window.sebKaltestPilot2.state.tests.construction_briques.brique.errors,focused:document.activeElement===el};el.value='100';el.dispatchEvent(new Event('input',{bubbles:true}));const invalid=window.sebKaltestPilot2.state.tests.construction_briques.brique.errors;el.value='99';el.dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('secretCode').value='svg56';document.getElementById('validBtn').click();const state=window.sebKaltestPilot2.state.tests.construction_briques.brique;return {first,second,invalid,errors:state.errors,adminValidated:state.adminValidated,legacy:JSON.parse(sessionStorage.getItem('eval_brique')||'null'),max:el.max};})()";
+const js="(()=>{const el=document.querySelector('.kaltest-brique-layout #nivDiff');el.focus();el.value='1';el.dispatchEvent(new Event('input',{bubbles:true}));const first={value:el.value,stored:window.sebKaltestPilot2.state.tests.construction_briques.brique.errors,focused:document.activeElement===el};el.value='12';el.dispatchEvent(new Event('input',{bubbles:true}));const second={value:el.value,stored:window.sebKaltestPilot2.state.tests.construction_briques.brique.errors,focused:document.activeElement===el};el.value='125';el.dispatchEvent(new Event('input',{bubbles:true}));const triple=window.sebKaltestPilot2.state.tests.construction_briques.brique.errors;el.value='-1';el.dispatchEvent(new Event('input',{bubbles:true}));const invalid=window.sebKaltestPilot2.state.tests.construction_briques.brique.errors;el.value='125';el.dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('secretCode').value='svg56';document.getElementById('validBtn').click();const state=window.sebKaltestPilot2.state.tests.construction_briques.brique;return {first,second,triple,invalid,errors:state.errors,adminValidated:state.adminValidated,legacy:JSON.parse(sessionStorage.getItem('eval_brique')||'null'),max:el.max};})()";
 const actual=await win.webContents.executeJavaScript(js,true);
 assert.deepEqual(actual.first,{value:'1',stored:1,focused:true});
 assert.deepEqual(actual.second,{value:'12',stored:12,focused:true});
-assert.equal(actual.invalid,null,'100 must be rejected, not silently capped');
-assert.equal(actual.errors,99);
+assert.equal(actual.triple,125,'125 doit être accepté');
+assert.equal(actual.invalid,null,'Une valeur négative doit être refusée');
+assert.equal(actual.errors,125);
 assert.equal(actual.adminValidated,true);
-assert.equal(actual.max,'99');
-assert.equal(actual.legacy?.niveau,'99');
-done(0,'BRIQUE_ERRORS_R61: OK — 1/12/99 editable, 100 rejected, Admin persists 99');
+assert.equal(actual.max,'','Pas de plafond HTML sur Briques');
+assert.equal(actual.legacy?.niveau,'125');
+done(0,'BRIQUE_ERRORS_R61: OK — 1/12/125 autorisés, négatifs refusés, admin conserve 125');
 }catch(e){done(2,'BRIQUE_ERRORS_R61: FAIL',e);}
 }).catch(e=>done(2,'BRIQUE_ERRORS_R61: INIT FAIL',e));

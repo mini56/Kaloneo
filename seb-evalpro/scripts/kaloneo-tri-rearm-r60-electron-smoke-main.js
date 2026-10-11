@@ -90,11 +90,11 @@ app.whenReady().then(async()=>{
       const focusStays=await win.webContents.executeJavaScript("(()=>document.activeElement===document.querySelectorAll('[data-tri-error]')["+i+"])()",true);
       assert.equal(focusStays,true,'Tri '+(i+1)+': error field lost focus after delay');
 
-      // Type 12 or 25, digit by digit, with no blur.
-      const finalValue=String([0,12,25][i]);
-      if(finalValue.length===2){
+      // Type 12 or 125, digit by digit, with no blur.
+      const finalValue=String([0,12,125][i]);
+      if(finalValue.length>=2){
         const doubleDigit=await win.webContents.executeJavaScript("(()=>{const el=document.querySelectorAll('[data-tri-error]')["+i+"];el.value='"+finalValue+"';el.dispatchEvent(new Event('input',{bubbles:true}));const state=window.sebKaltestPilot2.state.tests.tri_chevilles.tri;return {entered:el.value,stored:state.rows["+i+"].errors,focused:document.activeElement===el,display:document.querySelector('.kaltest-tri-display')?.textContent,awaitingError:state.awaitingError};})()",true);
-        assert.deepEqual(doubleDigit,{entered:finalValue,stored:null,focused:true,display:'01:22',awaitingError:i+1},'Tri '+(i+1)+': two digits must not cause premature reset');
+        assert.deepEqual(doubleDigit,{entered:finalValue,stored:null,focused:true,display:'01:22',awaitingError:i+1},'Tri '+(i+1)+': multiple digits must not cause premature reset');
       }
       const confirmed=await win.webContents.executeJavaScript("(()=>{const el=document.querySelectorAll('[data-tri-error]')["+i+"];el.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));const state=window.sebKaltestPilot2.state.tests.tri_chevilles.tri;return {stored:state.rows["+i+"].errors,awaitingError:state.awaitingError,currentTri:state.currentTri,liveSeconds:state.liveSeconds,startDisabled:document.querySelector('.kaltest-tri-chrono-buttons .seb-btn-timer-start').disabled,display:document.querySelector('.kaltest-tri-display')?.textContent};})()",true);
       assert.equal(confirmed.stored,Number(finalValue),'Tri '+(i+1)+': final errors not committed');
@@ -106,8 +106,17 @@ app.whenReady().then(async()=>{
     }
     const after=await win.webContents.executeJavaScript("(()=>{const results=document.querySelector('.kaltest-tri-results-button');const state=window.sebKaltestPilot2.state.tests.tri_chevilles.tri;return {disabled:results?.disabled,errorValues:state.rows.slice(0,3).map(r=>r.errors),count:state.rows.filter(r=>r.seconds!==null&&r.errors!==null).length};})()",true);
     assert.equal(after.count,3);
-    assert.deepEqual(after.errorValues,[0,12,25]);
+    assert.deepEqual(after.errorValues,[0,12,125]);
     assert.equal(after.disabled,false,'Voir les résultats must unlock after 3 completed tris');
-    done(0,'TRI_REARM_R60: OK — 0/12/25 errors, typing focus and chrono preserved until Enter');
+    const review=await win.webContents.executeJavaScript("(()=>{document.querySelector('.kaltest-tri-results-button').click();const layout=document.querySelector('.kaltest-tri-layout');const left=layout.querySelector('.kaltest-tri-left');const right=layout.querySelector('.kaltest-tri-right');const auto=layout.querySelector('.kaltest-tri-autoeval');const summary=auto.querySelector('.kaltest-tri-results');return {fullWidth:layout.classList.contains('kaltest-tri-review'),leftRatio:left.getBoundingClientRect().width/layout.getBoundingClientRect().width,rightHidden:getComputedStyle(right).display==='none',guideHidden:getComputedStyle(layout.querySelector('.kaltest-tri-guide')).display==='none',autoVisible:!auto.hidden,summaryVisible:!summary.hidden,summaryText:summary.textContent,autoInputs:auto.querySelectorAll('input[type=checkbox]').length};})()",true);
+    assert.equal(review.fullWidth,true,'Tri review must switch to full-width');
+    assert.ok(review.leftRatio>0.95,'Tri autoévaluation still confined to half width');
+    assert.equal(review.rightHidden,true);
+    assert.equal(review.guideHidden,true);
+    assert.equal(review.autoVisible,true);
+    assert.equal(review.summaryVisible,true);
+    assert.ok(review.summaryText.includes('137'),'Tri 0 + 12 + 125 total is not displayed');
+    assert.equal(review.autoInputs,5,'Tri autoevaluation missing checkboxes');
+    done(0,'TRI_REARM_R60: OK — 0/12/125 errors, 3 tries, chrono/focus preserved; review full width');
   }catch(error){done(2,'TRI_REARM_R60: FAIL',error);}
 }).catch(error=>done(2,'TRI_REARM_R60: INIT FAIL',error));
