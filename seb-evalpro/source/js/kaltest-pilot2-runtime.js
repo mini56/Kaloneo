@@ -1229,6 +1229,8 @@
         img.src = resource.data || resource.name;
         img.alt = resource.alt || resource.name || '';
         img.className = 'seb-media-image';
+        const scale=Number(item?.style?.imageScale);
+        if(Number.isFinite(scale)&&scale>=10&&scale<100){img.style.width=scale+'%';img.style.height='auto';img.style.maxHeight='100%';}
         wrap.appendChild(img);
       }
       return wrap;
