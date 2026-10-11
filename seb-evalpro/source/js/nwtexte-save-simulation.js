@@ -211,7 +211,7 @@
       }
       const name = cleanFilename(nameInput.value);
       if (!name) {
-        hint.textContent = 'Saisissez le nom du fichier demandé dans la consigne.';
+        hint.textContent = '';
         nameInput.focus();
         return;
       }
