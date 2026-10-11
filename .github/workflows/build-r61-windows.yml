@@ -46,7 +46,7 @@ jobs:
       - name: Verify V1 can be modified and saved in the real Electron Builder
         run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
       - name: Check Tri first attempt error and next chrono in real Electron
-        run: npx electron --no-sandbox scripts/kaloneo-tri-rearm-r61-electron-smoke-main.js
+        run: npx electron --no-sandbox scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
       - name: Check 0-99 Briques errors in real Electron
         run: npx electron --no-sandbox scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
       - name: Check full candidate parcours transitions in real Electron
