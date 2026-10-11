@@ -2163,11 +2163,14 @@
       err.value = tri.rows[index].errors === null || tri.rows[index].errors === undefined ? '' : String(tri.rows[index].errors);
       err.disabled = testState.status === 'COMPLETED';
       err.dataset.triError = String(index+1);
-      err.addEventListener('input', () => {
+      // Une frappe n'est pas une validation : ne jamais remettre le chrono
+      // a zero ou sortir du champ pendant la saisie de plusieurs chiffres.
+      const validateTriErrors = () => {
         const raw = String(err.value || '').trim();
-        if (!/^\d+$/.test(raw)) {
+        if (!/^\\d+$/.test(raw)) {
           tri.rows[index].errors = null;
           tri.ready = false;
+          refreshResultsButton();
           refreshReady();
           persist();
           return;
@@ -2181,18 +2184,24 @@
           display.textContent = '00:00';
           start.disabled = Number(tri.currentTri) > maxTris;
           stop.disabled = true;
-          // Conserver le focus sur Erreurs : le candidat peut saisir 10, 12,
-          // etc., sans être interrompu après le premier chiffre.
         }
         tri.ready = false;
         refreshResultsButton();
         refreshReady();
         persist();
+      };
+      err.addEventListener('input', () => {
+        // En cours de frappe : conserver le focus ET le chrono affiche.
+        tri.ready = false;
+        refreshResultsButton();
+        refreshReady();
       });
+      err.addEventListener('change', validateTriErrors);
       err.addEventListener('keydown', event => {
-        if (event.key === 'Enter' && !start.disabled) {
+        if (event.key === 'Enter') {
           event.preventDefault();
-          start.focus();
+          validateTriErrors();
+          // La touche Entree valide, sans deplacer automatiquement le focus.
         }
       });
       errorInputs.push(err);
