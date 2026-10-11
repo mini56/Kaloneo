@@ -1,0 +1,36 @@
+name: R60 Tri de chevilles real candidate regression
+on:
+  push:
+    branches:
+      - fix-r60-tri-rearm-only-20261011
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tri-rearm:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - name: Checkout isolated Tri correction
+        uses: actions/checkout@v4
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check restored Tri runtime and smoke syntax
+        run: |
+          node --check source/js/kaltest-pilot2-runtime.js
+          node --check scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
+      - name: Prepare authentic KALTEST candidate application
+        run: npm run prepare:web
+      - name: Check Tri first attempt error and next chrono in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
+      - name: Check preserved validated R48.10 / NWTEXT R55 / icons
+        run: node scripts/kaloneo-consolidation-regression.js
