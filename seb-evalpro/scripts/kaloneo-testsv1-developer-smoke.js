@@ -38,12 +38,12 @@ try{
     JSON.stringify({format:'kaloneo-official-v1-overrides',version:1,
       tests:[{id:testId,version:'1.0.0'}]}));
   const updated=library.getTest(testId,version);
-  assert.equal(updated.definition.title,canonical.title,
-    'New official GitHub V1 must replace local developer draft after update');
+  assert.equal(updated.definition.title,corrected.title,
+    'An Admin-modified V1 must not be overwritten by a new Setup');
   const drafts=JSON.parse(fs.readFileSync(path.join(temp,'userdata','KALONEO','developer-v1-drafts.json')));
-  assert.equal(drafts[testId+'@'+version],undefined,
-    'Stale local developer draft must be cleared when official seed changes');
+  assert.ok(drafts[testId+'@'+version]?.seedHash,
+    'The V1 backup tracking must remain available across updates');
   const stock=library.getTest('ranger_stock','1.0.0');
   assert.equal(stock.ok,true,'Unrelated V1 must remain accessible');
-  console.log('TESTS_V1_DEVELOPER_SMOKE: OK Admin forbidden, V1 local+backup, GitHub seed wins, other V1 intact');
+  console.log('TESTS_V1_DEVELOPER_SMOKE: OK Admin lock unchanged, V1 local+backup retained across seed update, other V1 intact');
 } finally {fs.rmSync(temp,{recursive:true,force:true});}
