@@ -2269,7 +2269,7 @@
     if(developerEditing && !confirm(
       'Enregistrer la V1 officielle « '+data.title+' » (1.0.0) ?\\n\\n' +
       'La version locale actuelle sera sauvegardée automatiquement dans les copies de sécurité.\\n' +
-      'Pour rendre cette V1 officielle dans les prochaines compilations, exportez-la ensuite vers TESTS_V1.'
+      'La version 1.0.0 restera modifiable en session Administrateur jusqu’à votre décision de verrouillage.'
     ))return false;
     let result;
     try {
@@ -2316,7 +2316,7 @@
     }
     saveDraft(false);
     markCurrentSaved();
-    transientStatus(developerEditing?'V1 corrigée sauvegardée — exportez-la vers TESTS_V1':
+    transientStatus(developerEditing?'V1 enregistrée avec copie de sécurité':
       createNewVersion?'Nouvelle version créée et enregistrée':'Enregistré dans la bibliothèque',2500);
     if(options.exportJson===true) exportDefinition(data);
     return true;
