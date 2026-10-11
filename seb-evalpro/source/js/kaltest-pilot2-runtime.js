@@ -3162,12 +3162,12 @@
             <button id="btn-copy" type="button" title="Copier">▣ Copier</button>
             <button id="btn-paste" type="button" title="Coller">▤ Coller</button>
           </div>
-        </div>
-        <div class="toolbar-row2 kaltest-word-formatbar kaltest-text-editor-toolbar">
           <div class="kaltest-word-group kaltest-word-font"><span class="kaltest-word-group-label">Police</span>
             <select id="nw-font" title="Changer la police"><option value="Arial">Arial</option><option value="Calibri" selected>Calibri</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option><option value="Georgia">Georgia</option></select>
             <select id="nw-size" title="Taille du texte"><option value="10pt">10</option><option value="12pt">12</option><option value="14pt" selected>14</option><option value="16pt">16</option><option value="18pt">18</option><option value="24pt">24</option><option value="32pt">32</option><option value="48pt">48</option></select>
           </div>
+        </div>
+        <div class="toolbar-row2 kaltest-word-formatbar kaltest-text-editor-toolbar">
           <div class="kaltest-word-group kaltest-word-style"><span class="kaltest-word-group-label">Style</span>
             <button id="btn-bold" type="button" title="Gras"><b>G</b></button><button id="btn-italic" type="button" title="Italique"><i>I</i></button><button id="btn-underline" type="button" title="Souligné"><u>U</u></button>
             <div class="color-picker-container"><button id="nw-text-color-button" class="color-picker-btn" type="button" title="Couleur du texte"><span class="color-indicator" id="text-color-indicator"></span><strong>A</strong></button><div class="color-picker-menu" id="text-color-menu"><button type="button" class="color-swatch" data-seb-color-type="text" data-seb-color="#000000" title="Noir"></button><button type="button" class="color-swatch" data-seb-color-type="text" data-seb-color="#0000FF" title="Bleu"></button><button type="button" class="color-swatch" data-seb-color-type="text" data-seb-color="#FF0000" title="Rouge"></button><input type="color" id="custom-text-color" value="#000000" title="Couleur personnalisée"></div></div>
