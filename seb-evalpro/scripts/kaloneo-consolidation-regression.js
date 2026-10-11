@@ -28,6 +28,8 @@ assert(builder.includes('function saveToLibrary'));
 assert(html.includes('icon-picker'));
 assert(candidatePage.includes('id="kaltest-test-icon"'));
 assert(candidate.includes('testIcon.src = iconData'));
+assert(candidate.includes("guard.className = 'kaltest-builder-background-text-guard'"),'R48.5 decorative image exclusion missing');
+assert(css.includes('.kaltest-builder-background-text-guard {'),'R48.5 decorative exclusion CSS missing');
 for(const item of ['kaltest-word-end-fill','typewriter-reference.png','#toolbar.kaltest-word-topbar','.toolbar-row2.kaltest-word-formatbar']){
  assert(css.includes(item)||candidate.includes(item),'NWTEXT R55 missing: '+item);
 }

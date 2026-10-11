@@ -3507,3 +3507,15 @@ body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2 .kaltest-
  display:block;box-sizing:border-box!important;width:100%!important;
  max-width:100%!important;min-width:0!important;margin:0!important;
 }
+
+/* R59: réintégration de la protection R48.5 pour les images décoratives.
+   Empêche le texte d'occuper la silhouette de l'image en bas à droite,
+   sans modifier la grille R48.10 ni la présentation NWTEXT validée R55. */
+.kaltest-builder-background-text-guard {
+  float:right;
+  width:54%;
+  height:100%;
+  display:block;
+  shape-outside:polygon(100% 0%,100% 100%,0% 100%,0% 70%,14% 59%,44% 49%,100% 42%);
+  pointer-events:none;
+}

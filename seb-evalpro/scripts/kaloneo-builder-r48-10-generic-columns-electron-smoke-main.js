@@ -64,6 +64,7 @@ app.whenReady().then(async()=>{
       selectValues:selectors.map(el=>el.value),
       photos:photos.map(el=>({src:el.getAttribute('src'),loaded:el.complete&&el.naturalWidth>0})),
       backgroundCount:bg.length,
+      decorativeGuard: (()=>{const el=target.querySelector('.kaltest-builder-background-text-guard');if(!el)return {exists:false};const st=getComputedStyle(el);return {exists:true,float:st.cssFloat,shape:st.shapeOutside};})(),
       closeLabel:document.getElementById('kaltest-next')?.textContent,
       visible:document.getElementById('page-exercise')?.classList.contains('visible')
     };
@@ -77,6 +78,9 @@ app.whenReady().then(async()=>{
   assert.equal(result.photos.length,1);
   assert.equal(result.photos[0].loaded,true,'restaurant candidate image not loaded');
   assert.ok(result.backgroundCount>0,'plateau background missing');
+  assert.equal(result.decorativeGuard?.exists,true,'R48.5 decorative text exclusion not restored');
+  assert.equal(result.decorativeGuard?.float,'right','R48.5 decorative exclusion must float right');
+  assert.ok(result.decorativeGuard?.shape.includes('polygon'),'R48.5 photo outline missing');
   assert.ok(result.closeLabel.includes('Fermer l’aperçu'),'close button label missing');
   const visibleExit=await win.webContents.executeJavaScript(`(()=>{
     const el=document.getElementById('kaloneo-builder-preview-exit');

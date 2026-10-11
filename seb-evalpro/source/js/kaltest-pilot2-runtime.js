@@ -3504,6 +3504,15 @@
 
     if (item.type === 'text') {
       renderRichContext(wrap, item.text || '');
+      // R48.5: garder les dernières lignes du texte hors de l'illustration
+      // décorative. Indépendant de la règle R48.10 de largeur des tableaux.
+      if (item?.style?.backgroundImage && item.style.backgroundFit === 'decorative' &&
+          String(item.style.backgroundPosition || 'right bottom') === 'right bottom') {
+        const guard = document.createElement('span');
+        guard.className = 'kaltest-builder-background-text-guard';
+        guard.setAttribute('aria-hidden', 'true');
+        wrap.insertBefore(guard, wrap.firstChild);
+      }
       return wrap;
     }
     if (item.type === 'html' || item.type === 'html-js') {
