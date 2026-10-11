@@ -2228,15 +2228,6 @@
     results.append(averageLine,errorsLine);
     right.appendChild(results);
 
-    function showFullWidthTriReview() {
-      // Bilan + autoévaluation occupent toute la page, pas une demi-colonne.
-      results.hidden = false;
-      auto.hidden = false;
-      refreshResults();
-      auto.prepend(results);
-      shell.classList.add('kaltest-tri-review');
-    }
-
     function completedRows() {
       return tri.rows.slice(0,maxTris).filter(row =>
         row?.seconds !== null && row?.seconds !== undefined &&
@@ -2294,7 +2285,9 @@
     resultsButton.addEventListener('click', () => {
       if (!canShowResults()) return;
       tri.resultsShown = true;
-      showFullWidthTriReview();
+      auto.hidden = false;
+      results.hidden = false;
+      refreshResults();
       persist();
     });
     autoValidate.addEventListener('click', () => {
@@ -2363,13 +2356,13 @@
 
     if (testState.status === 'COMPLETED') {
       start.disabled=true;stop.disabled=true;resultsButton.disabled=true;
-      showFullWidthTriReview();
+      auto.hidden=false;results.hidden=false;refreshResults();
       const next=document.getElementById('kaltest-next');if(next){next.disabled=false;next.classList.remove('seb-exercise-nav-locked');}
     } else {
       if (tri.awaitingError!==null) {start.disabled=true;stop.disabled=true;}
       else {start.disabled=Number(tri.currentTri)>maxTris;stop.disabled=true;}
       refreshResultsButton();
-      if(tri.resultsShown) showFullWidthTriReview();
+      if(tri.resultsShown){results.hidden=false;refreshResults();}
       refreshReady();
     }
 
