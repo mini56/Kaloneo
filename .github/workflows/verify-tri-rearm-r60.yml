@@ -1,4 +1,4 @@
-name: R60 Tri de chevilles real candidate regression
+name: R60 V1 Admin edit and Tri cross-regression
 on:
   push:
     branches:
@@ -30,6 +30,12 @@ jobs:
           node --check scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
       - name: Prepare authentic KALTEST candidate application
         run: npm run prepare:web
+      - name: Verify Admin V1 save backups and persistence across app upgrades
+        run: node scripts/kaloneo-testsv1-developer-smoke.js
+      - name: Verify original V1 and V2 coexist without delete regression
+        run: node scripts/kaloneo-edit-existing-test-smoke.js
+      - name: Verify V1 can be modified and saved in the real Electron Builder
+        run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
       - name: Check Tri first attempt error and next chrono in real Electron
         run: npx electron --no-sandbox scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
       - name: Check full candidate parcours transitions in real Electron
