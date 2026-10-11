@@ -115,7 +115,7 @@ app.whenReady().then(async()=>{
         assert.equal(threshold.guideVisible,true,'Guide must remain visible until Voir les résultats click');
       }
     }
-    const after=await win.webContents.executeJavaScript("(()=>{const results=document.querySelector('.kaltest-tri-results-button');const state=window.sebKaltestPilot2.state.tests.tri_chevilles.tri;return {disabled:results?.disabled,errorValues:state.rows.slice(0,3).map(r=>r.errors),count:state.rows.filter(r=>r.seconds!==null&&r.errors!==null).length};})()",true);
+    const after=await win.webContents.executeJavaScript("(()=>{const results=document.querySelector('.kaltest-tri-results-button');const state=window.sebKaltestPilot2.state.tests.tri_chevilles.tri;return {disabled:results?.disabled,errorValues:state.rows.slice(0,5).map(r=>r.errors),count:state.rows.filter(r=>r.seconds!==null&&r.errors!==null).length};})()",true);
     assert.equal(after.count,5);
     assert.deepEqual(after.errorValues,[0,12,125,5,9]);
     assert.equal(after.disabled,false,'Voir les résultats must unlock after 3 completed tris');
