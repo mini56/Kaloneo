@@ -239,7 +239,8 @@ function renderMedia(block){
   const data=String(block.mediaData||'');
   if(!data){wrap.append(el('div','kb-empty',block.mediaPlaceholder||'Aucun média sélectionné'));return wrap;}
   if(block.type==='image'){
-    const img=el('img','kb-media');img.src=String(data).startsWith('imageqcm/')?'../'+data:data;img.alt=block.mediaAlt||block.mediaName||'Image';wrap.append(img);
+    const img=el('img','kb-media');img.src=String(data).startsWith('imageqcm/')?'../'+data:data;img.alt=block.mediaAlt||block.mediaName||'Image';
+    const scale=Number(block.imageScale);if(scale>=10&&scale<100){img.style.width=scale+'%';img.style.height='auto';img.style.maxHeight='100%';}wrap.append(img);
   }else if(block.type==='audio'){
     const audio=el('audio','kb-audio');audio.controls=true;audio.src=data;wrap.append(audio);
   }else{
