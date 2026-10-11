@@ -108,15 +108,20 @@ app.whenReady().then(async()=>{
     assert.equal(after.count,3);
     assert.deepEqual(after.errorValues,[0,12,125]);
     assert.equal(after.disabled,false,'Voir les résultats must unlock after 3 completed tris');
-    const review=await win.webContents.executeJavaScript("(()=>{document.querySelector('.kaltest-tri-results-button').click();const layout=document.querySelector('.kaltest-tri-layout');const left=layout.querySelector('.kaltest-tri-left');const right=layout.querySelector('.kaltest-tri-right');const auto=layout.querySelector('.kaltest-tri-autoeval');const summary=auto.querySelector('.kaltest-tri-results');return {fullWidth:layout.classList.contains('kaltest-tri-review'),leftRatio:left.getBoundingClientRect().width/layout.getBoundingClientRect().width,rightHidden:getComputedStyle(right).display==='none',guideHidden:getComputedStyle(layout.querySelector('.kaltest-tri-guide')).display==='none',autoVisible:!auto.hidden,summaryVisible:!summary.hidden,summaryText:summary.textContent,autoInputs:auto.querySelectorAll('input[type=checkbox]').length};})()",true);
-    assert.equal(review.fullWidth,true,'Tri review must switch to full-width');
-    assert.ok(review.leftRatio>0.95,'Tri autoévaluation still confined to half width');
-    assert.equal(review.rightHidden,true);
-    assert.equal(review.guideHidden,true);
+    // La présentation validée reste toujours 50/50, même après « Voir les résultats ».
+    const review=await win.webContents.executeJavaScript("(()=>{document.querySelector('.kaltest-tri-results-button').click();const layout=document.querySelector('.kaltest-tri-layout');const left=layout.querySelector('.kaltest-tri-left');const right=layout.querySelector('.kaltest-tri-right');const auto=layout.querySelector('.kaltest-tri-autoeval');const summary=right.querySelector('.kaltest-tri-results');return {leftRatio:left.getBoundingClientRect().width/layout.getBoundingClientRect().width,rightRatio:right.getBoundingClientRect().width/layout.getBoundingClientRect().width,autoInLeft:left.contains(auto),summaryInRight:right.contains(summary),guideVisible:getComputedStyle(layout.querySelector('.kaltest-tri-guide')).display!=='none',rightVisible:getComputedStyle(right).display!=='none',autoVisible:!auto.hidden,summaryVisible:!summary.hidden,summaryText:summary.textContent,tableRows:right.querySelectorAll('.kaltest-tri-row:not(.head)').length,chronoPresent:!!right.querySelector('.kaltest-tri-chrono-card'),autoInputs:auto.querySelectorAll('input[type=checkbox]').length};})()",true);
+    assert.ok(review.leftRatio>0.40&&review.leftRatio<0.60,'Autoévaluation must remain on left half');
+    assert.ok(review.rightRatio>0.40&&review.rightRatio<0.60,'Tri table must remain on right half');
+    assert.equal(review.autoInLeft,true,'Autoévaluation must stay in left column');
+    assert.equal(review.summaryInRight,true,'Results must stay in right column');
+    assert.equal(review.guideVisible,true,'Tri guide must not disappear');
+    assert.equal(review.rightVisible,true,'Tri right side must not disappear');
     assert.equal(review.autoVisible,true);
     assert.equal(review.summaryVisible,true);
-    assert.ok(review.summaryText.includes('137'),'Tri 0 + 12 + 125 total is not displayed');
-    assert.equal(review.autoInputs,5,'Tri autoevaluation missing checkboxes');
-    done(0,'TRI_REARM_R60: OK — 0/12/125 errors, 3 tries, chrono/focus preserved; review full width');
+    assert.equal(review.tableRows,5,'All five tri rows must remain visible');
+    assert.equal(review.chronoPresent,true,'Tri chronometer must remain visible on the right');
+    assert.ok(review.summaryText.includes('137'),'Tri 0 + 12 + 125 total must be displayed');
+    assert.equal(review.autoInputs,5,'Tri autoevaluation must contain five options');
+    done(0,'TRI_REARM_R60: OK — 0/12/125 errors, autoevaluation left and table right preserved');
   }catch(error){done(2,'TRI_REARM_R60: FAIL',error);}
 }).catch(error=>done(2,'TRI_REARM_R60: INIT FAIL',error));
