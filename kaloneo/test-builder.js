@@ -1256,6 +1256,19 @@
     body.appendChild(label);
 
     if(block.type==='image'){
+      const scalePanel=document.createElement('div');
+      scalePanel.className='field-row image-scale-controls';
+      const scaleLabel=document.createElement('label');scaleLabel.textContent='Taille de l’image dans le bloc';
+      const scale=document.createElement('input');scale.type='range';scale.min='10';scale.max='100';scale.step='1';
+      const value=document.createElement('output');
+      const updateSize=next=>{block.imageScale=Math.max(10,Math.min(100,Math.round(Number(next)||100)));scale.value=String(block.imageScale);value.textContent=block.imageScale+' %';changed();};
+      scale.value=String(Number(block.imageScale)>=10&&Number(block.imageScale)<=100?block.imageScale:100);
+      value.textContent=scale.value+' %';
+      scale.addEventListener('input',()=>updateSize(scale.value));
+      const smaller=document.createElement('button');smaller.type='button';smaller.className='mini-btn';smaller.textContent='−';smaller.title='Réduire de 5 %';smaller.addEventListener('click',()=>updateSize(Number(scale.value)-5));
+      const larger=document.createElement('button');larger.type='button';larger.className='mini-btn';larger.textContent='+';larger.title='Agrandir de 5 %';larger.addEventListener('click',()=>updateSize(Number(scale.value)+5));
+      const reset=document.createElement('button');reset.type='button';reset.className='mini-btn';reset.textContent='100 %';reset.addEventListener('click',()=>updateSize(100));
+      scaleLabel.appendChild(scale);scalePanel.append(scaleLabel,smaller,value,larger,reset);body.appendChild(scalePanel);
       const choose=document.createElement('button');
       choose.type='button';
       choose.className='mini-btn choose-library-image';
@@ -1687,7 +1700,8 @@
       wrap.appendChild(frame);
     } else if(block.type==='image'&&block.mediaData) {
       wrap.classList.add('preview-media-block');
-      const img=document.createElement('img');img.className='preview-media';img.src=String(block.mediaData).startsWith('imageqcm/')?'../'+block.mediaData:block.mediaData;img.alt=block.mediaAlt||block.mediaName||'Image';wrap.appendChild(img);
+      const img=document.createElement('img');img.className='preview-media';img.src=String(block.mediaData).startsWith('imageqcm/')?'../'+block.mediaData:block.mediaData;img.alt=block.mediaAlt||block.mediaName||'Image';
+      const scale=Number(block.imageScale);if(scale>=10&&scale<100){img.style.width=scale+'%';img.style.height='auto';img.style.maxHeight='100%';}wrap.appendChild(img);
     } else if(block.type==='audio'&&block.mediaData) {
       const a=document.createElement('audio');a.controls=true;a.src=block.mediaData;a.style.width='100%';wrap.appendChild(a);
     } else if(block.type==='video'&&block.mediaData) {
