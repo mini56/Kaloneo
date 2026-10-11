@@ -1,16 +1,6 @@
 name: 'Build Windows KALONÉO R70 — Build #75 Restaurant V1 (branche existante)'
+# R70 Build #75 did not publish: preserve run history; avoid stale builds on new commits.
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - 'seb-evalpro/source/kaltest/tests/planning-cantine/1.0.0/test.json'
-      - 'seb-evalpro/scripts/kaloneo-restaurant-v1-r70-smoke.js'
-      - '.github/workflows/build-r70-windows.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r70-builder.yml'
-      - 'seb-evalpro/scripts/full-pilot-journey-smoke-main.js'
   workflow_dispatch:
 
 permissions:
