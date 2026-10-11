@@ -124,7 +124,7 @@
           <input id="seb-nwtexte-picker-name" type="text" readonly />
           <button id="seb-nwtexte-picker-primary" type="button" disabled>${primaryText}</button>
           <button id="seb-nwtexte-picker-cancel" type="button">Annuler</button>
-          <div id="seb-nwtexte-picker-hint">Fenêtre simulée dans SEB EvalPro — aucun accès à Windows.</div>
+          <div id="seb-nwtexte-picker-hint"></div>
         </div>
       </div>`;
 
@@ -160,7 +160,7 @@
         const empty = document.createElement('div');
         empty.id = 'seb-nwtexte-picker-empty';
         empty.textContent = isImage
-          ? 'Aucune autre image n’est disponible dans cette fenêtre simulée.'
+          ? 'Aucune autre image n’est disponible dans ce dossier.'
           : (saved ? 'Aucun fichier ne correspond à la recherche.' : 'Ce dossier est vide. Enregistrez d’abord le document dans le dossier SEB.');
         files.appendChild(empty);
         primary.disabled = true;
@@ -188,9 +188,9 @@
       if (!selected) return;
       closeDialog();
       if (isImage) {
-        showToast('Image sélectionnée dans la fenêtre simulée.');
+        showToast('Image sélectionnée.');
       } else {
-        showToast('Document ouvert dans la fenêtre simulée : ' + selected);
+        showToast('Document ouvert : ' + selected);
       }
     }
 
