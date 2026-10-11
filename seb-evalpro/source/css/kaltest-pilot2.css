@@ -3401,7 +3401,7 @@ body[data-seb-kaltest-id="planning_cantine"] .kaltest-builder-grid td {
 body[data-seb-kaltest-id="planning_cantine"] .kaltest-planning-table select,
 body[data-seb-kaltest-id="planning_cantine"] .kaltest-builder-grid select {
   display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;
-  padding:2px 1px;font-size:13px!important;
+  padding:2px 1px;font-size:15px!important;
 }
 body[data-seb-kaltest-id="planning_cantine"] .kaltest-builder-grid-wrap {
   overflow-x:hidden;
