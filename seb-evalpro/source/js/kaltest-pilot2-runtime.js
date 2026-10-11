@@ -2163,13 +2163,11 @@
       err.value = tri.rows[index].errors === null || tri.rows[index].errors === undefined ? '' : String(tri.rows[index].errors);
       err.disabled = testState.status === 'COMPLETED';
       err.dataset.triError = String(index+1);
-      // La saisie n'est validée qu'à Entrée ou après changement de champ.
-      const validateTriErrors = () => {
+      err.addEventListener('input', () => {
         const raw = String(err.value || '').trim();
-        if (!/^\\d+$/.test(raw)) {
+        if (!/^\d+$/.test(raw)) {
           tri.rows[index].errors = null;
           tri.ready = false;
-          refreshResultsButton();
           refreshReady();
           persist();
           return;
@@ -2189,19 +2187,6 @@
         refreshResultsButton();
         refreshReady();
         persist();
-      };
-      err.addEventListener('input', () => {
-        // Ne pas avancer pendant la frappe : 10, 11, 12... restent saisissables.
-        tri.ready = false;
-        refreshResultsButton();
-        refreshReady();
-      });
-      err.addEventListener('change', validateTriErrors);
-      err.addEventListener('keydown', event => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          validateTriErrors();
-        }
       });
       errorInputs.push(err);
       row.append(number,min,sec,err);
