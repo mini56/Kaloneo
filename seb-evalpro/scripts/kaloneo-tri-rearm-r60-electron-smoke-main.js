@@ -96,13 +96,14 @@ app.whenReady().then(async()=>{
         const doubleDigit=await win.webContents.executeJavaScript("(()=>{const el=document.querySelectorAll('[data-tri-error]')["+i+"];el.value='"+finalValue+"';el.dispatchEvent(new Event('input',{bubbles:true}));const state=window.sebKaltestPilot2.state.tests.tri_chevilles.tri;return {entered:el.value,stored:state.rows["+i+"].errors,focused:document.activeElement===el,display:document.querySelector('.kaltest-tri-display')?.textContent,awaitingError:state.awaitingError};})()",true);
         assert.deepEqual(doubleDigit,{entered:finalValue,stored:null,focused:true,display:'01:22',awaitingError:i+1},'Tri '+(i+1)+': multiple digits must not cause premature reset');
       }
-      const confirmed=await win.webContents.executeJavaScript("(()=>{const el=document.querySelectorAll('[data-tri-error]')["+i+"];el.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));const state=window.sebKaltestPilot2.state.tests.tri_chevilles.tri;return {stored:state.rows["+i+"].errors,awaitingError:state.awaitingError,currentTri:state.currentTri,liveSeconds:state.liveSeconds,startDisabled:document.querySelector('.kaltest-tri-chrono-buttons .seb-btn-timer-start').disabled,display:document.querySelector('.kaltest-tri-display')?.textContent};})()",true);
+      const confirmed=await win.webContents.executeJavaScript("(()=>{const el=document.querySelectorAll('[data-tri-error]')["+i+"];el.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));const state=window.sebKaltestPilot2.state.tests.tri_chevilles.tri;return {stored:state.rows["+i+"].errors,awaitingError:state.awaitingError,currentTri:state.currentTri,liveSeconds:state.liveSeconds,startDisabled:document.querySelector('.kaltest-tri-chrono-buttons .seb-btn-timer-start').disabled,display:document.querySelector('.kaltest-tri-display')?.textContent,startFocused:document.activeElement===document.querySelector('.kaltest-tri-chrono-buttons .seb-btn-timer-start')};})()",true);
       assert.equal(confirmed.stored,Number(finalValue),'Tri '+(i+1)+': final errors not committed');
       assert.equal(confirmed.awaitingError,null,'Tri '+(i+1)+': still awaiting confirmed errors');
       assert.equal(confirmed.currentTri,i+2,'Tri '+(i+1)+': next attempt not selected');
       assert.equal(confirmed.liveSeconds,0,'Tri '+(i+1)+': clock not reset after validation');
       assert.equal(confirmed.display,'00:00','Tri '+(i+1)+': display not reset after validation');
       assert.equal(confirmed.startDisabled,false,'Tri '+(i+1)+': start not rearmed after validation');
+      assert.equal(confirmed.startFocused,true,'Tri '+(i+1)+': Enter must exit the error input and focus next chrono');
     }
     const after=await win.webContents.executeJavaScript("(()=>{const results=document.querySelector('.kaltest-tri-results-button');const state=window.sebKaltestPilot2.state.tests.tri_chevilles.tri;return {disabled:results?.disabled,errorValues:state.rows.slice(0,3).map(r=>r.errors),count:state.rows.filter(r=>r.seconds!==null&&r.errors!==null).length};})()",true);
     assert.equal(after.count,3);

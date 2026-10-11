@@ -2204,8 +2204,14 @@
       err.addEventListener('keydown', event => {
         if (event.key === 'Enter') {
           event.preventDefault();
+          const confirmingCurrentTri = Number(tri.awaitingError) === index + 1;
           validateTriErrors();
-          // La touche Entree valide, sans deplacer automatiquement le focus.
+          // Apres validation, sortir du champ : prochain chrono (ou resultats au 5e tri).
+          // Ne jamais deplacer le focus lors de la frappe des chiffres ni au clic hors champ.
+          if (confirmingCurrentTri && tri.awaitingError === null) {
+            if (!start.disabled) start.focus();
+            else if (!resultsButton.disabled) resultsButton.focus();
+          }
         }
       });
       errorInputs.push(err);
