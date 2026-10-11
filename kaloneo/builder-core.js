@@ -493,7 +493,12 @@
       if(style)item.style=style;
       return item;
     };
-    const content=(model.blocks||[]).map((block,index)=>{
+    // Un bloc média sans fichier ni emplacement n'est pas un contenu de test.
+    // Il reste éditable dans le brouillon, mais n'est pas exporté comme ressource cassée.
+    const content=(model.blocks||[])
+      .filter(block=>!['image','audio','video'].includes(block.type) ||
+        Boolean(block.mediaData||block.mediaName||block.mediaPlaceholder))
+      .map((block,index)=>{
       if(block.type==='question'){
         const q=blockQuestion(block,index);
         return styled({type:'question',zone:block.zone||'left',questionId:q.id},block);
@@ -503,7 +508,7 @@
       if(block.type==='html-js') return styled({type:'html-js',zone:block.zone||'left',html:block.html||'',script:block.js||'',preset:block.preset||undefined},block);
       if(['image','audio','video'].includes(block.type)) return styled({
         type:block.type,zone:block.zone||'left',
-        resource:{name:block.mediaName||'',mime:block.mediaType||'',data:block.mediaData||'',alt:block.mediaAlt||''}
+        resource:{name:block.mediaName||'',mime:block.mediaType||'',data:block.mediaData||'',alt:block.mediaAlt||'',...(block.mediaPlaceholder?{placeholder:block.mediaPlaceholder}:{})}
       },block);
       if(block.type==='response-table') return styled({type:'response-table',zone:block.zone||'left',definition:clone(block.responseTable||{})},block);
       if(block.type==='inline-flow') return styled({type:'inline-flow',zone:block.zone||'left',wordBank:clone(block.wordBank||[]),flow:clone(block.flow||[])},block);

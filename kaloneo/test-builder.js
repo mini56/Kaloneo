@@ -358,7 +358,11 @@
   function selectedIcon() {
     const id=$('selected-icon-id')?.value||'';
     const icon=iconLibrary().find(item=>item.id===id);
-    return icon ? {id:icon.id,label:icon.label,data:icon.data} : null;
+    if(icon) return {id:icon.id,label:icon.label,data:icon.data};
+    // Conserver une icône déjà embarquée avec un test importé, même si son
+    // identifiant ne figure pas parmi les icônes de la bibliothèque système.
+    const imported=state.sourceDefinition?.icon;
+    return id && imported?.id===id && imported?.data ? Core.clone(imported) : null;
   }
 
   function renderIconPicker() {
@@ -368,6 +372,11 @@
     const filter=String($('icon-search')?.value||'')
       .normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
     const selected=$('selected-icon-id')?.value||'';
+    const summary=$('icon-selection-summary');
+    if(summary){
+      const chosen=iconLibrary().find(item=>item.id===selected);
+      summary.textContent=selected ? (chosen?.label||state.sourceDefinition?.icon?.label||'Icône sélectionnée') : 'Aucune icône sélectionnée';
+    }
 
     iconLibrary().forEach(icon=>{
       const searchable=(icon.id+' '+icon.label).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
@@ -1803,7 +1812,8 @@
     add(Boolean(m.id),'Identifiant du test créé');
     add(Boolean(m.scenario),'Scénario renseigné');
     add(Boolean(m.instruction),'Consigne renseignée');
-    add(state.blocks.length>0,'Au moins un bloc Exercice');
+    add(state.blocks.some(b=>!['image','audio','video'].includes(b.type) ||
+      Boolean(b.mediaData||b.mediaName||b.mediaPlaceholder)),'Au moins un bloc Exercice');
 
     if(m.layout==='chars-rest') {
       add(Number(m.block1WidthChars)>=3,'Bloc 1 : largeur en caractères ≥ 3');
@@ -1853,7 +1863,13 @@
     });
 
     state.blocks.filter(b=>['image','audio','video'].includes(b.type)).forEach((b,i)=>{
-      add(Boolean(b.mediaData||b.mediaPlaceholder||state.sourceDefinition),'Média '+(i+1)+' embarqué ou emplacement défini');
+      if(b.mediaData||b.mediaName||b.mediaPlaceholder) {
+        add(true,'Média '+(i+1)+' disponible pour le test');
+      } else {
+        // Le bloc image/audio/vidéo vide est conservé dans le brouillon,
+        // mais n'est pas inclus dans le test enregistré.
+        add(true,'Média '+(i+1)+' vide : ignoré dans le test enregistré');
+      }
     });
     state.blocks.filter(b=>b.type==='table-grid').forEach((b,bi)=>{
       (b.table?.cells||[]).flat().filter(cell=>['image','audio','video'].includes(cell.kind)).forEach((cell,mi)=>{
@@ -2415,6 +2431,10 @@
       alert('Bibliothèque d’icônes KALONÉO incomplète : 70 icônes attendues.');
     }
     renderIconPicker();
+    $('jump-to-icon-picker')?.addEventListener('click',()=>{
+      $('icon-picker')?.closest('.icon-library-panel')?.scrollIntoView({block:'start',behavior:'smooth'});
+      $('icon-search')?.focus({preventScroll:true});
+    });
     $('icon-search').addEventListener('input',renderIconPicker);
     $('clear-icon').addEventListener('click',()=>{
       $('selected-icon-id').value='';
