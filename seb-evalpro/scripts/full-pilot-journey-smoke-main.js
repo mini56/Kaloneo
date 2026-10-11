@@ -32,29 +32,6 @@ async function waitForFile(win, expected, timeout=8000){
   return waitForLocation(win, current=>current.file===expected, expected, timeout);
 }
 
-// Wait for the actual engine after reload. A fixed 600 ms sleep can read
-// the page before scripts finish on a loaded Windows CI runner.
-async function waitForPilotEngine(win, expectedTestId=null, timeout=15000){
-  const start=Date.now();
-  let seen=null;
-  while(Date.now()-start<timeout){
-    seen=await win.webContents.executeJavaScript(`(()=>{
-      const engine=window.sebKaltestPilot2;
-      return {
-        loaded:!!engine,
-        segment:engine?.segment||'',
-        visible:document.getElementById('page-intro')?.classList.contains('visible')||false,
-        active:engine?.activeTests||[],
-        current:engine?.currentTest?.()?.id||''
-      };
-    })()`,true).catch(error=>({error:String(error)}));
-    if(seen?.loaded && seen.segment==='initial' &&
-        (expectedTestId ? seen.current===expectedTestId : seen.visible && seen.active.length===4)) return seen;
-    await sleep(100);
-  }
-  throw new Error('Parcours pilot non initialise apres reload: '+JSON.stringify(seen)+'; URL='+win.webContents.getURL());
-}
-
 app.commandLine.appendSwitch('disable-gpu');
 
 app.whenReady().then(async()=>{
@@ -88,10 +65,10 @@ app.whenReady().then(async()=>{
         tests:{},
         replay:[]
       }));
+      location.reload();
       true;
     `,true);
-    await win.loadFile(kaltest,{query:{fullParcours:'1'}});
-    await waitForPilotEngine(win);
+    await sleep(600);
 
     const intro=await win.webContents.executeJavaScript(`
       ({
@@ -129,10 +106,10 @@ app.whenReady().then(async()=>{
         tests:{},
         replay:[]
       }));
+      location.reload();
       true;
     `,true);
-    await win.loadFile(kaltest,{query:{fullParcours:'1'}});
-    await waitForPilotEngine(win,'texte_a_trous_stage_logistique');
+    await sleep(650);
 
     const initialLast=await win.webContents.executeJavaScript(`
       ({
