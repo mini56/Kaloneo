@@ -28,6 +28,7 @@ jobs:
         run: |
           node --check source/js/kaltest-pilot2-runtime.js
           node --check scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
+          node --check scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
       - name: Generate historical KALTEST pilot data
         run: node scripts/build-kaltest-pilot2-data.js
       - name: Prepare authentic KALTEST candidate application
@@ -40,6 +41,8 @@ jobs:
         run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
       - name: Check Tri first attempt error and next chrono in real Electron
         run: npx electron --no-sandbox scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
+      - name: Check Briques 0-99 including 12/99 and Admin persistence in Electron
+        run: npx electron --no-sandbox scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
       - name: Check full candidate parcours transitions in real Electron
         id: full_journey
         continue-on-error: true
