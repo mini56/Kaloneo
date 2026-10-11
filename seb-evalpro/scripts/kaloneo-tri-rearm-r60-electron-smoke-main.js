@@ -75,8 +75,18 @@ app.whenReady().then(async()=>{
       assert.equal(stopped.startDisabled,true);
 
       // No Enter or blur: entering 0, 1, 2 must immediately release the next tri.
-      const result=await win.webContents.executeJavaScript("(()=>{const el=document.querySelectorAll('[data-tri-error]')["+i+"];el.value='"+i+"';el.dispatchEvent(new Event('input',{bubbles:true}));const state=window.sebKaltestPilot2.state.tests.tri_chevilles.tri;return {entered:el.value,stored:state.rows["+i+"].errors,awaitingError:state.awaitingError,currentTri:state.currentTri,liveSeconds:state.liveSeconds,startDisabled:document.querySelector('.kaltest-tri-chrono-buttons .seb-btn-timer-start').disabled,display:document.querySelector('.kaltest-tri-display')?.textContent};})()",true);
+      const firstDigit=String(i);
+      const result=await win.webContents.executeJavaScript("(()=>{const el=document.querySelectorAll('[data-tri-error]')["+i+"];el.focus();el.value='"+firstDigit+"';el.dispatchEvent(new Event('input',{bubbles:true}));const state=window.sebKaltestPilot2.state.tests.tri_chevilles.tri;return {entered:el.value,stored:state.rows["+i+"].errors,awaitingError:state.awaitingError,currentTri:state.currentTri,liveSeconds:state.liveSeconds,startDisabled:document.querySelector('.kaltest-tri-chrono-buttons .seb-btn-timer-start').disabled,display:document.querySelector('.kaltest-tri-display')?.textContent};})()",true);
       assert.equal(result.stored,i,'Tri '+(i+1)+': error entry '+i+' lost');
+      // The old R60 test only tried 0, 1 and 2. Check that the input keeps
+      // keyboard focus long enough to type two-digit errors such as 12.
+      await wait(80);
+      const focusStays=await win.webContents.executeJavaScript("(()=>{const el=document.querySelectorAll('[data-tri-error]')["+i+"];return document.activeElement===el;})()",true);
+      assert.equal(focusStays,true,'Tri '+(i+1)+': Erreurs lost focus after first digit');
+      if(i===1){
+        const doubleDigit=await win.webContents.executeJavaScript("(()=>{const el=document.querySelectorAll('[data-tri-error]')[1];el.value='12';el.dispatchEvent(new Event('input',{bubbles:true}));return {entered:el.value,stored:window.sebKaltestPilot2.state.tests.tri_chevilles.tri.rows[1].errors,focused:document.activeElement===el};})()",true);
+        assert.deepEqual(doubleDigit,{entered:'12',stored:12,focused:true},'Tri 2: should accept two digits without changing focus');
+      }
       assert.equal(result.awaitingError,null,'Tri '+(i+1)+': errors do not release next tri');
       assert.equal(result.currentTri,i+2,'Tri '+(i+1)+': currentTri did not advance');
       assert.equal(result.liveSeconds,0,'Tri '+(i+1)+': chronometer not reset');
@@ -85,8 +95,8 @@ app.whenReady().then(async()=>{
     }
     const after=await win.webContents.executeJavaScript("(()=>{const results=document.querySelector('.kaltest-tri-results-button');const state=window.sebKaltestPilot2.state.tests.tri_chevilles.tri;return {disabled:results?.disabled,errorValues:state.rows.slice(0,3).map(r=>r.errors),count:state.rows.filter(r=>r.seconds!==null&&r.errors!==null).length};})()",true);
     assert.equal(after.count,3);
-    assert.deepEqual(after.errorValues,[0,1,2]);
+    assert.deepEqual(after.errorValues,[0,12,2]);
     assert.equal(after.disabled,false,'Voir les résultats must unlock after 3 completed tris');
-    done(0,'TRI_REARM_R60: OK — zero error, 3 complete tris, immediate chrono rearm and results');
+    done(0,'TRI_REARM_R60: OK — 0/12/2 errors, input focus preserved, 3 complete tris, immediate chrono rearm');
   }catch(error){done(2,'TRI_REARM_R60: FAIL',error);}
 }).catch(error=>done(2,'TRI_REARM_R60: INIT FAIL',error));
