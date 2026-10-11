@@ -10,6 +10,7 @@ const APP_BUILD_NUMBER = String(appPackage.sebBuildNumber || '').trim() || 'DEV'
 const { createCandidateStore } = require('./candidate-store-main');
 const { createCandidateTransfer } = require('./candidate-transfer-main');
 const { createKaloneoLibrary } = require('./kaloneo-library-main');
+const { embedTestImages, validatePortableTest } = require('./kaloneo-test-portability');
 const { configureLocalKey, readJsonFile, encodeJson, migrateJsonFile, migrateJsonTree } = require('./candidate-data-crypto');
 const { createCandidateLocalProtection } = require('./candidate-local-protection');
 const { internalStorageRoot, documentsWordRoot, migrateLegacyDocumentsStorage } = require('./storage-layout');
@@ -1187,7 +1188,7 @@ ipcMain.handle('kaloneo-transfer:export-test', async (_event, payload) => {
   try {
     const result = getKaloneoLibrary().getTest(payload && payload.id, payload && payload.version);
     if (!result.ok) return result;
-    const definition = result.definition;
+    const { definition } = embedTestImages(result.definition, path.resolve(__dirname, '../source'));
     const chosen = await dialog.showSaveDialog(mainWindow, {
       title:'Exporter un test KALONÉO',
       defaultPath:String(definition.id || 'test') + '-' + String(definition.version || '1.0.0') + '-test.json',
@@ -1212,6 +1213,7 @@ ipcMain.handle('kaloneo-transfer:import-test', async () => {
     });
     if (chosen.canceled || !chosen.filePaths?.[0]) return { ok:false, canceled:true };
     const definition = JSON.parse(fs.readFileSync(chosen.filePaths[0], 'utf8'));
+    validatePortableTest(definition);
     const result = getKaloneoLibrary().saveTest(definition, { overwrite:false });
     if (result && result.code === 'EXISTS') {
       return { ...result, definition };
