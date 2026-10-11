@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const IMAGE_MIME = Object.freeze({png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif',svg:'image/svg+xml'});
-const IMAGE_PATH = /^(?:\.\/)?(?:imageqcm|assets)\/[\wÀ-ÿ ./()\-]+\.(png|jpe?g|webp|gif|svg)$/i;
+const IMAGE_PATH = /^(?:\.\/)?(?:imageqcm|assets)\/[\wÀ-ÿ .()\x2f\-]+\.(png|jpe?g|webp|gif|svg)$/i;
 function validatePortableTest(definition) {
   if (!definition || typeof definition !== 'object' || Array.isArray(definition)) throw new Error('Test JSON invalide.');
   if (Number(definition.kaltestFormat) !== 1 || !definition.id || !definition.version || !definition.title) {
