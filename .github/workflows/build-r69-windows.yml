@@ -1,15 +1,6 @@
 name: 'Build Windows KALONÉO R69 — Build #74 Export Restaurant (branche existante)'
+# R69 was published as Build #74. New pushes must not rerun that immutable release.
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - 'seb-evalpro/src/main.js'
-      - 'seb-evalpro/scripts/kaloneo-export-restaurant-r69-smoke.js'
-      - '.github/workflows/build-r69-windows.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r69-builder.yml'
   workflow_dispatch:
 
 permissions:

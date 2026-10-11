@@ -6,15 +6,9 @@
   "version": "1.0.0",
   "title": "Planification — Le restaurant",
   "category": "planification",
-  "description": "Construire le planning hebdomadaire de la cantine en respectant les contraintes de personnel et de menus.",
+  "description": "Construire le planning hebdomadaire du restaurant en respectant les contraintes de personnel et de menus.",
   "kind": "questionnaire",
   "scored": true,
-  "sourceMigration": {
-    "baseline": "SEB EvalPro 0.3.10 Build #20",
-    "sourcePage": "planning.html",
-    "sourceScript": "source/js/planning-page.js",
-    "legacyParcoursId": "planning"
-  },
   "calculator": {
     "compatible": false,
     "defaultEnabled": false
@@ -22,85 +16,373 @@
   "scenario": "Le service des ressources humaines vous confie la gestion du planning hebdomadaire de la cantine de l'entreprise. Deux cuisinières, Katell et Lizig, assurent le service du lundi au vendredi. Plusieurs collaborateurs ont émis des demandes particulières pour leurs repas. À vous de coordonner l'équipe et d'établir les menus en tenant compte de toutes les contraintes !",
   "instruction": "Renseignez les menus pour chaque jour et chaque catégorie en utilisant les listes déroulantes du tableau. La colonne de droite vous guide pour remplir correctement le tableau.",
   "presentation": {
-    "layout": {
-      "type": "split",
-      "ratio": "60/40",
-      "blocks": [
-        {
-          "id": "planning"
+    "layout": "50-50",
+    "builderContent": [
+      {
+        "type": "table-grid",
+        "zone": "left",
+        "table": {
+          "title": "",
+          "rows": 3,
+          "cols": 6,
+          "layoutOnly": false,
+          "headers": [
+            "Planning",
+            "Lundi",
+            "Mardi",
+            "Mercredi",
+            "Jeudi",
+            "Vendredi"
+          ],
+          "columns": [
+            {
+              "id": "c0",
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c1",
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c2",
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c3",
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c4",
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c5",
+              "align": "center",
+              "remainder": true
+            }
+          ],
+          "cells": [
+            [
+              {
+                "kind": "fixed-text",
+                "value": "Serveuse"
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q1",
+                "responseType": "select",
+                "options": [
+                  "Katell👩🏻‍🦱",
+                  "Lizig👱🏼‍♀️",
+                  "👩🏻‍🦱👱‍♀️Katell/Lizig",
+                  "Lizig/Katell👱‍♀️👩🏻‍🦱"
+                ],
+                "acceptedAnswers": "Lizig👱🏼‍♀️",
+                "points": 1
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q2",
+                "responseType": "select",
+                "options": [
+                  "Katell👩🏻‍🦱",
+                  "Lizig👱🏼‍♀️",
+                  "👩🏻‍🦱👱‍♀️Katell/Lizig",
+                  "Lizig/Katell👱‍♀️👩🏻‍🦱"
+                ],
+                "acceptedAnswers": "Katell👩🏻‍🦱",
+                "points": 1
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q3",
+                "responseType": "select",
+                "options": [
+                  "Katell👩🏻‍🦱",
+                  "Lizig👱🏼‍♀️",
+                  "👩🏻‍🦱👱‍♀️Katell/Lizig",
+                  "Lizig/Katell👱‍♀️👩🏻‍🦱"
+                ],
+                "acceptedAnswers": "Lizig👱🏼‍♀️",
+                "points": 1
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q4",
+                "responseType": "select",
+                "options": [
+                  "Katell👩🏻‍🦱",
+                  "Lizig👱🏼‍♀️",
+                  "👩🏻‍🦱👱‍♀️Katell/Lizig",
+                  "Lizig/Katell👱‍♀️👩🏻‍🦱"
+                ],
+                "acceptedAnswers": "Katell👩🏻‍🦱",
+                "points": 1
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q5",
+                "responseType": "select",
+                "options": [
+                  "Katell👩🏻‍🦱",
+                  "Lizig👱🏼‍♀️",
+                  "👩🏻‍🦱👱‍♀️Katell/Lizig",
+                  "Lizig/Katell👱‍♀️👩🏻‍🦱"
+                ],
+                "acceptedAnswers": "Katell👩🏻‍🦱",
+                "points": 1
+              }
+            ],
+            [
+              {
+                "kind": "fixed-text",
+                "value": "Plats"
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q6",
+                "responseType": "select",
+                "options": [
+                  "Galettes au blé noir",
+                  "Spaghettis",
+                  "Assiette de fruits de mer",
+                  "Pavé de saumon",
+                  "Kig-Ha-Farz",
+                  "Profiteroles",
+                  "Kouign-Amann",
+                  "Tarte au citron",
+                  "Crumble aux fruits rouges",
+                  "Crème brûlée"
+                ],
+                "acceptedAnswers": "Assiette de fruits de mer",
+                "points": 1
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q7",
+                "responseType": "select",
+                "options": [
+                  "Galettes au blé noir",
+                  "Spaghettis",
+                  "Assiette de fruits de mer",
+                  "Pavé de saumon",
+                  "Kig-Ha-Farz",
+                  "Profiteroles",
+                  "Kouign-Amann",
+                  "Tarte au citron",
+                  "Crumble aux fruits rouges",
+                  "Crème brûlée"
+                ],
+                "acceptedAnswers": "Spaghettis",
+                "points": 1
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q8",
+                "responseType": "select",
+                "options": [
+                  "Galettes au blé noir",
+                  "Spaghettis",
+                  "Assiette de fruits de mer",
+                  "Pavé de saumon",
+                  "Kig-Ha-Farz",
+                  "Profiteroles",
+                  "Kouign-Amann",
+                  "Tarte au citron",
+                  "Crumble aux fruits rouges",
+                  "Crème brûlée"
+                ],
+                "acceptedAnswers": "Pavé de saumon",
+                "points": 1
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q9",
+                "responseType": "select",
+                "options": [
+                  "Galettes au blé noir",
+                  "Spaghettis",
+                  "Assiette de fruits de mer",
+                  "Pavé de saumon",
+                  "Kig-Ha-Farz",
+                  "Profiteroles",
+                  "Kouign-Amann",
+                  "Tarte au citron",
+                  "Crumble aux fruits rouges",
+                  "Crème brûlée"
+                ],
+                "acceptedAnswers": "Galettes au blé noir",
+                "points": 1
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q10",
+                "responseType": "select",
+                "options": [
+                  "Galettes au blé noir",
+                  "Spaghettis",
+                  "Assiette de fruits de mer",
+                  "Pavé de saumon",
+                  "Kig-Ha-Farz",
+                  "Profiteroles",
+                  "Kouign-Amann",
+                  "Tarte au citron",
+                  "Crumble aux fruits rouges",
+                  "Crème brûlée"
+                ],
+                "acceptedAnswers": "Kig-Ha-Farz",
+                "points": 1
+              }
+            ],
+            [
+              {
+                "kind": "fixed-text",
+                "value": "Desserts"
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q11",
+                "responseType": "select",
+                "options": [
+                  "Profiteroles",
+                  "Kouign-Amann",
+                  "Tarte au citron",
+                  "Crumble aux fruits rouges",
+                  "Crème brûlée",
+                  "Galettes au blé noir",
+                  "Spaghettis",
+                  "Assiette de fruits de mer",
+                  "Pavé de saumon",
+                  "Kig-Ha-Farz"
+                ],
+                "acceptedAnswers": "Crème brûlée",
+                "points": 1
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q12",
+                "responseType": "select",
+                "options": [
+                  "Profiteroles",
+                  "Kouign-Amann",
+                  "Tarte au citron",
+                  "Crumble aux fruits rouges",
+                  "Crème brûlée",
+                  "Galettes au blé noir",
+                  "Spaghettis",
+                  "Assiette de fruits de mer",
+                  "Pavé de saumon",
+                  "Kig-Ha-Farz"
+                ],
+                "acceptedAnswers": "Profiteroles",
+                "points": 1
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q13",
+                "responseType": "select",
+                "options": [
+                  "Profiteroles",
+                  "Kouign-Amann",
+                  "Tarte au citron",
+                  "Crumble aux fruits rouges",
+                  "Crème brûlée",
+                  "Galettes au blé noir",
+                  "Spaghettis",
+                  "Assiette de fruits de mer",
+                  "Pavé de saumon",
+                  "Kig-Ha-Farz"
+                ],
+                "acceptedAnswers": "Tarte au citron",
+                "points": 1
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q14",
+                "responseType": "select",
+                "options": [
+                  "Profiteroles",
+                  "Kouign-Amann",
+                  "Tarte au citron",
+                  "Crumble aux fruits rouges",
+                  "Crème brûlée",
+                  "Galettes au blé noir",
+                  "Spaghettis",
+                  "Assiette de fruits de mer",
+                  "Pavé de saumon",
+                  "Kig-Ha-Farz"
+                ],
+                "acceptedAnswers": "Crumble aux fruits rouges",
+                "points": 1
+              },
+              {
+                "kind": "select",
+                "questionId": "planning_q15",
+                "responseType": "select",
+                "options": [
+                  "Profiteroles",
+                  "Kouign-Amann",
+                  "Tarte au citron",
+                  "Crumble aux fruits rouges",
+                  "Crème brûlée",
+                  "Galettes au blé noir",
+                  "Spaghettis",
+                  "Assiette de fruits de mer",
+                  "Pavé de saumon",
+                  "Kig-Ha-Farz"
+                ],
+                "acceptedAnswers": "Kouign-Amann",
+                "points": 1
+              }
+            ]
+          ],
+          "compact": true
         },
-        {
-          "id": "aide"
+        "style": {
+          "fontSize": 16
         }
-      ]
-    },
-    "planningGrid": {
-      "headers": [
-        "Planning",
-        "Lundi",
-        "Mardi",
-        "Mercredi",
-        "Jeudi",
-        "Vendredi"
-      ],
-      "rows": [
-        {
-          "label": "Serveuse",
-          "questionIds": [
-            "planning_q1",
-            "planning_q2",
-            "planning_q3",
-            "planning_q4",
-            "planning_q5"
-          ]
-        },
-        {
-          "label": "Plats",
-          "questionIds": [
-            "planning_q6",
-            "planning_q7",
-            "planning_q8",
-            "planning_q9",
-            "planning_q10"
-          ]
-        },
-        {
-          "label": "Desserts",
-          "questionIds": [
-            "planning_q11",
-            "planning_q12",
-            "planning_q13",
-            "planning_q14",
-            "planning_q15"
-          ]
+      },
+      {
+        "type": "text",
+        "zone": "left",
+        "text": "[b]Liste des plats :[/b] Galettes au blé noir, Spaghettis, Assiette de fruits de mer, Pavé de saumon, Kig-Ha-Farz\n[b]Liste des desserts :[/b] Profiteroles, Kouign-Amann, Tarte au citron, Crumble aux fruits rouges, Crème brûlée",
+        "style": {
+          "fontSize": 16,
+          "backgroundColor": "#EEF6FD"
         }
-      ],
-      "dishList": [
-        "Galettes au blé noir",
-        "Spaghettis",
-        "Assiette de fruits de mer",
-        "Pavé de saumon",
-        "Kig-Ha-Farz"
-      ],
-      "dessertList": [
-        "Profiteroles",
-        "Kouign-Amann",
-        "Tarte au citron",
-        "Crumble aux fruits rouges",
-        "Crème brûlée"
-      ],
-      "guide": [
-        "L'équipe de maintenance viendra déguster un plat de spaghettis et des profiteroles au chocolat.",
-        "Lizig travaille deux matinées dont le lundi.",
-        "Katell ne travaille pas le mercredi.",
-        "C'est Lizig qui préparera le pavé de saumon et la tarte au citron.",
-        "C'est Katell qui préparera le Kig-Ha-Farz.",
-        "Katell fera les galettes au blé noir le jeudi.",
-        "Jean le livreur veut un Kouign-Amann vendredi.",
-        "Jacqueline la comptable veut une assiette de fruits de mer et une crème brûlée comme tous les lundis."
-      ],
-      "backgroundImage": "imageqcm/kaloneo-planning-restaurant.webp"
-    }
+      },
+      {
+        "type": "text",
+        "zone": "left",
+        "text": "[b]Indications[/b]\n1. L'équipe de maintenance viendra déguster un plat de spaghettis et des profiteroles au chocolat.\n2. Lizig travaille deux matinées dont le lundi.\n3. Katell ne travaille pas le mercredi.\n4. C'est Lizig qui préparera le pavé de saumon et\n la tarte au citron.\n5. C'est Katell qui préparera le Kig-Ha-Farz.\n6. Katell fera les galettes au blé noir le jeudi.\n7. Jean le livreur veut un Kouign-Amann\n    vendredi.\n8. Jacqueline la comptable veut une\n assiette de fruits\n de mer et une crème brûlée comme \ntous les lundis.",
+        "style": {
+          "fontSize": 20,
+          "backgroundColor": "#FFFFFF",
+          "backgroundImage": "imageqcm/r48-plateau-repas.png",
+          "backgroundFit": "decorative",
+          "backgroundPosition": "right bottom",
+          "backgroundOpacity": 100
+        }
+      },
+      {
+        "type": "image",
+        "zone": "right",
+        "resource": {
+          "name": "imageqcm/r48-cantine-cuisinieres.png",
+          "mime": "image/png",
+          "data": "imageqcm/r48-cantine-cuisinieres.png",
+          "alt": "Deux cuisinières dans la cantine."
+        },
+        "style": {
+          "backgroundColor": "#EEF6FD"
+        }
+      }
+    ]
   },
   "behavior": {
     "validateBeforeAdvance": true,
@@ -457,6 +739,18 @@
     "questionnaire.basic",
     "questionnaire.table",
     "layout.split",
-    "bilan.bindings"
-  ]
+    "bilan.bindings",
+    "media.image"
+  ],
+  "icon": {
+    "id": "planification",
+    "label": "Planification",
+    "data": "data:image/png;base64,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"
+  },
+  "sourceMigration": {
+    "baseline": "SEB EvalPro 0.3.10 Build #20",
+    "sourcePage": "planning.html",
+    "sourceScript": "source/js/planning-page.js",
+    "legacyParcoursId": "planning"
+  }
 }

@@ -299,12 +299,15 @@ app.whenReady().then(async()=>{
       ({
         current:window.sebKaltestPilot2.currentTest()?.id||'',
         next:window.sebParcours?.nextUrl('planning')||'',
-        rows:document.querySelectorAll('.kaltest-planning-table tbody tr').length
+        rows:document.querySelectorAll('.kaltest-builder-grid tbody tr').length,
+        dropdowns:document.querySelectorAll('.kaltest-builder-grid select').length,
+        restaurantImage:document.querySelector('.kaltest-builder-media img')?.getAttribute('src')||''
       })
     `,true);
     if(planning.current!=='planning_cantine' ||
        planning.next!=='kaltest-pilot2.html?fullParcours=1&segment=genre-nombre' ||
-       planning.rows!==3){
+       planning.rows!==3 || planning.dropdowns!==15 ||
+       !planning.restaurantImage.includes('imageqcm/r48-cantine-cuisinieres.png')){
       throw new Error('Planning KALTEST invalide: '+JSON.stringify(planning));
     }
 
