@@ -2464,8 +2464,8 @@
       syncProtectedVersionUi();
     }
 
-    if(window.KaloneoIconLibrary?.count!==70) {
-      alert('Bibliothèque d’icônes KALONÉO incomplète : 70 icônes attendues.');
+    if(window.KaloneoIconLibrary?.count!==100) {
+      alert('Bibliothèque d’icônes KALONÉO incomplète : 100 icônes attendues.');
     }
     renderIconPicker();
     $('jump-to-icon-picker')?.addEventListener('click',()=>{

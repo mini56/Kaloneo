@@ -1,0 +1,249 @@
+{
+  "version": "KALONEO-ICONES-R61-96",
+  "count": 30,
+  "existing_count": 70,
+  "total": 100,
+  "pixel_size": 96,
+  "items": [
+    {
+      "id": "test_lecture_comprehension",
+      "label": "Lecture et compréhension",
+      "original": "kaloneo/icons-tests/test_lecture_comprehension.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "116AC6129BF66ABD4D303E418C8FC5E572D6A2352974D4086635F6F1C21A4002"
+    },
+    {
+      "id": "test_controle_code_barres",
+      "label": "Contrôle par code-barres",
+      "original": "kaloneo/icons-tests/test_controle_code_barres.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "31E09479151CDC8A71EE59FE750EEA6918FC95A5CA461B0BCF129FCBAEBE77AC"
+    },
+    {
+      "id": "test_texte_a_trous",
+      "label": "Texte à trous",
+      "original": "kaloneo/icons-tests/test_texte_a_trous.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "1EE6B8696214A4E76032A4C44A9FE2863DF395945927A62024D6C34D0915CD41"
+    },
+    {
+      "id": "test_planning_horaires",
+      "label": "Planning et horaires",
+      "original": "kaloneo/icons-tests/test_planning_horaires.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "F85C80ACF8ABB3053493291FDA2276DFDF7B7CD8FEA9A2FBD07D44E06741EB51"
+    },
+    {
+      "id": "test_fractions_proportions",
+      "label": "Fractions et proportions",
+      "original": "kaloneo/icons-tests/test_fractions_proportions.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "FB39973B2D2B749F2712AA4CFB99F2949902C7BBD29725C5EF8D787390ECAD72"
+    },
+    {
+      "id": "test_calculs_arithmetiques",
+      "label": "Calculs arithmétiques",
+      "original": "kaloneo/icons-tests/test_calculs_arithmetiques.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "5059648F4011041D7095406DE1967A2D79D4EC1A8986B6F808F1FBCF40453CA8"
+    },
+    {
+      "id": "test_dictee_orthographe",
+      "label": "Dictée et orthographe",
+      "original": "kaloneo/icons-tests/test_dictee_orthographe.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "8C437BE87592C432E6ADE4E629FC088ACCBBE6418E39385EAA878F08A8E35231"
+    },
+    {
+      "id": "test_gestion_du_temps",
+      "label": "Gestion du temps",
+      "original": "kaloneo/icons-tests/test_gestion_du_temps.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "0D645DB6DECE13940A6494BAE626B31D6194F13CFDB2C6CFD7872053607F2342"
+    },
+    {
+      "id": "test_reception_colis",
+      "label": "Réception et vérification des colis",
+      "original": "kaloneo/icons-tests/test_reception_colis.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "B2DE9FA2F5E766C8D2B20C0BFF676BDE61CCCBFB3907483905B746F98CC3EA83"
+    },
+    {
+      "id": "test_calculatrice_test",
+      "label": "Calculatrice et opérations",
+      "original": "kaloneo/icons-tests/test_calculatrice_test.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "C59C7E021330DADA5FC3B1E5BDD2A72D399038CF2409A97D70D4D745A14908F6"
+    },
+    {
+      "id": "test_montage_briques",
+      "label": "Montage de briques",
+      "original": "kaloneo/icons-tests/test_montage_briques.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "0BAC32A0E2D54C76BC5413C8D03E3419CA5D469AD3B65895FCF695C1EFEF2AE5"
+    },
+    {
+      "id": "test_securite_chantier",
+      "label": "Sécurité et consignes de chantier",
+      "original": "kaloneo/icons-tests/test_securite_chantier.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "3A85AE5D09D07ECA9DEA12131CD818ED86FF28B648C80A056C1D9FAAA4BCE0BB"
+    },
+    {
+      "id": "test_conversion_mesures",
+      "label": "Conversions et mesures",
+      "original": "kaloneo/icons-tests/test_conversion_mesures.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "594D84798A7D8920F566CCA24DEE986A78C21495C9448C54101D43DF2601E676"
+    },
+    {
+      "id": "test_courriel_signature",
+      "label": "Courriel professionnel et signature",
+      "original": "kaloneo/icons-tests/test_courriel_signature.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "035008768D3E0BBEEE383DD8B618421575A26C3908B8008BF50F8BD3698D9534"
+    },
+    {
+      "id": "test_tri_chevilles",
+      "label": "Tri de chevilles",
+      "original": "kaloneo/icons-tests/test_tri_chevilles.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "E859A25055DBC7E34025E38D45D365FC68876B7450CF716157D7D67CF33693DC"
+    },
+    {
+      "id": "test_planning_cantine",
+      "label": "Planning de cantine",
+      "original": "kaloneo/icons-tests/test_planning_cantine.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "8E7F470A0F81F652B6F26CD90ACC9DE336F0C11A203C7EE0AA1E0F0A9F4AD3C0"
+    },
+    {
+      "id": "test_structure_papier",
+      "label": "Structure 3D en papier",
+      "original": "kaloneo/icons-tests/test_structure_papier.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "1086AF1763A2A2A860E003E83A5DCBABDEF75D965868CBC8AAD74197FCE83169"
+    },
+    {
+      "id": "test_traitement_texte",
+      "label": "Traitement de texte",
+      "original": "kaloneo/icons-tests/test_traitement_texte.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "FC75940A09B4A1D9445C999245AB1D638A6BBF90D6D74339B0499A9A2131B14C"
+    },
+    {
+      "id": "test_ecoute_audio",
+      "label": "Écoute et audio",
+      "original": "kaloneo/icons-tests/test_ecoute_audio.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "E3D45E419900CC2E3E60F1172977828CA29CDEA250E14EFA43BD999B4369C4EA"
+    },
+    {
+      "id": "test_stock_inventaire",
+      "label": "Gestion des stocks",
+      "original": "kaloneo/icons-tests/test_stock_inventaire.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "AE42B73D9C4D7BDC57F3FEDF0FAFD4EF4AAF14B2C6EBC505507F1B8033037F52"
+    },
+    {
+      "id": "test_redaction_ecrite",
+      "label": "Rédaction écrite",
+      "original": "kaloneo/icons-tests/test_redaction_ecrite.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "FA797C4FAEBF9E60AD08D6A1154408A651AAF77C2B05F5E2ABB4DBB79732879D"
+    },
+    {
+      "id": "test_message_email",
+      "label": "Communication par e-mail",
+      "original": "kaloneo/icons-tests/test_message_email.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "95728F300A85B20ED6C017CF5F89A5D6734236BBE3A499814304D32FFCAD89A0"
+    },
+    {
+      "id": "test_organisation_demenagement",
+      "label": "Organisation d’un déménagement",
+      "original": "kaloneo/icons-tests/test_organisation_demenagement.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "CAC9587C6545BD949A7EF9ABA91B3F6B4AAB1307C9D92F7DBB04E66FDCB2E204"
+    },
+    {
+      "id": "test_transport_colis",
+      "label": "Transport de colis",
+      "original": "kaloneo/icons-tests/test_transport_colis.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "1A12DC5A05742F677C1298C21AD7D4E46C8F1F5084B5E1C40AF1A1944AC4F889"
+    },
+    {
+      "id": "test_organisation_planning",
+      "label": "Organisation et planification",
+      "original": "kaloneo/icons-tests/test_organisation_planning.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "ACCE38EF8E9EA9C08EBFF1350AC0603490EFACB7608D86EE2B61E60CD5D68CC9"
+    },
+    {
+      "id": "test_puzzle_logique",
+      "label": "Puzzle et logique",
+      "original": "kaloneo/icons-tests/test_puzzle_logique.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "E0735862F77F2B4FA54259C743603E35A5FA1089084FB2452C91EABCF2DBC411"
+    },
+    {
+      "id": "test_construction_gratte_ciel",
+      "label": "Construction de gratte-ciel",
+      "original": "kaloneo/icons-tests/test_construction_gratte_ciel.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "60D536737336768B912079D6F59D58D2D7170B03F47C354BFCBCD63D3D6BDCA7"
+    },
+    {
+      "id": "test_organisation_etapes",
+      "label": "Organisation des étapes",
+      "original": "kaloneo/icons-tests/test_organisation_etapes.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "D85E1F1C71CA1455AB746331A8B28F9AFCAB7E8D65E6C7CCED2FE3E8A21CCDE2"
+    },
+    {
+      "id": "test_poids_volumes",
+      "label": "Poids et volumes",
+      "original": "kaloneo/icons-tests/test_poids_volumes.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "7C8BEF4E15737F2B7DEA775AA975657735F9882A7697118D6D6EFEF419F90BDC"
+    },
+    {
+      "id": "test_autoevaluation_progression",
+      "label": "Autoévaluation et progression",
+      "original": "kaloneo/icons-tests/test_autoevaluation_progression.png",
+      "largeur": 96,
+      "hauteur": 96,
+      "sha256": "B862B7959CA455F1B82CCCDCFE6B0CF531F74AAFAFFEDF5D89619B87078DD92E"
+    }
+  ]
+}
