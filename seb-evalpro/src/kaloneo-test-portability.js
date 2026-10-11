@@ -4,13 +4,13 @@
 const fs = require('fs');
 const path = require('path');
 const IMAGE_MIME = Object.freeze({png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif',svg:'image/svg+xml'});
-const IMAGE_PATH = /^(?:\.\/)?(?:imageqcm|assets)\/[\wÀ-ÿ\-./ ()]+\.(png|jpe?g|webp|gif|svg)$/i;
+const IMAGE_PATH = /^(?:\.\/)?(?:imageqcm|assets)\/[\wÀ-ÿ ./()\-]+\.(png|jpe?g|webp|gif|svg)$/i;
 function validatePortableTest(definition) {
   if (!definition || typeof definition !== 'object' || Array.isArray(definition)) throw new Error('Test JSON invalide.');
   if (Number(definition.kaltestFormat) !== 1 || !definition.id || !definition.version || !definition.title) {
     throw new Error('Définition KALTEST incomplète.');
   }
-  if (!Array.isArray(definition.outputs) || !Array.isArray(definition.bilanContributions)) {
+  if (definition.scored === true && (!Array.isArray(definition.outputs) || !Array.isArray(definition.bilanContributions))) {
     throw new Error('Configuration Résultats/Bilan absente : export autonome refusé.');
   }
   if (definition.scored && !Array.isArray(definition.questions) && !definition.evaluation && !definition.presentation?.builderContent) {
