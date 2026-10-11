@@ -1,4 +1,4 @@
-name: Build Windows KALONÉO R53 corrections
+name: Build Windows KALONÉO R54 corrections
 # R30 adds simple text colors to Scenario, Consigne and Builder text blocks.
 
 on:
@@ -287,12 +287,12 @@ jobs:
         run: node scripts/kaloneo-test-portability-check.js
 
       - name: Build Windows PILOTE 22 R48.7 setup
-        run: npx electron-builder --win nsis --config build/kaloneo-v1-fixes-r53-builder.yml --publish never
+        run: npx electron-builder --win nsis --config build/kaloneo-v1-fixes-r54-builder.yml --publish never
 
       - name: Verify setup and hash
         shell: pwsh
         run: |
-          $setup = Get-ChildItem -Path dist -Filter 'SEB-EvalPro-Kaloneo-PILOTE-22-R53-0.0.82-Windows-Setup.exe' -File | Select-Object -First 1
+          $setup = Get-ChildItem -Path dist -Filter 'SEB-EvalPro-Kaloneo-PILOTE-22-R54-0.0.83-Windows-Setup.exe' -File | Select-Object -First 1
           if (-not $setup) { throw 'Setup PILOTE 22 R47 introuvable.' }
           $hash = (Get-FileHash -Algorithm SHA256 $setup.FullName).Hash.ToUpperInvariant()
           "SETUP_PATH=$($setup.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
@@ -303,7 +303,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: SEB-EvalPro-Kaloneo-PILOTE-22-R47-Windows
-          path: seb-evalpro/dist/SEB-EvalPro-Kaloneo-PILOTE-22-R53-0.0.82-Windows-Setup.exe
+          path: seb-evalpro/dist/SEB-EvalPro-Kaloneo-PILOTE-22-R54-0.0.83-Windows-Setup.exe
           if-no-files-found: error
 
       - name: Publish V1 correction test release
@@ -311,8 +311,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = 'seb-kaloneo-v1-fixes-r53-test'
-          $title = 'SEB EvalPro Kalonéo — R53 Correctifs V1 TEST'
+          $tag = 'seb-kaloneo-v1-fixes-r54-test'
+          $title = 'SEB EvalPro Kalonéo — R54 Correctifs V1 TEST'
           if (gh release view $tag 2>$null) {
             throw 'Release déjà existante ; ne pas écraser une release précédente.'
           }
