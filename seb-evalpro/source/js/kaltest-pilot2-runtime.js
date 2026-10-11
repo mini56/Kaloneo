@@ -2167,7 +2167,7 @@
       // a zero ou sortir du champ pendant la saisie de plusieurs chiffres.
       const validateTriErrors = () => {
         const raw = String(err.value || '').trim();
-        if (!/^\\d+$/.test(raw)) {
+        if (!/^\d+$/.test(raw)) {
           tri.rows[index].errors = null;
           tri.ready = false;
           refreshResultsButton();
