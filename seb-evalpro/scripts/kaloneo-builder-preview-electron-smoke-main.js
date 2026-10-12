@@ -838,12 +838,11 @@ app.whenReady().then(async()=>{
     // Régression utilisateur : les blocs repliés restent repliés après Aperçu.
     const foldsBeforePreview=await win.webContents.executeJavaScript(`(()=>{
       const blocks=[...document.querySelectorAll('.exercise-block')];
-      if(blocks.length<2)return {count:blocks.length};
-      blocks[0].querySelector('.toggle-block').click();
-      blocks.at(-1).querySelector('.toggle-block').click();
+      if(!blocks.length)return {count:0};
+      blocks.forEach(block=>block.querySelector('.toggle-block').click());
       return {count:blocks.length,folded:[...document.querySelectorAll('.exercise-block.is-collapsed')].map(x=>x.dataset.uid)};
     })()`);
-    if(foldsBeforePreview.count<2||foldsBeforePreview.folded.length<2)
+    if(foldsBeforePreview.count<1||foldsBeforePreview.folded.length!==foldsBeforePreview.count)
       return fail('Impossible de préparer les blocs repliés avant le retour Aperçu',foldsBeforePreview);
     await win.webContents.executeJavaScript(`(()=>{
       localStorage.setItem('kaloneo_test_builder_v2',JSON.stringify({
