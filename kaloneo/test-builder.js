@@ -27,6 +27,37 @@
   let applyingHistory = false;
   const activeGridEditorColumn=new Map(); // UI only: never saved into KALTEST
   const collapsedBlockUids=new Set(); // état d'affichage uniquement, jamais écrit dans les tests
+  const PREVIEW_FOLD_KEY='kaloneo_builder_preview_fold_state_v1';
+  let imageLibraryOpening=false;
+  let imageSelectionBusy=false;
+  let pcPickerBusy=false;
+  let pcImportBusy=false;
+  let imageThumbObserver=null;
+  let imageThumbGeneration=0;
+  let activeImageThumbs=0;
+  const imageThumbQueue=[];
+
+  function savePreviewFoldState() {
+    const snapshot={
+      id:$('test-id')?.value||'',version:$('test-version')?.value||'',
+      blocks:state.blocks.map((b,i)=>({index:i,type:b.type,collapsed:collapsedBlockUids.has(b.uid)}))
+    };
+    try{sessionStorage.setItem(PREVIEW_FOLD_KEY,JSON.stringify(snapshot));}catch(_){}
+  }
+  function restorePreviewFoldState() {
+    let snapshot=null;
+    try{
+      snapshot=JSON.parse(sessionStorage.getItem(PREVIEW_FOLD_KEY)||'null');
+      sessionStorage.removeItem(PREVIEW_FOLD_KEY);
+    }catch(_){}
+    if(!snapshot||snapshot.id!==$('test-id')?.value||snapshot.version!==$('test-version')?.value)return false;
+    if(!Array.isArray(snapshot.blocks)||snapshot.blocks.length!==state.blocks.length)return false;
+    if(snapshot.blocks.some((b,i)=>b.index!==i||b.type!==state.blocks[i]?.type))return false;
+    collapsedBlockUids.clear();
+    snapshot.blocks.forEach((b,i)=>{if(b.collapsed)collapsedBlockUids.add(state.blocks[i].uid);});
+    return true;
+  }
+
   let builderDirty = false;
   let changingInputField = false; // un champ saisi ne lance pas l'aperçu Electron à chaque caractère
   let savedFingerprint = String(localStorage.getItem(SAVED_FINGERPRINT_KEY) || '');
@@ -1112,6 +1143,9 @@
   }
 
   async function useLibraryImage(imageId) {
+    if(imageSelectionBusy)return false;
+    imageSelectionBusy=true;
+    try {
     const result=await window.sebEvalPro?.kaloneoGetImage?.(imageId);
     if(!result || result.ok!==true || !result.image?.data) throw new Error(result?.error||'Image introuvable');
 
@@ -1145,6 +1179,26 @@
     renderBlocks();
     $('image-library-dialog')?.close();
     return true;
+    } finally { imageSelectionBusy=false; }
+  }
+
+  function pumpImageThumbs() {
+    while(activeImageThumbs<4&&imageThumbQueue.length){
+      const task=imageThumbQueue.shift();
+      if(task.generation!==imageThumbGeneration||!task.img.isConnected)continue;
+      activeImageThumbs++;
+      Promise.resolve(window.sebEvalPro?.kaloneoGetImage?.(task.id))
+        .then(result=>{
+          if(task.generation===imageThumbGeneration&&task.img.isConnected&&result?.ok&&result.image?.data)
+            task.img.src=result.image.data;
+        }).catch(()=>{}).finally(()=>{activeImageThumbs--;pumpImageThumbs();});
+    }
+  }
+  function queueImageThumb(id,img,generation) {
+    if(img.dataset.queued==='true')return;
+    img.dataset.queued='true';
+    imageThumbQueue.push({id,img,generation});
+    pumpImageThumbs();
   }
 
   function renderImageLibrary() {
@@ -1174,6 +1228,9 @@
       const haystack=normalizedSearch([item.name,item.category,item.theme,item.orientation,item.sourceName].filter(Boolean).join(' '));
       return !search||haystack.includes(search);
     });
+    if(imageThumbObserver)imageThumbObserver.disconnect();
+    imageThumbGeneration++;
+    imageThumbQueue.length=0;
     root.replaceChildren();
     const status=$('image-library-status');
     if(status){
@@ -1185,11 +1242,22 @@
         (state.imageLibraryTargetUid?' — choisissez une image pour le bloc courant.':' — bibliothèque générale.');
     }
 
-    items.slice(0,250).forEach(item=>{
+    const thumbGeneration=imageThumbGeneration;
+    imageThumbObserver=typeof IntersectionObserver==='function'?
+      new IntersectionObserver(entries=>{
+        for(const entry of entries){
+          if(!entry.isIntersecting)continue;
+          imageThumbObserver?.unobserve(entry.target);
+          const img=entry.target.querySelector('img');
+          if(img)queueImageThumb(entry.target.dataset.imageId,img,thumbGeneration);
+        }
+      },{root,rootMargin:'140px'}):null;
+    items.slice(0,250).forEach((item,index)=>{
       const card=document.createElement('article');
       card.className='image-library-card';
       const preview=document.createElement('div');
       preview.className='image-library-preview';
+      preview.dataset.imageId=item.id;
       const img=document.createElement('img');
       img.alt=item.name||'Image';
       img.loading='lazy';
@@ -1207,14 +1275,23 @@
         use.type='button';
         use.className='mini-btn image-library-use';
         use.textContent='Utiliser';
-        use.addEventListener('click',()=>useLibraryImage(item.id).catch(error=>alert('Image impossible à utiliser : '+String(error?.message||error))));
+        use.addEventListener('click',()=>{
+          if(imageSelectionBusy)return;
+          use.disabled=true;
+          use.textContent='Sélection en cours…';
+          useLibraryImage(item.id)
+            .catch(error=>alert('Image impossible à utiliser : '+String(error?.message||error)))
+            .finally(()=>{if(use.isConnected){use.disabled=false;use.textContent='Utiliser';}});
+        });
         card.appendChild(use);
       }
 
-      window.sebEvalPro?.kaloneoGetImage?.(item.id).then(result=>{
-        if(result?.ok&&result.image?.data)img.src=result.image.data;
-      }).catch(()=>{});
       root.appendChild(card);
+      // Quelques vignettes immédiates, les autres seulement lorsqu'elles
+      // deviennent visibles. Jamais 250 lectures d'images simultanées.
+      if(index<8||!imageThumbObserver){
+        if(index<12)queueImageThumb(item.id,img,thumbGeneration);
+      }else imageThumbObserver.observe(preview);
     });
     if(!items.length){
       const empty=document.createElement('p');empty.className='muted';empty.textContent='Aucune image trouvée.';root.appendChild(empty);
@@ -1229,10 +1306,20 @@
   }
 
   async function openImageLibrary(targetUid=null) {
+    const dialog=$('image-library-dialog');
+    if(imageLibraryOpening||dialog?.open)return;
+    imageLibraryOpening=true;
     state.imageLibraryTargetUid=targetUid||null;
-    await reloadImageLibrary();
-    $('image-library-dialog')?.showModal();
-    requestAnimationFrame(()=>$('image-library-search')?.focus());
+    try{
+      // Montrer d'abord la fenêtre ; les métadonnées/images arrivent ensuite.
+      dialog.showModal();
+      $('image-library-status').textContent='Chargement de la bibliothèque…';
+      requestAnimationFrame(()=>$('image-library-search')?.focus());
+      await reloadImageLibrary();
+    }catch(error){
+      if(dialog?.open)dialog.close();
+      throw error;
+    }finally{imageLibraryOpening=false;}
   }
 
   async function importImages(files) {
@@ -1265,13 +1352,25 @@
     const input=$('image-library-pc-file');
     const file=input?.files?.[0];
     if(input)input.value='';
-    if(!file)return;
-    const result=await importImages([file]);
-    if(result?.firstImageId){
-      if(state.imageLibraryTargetUid)await useLibraryImage(result.firstImageId);
-      return;
+    if(pcImportBusy)return;
+    pcImportBusy=true;
+    const button=$('image-library-import-pc');
+    if(button){button.disabled=true;button.textContent='Import en cours…';}
+    try{
+      if(!file)return;
+      const status=$('image-library-status');
+      if(status)status.textContent='Import de « '+file.name+' » en cours…';
+      const result=await importImages([file]);
+      if(result?.firstImageId){
+        if(state.imageLibraryTargetUid)await useLibraryImage(result.firstImageId);
+        return;
+      }
+      if(result?.failed)alert('Cette image n’a pas pu être importée. Choisissez un fichier image valide.');
+    }finally{
+      pcImportBusy=false;
+      pcPickerBusy=false;
+      if(button){button.disabled=false;button.textContent='Importer une image du PC';}
     }
-    if(result?.failed)alert('Cette image n’a pas pu être importée. Choisissez un fichier image valide.');
   }
 
   async function importImageZip() {
@@ -1363,7 +1462,9 @@
 
     const name=document.createElement('div');
     name.className='file-preview-name';
-    name.textContent=block.mediaName?'Embarqué : '+block.mediaName:(block.mediaPlaceholder||'Aucun fichier sélectionné');
+    name.textContent=block.mediaData
+      ?'Image sélectionnée : '+(block.mediaName||'Image intégrée')
+      :(block.mediaPlaceholder||'Aucun fichier sélectionné');
     body.appendChild(name);
 
     const remove=document.createElement('button');
@@ -1807,6 +1908,18 @@
       article.dataset.uid=block.uid;
       frag.querySelector('.block-index').textContent=String(index+1);
 
+      // Visible même lorsque le bloc est replié : une image choisie ne
+      // doit jamais paraître disparue de l'éditeur.
+      if(block.type==='image'||block.backgroundImage){
+        const badge=document.createElement('span');
+        badge.className='block-media-status';
+        badge.textContent=block.type==='image'
+          ?(block.mediaData?'✓ '+(block.mediaName||'Image sélectionnée'):'Aucune image')
+          :'✓ Image de fond';
+        badge.title=badge.textContent;
+        badge.setAttribute('aria-label',badge.textContent);
+        article.querySelector('.block-header').insertBefore(badge,article.querySelector('.toggle-block'));
+      }
       const type=frag.querySelector('.block-type');
       type.value=block.type;
       type.addEventListener('change',()=>{
@@ -2164,8 +2277,12 @@
   }
 
   function refreshRealMiniPreview() {
+    // Retour au fonctionnement fluide du Builder historique : afficher le
+    // DOM direct sans le remplacer par des captures après chaque pause.
+    // Le bouton « Aperçu » ouvre toujours le vrai moteur candidat Electron.
     invalidateMiniPreview();
-    scheduleMiniPreviewCapture();
+    const warning=$('candidate-preview-warning');
+    if(warning)warning.textContent='Aperçu direct — bouton « Aperçu » pour voir l’écran candidat réel.';
   }
 
   function fitMiniPreview() {
@@ -2932,12 +3049,19 @@
             'Retour de l’aperçu Electron — même test restauré',
             {markSaved:false,protectedVersion:protectedFromDraft}
           );
+          restorePreviewFoldState();
           restored = true;
         }
       } catch (_) {}
     }
 
-    if(!restored && resumeFromPreview) restored = restoreDraft();
+    if(!restored && resumeFromPreview){
+      restored=restoreDraft();
+      if(restored)restorePreviewFoldState();
+    }
+    if(!resumeFromPreview){
+      try{sessionStorage.removeItem(PREVIEW_FOLD_KEY);}catch(_){}
+    }
     if(!restored || state.blocks.length===0) {
       state.idLocked=false;
       state.sourceDefinition=null;
@@ -2986,8 +3110,21 @@
     $('image-library-search').addEventListener('input',renderImageLibrary);
     $('image-library-theme').addEventListener('change',renderImageLibrary);
     $('image-library-orientation').addEventListener('change',renderImageLibrary);
-    $('image-library-import-pc').addEventListener('click',()=>$('image-library-pc-file').click());
-    $('image-library-pc-file').addEventListener('change',()=>importImageFromPc().catch(error=>alert('Import de l’image impossible : '+String(error?.message||error))));
+    $('image-library-import-pc').addEventListener('click',()=>{
+      if(pcPickerBusy||pcImportBusy)return;
+      pcPickerBusy=true;
+      const button=$('image-library-import-pc');
+      button.disabled=true;button.textContent='Sélection en cours…';
+      $('image-library-pc-file').click();
+    });
+    $('image-library-pc-file').addEventListener('cancel',()=>{
+      if(pcImportBusy)return;
+      pcPickerBusy=false;
+      const button=$('image-library-import-pc');
+      button.disabled=false;button.textContent='Importer une image du PC';
+    });
+    $('image-library-pc-file').addEventListener('change',()=>importImageFromPc()
+      .catch(error=>alert('Import de l’image impossible : '+String(error?.message||error))));
     $('close-test-library').addEventListener('click',()=>$('test-library-dialog').close());
     $('test-library-search').addEventListener('input',()=>renderLibraryTests($('test-library-dialog')._kaloneoItems||[]));
 
@@ -3091,12 +3228,15 @@
         return;
       }
       const definition=Core.modelToDefinition(currentModel());
+      savePreviewFoldState();
       try {
         const result=await bridge.kaloneoOpenPreview(definition);
         if(!result || result.ok!==true) {
+          try{sessionStorage.removeItem(PREVIEW_FOLD_KEY);}catch(_){}
           alert('Aperçu impossible : '+String(result?.error||'erreur inconnue'));
         }
       } catch(error) {
+        try{sessionStorage.removeItem(PREVIEW_FOLD_KEY);}catch(_){}
         alert('Aperçu impossible : '+String(error?.message||error));
       }
     });

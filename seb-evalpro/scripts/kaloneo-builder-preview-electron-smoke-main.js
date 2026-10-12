@@ -602,8 +602,11 @@ app.whenReady().then(async()=>{
       const choose=document.querySelector('.choose-library-image');
       if(!choose)return {ok:false,reason:'bouton absent'};
       choose.click();
+      const immediateOpen=document.getElementById('image-library-dialog')?.open===true;
+      choose.click(); // un double-clic ne doit pas créer de deuxième demande
       await new Promise(resolve=>setTimeout(resolve,160));
       const dialog=document.getElementById('image-library-dialog');
+      if(!immediateOpen)return {ok:false,reason:'bibliothèque non affichée immédiatement'};
       const card=document.querySelector('.image-library-card');
       const img=card?.querySelector('img');
       const use=card?.querySelector('.image-library-use');
@@ -701,10 +704,12 @@ app.whenReady().then(async()=>{
       for(let i=0;i<15&&dialog.open;i++)await new Promise(resolve=>setTimeout(resolve,70));
       const preview=document.querySelector('.preview-media');
       const title=document.querySelector('.exercise-block .file-preview-name')?.textContent||'';
-      return {ok:true,opened,closed:!dialog.open,src:preview?.getAttribute('src')||'',title};
+      const imageStatus=document.querySelector('.exercise-block .block-media-status')?.textContent||'';
+      return {ok:true,opened,closed:!dialog.open,src:preview?.getAttribute('src')||'',title,imageStatus};
     })()`,true);
     if(!importedFromPc.ok||!importedFromPc.opened||!importedFromPc.closed||
        !importedFromPc.src.startsWith('data:image/svg+xml;base64,')||!importedFromPc.title.includes('image-du-pc.svg')||
+       !importedFromPc.imageStatus.includes('image-du-pc.svg')||
        importedImages.size!==1||savedImageCalls!==1){
       return fail('Import depuis le PC vers la bibliothèque et le bloc incorrect',importedFromPc);
     }
@@ -830,6 +835,16 @@ app.whenReady().then(async()=>{
       return fail('déplacement réel souris de la calculatrice incorrect', {calcBefore,calcOpen});
     }
 
+    // Régression utilisateur : les blocs repliés restent repliés après Aperçu.
+    const foldsBeforePreview=await win.webContents.executeJavaScript(`(()=>{
+      const blocks=[...document.querySelectorAll('.exercise-block')];
+      if(blocks.length<2)return {count:blocks.length};
+      blocks[0].querySelector('.toggle-block').click();
+      blocks.at(-1).querySelector('.toggle-block').click();
+      return {count:blocks.length,folded:[...document.querySelectorAll('.exercise-block.is-collapsed')].map(x=>x.dataset.uid)};
+    })()`);
+    if(foldsBeforePreview.count<2||foldsBeforePreview.folded.length<2)
+      return fail('Impossible de préparer les blocs repliés avant le retour Aperçu',foldsBeforePreview);
     await win.webContents.executeJavaScript(`(()=>{
       localStorage.setItem('kaloneo_test_builder_v2',JSON.stringify({
         idLocked:true,
@@ -858,6 +873,13 @@ app.whenReady().then(async()=>{
       draftStatus:String(document.getElementById('draft-status')?.textContent||'').trim()
     }))()`);
 
+    const foldsAfterPreview=await win.webContents.executeJavaScript(`(()=>({
+      count:document.querySelectorAll('.exercise-block').length,
+      collapsed:document.querySelectorAll('.exercise-block.is-collapsed').length
+    }))()`);
+    if(foldsAfterPreview.count!==foldsBeforePreview.count||foldsAfterPreview.collapsed!==foldsBeforePreview.folded.length)
+      return fail('Retour Aperçu : les blocs repliés sont tous rouverts', {foldsBeforePreview,foldsAfterPreview});
+    console.log('KALONEO_PREVIEW_PRESERVES_COLLAPSED_BLOCKS=OK',JSON.stringify(foldsAfterPreview));
     if(!/test-builder\.html$/i.test(returned.path)||
        returned.title!=='Aperçu Electron Smoke'||
        returned.scenario!=='[c=#005A8D]Scénario[/c] [b]plein[/b] écran'||

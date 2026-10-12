@@ -1173,3 +1173,12 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
   border-color:#bc2424!important;
   color:#a91c1c!important;
 }
+
+/* R87 : lisibilité de l'image choisie même avec le bloc replié. */
+.block-header .block-media-status{
+  font-size:11px;color:#005a32;background:#e6f5eb;border:1px solid #a7d9b9;
+  border-radius:5px;padding:3px 5px;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;max-width:140px;min-width:0;
+}
+.block-header:has(.block-media-status){grid-template-columns:28px minmax(130px,160px) 100px 30px 30px 82px minmax(70px,1fr) 30px;}
+.block-body .file-preview-name{color:#005a32;font-weight:700;}
