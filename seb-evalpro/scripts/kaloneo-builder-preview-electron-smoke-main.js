@@ -19,6 +19,7 @@ let protectedLibraryMode = false;
 let restaurantFixture = null;
 let protectedOrganisation = null;
 const imageLibraryData = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120"><rect width="180" height="120" fill="#1b6c8e"/></svg>').toString('base64');
+const imageLibraryAlternativeData = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120"><rect width="180" height="120" fill="#e67e22"/></svg>').toString('base64');
 let win = null;
 
 ipcMain.on('app:edition-sync', event => {
@@ -83,10 +84,12 @@ ipcMain.handle('kaloneo-library:save-test',(_e,payload)=>{
 });
 ipcMain.handle('kaloneo-library:list-images',()=>({ok:true,images:[
   {id:'img-smoke-library',name:'bibliotheque-kaloneo.svg',mime:'image/svg+xml',size:123,category:'Mes images KALONÉO',systemProvided:false,sourceName:''},
+  {id:'img-smoke-alternative',name:'bibliotheque-changement.svg',mime:'image/svg+xml',size:124,category:'Mes images KALONÉO',systemProvided:false,sourceName:''},
   ...[...importedImages.values()].map(({data,...metadata})=>metadata)
 ]}));
 ipcMain.handle('kaloneo-library:get-image',(_e,id)=>{
   if(id==='img-smoke-library')return {ok:true,image:{id,name:'bibliotheque-kaloneo.svg',mime:'image/svg+xml',size:123,category:'Mes images KALONÉO',systemProvided:false,data:imageLibraryData}};
+  if(id==='img-smoke-alternative')return {ok:true,image:{id,name:'bibliotheque-changement.svg',mime:'image/svg+xml',size:124,category:'Mes images KALONÉO',systemProvided:false,data:imageLibraryAlternativeData}};
   const image=importedImages.get(id);
   return image?{ok:true,image}:{ok:false,error:'absent'};
 });
@@ -270,6 +273,17 @@ app.whenReady().then(async()=>{
          document.querySelectorAll('.exercise-block .block-image-options').length!==1){
         throw new Error('Bloc Texte : image de fond et options avancées introuvables après sélection');
       }
+      const undoText=document.getElementById('undo-change');
+      const redoText=document.getElementById('redo-change');
+      if(undoText.disabled)throw new Error('Annuler désactivé immédiatement après une image de fond');
+      undoText.click();
+      if(redoText.disabled||document.querySelector('.exercise-block .block-image-options')){
+        throw new Error('Annuler ne restaure pas le bloc Texte sans image de fond');
+      }
+      redoText.click();
+      if(document.querySelectorAll('.exercise-block .block-image-options').length!==1){
+        throw new Error('Rétablir ne remet pas l’image de fond du bloc Texte');
+      }
       const type=document.querySelector('.exercise-block .block-type');
       type.value='image';
       type.dispatchEvent(new Event('change',{bubbles:true}));
@@ -372,7 +386,34 @@ app.whenReady().then(async()=>{
       return fail('sélection d’une image depuis la bibliothèque KALONÉO incorrecte',libraryPick);
     }
 
-    const pageBackground=await win.webContents.executeJavaScript(`(async()=>{
+    const immediateImageHistory=await win.webContents.executeJavaScript(`(async()=>{
+      document.querySelector('.exercise-block .choose-library-image').click();
+      await new Promise(resolve=>setTimeout(resolve,130));
+      const library=document.getElementById('image-library-dialog');
+      const alternative=[...library.querySelectorAll('.image-library-card')].find(card=>
+        card.querySelector('strong')?.textContent==='bibliotheque-changement.svg');
+      alternative?.querySelector('.image-library-use')?.click();
+      for(let i=0;i<18&&library.open;i++)await new Promise(resolve=>setTimeout(resolve,35));
+      if(library.open)return {ok:false,error:'la sélection ne s’est pas refermée'};
+      const name=()=>document.querySelector('.exercise-block .file-preview-name')?.textContent||'';
+      const undo=document.getElementById('undo-change');
+      const redo=document.getElementById('redo-change');
+      const updatedName=name(),canUndo=!undo.disabled;
+      undo.click();
+      const undoneName=name(),canRedo=!redo.disabled;
+      redo.click();
+      const redoneName=name();
+      return {ok:true,updatedName,canUndo,undoneName,canRedo,redoneName};
+    })()`,true);
+    if(!immediateImageHistory.ok||!immediateImageHistory.canUndo||!immediateImageHistory.canRedo||
+       !immediateImageHistory.updatedName.includes('bibliotheque-changement.svg')||
+       !immediateImageHistory.undoneName.includes('bibliotheque-kaloneo.svg')||
+       !immediateImageHistory.redoneName.includes('bibliotheque-changement.svg')){
+      return fail('R80: Annuler / Rétablir indisponible immédiatement après changement image',immediateImageHistory);
+    }
+    console.log('KALONEO_IMMEDIATE_IMAGE_UNDO_REDO=OK',JSON.stringify(immediateImageHistory));
+
+        const pageBackground=await win.webContents.executeJavaScript(`(async()=>{
       document.getElementById('choose-page-background-image').click();
       await new Promise(resolve=>setTimeout(resolve,160));
       const dialog=document.getElementById('image-library-dialog');

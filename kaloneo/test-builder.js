@@ -2639,9 +2639,16 @@
       flushTypingRefresh();
     }
     if(!applyingHistory){
-      builderDirty=true;
-      updateDirtyIndicator();
-      scheduleHistorySnapshot();
+      if(options.typing===true){
+        // Regrouper uniquement la saisie continue, pas les actions ponctuelles.
+        builderDirty=true;
+        updateDirtyIndicator();
+        scheduleHistorySnapshot();
+      }else{
+        // Image, liste, couleur et bouton : Annuler doit être utilisable
+        // immédiatement, sans attendre le délai de frappe de 350 ms.
+        commitHistorySnapshot();
+      }
     }
   }
 
