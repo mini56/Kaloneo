@@ -670,7 +670,7 @@
             const block=tableBlocks.find(entry=>entry.tableDefinition?.id===table.id) || tableBlocks[index];
             if(!block)return;
             const style=builderItemStyle(block);
-            if(Object.keys(style).length) table.builderStyle=style;
+            if(style) table.builderStyle=style;
             else if(Object.prototype.hasOwnProperty.call(table,'builderStyle')) delete table.builderStyle;
           });
         }
