@@ -1253,7 +1253,7 @@
       changed();renderBlocks();
     });
     label.appendChild(input);
-    body.appendChild(label);
+    if(block.type!=='image')body.appendChild(label);
 
     if(block.type==='image'){
       const scalePanel=document.createElement('div');
@@ -1272,7 +1272,7 @@
       const choose=document.createElement('button');
       choose.type='button';
       choose.className='mini-btn choose-library-image';
-      choose.textContent='Choisir dans la bibliothèque d’images';
+      choose.textContent='Choisir une image';
       choose.addEventListener('click',()=>openImageLibrary(block.uid).catch(error=>alert('Bibliothèque d’images inaccessible : '+String(error?.message||error))));
       body.appendChild(choose);
     }
@@ -1384,6 +1384,19 @@
     const options=document.createElement('div');options.className='field-row cols-3';options.append(position,fit,opacity);
     if(block.type!=='text')panel.append(title,row);
     panel.append(bgLabel,controls,options);
+    if(block.type==='text'){
+      const scalePanel=document.createElement('div');scalePanel.className='image-scale-controls';
+      const scaleLabel=document.createElement('label');scaleLabel.textContent='Taille de l’image de fond';
+      const scale=document.createElement('input');scale.type='range';scale.min='10';scale.max='100';scale.step='1';
+      const value=document.createElement('output');
+      const updateSize=n=>{block.backgroundScale=Math.max(10,Math.min(100,Math.round(Number(n)||100)));scale.value=String(block.backgroundScale);value.textContent=scale.value+' %';changed();};
+      scale.value=String(Number(block.backgroundScale)>=10&&Number(block.backgroundScale)<=100?block.backgroundScale:100);value.textContent=scale.value+' %';
+      scale.addEventListener('input',()=>updateSize(scale.value));
+      const smaller=document.createElement('button');smaller.type='button';smaller.className='mini-btn';smaller.textContent='−';smaller.addEventListener('click',()=>updateSize(Number(scale.value)-5));
+      const larger=document.createElement('button');larger.type='button';larger.className='mini-btn';larger.textContent='+';larger.addEventListener('click',()=>updateSize(Number(scale.value)+5));
+      const reset=document.createElement('button');reset.type='button';reset.className='mini-btn';reset.textContent='100 %';reset.addEventListener('click',()=>updateSize(100));
+      scaleLabel.appendChild(scale);scalePanel.append(scaleLabel,smaller,value,larger,reset);panel.appendChild(scalePanel);
+    }
     body.appendChild(panel);
   }
 
@@ -1410,7 +1423,7 @@
       node.style.backgroundImage='linear-gradient(rgba(255,255,255,'+(1-opacity)+'),rgba(255,255,255,'+(1-opacity)+')),url('+JSON.stringify(String(block.backgroundImage).startsWith('imageqcm/')?'../'+block.backgroundImage:block.backgroundImage)+')';
       node.style.backgroundRepeat='no-repeat';
       node.style.backgroundPosition=String(block.backgroundPosition||'right bottom');
-      node.style.backgroundSize=block.backgroundFit==='cover'?'cover':block.backgroundFit==='contain'?'contain':'auto 78%';
+      const bgScale=Number(block.backgroundScale);node.style.backgroundSize=bgScale>=10&&bgScale<100?bgScale+'% auto':block.backgroundFit==='cover'?'cover':block.backgroundFit==='contain'?'contain':'auto 78%';
     }
     return node;
   }
