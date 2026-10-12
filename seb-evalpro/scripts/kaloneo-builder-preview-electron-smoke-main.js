@@ -212,7 +212,60 @@ app.whenReady().then(async()=>{
        history.afterRedo.value!=='Saisie immédiate'||history.afterRedo.undoDisabled||!history.afterRedo.redoDisabled){
       return fail('Annuler / Rétablir du Builder incorrect',history);
     }
-    const setup=await win.webContents.executeJavaScript(`(async()=>{
+    const foldBehavior=await win.webContents.executeJavaScript(`(async()=>{
+      const add=document.getElementById('add-block');
+      add.click();add.click();
+      let blocks=[...document.querySelectorAll('.exercise-block')];
+      if(blocks.length!==3)return {ok:false,error:'Trois blocs attendus'};
+      const second=blocks[1];
+      second.querySelector('.block-type').value='question';
+      second.querySelector('.block-type').dispatchEvent(new Event('change',{bubbles:true}));
+      blocks=[...document.querySelectorAll('.exercise-block')];
+      const target=blocks[1],uid=target.dataset.uid;
+      const input=target.querySelector('.block-body textarea');
+      if(!input)return {ok:false,error:'Question sans zone de saisie'};
+      input.value='Question conservée quand le bloc est réduit';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      const before=target.getBoundingClientRect().height;
+      const toggle=target.querySelector('.toggle-block');
+      toggle.click();
+      const collapsed=target.getBoundingClientRect().height;
+      const hidden=target.querySelector('.block-body').hidden;
+      const expectedHeader=target.querySelector('.block-header').getBoundingClientRect().height;
+      const headerFits=target.querySelector('.block-header').scrollWidth<=target.querySelector('.block-header').clientWidth+2;
+      const buttons=[...target.querySelectorAll('.block-header>button')];
+      const correctOrder=buttons.at(-2)?.classList.contains('remove-block')&&buttons.at(-1)?.classList.contains('toggle-block');
+      const zoneWidth=Math.round(target.querySelector('.block-zone').getBoundingClientRect().width);
+      const undo=document.getElementById('undo-change');
+      const canUndo=!undo.disabled;
+      // Changer l'ordre doit préserver l'état réduit du même bloc (UID stable).
+      target.querySelector('.move-down').click();
+      const moved=[...document.querySelectorAll('.exercise-block')][2];
+      const moveKeptFold=moved.dataset.uid===uid&&moved.classList.contains('is-collapsed')&&moved.querySelector('.block-body').hidden;
+      const movedButton=moved.querySelector('.toggle-block');
+      movedButton.click();
+      const expanded=moved.getBoundingClientRect().height;
+      const preserved=moved.querySelector('.block-body textarea')?.value==='Question conservée quand le bloc est réduit';
+      const ariaRestored=movedButton.getAttribute('aria-expanded')==='true'&&!moved.querySelector('.block-body').hidden;
+      // Le pliage ne doit pas créer de nouveau pas dans l'historique Annuler.
+      document.getElementById('new-test').click();
+      return {
+        ok:true,before,collapsed,expectedHeader,expanded,hidden,headerFits,correctOrder,
+        zoneWidth,canUndo,moveKeptFold,preserved,ariaRestored,
+        newTestHasOneBlock:document.querySelectorAll('.exercise-block').length===1
+      };
+    })()`,true);
+    if(!foldBehavior.ok||!foldBehavior.hidden||!foldBehavior.headerFits||!foldBehavior.correctOrder||
+       !foldBehavior.moveKeptFold||!foldBehavior.preserved||!foldBehavior.ariaRestored||
+       !foldBehavior.newTestHasOneBlock||foldBehavior.zoneWidth>118||
+       foldBehavior.before-foldBehavior.collapsed<125||
+       Math.abs(foldBehavior.collapsed-foldBehavior.expectedHeader)>36||
+       foldBehavior.expanded<foldBehavior.collapsed+125) {
+      return fail('Réduction / déploiement des blocs : contenu, ordre ou dimensions incorrects',foldBehavior);
+    }
+    console.log('KALONEO_BLOCK_COLLAPSE_EXPAND_ELECTRON=OK',JSON.stringify(foldBehavior));
+
+        const setup=await win.webContents.executeJavaScript(`(async()=>{
       document.getElementById('test-title').value='Aperçu Electron Smoke';
       document.getElementById('test-title').dispatchEvent(new Event('input',{bubbles:true}));
       const scenario=document.getElementById('test-scenario');

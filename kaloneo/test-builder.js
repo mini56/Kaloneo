@@ -26,6 +26,7 @@
   let historyTimer = null;
   let applyingHistory = false;
   const activeGridEditorColumn=new Map(); // UI only: never saved into KALTEST
+  const collapsedBlockUids=new Set(); // état d'affichage uniquement, jamais écrit dans les tests
   let builderDirty = false;
   let savedFingerprint = String(localStorage.getItem(SAVED_FINGERPRINT_KEY) || '');
   let statusToken = 0;
@@ -1758,10 +1759,30 @@
       });
       frag.querySelector('.remove-block').addEventListener('click',()=>{
         if(!confirm('Supprimer le bloc complet '+(index+1)+' ? Tout le contenu de ce bloc sera perdu.')) return;
+        collapsedBlockUids.delete(block.uid);
         state.blocks.splice(index,1);changed();renderBlocks();
       });
 
-      renderBlockBody(block,frag.querySelector('.block-body'),index);
+      const blockBody=article.querySelector('.block-body');
+      const foldButton=article.querySelector('.toggle-block');
+      blockBody.id='builder-block-body-'+block.uid;
+      foldButton.setAttribute('aria-controls',blockBody.id);
+      const updateFold=()=>{
+        const collapsed=collapsedBlockUids.has(block.uid);
+        article.classList.toggle('is-collapsed',collapsed);
+        blockBody.hidden=collapsed;
+        foldButton.textContent=collapsed?'▾':'▴';
+        foldButton.setAttribute('aria-expanded',String(!collapsed));
+        foldButton.title=collapsed?'Déployer ce bloc':'Réduire ce bloc';
+        foldButton.setAttribute('aria-label',foldButton.title);
+      };
+      foldButton.addEventListener('click',()=>{
+        if(collapsedBlockUids.has(block.uid))collapsedBlockUids.delete(block.uid);
+        else collapsedBlockUids.add(block.uid);
+        updateFold(); // purement visuel : pas de modification du test ni d'historique
+      });
+      renderBlockBody(block,blockBody,index);
+      updateFold();
       host.appendChild(frag);
     });
 
@@ -2339,6 +2360,7 @@
     state.sourceDefinition=model.sourceDefinition;
     state.sourceProtectedVersion=options.protectedVersion===true;
     state.blocks=model.blocks;
+    collapsedBlockUids.clear(); // chaque nouveau test s'ouvre déployé
     applyMeta(model.meta);
     syncProtectedVersionUi();
     renderIconPicker();
@@ -2676,6 +2698,7 @@
     state.sourceDefinition=null;
     state.sourceProtectedVersion=false;
     state.blocks=[baseBlock('text')];
+    collapsedBlockUids.clear();
     applyMeta(defaultMeta());
     syncProtectedVersionUi();
     renderIconPicker();

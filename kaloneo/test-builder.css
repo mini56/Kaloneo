@@ -167,9 +167,34 @@ textarea {
 
 .block-header {
   display: grid;
-  grid-template-columns: auto minmax(150px,1fr) minmax(130px,.8fr) auto auto auto;
-  gap: 8px;
+  grid-template-columns: 28px minmax(105px,1fr) 106px 30px 30px max-content 30px;
+  gap: 6px;
   align-items: center;
+}
+.block-header .block-type,
+.block-header .block-zone{
+  width:100%;
+  min-width:0;
+}
+.block-header .move-up,
+.block-header .move-down,
+.block-header .toggle-block{
+  width:30px;
+  min-width:30px;
+  height:30px;
+  min-height:30px;
+  padding:0!important;
+  font-size:16px;
+  line-height:1;
+}
+.block-header .toggle-block{
+  font-size:20px;
+}
+.exercise-block.is-collapsed>.block-body{
+  display:none;
+}
+.exercise-block.is-collapsed{
+  padding-bottom:12px;
 }
 
 .block-index {
@@ -411,7 +436,8 @@ textarea {
   .block-body .field-row.cols-3 { grid-template-columns: 1fr; }
 
   .block-header {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 28px minmax(105px,1fr) 95px 30px 30px max-content 30px;
+    overflow-x:auto;
   }
 }
 
