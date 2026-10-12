@@ -1049,19 +1049,15 @@ body{
   margin-left:2px;
 }
 
-/* R48.6 — la miniature est une photographie du vrai moteur et non un second layout. */
+/* Aperçu immédiat du Builder en dessous, capture fidèle Electron seulement à jour. */
 .candidate-preview-snapshot{
   position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
   pointer-events:none;z-index:4;
 }
 .candidate-preview-snapshot[hidden]{display:none!important;}
-.candidate-preview-status{
-  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  padding:24px;text-align:center;color:#004E70;background:#f2f6f9;
-  font-size:14px;z-index:5;pointer-events:none;
-}
-.candidate-preview-status[hidden]{display:none!important;}
-.candidate-preview-viewport>.candidate-preview{visibility:hidden!important;}
+/* Aucun panneau coloré intermédiaire n'efface le rendu en cours de saisie. */
+.candidate-preview-status{display:none!important;}
+.candidate-preview-viewport>.candidate-preview{visibility:visible!important;}
 
 .candidate-preview-warning{font-size:12px;color:#004E70;margin:8px 0 0;min-height:16px;}
 

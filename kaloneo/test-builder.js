@@ -2043,48 +2043,83 @@
 
   const MINI_PREVIEW_WIDTH=1366;
   const MINI_PREVIEW_HEIGHT=768;
+  // Le rendu HTML du Builder répond immédiatement. Une seule capture Electron
+  // est demandée après une pause : pas de rechargement du candidat par touche.
+  const MINI_PREVIEW_IDLE_MS=1100;
   let miniPreviewTimer=null;
   let miniPreviewRevision=0;
-  function refreshRealMiniPreview() {
-    const revision=++miniPreviewRevision;
+  let miniPreviewRunning=false;
+  let miniPreviewDeferredRevision=null;
+
+  function invalidateMiniPreview() {
+    ++miniPreviewRevision;
     if(miniPreviewTimer)clearTimeout(miniPreviewTimer);
+    miniPreviewTimer=null;
+    miniPreviewDeferredRevision=null;
     const image=$('candidate-preview-snapshot');
+    if(image)image.hidden=true; // Ne jamais recouvrir le texte courant par une ancienne capture.
     const status=$('candidate-preview-status');
-    if(!image||!status)return;
-    // Garder la dernière capture visible pendant la frappe ; la nouvelle la remplace dès qu'elle est prête.
-    // Une seule capture sera lancée après la pause de saisie, jamais à chaque caractère.
-    status.textContent='Actualisation du rendu candidat…';
-    status.hidden=false;
+    if(status)status.hidden=true; // Aucun écran intermédiaire sur le rendu direct.
+    const warning=$('candidate-preview-warning');
+    if(warning)warning.textContent='Aperçu direct — vérification du rendu candidat après une pause.';
+  }
+
+  function scheduleMiniPreviewCapture(delay=MINI_PREVIEW_IDLE_MS) {
+    if(miniPreviewTimer)clearTimeout(miniPreviewTimer);
     miniPreviewTimer=setTimeout(async()=>{
-      const bridge=window.sebEvalPro;
-      if(!bridge?.kaloneoRenderMiniPreview) {
-        status.textContent='Miniature fidèle disponible uniquement dans Electron.';
+      miniPreviewTimer=null;
+      const revision=miniPreviewRevision;
+      if(miniPreviewRunning) {
+        // Une capture est déjà en cours : garder seulement la dernière demande.
+        miniPreviewDeferredRevision=revision;
         return;
       }
+      const bridge=window.sebEvalPro;
+      const status=$('candidate-preview-status');
+      const image=$('candidate-preview-snapshot');
+      const warning=$('candidate-preview-warning');
+      if(!bridge?.kaloneoRenderMiniPreview||!image)return;
+      miniPreviewRunning=true;
       try {
         const result=await bridge.kaloneoRenderMiniPreview(Core.modelToDefinition(currentModel()));
-        if(revision!==miniPreviewRevision)return; // capture précédente obsolète
+        if(revision!==miniPreviewRevision)return; // Capture obsolète : aucun affichage.
         if(!result?.ok||!result.image) {
-          status.textContent='Aperçu indisponible : '+String(result?.error||'rendu candidat non reçu');
+          if(status)status.textContent='Capture Electron indisponible : '+String(result?.error||'rendu absent');
+          if(warning)warning.textContent='Aperçu direct affiché ; contrôle Electron indisponible.';
           return;
         }
         image.src=result.image;
+        if(typeof image.decode==='function') {
+          try{await image.decode();}catch(_){}
+        }
+        if(revision!==miniPreviewRevision)return;
         image.hidden=false;
-        status.hidden=true;
         const warnings=[];
         if(result.report?.overflowZones)warnings.push('débordement de bloc');
         if(result.report?.tableHorizontalOverflow)warnings.push('tableau trop large');
         if(result.report?.brokenImages?.length)warnings.push('image introuvable');
-        const alert=$('candidate-preview-warning');
-        if(alert){
-          alert.textContent=warnings.length?
-            'À corriger dans le rendu candidat : '+warnings.join(', ')+'.':
-            'Réduction fidèle du rendu candidat 1366 × 768.';
+        if(warning)warning.textContent=warnings.length?
+          'À corriger dans le rendu candidat : '+warnings.join(', ')+'.':
+          'Rendu candidat fidèle 1366 × 768 vérifié.';
+      }catch(error) {
+        if(revision===miniPreviewRevision) {
+          if(status)status.textContent='Impossible de calculer le rendu : '+String(error?.message||error);
+          if(warning)warning.textContent='Aperçu direct affiché ; contrôle Electron indisponible.';
         }
-      } catch(error) {
-        if(revision===miniPreviewRevision)status.textContent='Impossible de calculer le rendu : '+String(error?.message||error);
+      }finally{
+        miniPreviewRunning=false;
+        // Les captures obsolètes ne sont pas mises en file d’attente.
+        if(miniPreviewDeferredRevision===miniPreviewRevision) {
+          miniPreviewDeferredRevision=null;
+          scheduleMiniPreviewCapture(0);
+        }
       }
-    },850);
+    },delay);
+  }
+
+  function refreshRealMiniPreview() {
+    invalidateMiniPreview();
+    scheduleMiniPreviewCapture();
   }
 
   function fitMiniPreview() {
@@ -2100,7 +2135,40 @@
     page.style.transformOrigin='top left';
   }
 
-  function refreshPreview() {
+  function previewBlockNode(block) {
+    const node=blockPreview(block);
+    if(block.uid)node.dataset.previewUid=String(block.uid);
+    return node;
+  }
+
+  function refreshTypingPreview() {
+    const field=document.activeElement;
+    const uid=field?.closest?.('.exercise-block')?.dataset?.uid;
+    if(uid) {
+      const block=state.blocks.find(item=>item.uid===uid);
+      const existing=Array.from($('preview-exercise')?.querySelectorAll('[data-preview-uid]')||[])
+        .find(node=>node.dataset.previewUid===uid);
+      if(block&&existing) {
+        existing.replaceWith(previewBlockNode(block));
+        return;
+      }
+    }
+    if(field?.id==='test-title') {
+      $('preview-title').textContent=field.value||'Nouveau test';
+      return;
+    }
+    if(field?.id==='test-scenario') {
+      renderRichContext($('preview-scenario'),field.value||'Le scénario apparaîtra ici.');
+      return;
+    }
+    if(field?.id==='test-instruction') {
+      renderRichContext($('preview-instruction'),field.value||'Les consignes apparaîtront ici.');
+      return;
+    }
+    refreshPreview({liveOnly:true});
+  }
+
+  function refreshPreview(options={}) {
     const m=collectMeta();
     $('preview-title').textContent=m.title||'Nouveau test';
     $('preview-version').textContent='v'+m.version;
@@ -2142,7 +2210,7 @@
 
     if(m.layout==='single') {
       const zone=document.createElement('div');zone.className='preview-zone';
-      state.blocks.forEach(block=>zone.appendChild(blockPreview(block)));
+      state.blocks.forEach(block=>zone.appendChild(previewBlockNode(block)));
       host.appendChild(zone);
     } else {
       const left=document.createElement('div');left.className='preview-zone';
@@ -2154,12 +2222,12 @@
       } else {
         host.style.removeProperty('grid-template-columns');
       }
-      state.blocks.forEach(block=>(block.zone==='right'?right:left).appendChild(blockPreview(block)));
+      state.blocks.forEach(block=>(block.zone==='right'?right:left).appendChild(previewBlockNode(block)));
       host.append(left,right);
     }
-    validate();
+    if(!options.liveOnly)validate();
     requestAnimationFrame(fitMiniPreview);
-    refreshRealMiniPreview();
+    if(!options.liveOnly)refreshRealMiniPreview();
   }
 
   function validate() {
@@ -2695,16 +2763,30 @@
   }
 
   let pendingTypingRefresh=null;
+  let pendingLiveTypingFrame=null;
+  function queueLiveTypingPreview() {
+    invalidateMiniPreview(); // Retirer immédiatement toute capture périmée.
+    if(pendingLiveTypingFrame!==null)return;
+    pendingLiveTypingFrame=requestAnimationFrame(()=>{
+      pendingLiveTypingFrame=null;
+      refreshTypingPreview(); // DOM direct au prochain rafraîchissement d'écran.
+    });
+  }
   function flushTypingRefresh() {
     if(pendingTypingRefresh){clearTimeout(pendingTypingRefresh);pendingTypingRefresh=null;}
+    if(pendingLiveTypingFrame!==null){
+      cancelAnimationFrame(pendingLiveTypingFrame);
+      pendingLiveTypingFrame=null;
+    }
     saveDraft(false);
-    refreshPreview();
+    refreshPreview(); // Validation et capture fidèle différées, après la frappe.
   }
   function changed(options={}) {
     const typing=options.typing===true||changingInputField;
     if(typing){
-      // Le moteur de capture Electron recharge une vraie page candidat : ne jamais le lancer pendant la frappe.
-      // Conserver immédiatement la valeur dans le modèle, puis enregistrer et prévisualiser après une courte pause.
+      // Réagir pendant la frappe sans détruire les champs de l'éditeur.
+      // Le vrai moteur Electron ne capture qu'après une pause.
+      queueLiveTypingPreview();
       if(pendingTypingRefresh)clearTimeout(pendingTypingRefresh);
       pendingTypingRefresh=setTimeout(flushTypingRefresh,350);
     }else{

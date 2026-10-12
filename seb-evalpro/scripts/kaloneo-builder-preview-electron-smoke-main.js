@@ -23,6 +23,11 @@ let protectedOrganisation = null;
 const imageLibraryData = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120"><rect width="180" height="120" fill="#1b6c8e"/></svg>').toString('base64');
 const imageLibraryAlternativeData = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120"><rect width="180" height="120" fill="#e67e22"/></svg>').toString('base64');
 let win = null;
+let miniRenderCalls = 0;
+ipcMain.handle('kaloneo-builder:render-mini-preview',()=>{
+  miniRenderCalls++;
+  return {ok:false,error:'Capture Electron simulée pour le test du Builder'};
+});
 
 ipcMain.on('app:edition-sync', event => {
   event.returnValue = {edition:'unified',canBilan:true,canAi:true,canImport:true,canExport:true};
@@ -217,6 +222,37 @@ app.whenReady().then(async()=>{
        history.afterRedo.value!=='Saisie immédiate'||history.afterRedo.undoDisabled||!history.afterRedo.redoDisabled){
       return fail('Annuler / Rétablir du Builder incorrect',history);
     }
+    // Vérifier une frappe immédiatement visible, sans overlay ni capture Electron.
+    const miniBeforeTyping=miniRenderCalls;
+    const liveTyping=await win.webContents.executeJavaScript(`(async()=>{
+      const field=document.querySelector('.exercise-block .block-body textarea');
+      if(!field)return {ok:false,reason:'Champ de texte initial absent'};
+      field.focus();
+      field.value='Texte mis à jour instantanément';
+      field.setSelectionRange(field.value.length,field.value.length);
+      field.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(resolve=>setTimeout(resolve,100));
+      const content=document.getElementById('preview-exercise');
+      const page=document.getElementById('candidate-preview');
+      const overlay=document.getElementById('candidate-preview-status');
+      const snapshot=document.getElementById('candidate-preview-snapshot');
+      return {
+        ok:true,
+        displayed:content?.textContent.includes('Texte mis à jour instantanément'),
+        visible:getComputedStyle(page).visibility==='visible',
+        noBlueOverlay:getComputedStyle(overlay).display==='none',
+        oldCaptureHidden:snapshot.hidden,
+        cursorStable:document.activeElement===field&&field.isConnected&&field.selectionStart===field.value.length
+      };
+    })()`,true);
+    if(!liveTyping.ok||!liveTyping.displayed||!liveTyping.visible||!liveTyping.noBlueOverlay||
+       !liveTyping.oldCaptureHidden||!liveTyping.cursorStable||miniRenderCalls!==miniBeforeTyping){
+      return fail('Aperçu direct pendant la frappe ou stabilité du curseur incorrect', {
+        liveTyping,capturesBefore:miniBeforeTyping,capturesAfter:miniRenderCalls
+      });
+    }
+    console.log('KALONEO_BUILDER_LIVE_TYPING_NO_BLUE_SCREEN=OK',JSON.stringify(liveTyping));
+
     const foldBehavior=await win.webContents.executeJavaScript(`(async()=>{
       const add=document.getElementById('add-block');
       add.click();add.click();

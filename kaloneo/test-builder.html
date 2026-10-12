@@ -294,7 +294,7 @@
       <div class="preview-toolbar">
         <div>
           <h2>Aperçu fidèle du candidat</h2>
-          <p class="muted">Image réduite du véritable moteur candidat (1366 × 768). Les avertissements signalent les débordements.</p>
+          <p class="muted">Aperçu immédiat pendant la saisie ; contrôle fidèle Electron (1366 × 768) après une pause. Les avertissements signalent les débordements.</p>
         </div>
         <div class="preview-toolbar-actions">
           <button id="open-electron-preview" class="seb-action-btn seb-btn-nav" type="button">Aperçu</button>
@@ -303,7 +303,7 @@
 
       <div id="candidate-preview-viewport" class="candidate-preview-viewport">
         <img id="candidate-preview-snapshot" class="candidate-preview-snapshot" alt="Rendu réel de la page candidat, réduit proportionnellement" hidden>
-        <div id="candidate-preview-status" class="candidate-preview-status" role="status">Préparation de l’aperçu candidat…</div>
+        <div id="candidate-preview-status" class="candidate-preview-status" role="status" hidden></div>
       <div id="candidate-preview" class="candidate-preview">
         <div class="preview-heading">
           <div class="preview-title-with-icon">
@@ -327,7 +327,7 @@
         <section id="preview-exercise" class="preview-exercise"></section>
       </div>
       </div>
-      <p id="candidate-preview-warning" class="candidate-preview-warning">Réduction du véritable moteur candidat en préparation.</p>
+      <p id="candidate-preview-warning" class="candidate-preview-warning">Aperçu direct — vérification du rendu candidat après une pause.</p>
     </section>
   </main>
 
