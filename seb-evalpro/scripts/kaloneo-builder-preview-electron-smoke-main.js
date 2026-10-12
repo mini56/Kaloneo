@@ -154,8 +154,7 @@ app.whenReady().then(async()=>{
     show:false,width:1366,height:768,
     webPreferences:{
       preload:path.join(root,'src','preload.js'),
-      contextIsolation:true,nodeIntegration:false,sandbox:false,
-      backgroundThrottling:false // L'aperçu utilise requestAnimationFrame, même dans ce smoke caché.
+      contextIsolation:true,nodeIntegration:false,sandbox:false
     }
   });
   win.webContents.on('preload-error',(_event,badPath,error)=>fail('erreur preload '+String(badPath||''),{error:String(error&&error.stack||error)}));
@@ -714,7 +713,7 @@ app.whenReady().then(async()=>{
         await win.webContents.executeJavaScript(`document.getElementById('open-electron-preview').click();true`);
     for(let i=0;i<30;i++){
       await wait(120);
-      const p=await win.webContents.executeJavaScript('location.pathname');
+      const p=win.webContents.getURL(); // Ne pas exécuter de JS dans un frame en cours de navigation.
       if(/test-preview\.html$/i.test(p)) break;
     }
     await wait(500);
@@ -844,7 +843,7 @@ app.whenReady().then(async()=>{
     await win.webContents.executeJavaScript(`document.querySelector('.close-preview').click();true`);
     for(let i=0;i<30;i++){
       await wait(120);
-      const p=await win.webContents.executeJavaScript('location.pathname');
+      const p=win.webContents.getURL(); // Ne pas exécuter de JS dans un frame en cours de navigation.
       if(/test-builder\.html$/i.test(p)) break;
     }
     await wait(500);
@@ -989,7 +988,7 @@ app.whenReady().then(async()=>{
     await win.webContents.executeJavaScript("document.getElementById('open-electron-preview').click(); true");
     for(let attempt=0;attempt<30;attempt++){
       await wait(150);
-      const p=await win.webContents.executeJavaScript('location.pathname');
+      const p=win.webContents.getURL(); // Ne pas exécuter de JS dans un frame en cours de navigation.
       if(/test-preview\.html$/i.test(p)) break;
     }
     await wait(400);
@@ -1072,7 +1071,7 @@ app.whenReady().then(async()=>{
     }
     for(let attempt=0;attempt<30;attempt++){
       await wait(120);
-      const p=await win.webContents.executeJavaScript('location.pathname');
+      const p=win.webContents.getURL(); // Ne pas exécuter de JS dans un frame en cours de navigation.
       if(/test-preview\.html$/i.test(p))break;
     }
     if(previewDefinition?.id!=='genre_nombre'||
