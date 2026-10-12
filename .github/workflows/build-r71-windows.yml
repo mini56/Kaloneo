@@ -1,21 +1,6 @@
 name: 'Build Windows KALONÉO R72 — Build #77 Restaurant V1 (branche existante)'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - 'kaloneo/test-builder.js'
-      - 'kaloneo/test-preview.js'
-      - 'kaloneo/builder-core.js'
-      - 'seb-evalpro/source/js/kaltest-pilot2-runtime.js'
-      - 'seb-evalpro/scripts/kaloneo-restaurant-v1-r70-smoke.js'
-      - '.github/workflows/build-r71-windows.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r72-builder.yml'
-      - 'seb-evalpro/scripts/full-pilot-journey-smoke-main.js'
   workflow_dispatch:
-
 permissions:
   contents: write
 
