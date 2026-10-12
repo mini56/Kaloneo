@@ -616,14 +616,13 @@ app.whenReady().then(async()=>{
       if(!valueType)return {ok:false,reason:'Type de sortie absent'};
       valueType.value='integer';valueType.dispatchEvent(new Event('change',{bubbles:true}));
       document.getElementById('add-bilan-contribution').click();
-      const link=document.querySelector('#bilan-editor .contract-link-row select');
+      const link=[...document.querySelectorAll('#bilan-editor .contract-link-row select')].at(-1);
       if(!link)return {ok:false,reason:'Bouton Liaison Bilan inopérant'};
-      link.value='bilan.competences_techniques.planning.repartition_taches';
+      link.value='bilan.competences_techniques.briques.identifier_schema';
       link.dispatchEvent(new Event('change',{bubbles:true}));
-      const mapping=[...document.querySelectorAll('#bilan-editor .contract-bindings select')];
-      if(mapping.length!==2)return {ok:false,reason:'Entrées de la ligne Planning absentes'};
-      mapping[0].value='score';mapping[0].dispatchEvent(new Event('change',{bubbles:true}));
-      mapping[1].value='score_max';mapping[1].dispatchEvent(new Event('change',{bubbles:true}));
+      const errorsSelect=[...document.querySelectorAll('#bilan-editor .contract-item')].at(-1)?.querySelector('.contract-bindings select');
+      if(!errorsSelect)return {ok:false,reason:'Entrée erreurs de la ligne Briques absente'};
+      errorsSelect.value='variable_restaurant';errorsSelect.dispatchEvent(new Event('change',{bubbles:true}));
       const preview=document.getElementById('open-electron-preview');
       if(!preview)return {ok:false,reason:'Bouton aperçu absent'};
       preview.click();
@@ -640,8 +639,8 @@ app.whenReady().then(async()=>{
       ?.filter(block=>block?.type==='text').map(block=>String(block.text||'')).join(' ')||'';
     if(!previewDefinition?.outputs?.some(output=>output.id==='variable_restaurant'&&output.type==='integer')||
        !previewDefinition?.bilanContributions?.some(link=>
-         link.lineId==='bilan.competences_techniques.planning.repartition_taches'&&
-         link.bindings?.score==='score'&&link.bindings?.score_max==='score_max')){
+         link.lineId==='bilan.competences_techniques.briques.identifier_schema'&&
+         link.bindings?.erreurs==='variable_restaurant')){
       return fail('Sortie et liaison Bilan non conservées dans la définition KALTEST',previewDefinition?.bilanContributions);
     }
     if(!definitionIndications.includes('JacquelinX')||definitionIndications.includes('Jacqueline')) {
