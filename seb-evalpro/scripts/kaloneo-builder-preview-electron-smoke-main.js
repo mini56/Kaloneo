@@ -154,7 +154,8 @@ app.whenReady().then(async()=>{
     show:false,width:1366,height:768,
     webPreferences:{
       preload:path.join(root,'src','preload.js'),
-      contextIsolation:true,nodeIntegration:false,sandbox:false
+      contextIsolation:true,nodeIntegration:false,sandbox:false,
+      backgroundThrottling:false // L'aperçu utilise requestAnimationFrame, même dans ce smoke caché.
     }
   });
   win.webContents.on('preload-error',(_event,badPath,error)=>fail('erreur preload '+String(badPath||''),{error:String(error&&error.stack||error)}));
@@ -239,6 +240,8 @@ app.whenReady().then(async()=>{
       return {
         ok:true,
         displayed:content?.textContent.includes('Texte mis à jour instantanément'),
+        previewText:String(content?.textContent||'').slice(0,220),
+        previewBlockCount:content?.querySelectorAll('[data-preview-uid]').length||0,
         visible:getComputedStyle(page).visibility==='visible',
         noBlueOverlay:getComputedStyle(overlay).display==='none',
         oldCaptureHidden:snapshot.hidden,
