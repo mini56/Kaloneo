@@ -1,34 +1,12 @@
 name: 'Build Windows KALONÉO R76 — Build #81 CSS boutons harmonisés (branche existante)'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - 'seb-evalpro/source/css/seb-button-styles.css'
-      - 'seb-evalpro/source/css/seb-design-system.css'
-      - 'seb-evalpro/source/css/seb-in-app-alert.css'
-      - 'seb-evalpro/source/css/kaloneo-remaining-pages.css'
-      - 'seb-evalpro/source/css/admin-mask-preview.css'
-      - 'seb-evalpro/source/css/admin-mask-builder.css'
-      - 'seb-evalpro/source/css/admin-parcours-builder.css'
-      - 'seb-evalpro/overrides/admin-tests-parcours.html'
-      - 'seb-evalpro/overrides/admin-kaloneo-transfer.html'
-      - 'kaloneo/test-builder.html'
-      - 'kaloneo/test-builder.css'
-      - 'kaloneo/bilan-catalog.js'
-      - 'kaloneo/test-builder.js'
-      - 'kaloneo/test-preview.js'
-      - 'kaloneo/builder-core.js'
-      - 'seb-evalpro/source/js/kaltest-pilot2-runtime.js'
-      - 'seb-evalpro/scripts/kaloneo-restaurant-v1-r70-smoke.js'
-      - '.github/workflows/build-r76-windows.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r76-builder.yml'
-      - 'seb-evalpro/scripts/full-pilot-journey-smoke-main.js'
-      - 'seb-evalpro/scripts/kaloneo-builder-preview-electron-smoke-main.js'
-      - 'seb-evalpro/scripts/kaloneo-builder-r48-4-real-preview-electron-smoke-main.js'
+  # R76 / Build #81 déjà publié : compilation automatique désactivée.
   workflow_dispatch:
+
+# Conserver ce groupe pour les futurs Builds R77, R78, etc.
+concurrency:
+  group: kaloneo-windows-setup-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write

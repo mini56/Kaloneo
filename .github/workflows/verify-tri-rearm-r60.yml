@@ -5,6 +5,10 @@ on:
       - fix-r60-tri-rearm-only-20261011
   workflow_dispatch:
 
+concurrency:
+  group: kaloneo-crossregression-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
