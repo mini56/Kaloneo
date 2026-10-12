@@ -1,4 +1,4 @@
-name: 'Build Windows KALONÉO R77 — Build #82 Galerie d'images nettoyée (branche existante)'
+name: 'Build Windows KALONÉO R77 — Build #82 Galerie images nettoyée (branche existante)'
 on:
   push:
     branches:
@@ -152,7 +152,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = 'seb-kaloneo-v1-fixes-r77-test'
-          $title = 'SEB EvalPro Kalonéo — R77 / Build #82 — Galerie d'images sans doublons — TEST'
+          $title = 'SEB EvalPro Kalonéo — R77 / Build #82 — Galerie images sans doublons — TEST'
           if (gh release view $tag 2>$null) {
             throw 'Release R77 deja presente : ne pas ecraser une release existante.'
           }
