@@ -40,7 +40,11 @@
   function savePreviewFoldState() {
     const snapshot={
       id:$('test-id')?.value||'',version:$('test-version')?.value||'',
-      blocks:state.blocks.map((b,i)=>({index:i,type:b.type,collapsed:collapsedBlockUids.has(b.uid)}))
+      blocks:state.blocks.map((b,i)=>({index:i,type:b.type,collapsed:collapsedBlockUids.has(b.uid)})),
+      sections:{
+        bilan: $('toggle-contract-section')?.getAttribute('aria-expanded')==='true',
+        icones: $('toggle-icon-library')?.getAttribute('aria-expanded')==='true'
+      }
     };
     try{sessionStorage.setItem(PREVIEW_FOLD_KEY,JSON.stringify(snapshot));}catch(_){}
   }
@@ -55,6 +59,12 @@
     if(snapshot.blocks.some((b,i)=>b.index!==i||b.type!==state.blocks[i]?.type))return false;
     collapsedBlockUids.clear();
     snapshot.blocks.forEach((b,i)=>{if(b.collapsed)collapsedBlockUids.add(state.blocks[i].uid);});
+    // L'état visuel de Sorties et Bilan et des icônes appartient à
+    // la session Builder, pas au JSON KALTEST. Le restaurer avant tout rendu.
+    if(typeof snapshot.sections?.bilan==='boolean')
+      setSectionExpanded('toggle-contract-section',snapshot.sections.bilan);
+    if(typeof snapshot.sections?.icones==='boolean')
+      setSectionExpanded('toggle-icon-library',snapshot.sections.icones);
     return true;
   }
 
@@ -2141,6 +2151,58 @@
     return wrap;
   }
 
+  // Reproduction locale du renderer candidat renderGenreNombre :
+  // mêmes tableaux, mêmes questions et mêmes cellules, sans charger Electron.
+  // La source reste la définition courante V1 ; rien n'est écrit dans le test.
+  function legacyGrammarTablePreview(block) {
+    const definition=block.tableDefinition||{};
+    const wrap=document.createElement('div');
+    wrap.className='preview-grammar-card';
+    const title=document.createElement('h3');
+    title.textContent=definition.title||'Tableau';
+    wrap.appendChild(title);
+    const table=document.createElement('table');
+    table.className='preview-grammar-table';
+    const headers=Array.isArray(definition.headers)?definition.headers:[];
+    if(headers.length){
+      const thead=document.createElement('thead');
+      const tr=document.createElement('tr');
+      headers.forEach(label=>{
+        const th=document.createElement('th');
+        th.textContent=String(label||'');
+        tr.appendChild(th);
+      });
+      thead.appendChild(tr);
+      table.appendChild(thead);
+    }
+    const questions=new Map((state.sourceDefinition?.questions||[]).map(q=>[String(q.id),q]));
+    const tbody=document.createElement('tbody');
+    for(const id of definition.questionIds||[]) {
+      const q=questions.get(String(id));
+      if(!q)continue;
+      const rawPrompt=String(q.prompt||'');
+      const prompt=normalizedSearch(rawPrompt);
+      const source=rawPrompt.match(/«\s*([^»]+?)\s*»/)?.[1]?.trim()||'';
+      const targetLeft=headers.length>1&&prompt.includes(normalizedSearch(headers[0]));
+      const tr=document.createElement('tr');
+      const left=document.createElement('td');
+      const right=document.createElement('td');
+      const answer=document.createElement('input');
+      answer.type='text';
+      answer.readOnly=true;answer.tabIndex=-1;
+      answer.setAttribute('aria-label','Réponse à compléter');
+      const fixed=targetLeft?right:left;
+      fixed.textContent=source;
+      fixed.className='preview-grammar-source';
+      (targetLeft?left:right).appendChild(answer);
+      tr.append(left,right);
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    return wrap;
+  }
+
   function blockPreview(block) {
     const wrap=document.createElement('div');
     wrap.className='preview-content-block';
@@ -2192,9 +2254,7 @@
     } else if(block.type==='inline-flow') {
       node=inlinePreview(block);
     } else if(block.type==='multiple-tables') {
-      const h=document.createElement('h3');h.textContent=block.tableDefinition?.title||'Tableau';
-      wrap.appendChild(h);
-      const p=document.createElement('div');p.textContent=(block.tableDefinition?.headers||[]).join(' | ');wrap.appendChild(p);
+      node=legacyGrammarTablePreview(block);
     }
     node.classList.add('preview-content-block');
     return applyPreviewBlockStyle(node,block);

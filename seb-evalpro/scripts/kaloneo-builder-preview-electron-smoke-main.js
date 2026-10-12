@@ -720,9 +720,14 @@ app.whenReady().then(async()=>{
       const blocks=[...document.querySelectorAll('.exercise-block')];
       if(!blocks.length)return {count:0};
       blocks.forEach(block=>block.querySelector('.toggle-block').click());
-      return {count:blocks.length,folded:[...document.querySelectorAll('.exercise-block.is-collapsed')].map(x=>x.dataset.uid)};
+      const contract=document.getElementById('toggle-contract-section');
+      if(contract?.getAttribute('aria-expanded')==='true')contract.click();
+      const contractCollapsed=contract?.getAttribute('aria-expanded')==='false'
+        &&document.getElementById('contract-section-content')?.hidden===true;
+      return {count:blocks.length,folded:[...document.querySelectorAll('.exercise-block.is-collapsed')].map(x=>x.dataset.uid),contractCollapsed};
     })()`);
-    if(foldsBeforePreview.count<1||foldsBeforePreview.folded.length!==foldsBeforePreview.count)
+    if(foldsBeforePreview.count<1||foldsBeforePreview.folded.length!==foldsBeforePreview.count||
+       !foldsBeforePreview.contractCollapsed)
       return fail('Impossible de préparer les blocs repliés avant le retour Aperçu',foldsBeforePreview);
         await win.webContents.executeJavaScript(`document.getElementById('open-electron-preview').click();true`);
     for(let i=0;i<30;i++){
@@ -874,9 +879,12 @@ app.whenReady().then(async()=>{
 
     const foldsAfterPreview=await win.webContents.executeJavaScript(`(()=>({
       count:document.querySelectorAll('.exercise-block').length,
-      collapsed:document.querySelectorAll('.exercise-block.is-collapsed').length
+      collapsed:document.querySelectorAll('.exercise-block.is-collapsed').length,
+      contractCollapsed:document.getElementById('toggle-contract-section')?.getAttribute('aria-expanded')==='false'
+        &&document.getElementById('contract-section-content')?.hidden===true
     }))()`);
-    if(foldsAfterPreview.count!==foldsBeforePreview.count||foldsAfterPreview.collapsed!==foldsBeforePreview.folded.length)
+    if(foldsAfterPreview.count!==foldsBeforePreview.count||foldsAfterPreview.collapsed!==foldsBeforePreview.folded.length||
+       !foldsAfterPreview.contractCollapsed)
       return fail('Retour Aperçu : les blocs repliés sont tous rouverts', {foldsBeforePreview,foldsAfterPreview});
     console.log('KALONEO_PREVIEW_PRESERVES_COLLAPSED_BLOCKS=OK',JSON.stringify(foldsAfterPreview));
     if(!/test-builder\.html$/i.test(returned.path)||
@@ -1078,6 +1086,17 @@ app.whenReady().then(async()=>{
       if(blocks.length!==2||blocks.some(x=>x.querySelector('.block-type')?.value!=='multiple-tables')){
         return {ok:false,reason:'Genre et nombre : tableaux historiques non conservés',blocks:blocks.length};
       }
+      const grammarTables=[...document.querySelectorAll('#preview-exercise .preview-grammar-table')];
+      const grammarRows=grammarTables.map(table=>table.tBodies[0]?.rows.length||0);
+      const grammarSources=grammarTables.map(table=>
+        [...table.querySelectorAll('td.preview-grammar-source')].map(cell=>cell.textContent));
+      const grammarInputs=grammarTables.map(table=>table.querySelectorAll('tbody input').length);
+      if(grammarTables.length!==2||grammarRows.some(n=>n!==10)||
+         grammarInputs.some(n=>n!==10)||
+         grammarSources[0][0]!=='Des taux'||grammarSources[0][1]!=='Un monsieur'||
+         grammarSources[1][0]!=='Publique'||grammarSources[1][2]!=='Blanc'){
+        return {ok:false,reason:'Aperçu Builder incomplet : cellules du véritable test absentes',grammarRows,grammarSources,grammarInputs};
+      }
       const label=[...blocks[0].querySelectorAll('label')].find(x=>x.textContent?.startsWith('Taille de police'));
       const font=label?.querySelector('select');
       if(!font)return {ok:false,reason:'Taille de police indisponible'};
@@ -1141,6 +1160,7 @@ app.whenReady().then(async()=>{
       return fail('Genre et nombre : perte du curseur après plusieurs modifications',genreFont);
     }
     console.log('KALONEO_GENRE_NOMBRE_MULTIPLE_EDITS_FOCUS=OK',JSON.stringify(genreFont));
+    console.log('KALONEO_GENRE_NOMBRE_DIRECT_PREVIEW_COMPLETE=OK');
     for(let attempt=0;attempt<30;attempt++){
       await wait(120);
       const p=win.webContents.getURL(); // Ne pas exécuter de JS dans un frame en cours de navigation.

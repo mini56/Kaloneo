@@ -1182,3 +1182,69 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 }
 .block-header:has(.block-media-status){grid-template-columns:28px minmax(130px,160px) 100px 30px 30px 82px minmax(70px,1fr) 30px;}
 .block-body .file-preview-name{color:#005a32;font-weight:700;}
+
+
+/* Aperçu direct des tableaux structurés historiques : même grille de
+   questions et même densité visuelle que le rendu candidat KALTEST. */
+.preview-content-block.preview-grammar-card{
+  width:100%;
+  min-width:0;
+  padding:0 8px;
+  background:transparent;
+  white-space:normal;
+}
+.preview-grammar-card h3{
+  margin:0 0 6px;
+  text-align:center;
+  color:#004e70;
+  font-family:"Calibri Light",Calibri,Arial,sans-serif;
+  font-size:19px;
+  font-weight:300;
+}
+.preview-grammar-table{
+  width:94%;
+  margin:0 auto;
+  table-layout:fixed;
+  border-collapse:separate;
+  border-spacing:0;
+  border:1px solid #8398b0;
+  border-radius:10px;
+  overflow:hidden;
+  background:#fff;
+  font-size:15.5px;
+}
+.preview-grammar-table th{
+  padding:6px 8px;
+  background:#004e70;
+  color:#fff;
+  text-align:center;
+  font-size:16px;
+  font-weight:700;
+}
+.preview-grammar-table td{
+  height:34px;
+  padding:3px 6px;
+  border-top:1px solid #c1c9d6;
+  border-right:1px solid #c1c9d6;
+  background:rgba(255,255,255,.94);
+  color:#203642;
+  text-align:center;
+  vertical-align:middle;
+}
+.preview-grammar-table td:last-child,
+.preview-grammar-table th:last-child{border-right:0}
+.preview-grammar-table td.preview-grammar-source{
+  background:rgba(193,201,214,.55);
+  font-weight:700;
+}
+.preview-grammar-table input{
+  display:block;
+  width:100%;
+  min-width:0;
+  min-height:27px;
+  padding:3px 6px;
+  font-size:15.5px;
+  background:#fff;
+  border:1px solid #8398b0;
+  border-radius:6px;
+}
