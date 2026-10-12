@@ -240,6 +240,7 @@
     block.backgroundFit=String(style.backgroundFit||'decorative');
     block.backgroundPosition=String(style.backgroundPosition||'right bottom');
     block.backgroundOpacity=Number.isFinite(Number(style.backgroundOpacity))?Number(style.backgroundOpacity):100;
+    block.backgroundScale=Number(style.backgroundScale)>=10&&Number(style.backgroundScale)<=100?Number(style.backgroundScale):100;
     return block;
   }
 
@@ -259,6 +260,7 @@
       style.backgroundFit=['decorative','contain','cover'].includes(block.backgroundFit)?block.backgroundFit:'decorative';
       style.backgroundPosition=String(block.backgroundPosition||'right bottom');
       style.backgroundOpacity=Math.max(0,Math.min(100,Number(block.backgroundOpacity??100)||0));
+      if(Number(block.backgroundScale)>=10&&Number(block.backgroundScale)<100)style.backgroundScale=Math.round(Number(block.backgroundScale));
     }
     return Object.keys(style).length?style:undefined;
   }
