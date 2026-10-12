@@ -1,17 +1,6 @@
 name: 'Build Windows KALONÉO R77 — Build #82 Galerie images nettoyée (branche existante)'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - 'kaloneo/image-library-gallery.js'
-      - 'kaloneo/test-builder.js'
-      - 'kaloneo/test-builder.html'
-      - 'seb-evalpro/scripts/kaloneo-image-gallery-visibility-smoke.js'
-      - '.github/workflows/build-r77-windows.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r77-builder.yml'
+  # Release R77 / Build #82 publiée : ne pas réutiliser ce numéro automatiquement.
   workflow_dispatch:
 
 # Conserver ce groupe pour les futurs Builds R77, R78, etc.
