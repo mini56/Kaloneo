@@ -1231,6 +1231,10 @@
         img.className = 'seb-media-image';
         const scale=Number(item?.style?.imageScale);
         if(Number.isFinite(scale)&&scale>=10&&scale<100){img.style.width=scale+'%';img.style.height='auto';img.style.maxHeight='100%';}
+        if(['left','right'].includes(item?.style?.imageAlign)){
+          wrap.style.justifyContent=item.style.imageAlign==='left'?'flex-start':'flex-end';
+          img.style.margin='auto 0';
+        }
         wrap.appendChild(img);
       }
       return wrap;

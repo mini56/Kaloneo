@@ -1206,7 +1206,7 @@
   async function importImages(files) {
     const list=[...(files||[])];
     if(!list.length)return;
-    let added=0,duplicates=0,failed=0;
+    let added=0,duplicates=0,failed=0,firstImageId=null;
     for(const file of list){
       if(!String(file.type||'').startsWith('image/')){failed++;continue;}
       try{
@@ -1218,6 +1218,7 @@
           category:'Mes images KALONÉO'
         });
         if(result?.ok){
+          if(!firstImageId&&result.image?.id)firstImageId=result.image.id;
           if(result.duplicate)duplicates++;else added++;
         }else failed++;
       }catch(_){failed++;}
@@ -1225,6 +1226,20 @@
     await reloadImageLibrary();
     const status=$('image-library-status');
     if(status)status.textContent=added+' ajoutée'+(added>1?'s':'')+', '+duplicates+' déjà présente'+(duplicates>1?'s':'')+(failed?', '+failed+' refusée'+(failed>1?'s':''):'')+'.';
+    return {added,duplicates,failed,firstImageId};
+  }
+
+  async function importImageFromPc() {
+    const input=$('image-library-pc-file');
+    const file=input?.files?.[0];
+    if(input)input.value='';
+    if(!file)return;
+    const result=await importImages([file]);
+    if(result?.firstImageId){
+      if(state.imageLibraryTargetUid)await useLibraryImage(result.firstImageId);
+      return;
+    }
+    if(result?.failed)alert('Cette image n’a pas pu être importée. Choisissez un fichier image valide.');
   }
 
   async function importImageZip() {
@@ -1240,6 +1255,37 @@
         (result.failed?', '+result.failed+' refusée'+(result.failed>1?'s':''):'')+
         ' — '+themes+' thème'+(themes>1?'s':'')+' détecté'+(themes>1?'s':'')+'.';
     }
+  }
+
+  function appendImageScaleControls(parent,block,property,title) {
+    const panel=document.createElement('div');panel.className='image-scale-controls';
+    const label=document.createElement('label');label.textContent=title;
+    const slider=document.createElement('input');
+    slider.type='range';slider.min='10';slider.max='100';slider.step='1';
+    const output=document.createElement('output');
+    const initial=Number(block[property]);
+    slider.value=String(initial>=10&&initial<=100?initial:100);
+    output.textContent=slider.value+' %';
+    const updateSize=next=>{
+      block[property]=Math.max(10,Math.min(100,Math.round(Number(next)||100)));
+      slider.value=String(block[property]);
+      output.textContent=slider.value+' %';
+      changed();
+    };
+    slider.addEventListener('input',()=>updateSize(slider.value));
+    const button=(caption,tip,action)=>{
+      const node=document.createElement('button');
+      node.type='button';node.className='mini-btn';node.textContent=caption;node.title=tip;
+      node.addEventListener('click',action);return node;
+    };
+    label.appendChild(slider);
+    panel.append(label,
+      button('−','Réduire de 5 %',()=>updateSize(Number(slider.value)-5)),
+      output,
+      button('+','Agrandir de 5 %',()=>updateSize(Number(slider.value)+5)),
+      button('100 %','Taille initiale',()=>updateSize(100))
+    );
+    parent.appendChild(panel);
   }
 
   function renderMediaEditor(block,body) {
@@ -1271,25 +1317,15 @@
     }
 
     if(block.type==='image'){
-      const scalePanel=document.createElement('div');
-      scalePanel.className='image-scale-controls';
-      const scaleLabel=document.createElement('label');scaleLabel.textContent='Taille de l’image dans le bloc';
-      const scale=document.createElement('input');scale.type='range';scale.min='10';scale.max='100';scale.step='1';
-      const value=document.createElement('output');
-      const updateSize=next=>{block.imageScale=Math.max(10,Math.min(100,Math.round(Number(next)||100)));scale.value=String(block.imageScale);value.textContent=block.imageScale+' %';changed();};
-      scale.value=String(Number(block.imageScale)>=10&&Number(block.imageScale)<=100?block.imageScale:100);
-      value.textContent=scale.value+' %';
-      scale.addEventListener('input',()=>updateSize(scale.value));
-      const smaller=document.createElement('button');smaller.type='button';smaller.className='mini-btn';smaller.textContent='−';smaller.title='Réduire de 5 %';smaller.addEventListener('click',()=>updateSize(Number(scale.value)-5));
-      const larger=document.createElement('button');larger.type='button';larger.className='mini-btn';larger.textContent='+';larger.title='Agrandir de 5 %';larger.addEventListener('click',()=>updateSize(Number(scale.value)+5));
-      const reset=document.createElement('button');reset.type='button';reset.className='mini-btn';reset.textContent='100 %';reset.addEventListener('click',()=>updateSize(100));
-      scaleLabel.appendChild(scale);scalePanel.append(scaleLabel,smaller,value,larger,reset);body.appendChild(scalePanel);
       const choose=document.createElement('button');
-      choose.type='button';
-      choose.className='mini-btn choose-library-image';
-      choose.textContent='Choisir une image';
+      choose.type='button';choose.className='mini-btn choose-library-image';
+      choose.textContent=block.mediaData?'Changer l’image':'Choisir une image';
       choose.addEventListener('click',()=>openImageLibrary(block.uid).catch(error=>alert('Bibliothèque d’images inaccessible : '+String(error?.message||error))));
       body.appendChild(choose);
+      appendImageScaleControls(body,block,'imageScale','Taille de l’image dans le bloc');
+      body.appendChild(selectField('Alignement de l’image',String(block.imageAlign||'center'),[
+        ['center','Centré'],['left','Gauche'],['right','Droite']
+      ],value=>{block.imageAlign=value;changed();renderBlocks();}));
     }
     body.appendChild(inputField('Texte alternatif',block.mediaAlt||'',value=>{block.mediaAlt=value;changed();}));
 
@@ -1381,36 +1417,50 @@
       ],value=>{block.lineHeight=value;changed();});
       textOptions.append(alignment,spacing);panel.append(title,row,textOptions);
     }
-    const bgLabel=document.createElement('strong');bgLabel.textContent='Image de fond du bloc (texte par-dessus)';
-    const choose=document.createElement('button');choose.type='button';choose.className='mini-btn';
+    // Le bloc Image utilise exclusivement son image principale (pas un second sélecteur de fond).
+    // Conserver les données de fond héritées en mémoire/à l'export sans les supprimer.
+    if(block.type==='image'){
+      row.replaceChildren(background);
+      panel.append(title,row);
+      body.appendChild(panel);
+      return;
+    }
+
+    const bgLabel=document.createElement('strong');
+    bgLabel.textContent='Image de fond du bloc (derrière le texte)';
+    const choose=document.createElement('button');choose.type='button';choose.className='mini-btn choose-background-image';
     choose.textContent=block.backgroundImage?'Changer l’image de fond':'Choisir une image de fond';
     choose.addEventListener('click',()=>openImageLibrary('__block_background__:'+block.uid).catch(error=>alert(String(error?.message||error))));
-    const remove=document.createElement('button');remove.type='button';remove.className='mini-btn danger';
-    remove.textContent='Retirer le fond';remove.disabled=!block.backgroundImage;
-    remove.addEventListener('click',()=>{block.backgroundImage='';changed();renderBlocks();});
-    const position=selectField('Position',String(block.backgroundPosition||'right bottom'),[
-      ['right bottom','Bas droite'],['center center','Centre'],['left bottom','Bas gauche'],['right center','Droite']
-    ],v=>{block.backgroundPosition=v;changed();});
-    const fit=selectField('Taille du fond',String(block.backgroundFit||'decorative'),[
-      ['decorative','Illustration partielle'],['contain','Image entière'],['cover','Remplir']
-    ],v=>{block.backgroundFit=v;changed();});
-    const opacity=inputField('Visibilité image (%)',block.backgroundOpacity??100,v=>{block.backgroundOpacity=Math.max(0,Math.min(100,Number(v)||0));changed();},{type:'number',min:0,max:100});
-    const controls=document.createElement('div');controls.className='field-row';controls.append(choose,remove);
-    const options=document.createElement('div');options.className='field-row cols-3';options.append(position,fit,opacity);
+    const controls=document.createElement('div');controls.className='field-row';
+    controls.appendChild(choose);
+    if(block.backgroundImage){
+      const remove=document.createElement('button');remove.type='button';remove.className='mini-btn danger remove-background-image';
+      remove.textContent='Retirer le fond';
+      remove.addEventListener('click',()=>{block.backgroundImage='';changed();renderBlocks();});
+      controls.appendChild(remove);
+    }
     if(block.type!=='text')panel.append(title,row);
-    panel.append(bgLabel,controls,options);
-    if(block.type==='text'){
-      const scalePanel=document.createElement('div');scalePanel.className='image-scale-controls';
-      const scaleLabel=document.createElement('label');scaleLabel.textContent='Taille de l’image de fond';
-      const scale=document.createElement('input');scale.type='range';scale.min='10';scale.max='100';scale.step='1';
-      const value=document.createElement('output');
-      const updateSize=n=>{block.backgroundScale=Math.max(10,Math.min(100,Math.round(Number(n)||100)));scale.value=String(block.backgroundScale);value.textContent=scale.value+' %';changed();};
-      scale.value=String(Number(block.backgroundScale)>=10&&Number(block.backgroundScale)<=100?block.backgroundScale:100);value.textContent=scale.value+' %';
-      scale.addEventListener('input',()=>updateSize(scale.value));
-      const smaller=document.createElement('button');smaller.type='button';smaller.className='mini-btn';smaller.textContent='−';smaller.addEventListener('click',()=>updateSize(Number(scale.value)-5));
-      const larger=document.createElement('button');larger.type='button';larger.className='mini-btn';larger.textContent='+';larger.addEventListener('click',()=>updateSize(Number(scale.value)+5));
-      const reset=document.createElement('button');reset.type='button';reset.className='mini-btn';reset.textContent='100 %';reset.addEventListener('click',()=>updateSize(100));
-      scaleLabel.appendChild(scale);scalePanel.append(scaleLabel,smaller,value,larger,reset);panel.appendChild(scalePanel);
+    panel.append(bgLabel,controls);
+    // Ne pas afficher les réglages inutiles avant qu'une image ne soit choisie.
+    if(block.backgroundImage){
+      const more=document.createElement('details');
+      more.className='block-image-options';
+      const heading=document.createElement('summary');
+      heading.textContent='Réglages de l’image de fond';
+      more.appendChild(heading);
+      const position=selectField('Position',String(block.backgroundPosition||'right bottom'),[
+        ['right bottom','Bas droite'],['center center','Centre'],['left bottom','Bas gauche'],['right center','Droite']
+      ],v=>{block.backgroundPosition=v;changed();});
+      const fit=selectField('Taille du fond',String(block.backgroundFit||'decorative'),[
+        ['decorative','Illustration partielle'],['contain','Image entière'],['cover','Remplir']
+      ],v=>{block.backgroundFit=v;changed();});
+      const opacity=inputField('Visibilité image (%)',block.backgroundOpacity??100,v=>{
+        block.backgroundOpacity=Math.max(0,Math.min(100,Number(v)||0));changed();
+      },{type:'number',min:0,max:100});
+      const options=document.createElement('div');options.className='field-row cols-3';
+      options.append(position,fit,opacity);more.appendChild(options);
+      if(block.type==='text')appendImageScaleControls(more,block,'backgroundScale','Taille de l’image de fond');
+      panel.appendChild(more);
     }
     body.appendChild(panel);
   }
@@ -1880,7 +1930,12 @@
     } else if(block.type==='image'&&block.mediaData) {
       wrap.classList.add('preview-media-block');
       const img=document.createElement('img');img.className='preview-media';img.src=String(block.mediaData).startsWith('imageqcm/')?'../'+block.mediaData:block.mediaData;img.alt=block.mediaAlt||block.mediaName||'Image';
-      const scale=Number(block.imageScale);if(scale>=10&&scale<100){img.style.width=scale+'%';img.style.height='auto';img.style.maxHeight='100%';}wrap.appendChild(img);
+      const scale=Number(block.imageScale);if(scale>=10&&scale<100){img.style.width=scale+'%';img.style.height='auto';img.style.maxHeight='100%';}
+      if(['left','right'].includes(block.imageAlign)){
+        wrap.style.justifyContent=block.imageAlign==='left'?'flex-start':'flex-end';
+        img.style.margin='auto 0';
+      }
+      wrap.appendChild(img);
     } else if(block.type==='audio'&&block.mediaData) {
       const a=document.createElement('audio');a.controls=true;a.src=block.mediaData;a.style.width='100%';wrap.appendChild(a);
     } else if(block.type==='video'&&block.mediaData) {
@@ -2707,6 +2762,8 @@
     $('image-library-search').addEventListener('input',renderImageLibrary);
     $('image-library-theme').addEventListener('change',renderImageLibrary);
     $('image-library-orientation').addEventListener('change',renderImageLibrary);
+    $('image-library-import-pc').addEventListener('click',()=>$('image-library-pc-file').click());
+    $('image-library-pc-file').addEventListener('change',()=>importImageFromPc().catch(error=>alert('Import de l’image impossible : '+String(error?.message||error))));
     $('close-test-library').addEventListener('click',()=>$('test-library-dialog').close());
     $('test-library-search').addEventListener('input',()=>renderLibraryTests($('test-library-dialog')._kaloneoItems||[]));
 

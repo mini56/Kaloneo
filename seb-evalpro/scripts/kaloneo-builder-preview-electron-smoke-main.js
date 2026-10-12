@@ -13,6 +13,7 @@ let previewDefinition = null;
 let savedLibraryDefinition = null;
 let savedLibraryPayload = null;
 let savedImageCalls = 0;
+const importedImages = new Map();
 let zipImportCalls = 0;
 let protectedLibraryMode = false;
 let restaurantFixture = null;
@@ -81,14 +82,22 @@ ipcMain.handle('kaloneo-library:save-test',(_e,payload)=>{
   return {ok:true,replaced:false,test:{id:savedLibraryDefinition?.id,version:savedLibraryDefinition?.version,title:savedLibraryDefinition?.title}};
 });
 ipcMain.handle('kaloneo-library:list-images',()=>({ok:true,images:[
-  {id:'img-smoke-library',name:'bibliotheque-kaloneo.svg',mime:'image/svg+xml',size:123,category:'Mes images KALONÉO',systemProvided:false,sourceName:''}
+  {id:'img-smoke-library',name:'bibliotheque-kaloneo.svg',mime:'image/svg+xml',size:123,category:'Mes images KALONÉO',systemProvided:false,sourceName:''},
+  ...[...importedImages.values()].map(({data,...metadata})=>metadata)
 ]}));
-ipcMain.handle('kaloneo-library:get-image',(_e,id)=>id==='img-smoke-library'
-  ? {ok:true,image:{id,name:'bibliotheque-kaloneo.svg',mime:'image/svg+xml',size:123,category:'Mes images KALONÉO',systemProvided:false,data:imageLibraryData}}
-  : {ok:false,error:'absent'});
+ipcMain.handle('kaloneo-library:get-image',(_e,id)=>{
+  if(id==='img-smoke-library')return {ok:true,image:{id,name:'bibliotheque-kaloneo.svg',mime:'image/svg+xml',size:123,category:'Mes images KALONÉO',systemProvided:false,data:imageLibraryData}};
+  const image=importedImages.get(id);
+  return image?{ok:true,image}:{ok:false,error:'absent'};
+});
 ipcMain.handle('kaloneo-library:save-image',(_e,payload)=>{
-  savedImageCalls+=1;
-  return {ok:true,duplicate:false,image:{id:'img-saved-'+savedImageCalls,name:payload?.name||'image',mime:payload?.mime||'image/*',size:1,category:'Mes images KALONÉO',systemProvided:false}};
+  savedImageCalls++;
+  const data=String(payload?.data||'');
+  const existing=[...importedImages.values()].find(item=>item.data===data);
+  if(existing)return {ok:true,duplicate:true,image:existing};
+  const image={id:'img-pc-'+importedImages.size,name:payload?.name||'image',mime:payload?.mime||'image/*',size:data.length,category:'Mes images KALONÉO',systemProvided:false,data};
+  importedImages.set(image.id,image);
+  return {ok:true,duplicate:false,image};
 });
 ipcMain.handle('kaloneo-library:import-image-zip',()=>{
   zipImportCalls+=1;
@@ -247,6 +256,20 @@ app.whenReady().then(async()=>{
         throw new Error('Couleur texte bloc non appliquée :: '+JSON.stringify({blockColorValue,blockColorRendered,blockMarkupOk,blockRenderOk}));
       }
 
+      // Le bloc Texte propose un seul choix d'image de fond, sans contrôles inutiles avant sélection.
+      const textBackgroundChoose=document.querySelectorAll('.exercise-block .choose-background-image');
+      if(textBackgroundChoose.length!==1||document.querySelector('.exercise-block .block-image-options')){
+        throw new Error('Bloc Texte : image de fond dupliquée ou réglages affichés sans image');
+      }
+      textBackgroundChoose[0].click();
+      await new Promise(resolve=>setTimeout(resolve,130));
+      const textLibrary=document.getElementById('image-library-dialog');
+      textLibrary?.querySelector('.image-library-use')?.click();
+      await new Promise(resolve=>setTimeout(resolve,150));
+      if(textLibrary.open||document.querySelectorAll('.exercise-block .choose-background-image').length!==1||
+         document.querySelectorAll('.exercise-block .block-image-options').length!==1){
+        throw new Error('Bloc Texte : image de fond et options avancées introuvables après sélection');
+      }
       const type=document.querySelector('.exercise-block .block-type');
       type.value='image';
       type.dispatchEvent(new Event('change',{bubbles:true}));
@@ -273,15 +296,21 @@ app.whenReady().then(async()=>{
           columns,buttons:compactButtons.map(b=>({width:b.getBoundingClientRect().width,height:b.getBoundingClientRect().height}))
         }));
       }
+      // Bloc Image : un seul sélecteur principal et aucun second fond superposé.
+      if(document.querySelector('.exercise-block .choose-background-image')||
+         document.querySelectorAll('.exercise-block .choose-library-image').length!==1||
+         document.querySelector('.exercise-block .block-image-options')){
+        throw new Error('Bloc Image : sélecteurs d’images redondants');
+      }
+      const alignField=[...document.querySelectorAll('.exercise-block label')].find(x=>x.textContent?.includes('Alignement de l’image'));
+      const align=alignField?.querySelector('select');
+      if(!align)throw new Error('Alignement du bloc Image absent');
+      align.value='right';
+      align.dispatchEvent(new Event('change',{bubbles:true}));
       const styleSelects=[...document.querySelectorAll('.block-style-editor select')];
-      if(styleSelects[0]){
-        styleSelects[0].value='22';
-        styleSelects[0].dispatchEvent(new Event('change',{bubbles:true}));
-      }
-      if(styleSelects[1]){
-        styleSelects[1].value='#EEF9F2';
-        styleSelects[1].dispatchEvent(new Event('change',{bubbles:true}));
-      }
+      if(styleSelects.length!==1||styleSelects[0].options.length<2)throw new Error('Style du bloc Image non simplifié');
+      styleSelects[0].value='#EEF9F2';
+      styleSelects[0].dispatchEvent(new Event('change',{bubbles:true}));
       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
       document.getElementById('save-draft').click();
       await new Promise(resolve=>setTimeout(resolve,180));
@@ -296,6 +325,7 @@ app.whenReady().then(async()=>{
         calculatorOptionsHidden:document.getElementById('calculator-options')?.hidden,
         libraryStatus:String(document.getElementById('draft-status')?.textContent||'').trim(),
         imagePresent:!!smallImg,
+        imageAlignedRight:smallBlock?.style.justifyContent==='flex-end',
         smallImageFits:!!(ir&&br&&ir.width<=br.width+1&&ir.height<=br.height+1),
         smallImageSize:ir?{width:Math.round(ir.width),height:Math.round(ir.height)}:null,
         smallBlockSize:br?{width:Math.round(br.width),height:Math.round(br.height)}:null,
@@ -310,7 +340,7 @@ app.whenReady().then(async()=>{
     })()`);
     if(!/vraie page/i.test(setup.button)||setup.title!=='Aperçu Electron Smoke'||setup.calculatorBrand!=='KALONÉO'||setup.calculatorOptionsHidden||
        !savedLibraryDefinition||savedLibraryDefinition.title!=='Aperçu Electron Smoke'||! /bibliothèque/i.test(setup.libraryStatus)||
-       !setup.imagePresent||!setup.smallImageFits||setup.blockFont!=='22px'||!/238, 249, 242/.test(setup.blockBackground)||
+       !setup.imagePresent||!setup.smallImageFits||!setup.imageAlignedRight||setup.blockFont!==''||!/238, 249, 242/.test(setup.blockBackground)||
        !setup.obsoleteButtonsAbsent||setup.previewScale>=1||
        !setup.viewportRect||!setup.pageRect||setup.pageRect.width>setup.viewportRect.width+1||setup.pageRect.height>setup.viewportRect.height+1||
        setup.topLabels.join('|')!=='↶ Annuler|↷ Rétablir|Bibliothèque de tests|Nouveau test|Enregistrer|Fermer') return fail('ergonomie ou aperçu miniature Builder incorrect',setup);
@@ -373,7 +403,37 @@ app.whenReady().then(async()=>{
       return fail('gestion globale des images encore présente dans le Builder',imageChooserErgonomics);
     }
 
-    await win.webContents.executeJavaScript(`document.getElementById('open-electron-preview').click();true`);
+    const importedFromPc=await win.webContents.executeJavaScript(`(async()=>{
+      const choose=document.querySelector('.exercise-block .choose-library-image');
+      choose.click();
+      await new Promise(resolve=>setTimeout(resolve,140));
+      const dialog=document.getElementById('image-library-dialog');
+      const button=document.getElementById('image-library-import-pc');
+      const picker=document.getElementById('image-library-pc-file');
+      if(!dialog?.open||!button||!picker||picker.type!=='file')return {ok:false,reason:'contrôles d’import absents'};
+      const realClick=picker.click.bind(picker);
+      picker.click=()=>{picker.dataset.wasOpened='yes';};
+      button.click();
+      picker.click=realClick;
+      const opened=picker.dataset.wasOpened==='yes';
+      const image='<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120"><rect width="240" height="120" fill="#eaba31"/></svg>';
+      const selected=new File([image],'image-du-pc.svg',{type:'image/svg+xml'});
+      const files=new DataTransfer();files.items.add(selected);
+      picker.files=files.files;
+      picker.dispatchEvent(new Event('change',{bubbles:true}));
+      for(let i=0;i<15&&dialog.open;i++)await new Promise(resolve=>setTimeout(resolve,70));
+      const preview=document.querySelector('.preview-media');
+      const title=document.querySelector('.exercise-block .file-preview-name')?.textContent||'';
+      return {ok:true,opened,closed:!dialog.open,src:preview?.getAttribute('src')||'',title};
+    })()`,true);
+    if(!importedFromPc.ok||!importedFromPc.opened||!importedFromPc.closed||
+       !importedFromPc.src.startsWith('data:image/svg+xml;base64,')||!importedFromPc.title.includes('image-du-pc.svg')||
+       importedImages.size!==1||savedImageCalls!==1){
+      return fail('Import depuis le PC vers la bibliothèque et le bloc incorrect',importedFromPc);
+    }
+    console.log('KALONEO_BUILDER_PC_IMAGE_IMPORT=OK',JSON.stringify({images:importedImages.size,saves:savedImageCalls}));
+
+        await win.webContents.executeJavaScript(`document.getElementById('open-electron-preview').click();true`);
     for(let i=0;i<30;i++){
       await wait(120);
       const p=await win.webContents.executeJavaScript('location.pathname');
@@ -405,6 +465,7 @@ app.whenReady().then(async()=>{
         const br=block?.getBoundingClientRect();
         return {
           present:!!img,
+          rightAligned:block?.style.justifyContent==='flex-end',
           fits:!!(ir&&br&&ir.width<=br.width+1&&ir.height<=br.height+1),
           image:ir?{width:Math.round(ir.width),height:Math.round(ir.height)}:null,
           block:br?{width:Math.round(br.width),height:Math.round(br.height)}:null,
@@ -429,8 +490,8 @@ app.whenReady().then(async()=>{
        shown.chrono!=='00:00'||
        !['none','absent'].includes(shown.privacy)||
        !shown.pageBackground.includes('data:image/svg+xml')||
-       !shown.media.present||!shown.media.fits||shown.media.workspaceScroll||
-       shown.media.font!=='22px'||!/238, 249, 242/.test(shown.media.background)) {
+       !shown.media.present||!shown.media.fits||!shown.media.rightAligned||shown.media.workspaceScroll||
+       shown.media.font!==''||!/238, 249, 242/.test(shown.media.background)) {
       return fail('rendu plein écran incorrect',shown);
     }
 

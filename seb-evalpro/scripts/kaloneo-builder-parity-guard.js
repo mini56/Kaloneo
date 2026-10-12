@@ -96,6 +96,26 @@ const transferHtml=read(path.join(sebRoot,'overrides','admin-kaloneo-transfer.ht
 const transferJs=read(path.join(sebRoot,'source','js','admin-kaloneo-transfer.js'));
 
 
+// Contrat d'ergonomie validé : les images ne doivent jamais créer deux choix
+// concurrents dans un bloc Image. Les contrôles avancés du fond restent facultatifs.
+for(const token of ['id="image-library-import-pc"','id="image-library-pc-file"']){
+  if(!builderHtml.includes(token))fail('Import image PC depuis la bibliothèque absent : '+token);
+}
+for(const token of ['function importImageFromPc()','async function importImages(files)',
+  'function appendImageScaleControls(','row.replaceChildren(background)',
+  'choose-library-image','choose-background-image']){
+  if(!builderJs.includes(token))fail('Builder image simplifié absent : '+token);
+}
+if(builderJs.includes("if(block.type==='image')label.hidden=true") ||
+   builderJs.includes("className='field-row image-scale-controls'")){
+  fail('Ancien sélecteur Image masqué ou doubles dispositions CSS réintroduits.');
+}
+if(!Core.definitionToModel||!Core.modelToDefinition)fail('Aller-retour Builder indisponible');
+for(const token of ["imageAlign=['left','right']","style.imageAlign=block.imageAlign"]){
+  if(!read(path.join(builderRoot,'builder-core.js')).includes(token))
+    fail('Alignement des images non sauvegardé par le Builder : '+token);
+}
+
 for(const token of [
   'builder-core.js','table-grid','Gratte-ciel 6 × 6','value="text-editor"',
   'value="chars-rest"','id="block1-width-chars"','id="last-block-remainder"',

@@ -370,7 +370,7 @@
     <div class="dialog-head">
       <div>
         <h2>Choisir une image KALONÉO</h2>
-        <p>Sélectionnez une image déjà présente dans la bibliothèque. Les imports se gèrent depuis la page Import / Export.</p>
+        <p>Choisissez une image existante ou ajoutez-en une depuis votre PC.</p>
       </div>
       <button id="close-image-library" class="mini-btn" type="button">Fermer</button>
     </div>
@@ -390,6 +390,8 @@
           <option value="Portrait">Portrait</option>
         </select>
       </label>
+      <button id="image-library-import-pc" class="mini-btn" type="button">Importer une image du PC</button>
+      <input id="image-library-pc-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" hidden>
     </div>
     <p id="image-library-status" class="muted"></p>
     <div id="image-library-list" class="image-library-grid" aria-label="Bibliothèque d’images KALONÉO"></div>
