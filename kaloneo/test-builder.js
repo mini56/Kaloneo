@@ -1246,39 +1246,33 @@
     const kindLabel=block.type==='image'?'image':block.type==='audio'?'audio':'vidéo';
     const articleLabel=block.type==='image'?'l’image':block.type==='audio'?'l’audio':'la vidéo';
 
-    const label=document.createElement('label');
-    label.textContent='Fichier '+kindLabel;
-    const input=document.createElement('input');
-    input.type='file';
-    input.accept=block.type==='image'?'image/*':block.type==='audio'?'audio/*':'video/*';
-    input.title='Choisir un fichier remplace uniquement le média de ce bloc.';
-    input.addEventListener('change',async()=>{
-      const file=input.files&&input.files[0];
-      if(!file)return;
-      block.mediaName=file.name;
-      block.mediaType=file.type||'';
-      block.mediaData=await readFileAsDataUrl(file);
-      block.mediaPlaceholder='';
-      if(block.type==='image'){
-        try{
-          await window.sebEvalPro?.kaloneoSaveImage?.({
-            name:file.name,
-            mime:file.type,
-            data:block.mediaData,
-            category:'Mes images KALONÉO'
-          });
-        }catch(_){}
-      }
-      changed();renderBlocks();
-    });
-    label.appendChild(input);
-    // Garder l'entrée fichier pour les imports et les contrôles Electron, sans afficher un second choix d'image.
-    if(block.type==='image')label.hidden=true;
-    body.appendChild(label);
+    // Les images se choisissent uniquement dans la bibliothèque KALONÉO.
+    // L'import d'images se fait dans Import / Export ; aucun sélecteur fichier
+    // caché n'est créé dans les blocs Image. Audio et vidéo conservent leur entrée.
+    if(block.type!=='image'){
+      const label=document.createElement('label');
+      label.textContent='Fichier '+kindLabel;
+      const input=document.createElement('input');
+      input.type='file';
+      input.accept=block.type==='audio'?'audio/*':'video/*';
+      input.title='Choisir un fichier remplace uniquement le média de ce bloc.';
+      input.addEventListener('change',async()=>{
+        const file=input.files&&input.files[0];
+        if(!file)return;
+        block.mediaName=file.name;
+        block.mediaType=file.type||'';
+        block.mediaData=await readFileAsDataUrl(file);
+        block.mediaPlaceholder='';
+        changed();
+        renderBlocks();
+      });
+      label.appendChild(input);
+      body.appendChild(label);
+    }
 
     if(block.type==='image'){
       const scalePanel=document.createElement('div');
-      scalePanel.className='field-row image-scale-controls';
+      scalePanel.className='image-scale-controls';
       const scaleLabel=document.createElement('label');scaleLabel.textContent='Taille de l’image dans le bloc';
       const scale=document.createElement('input');scale.type='range';scale.min='10';scale.max='100';scale.step='1';
       const value=document.createElement('output');

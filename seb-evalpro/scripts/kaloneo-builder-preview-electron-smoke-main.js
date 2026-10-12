@@ -251,14 +251,28 @@ app.whenReady().then(async()=>{
       type.value='image';
       type.dispatchEvent(new Event('change',{bubbles:true}));
       await new Promise(resolve=>setTimeout(resolve,80));
-      const mediaInput=document.querySelector('.exercise-block input[type="file"]');
-      const svg='<svg xmlns="http://www.w3.org/2000/svg" width="320" height="340"><rect width="320" height="340" fill="#dceff5"/><circle cx="160" cy="170" r="80" fill="#f9b233"/></svg>';
-      const mediaFile=new File([svg],'image-test-r3.svg',{type:'image/svg+xml'});
-      const dt=new DataTransfer();
-      dt.items.add(mediaFile);
-      mediaInput.files=dt.files;
-      mediaInput.dispatchEvent(new Event('change',{bubbles:true}));
+      // Dans les blocs Image, une seule commande doit exister : la bibliothèque.
+      if(document.querySelector('.exercise-block input[type="file"]')){
+        throw new Error('Ancien sélecteur Fichier image toujours présent');
+      }
+      const imageChooser=document.querySelector('.exercise-block .choose-library-image');
+      if(!imageChooser)throw new Error('Bouton de bibliothèque image absent');
+      imageChooser.click();
       await new Promise(resolve=>setTimeout(resolve,180));
+      const library=document.getElementById('image-library-dialog');
+      const libraryButton=library?.querySelector('.image-library-use');
+      if(!library?.open||!libraryButton)throw new Error('Bibliothèque image inaccessible');
+      libraryButton.click();
+      await new Promise(resolve=>setTimeout(resolve,190));
+      const scaleControls=document.querySelector('.exercise-block .image-scale-controls');
+      const compactButtons=[...scaleControls?.querySelectorAll('button')||[]];
+      const columns=scaleControls?getComputedStyle(scaleControls).gridTemplateColumns.split(/\\s+/).filter(Boolean):[];
+      if(columns.length!==5||compactButtons.length!==3||
+          compactButtons.some(b=>b.getBoundingClientRect().width>58||b.getBoundingClientRect().height>36)){
+        throw new Error('Boutons de taille image agrandis : '+JSON.stringify({
+          columns,buttons:compactButtons.map(b=>({width:b.getBoundingClientRect().width,height:b.getBoundingClientRect().height}))
+        }));
+      }
       const styleSelects=[...document.querySelectorAll('.block-style-editor select')];
       if(styleSelects[0]){
         styleSelects[0].value='22';
@@ -301,7 +315,8 @@ app.whenReady().then(async()=>{
        !setup.viewportRect||!setup.pageRect||setup.pageRect.width>setup.viewportRect.width+1||setup.pageRect.height>setup.viewportRect.height+1||
        setup.topLabels.join('|')!=='↶ Annuler|↷ Rétablir|Bibliothèque de tests|Nouveau test|Enregistrer|Fermer') return fail('ergonomie ou aperçu miniature Builder incorrect',setup);
 
-    if(savedImageCalls<1) return fail('une image importée directement dans un bloc ne rejoint pas automatiquement la bibliothèque',{savedImageCalls});
+    // L'import passe désormais uniquement par Import / Export, pas par le bloc Image.
+    if(savedImageCalls!==0) return fail('une importation directe depuis le bloc Image a réapparu',{savedImageCalls});
 
     const libraryPick=await win.webContents.executeJavaScript(`(async()=>{
       const choose=document.querySelector('.choose-library-image');
