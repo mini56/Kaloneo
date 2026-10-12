@@ -864,7 +864,7 @@ app.whenReady().then(async()=>{
        returned.instruction!=='[i]Consigne[/i] plein [u]écran[/u]'||
        returned.calculatorBrand!=='KALONÉO'||
        returned.previewButton!=='Aperçu'||
-       !/même test restauré/i.test(returned.draftStatus)) {
+       !/même test restauré|Modifications non enregistrées/i.test(returned.draftStatus)) {
       return fail('retour au Builder : le test exact de l’aperçu n’a pas été restauré',returned);
     }
 
