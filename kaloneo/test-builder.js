@@ -1513,6 +1513,157 @@
     if(block.type==='multiple-tables') {renderMultipleTableEditor(block,body);}
   }
 
+
+  // Paramètres du contrat KALTEST : entrées/sorties et lignes du Bilan SEB.
+  const CONTRACT_TYPES=[
+    ['number','Nombre décimal'],['integer','Nombre entier'],['string','Texte'],
+    ['boolean','Oui / Non'],['duration','Durée'],['number-list','Liste de nombres'],
+    ['duration-list','Liste de durées'],['json','Données structurées']
+  ];
+  const CONTRACT_ID_RE=/^[a-z0-9][a-z0-9._-]*$/;
+  const contractLines=()=>Array.isArray(window.KaloneoBilanCatalog)?window.KaloneoBilanCatalog:[];
+  const contractLine=id=>contractLines().find(line=>line.id===id);
+
+  function contractField(title,value,options,onChange){
+    const label=document.createElement('label');label.textContent=title;
+    const control=options?document.createElement('select'):document.createElement('input');
+    if(options){
+      for(const [id,name] of options){
+        const option=document.createElement('option');option.value=id;option.textContent=name;
+        control.appendChild(option);
+      }
+    }else control.type='text';
+    control.value=String(value??'');
+    control.addEventListener(options?'change':'input',()=>onChange(control.value));
+    label.appendChild(control);return label;
+  }
+  function contractRemove(title,callback){
+    const btn=document.createElement('button');btn.type='button';
+    btn.className='mini-btn danger';btn.textContent='Retirer';btn.title=title;
+    btn.addEventListener('click',callback);return btn;
+  }
+  function renderContractEditors(){
+    const outHost=$('outputs-editor'),bilanHost=$('bilan-editor');
+    if(!outHost||!bilanHost)return;
+    outHost.replaceChildren();bilanHost.replaceChildren();
+    state.outputs.forEach((output,index)=>{
+      const item=document.createElement('div');item.className='contract-item';
+      const row=document.createElement('div');row.className='contract-row';
+      const idField=contractField('Identifiant de sortie',output.id,null,value=>{
+        const old=output.id;output.id=value;
+        for(const contribution of state.bilanContributions){
+          for(const key of Object.keys(contribution.bindings||{})){
+            if(contribution.bindings[key]===old)contribution.bindings[key]=value;
+          }
+        }
+        changed({typing:true});
+      });
+      idField.querySelector('input').addEventListener('blur',renderContractEditors);
+      const typeField=contractField('Type de donnée',output.type,CONTRACT_TYPES,value=>{
+        output.type=value;renderContractEditors();changed();
+      });
+      row.append(idField,typeField,contractRemove('Supprimer cette sortie',()=>{
+        if(state.bilanContributions.some(c=>Object.values(c.bindings||{}).includes(output.id))&&
+          !confirm('Cette sortie est utilisée par le Bilan. Supprimer aussi ses liaisons ?'))return;
+        state.outputs.splice(index,1);
+        for(const contribution of state.bilanContributions){
+          for(const key of Object.keys(contribution.bindings||{})){
+            if(contribution.bindings[key]===output.id)delete contribution.bindings[key];
+          }
+        }
+        renderContractEditors();changed();
+      }));
+      item.appendChild(row);outHost.appendChild(item);
+    });
+    if(!state.outputs.length){
+      const empty=document.createElement('p');empty.className='contract-empty';
+      empty.textContent='Aucune sortie déclarée.';outHost.appendChild(empty);
+    }
+    state.bilanContributions.forEach((contribution,index)=>{
+      const item=document.createElement('div');item.className='contract-item';
+      const row=document.createElement('div');row.className='contract-row contract-link-row';
+      const catalog=contractLines();
+      const lineOptions=[['','Choisir une ligne du Bilan…']];
+      for(const entry of catalog){
+        lineOptions.push([entry.id,entry.section+' / '+entry.subsection+' — '+entry.label]);
+      }
+      if(contribution.lineId&&!catalog.some(l=>l.id===contribution.lineId)){
+        lineOptions.push([contribution.lineId,'Liaison antérieure — '+contribution.lineId]);
+      }
+      row.append(contractField('Ligne du Bilan',contribution.lineId||'',lineOptions,value=>{
+        contribution.lineId=value;contribution.bindings={};
+        renderContractEditors();changed();
+      }),contractRemove('Supprimer cette liaison',()=>{
+        state.bilanContributions.splice(index,1);
+        renderContractEditors();changed();
+      }));
+      item.appendChild(row);
+      const line=contractLine(contribution.lineId);
+      if(line){
+        const help=document.createElement('p');help.className='contract-help';
+        help.textContent=line.mode==='manual'
+          ?'Évaluation manuelle : aucune sortie requise.'
+          :'Évaluation automatique : associez chaque entrée aux sorties compatibles du test.';
+        item.appendChild(help);
+        if(line.inputs.length){
+          const bindings=document.createElement('div');bindings.className='contract-bindings';
+          for(const input of line.inputs){
+            const opts=[['',input.required?'Choisir une sortie obligatoire…':'Aucune sortie (facultatif)']];
+            for(const output of state.outputs.filter(o=>o.type===input.type)){
+              opts.push([output.id,output.id+' ('+output.type+')']);
+            }
+            const current=contribution.bindings?.[input.id]||'';
+            if(current&&!opts.some(([id])=>id===current)){
+              opts.push([current,'Sortie existante incompatible — '+current]);
+            }
+            bindings.appendChild(contractField(input.id+' — '+input.type+(input.required?' *':''),current,opts,value=>{
+              if(!contribution.bindings||typeof contribution.bindings!=='object')contribution.bindings={};
+              if(value)contribution.bindings[input.id]=value;
+              else delete contribution.bindings[input.id];
+              changed();
+            }));
+          }
+          item.appendChild(bindings);
+        }
+      }else if(contribution.lineId){
+        const help=document.createElement('p');help.className='contract-help';
+        help.textContent='Liaison existante conservée (ligne absente du catalogue actuel).';
+        item.appendChild(help);
+      }
+      bilanHost.appendChild(item);
+    });
+    if(!state.bilanContributions.length){
+      const empty=document.createElement('p');empty.className='contract-empty';
+      empty.textContent='Aucune liaison directe vers le Bilan.';bilanHost.appendChild(empty);
+    }
+  }
+  function validateContract(add){
+    const ids=new Set();
+    for(const output of state.outputs){
+      const id=String(output.id||'');
+      add(CONTRACT_ID_RE.test(id),'Identifiant de sortie valide : '+(id||'vide'));
+      add(!ids.has(id),'Sortie sans doublon : '+(id||'vide'));
+      add(CONTRACT_TYPES.some(([type])=>type===output.type),'Type de sortie reconnu : '+(id||'vide'));
+      ids.add(id);
+    }
+    const targets=new Set();
+    for(const link of state.bilanContributions){
+      const line=contractLine(link.lineId);
+      add(Boolean(link.lineId),'Ligne du Bilan sélectionnée');
+      if(!link.lineId)continue;
+      add(!targets.has(link.lineId),'Liaison du Bilan sans doublon : '+link.lineId);
+      targets.add(link.lineId);
+      // Les anciennes liaisons personnalisées sont conservées sans modifier les tests existants.
+      if(!line)continue;
+      for(const input of line.inputs){
+        const outputId=link.bindings?.[input.id];
+        const output=state.outputs.find(o=>o.id===outputId);
+        add(!input.required||Boolean(outputId),'Entrée obligatoire du Bilan : '+input.id);
+        if(outputId)add(Boolean(output)&&output.type===input.type,'Type compatible pour '+input.id);
+      }
+    }
+  }
+
   function renderBlocks() {
     const host=$('blocks-editor');
     host.innerHTML='';
@@ -1958,6 +2109,7 @@
     const model=currentModel();
     const definition=Core.modelToDefinition(model);
     const analysis=Core.analyzeDefinition(definition);
+    validateContract(add);
     add(analysis.ok,'Contrat KALTEST compatible avec SEB EvalPro');
     analysis.errors.forEach(error=>add(false,error));
 
@@ -2630,6 +2782,16 @@
       });
     });
 
+    $('add-output').addEventListener('click',()=>{
+      let n=1;const ids=new Set(state.outputs.map(o=>o.id));
+      while(ids.has('sortie_'+n))n++;
+      state.outputs.push({id:'sortie_'+n,type:'number'});
+      renderContractEditors();changed();
+    });
+    $('add-bilan-contribution').addEventListener('click',()=>{
+      state.bilanContributions.push({lineId:'',bindings:{}});
+      renderContractEditors();changed();
+    });
     $('test-template').addEventListener('change',()=>applyTemplate($('test-template').value));
     $('add-block').addEventListener('click',()=>{
       state.blocks.push(baseBlock('text'));changed();renderBlocks();
