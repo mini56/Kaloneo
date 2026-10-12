@@ -1,23 +1,6 @@
 name: 'Build Windows KALONÉO R74 — Build #79 Texte et aperçu (branche existante)'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - 'kaloneo/test-builder.js'
-      - 'kaloneo/test-preview.js'
-      - 'kaloneo/builder-core.js'
-      - 'seb-evalpro/source/js/kaltest-pilot2-runtime.js'
-      - 'seb-evalpro/scripts/kaloneo-restaurant-v1-r70-smoke.js'
-      - '.github/workflows/build-r74-windows.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r74-builder.yml'
-      - 'seb-evalpro/scripts/full-pilot-journey-smoke-main.js'
-      - 'seb-evalpro/scripts/kaloneo-builder-preview-electron-smoke-main.js'
-      - 'seb-evalpro/scripts/kaloneo-builder-r48-4-real-preview-electron-smoke-main.js'
   workflow_dispatch:
-
 permissions:
   contents: write
 

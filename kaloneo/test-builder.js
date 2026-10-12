@@ -1558,7 +1558,7 @@
         }
         changed({typing:true});
       });
-      idField.querySelector('input').addEventListener('blur',renderContractEditors);
+      idField.querySelector('input').addEventListener('blur',()=>setTimeout(renderContractEditors,0));
       const typeField=contractField('Type de donnée',output.type,CONTRACT_TYPES,value=>{
         output.type=value;renderContractEditors();changed();
       });
