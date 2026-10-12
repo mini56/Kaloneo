@@ -6,6 +6,9 @@ const assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..');
 const web=path.join(root,'app','web');
 const definition=JSON.parse(fs.readFileSync(path.join(root,'r48-demo','planning-restaurant-builder-r48.json'),'utf8'));
+const indications=definition.presentation?.builderContent?.find(item=>item?.type==='text'&&String(item.text||'').includes('Jacqueline'));
+assert.ok(indications,'Bloc des indications du Restaurant absent');
+indications.text=indications.text.replace('Jacqueline','JacquelinX');
 let saved=0, replaySaved=0, closed=0;
 const realRuntime={ok:true,runtime:{
  id:'kaloneo-builder-preview-only',title:'Restaurant aperçu',builderPreview:true,
@@ -63,6 +66,8 @@ app.whenReady().then(async()=>{
       selectValues:selectors.map(el=>el.value),
       photos:photos.map(el=>({src:el.getAttribute('src'),loaded:el.complete&&el.naturalWidth>0})),
       backgroundCount:bg.length,
+      changedTextVisible:String(target.textContent||'').includes('JacquelinX'),
+      oldTextAbsent:!String(target.textContent||'').includes('Jacqueline'),
       closeLabel:document.getElementById('kaltest-next')?.textContent,
       visible:document.getElementById('page-exercise')?.classList.contains('visible')
     };
@@ -73,6 +78,7 @@ app.whenReady().then(async()=>{
   assert.equal(result.phase,'exercise');
   assert.equal(result.visible,true);
   assert.equal(result.selectCount,15);
+  assert.ok(result.changedTextVisible&&result.oldTextAbsent,'L’aperçu candidat réel ignore le texte des indications modifié');
   assert.equal(result.photos.length,1);
   assert.equal(result.photos[0].loaded,true,'restaurant candidate image not loaded');
   assert.ok(result.backgroundCount>0,'plateau background missing');
