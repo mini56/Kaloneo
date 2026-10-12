@@ -1096,16 +1096,21 @@ app.whenReady().then(async()=>{
       zone.focus();zone.value='left';
       zone.dispatchEvent(new Event('change',{bubbles:true}));
       const zoneKept=zone.isConnected&&document.activeElement===zone;
-      // Un changement de type peut reconstruire l'éditeur : retrouver
-      // le même sélecteur, mais sans modifier le type du vrai test.
+      zone.value='right';
+      zone.dispatchEvent(new Event('change',{bubbles:true}));
+      // Reconstruction structurelle du Builder sans changer le type des
+      // tableaux historiques ni l'identité de la V1 testée.
       const firstBlock=document.querySelector('.exercise-block');
       const type=firstBlock.querySelector('.block-type');
-      type.focus();type.value='multiple-tables';
-      // Reconstitution réelle déclenchée par la commande de structure.
-      type.dispatchEvent(new Event('change',{bubbles:true}));
+      type.focus();
+      const layout=document.getElementById('test-layout');
+      layout.value='60-40';
+      layout.dispatchEvent(new Event('change',{bubbles:true}));
       const restoredType=firstBlock.isConnected===false &&
         document.activeElement?.classList?.contains('block-type') &&
         document.activeElement?.closest('.exercise-block')?.dataset?.uid===firstBlock.dataset.uid;
+      layout.value='50-50';
+      layout.dispatchEvent(new Event('change',{bubbles:true}));
             document.getElementById('open-electron-preview').click();
       return {ok:true,selected,active,colorKept,titleKept,secondKept,zoneKept,restoredType};
     })()`,true);
