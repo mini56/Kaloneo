@@ -47,6 +47,9 @@ function createKaloneoLibrary(options = {}) {
     : [];
   const now = typeof options.now === 'function' ? options.now : () => new Date();
   let imageSeedsEnsured = false;
+  // Méta-images immuables jusqu'à un ajout via storeImageBuffer.
+  // Évite de relire l'intégralité du disque pour chaque vignette.
+  let cachedImageRecords = null;
 
   if (!dataRoot) throw new Error('dataRoot KALONÉO requis.');
 
@@ -124,6 +127,7 @@ function createKaloneoLibrary(options = {}) {
   }
 
   function scanImageRecords() {
+    if(cachedImageRecords)return cachedImageRecords;
     const out = [];
     for (const file of walkNamedFiles(imagesRoot, 'image.json')) {
       const value = readJson(file);
@@ -132,6 +136,7 @@ function createKaloneoLibrary(options = {}) {
       if (!fs.existsSync(binary)) continue;
       out.push({ value, file, binary });
     }
+    cachedImageRecords=out;
     return out;
   }
 
@@ -189,8 +194,10 @@ function createKaloneoLibrary(options = {}) {
       createdAt:stamp,
       file:binaryName
     };
-    atomicWriteJson(path.join(dir, 'image.json'), value);
-    return { ok:true, duplicate:false, image:toImageMetadata({ value, file:path.join(dir,'image.json'), binary:binaryFile }) };
+    const record={value,file:path.join(dir,'image.json'),binary:binaryFile};
+    atomicWriteJson(record.file, value);
+    if(cachedImageRecords)cachedImageRecords.push(record);
+    return { ok:true, duplicate:false, image:toImageMetadata(record) };
   }
 
   function humanizeTheme(value) {
@@ -371,7 +378,8 @@ function createKaloneoLibrary(options = {}) {
   }
 
   function listImages() {
-    ensureSeed();
+    // La bibliothèque est initialisée dès createKaloneoLibrary().
+    // Ne pas réexécuter la synchronisation de toutes les V1 à chaque liste.
     return scanImageRecords()
       .map(toImageMetadata)
       .sort((a,b) => {
@@ -383,7 +391,8 @@ function createKaloneoLibrary(options = {}) {
   }
 
   function getImage(id) {
-    ensureSeed();
+    // Chaque miniature doit être une lecture ciblée, pas une resynchronisation
+    // du catalogue V1 + un parcours complet des dossiers d'images.
     const record = findImageRecord(id);
     if (!record) return { ok:false, error:'Image KALONÉO introuvable.' };
     const buffer = fs.readFileSync(record.binary);
