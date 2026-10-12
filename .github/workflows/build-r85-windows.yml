@@ -41,8 +41,8 @@ jobs:
           $cfg = Get-Content -Raw -Encoding UTF8 build/kaloneo-v1-fixes-r85-builder.yml
           if ($number -ne 90) { throw "R85 doit être Build #90, trouvé #$number." }
           if ($nsis -notmatch '!define SEB_BUILD_NUMBER "90"') { throw 'Numéro NSIS différent de Build #90.' }
-          if ($cfg -notmatch 'version: 0\.0\.113') { throw 'Version du paquet R85 incorrecte.' }
-          if ($cfg -notmatch 'PILOTE-22-R85-0\.0\.113-Windows-Setup') { throw 'Nom du Setup incohérent.' }
+          if ($cfg -notmatch 'version: 0\.0\.114') { throw 'Version du paquet R85 incorrecte.' }
+          if ($cfg -notmatch 'PILOTE-22-R85-0\.0\.114-Windows-Setup') { throw 'Nom du Setup incohérent.' }
           git fetch --depth=1 origin tag seb-kaloneo-v1-fixes-r84-test
           if ($LASTEXITCODE -ne 0) { throw 'Impossible de lire le tag R84 pour garantir un build distinct.' }
           $previousJson = (git show 'seb-kaloneo-v1-fixes-r84-test:seb-evalpro/package.json') -join [Environment]::NewLine
