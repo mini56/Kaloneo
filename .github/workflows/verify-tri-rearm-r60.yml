@@ -34,6 +34,11 @@ jobs:
           node --check scripts/kaloneo-builder-preview-electron-smoke-main.js
           node --check scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
           node --check scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
+      - name: Verify gallery contains test illustrations only, without deleting images
+        run: |
+          node --check ../kaloneo/image-library-gallery.js
+          node --check ../kaloneo/test-builder.js
+          node scripts/kaloneo-image-gallery-visibility-smoke.js
       - name: Generate historical KALTEST pilot data
         run: node scripts/build-kaltest-pilot2-data.js
       - name: Prepare authentic KALTEST candidate application
