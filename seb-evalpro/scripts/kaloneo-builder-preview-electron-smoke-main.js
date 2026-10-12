@@ -715,6 +715,15 @@ app.whenReady().then(async()=>{
     }
     console.log('KALONEO_BUILDER_PC_IMAGE_IMPORT=OK',JSON.stringify({images:importedImages.size,saves:savedImageCalls}));
 
+    // Régression utilisateur : les blocs repliés restent repliés après Aperçu.
+    const foldsBeforePreview=await win.webContents.executeJavaScript(`(()=>{
+      const blocks=[...document.querySelectorAll('.exercise-block')];
+      if(!blocks.length)return {count:0};
+      blocks.forEach(block=>block.querySelector('.toggle-block').click());
+      return {count:blocks.length,folded:[...document.querySelectorAll('.exercise-block.is-collapsed')].map(x=>x.dataset.uid)};
+    })()`);
+    if(foldsBeforePreview.count<1||foldsBeforePreview.folded.length!==foldsBeforePreview.count)
+      return fail('Impossible de préparer les blocs repliés avant le retour Aperçu',foldsBeforePreview);
         await win.webContents.executeJavaScript(`document.getElementById('open-electron-preview').click();true`);
     for(let i=0;i<30;i++){
       await wait(120);
@@ -835,15 +844,6 @@ app.whenReady().then(async()=>{
       return fail('déplacement réel souris de la calculatrice incorrect', {calcBefore,calcOpen});
     }
 
-    // Régression utilisateur : les blocs repliés restent repliés après Aperçu.
-    const foldsBeforePreview=await win.webContents.executeJavaScript(`(()=>{
-      const blocks=[...document.querySelectorAll('.exercise-block')];
-      if(!blocks.length)return {count:0};
-      blocks.forEach(block=>block.querySelector('.toggle-block').click());
-      return {count:blocks.length,folded:[...document.querySelectorAll('.exercise-block.is-collapsed')].map(x=>x.dataset.uid)};
-    })()`);
-    if(foldsBeforePreview.count<1||foldsBeforePreview.folded.length!==foldsBeforePreview.count)
-      return fail('Impossible de préparer les blocs repliés avant le retour Aperçu',foldsBeforePreview);
     await win.webContents.executeJavaScript(`(()=>{
       localStorage.setItem('kaloneo_test_builder_v2',JSON.stringify({
         idLocked:true,
