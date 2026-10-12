@@ -313,7 +313,7 @@ function applyBlockStyle(node,block){
       node.style.backgroundImage='linear-gradient(rgba(255,255,255,'+(1-opacity)+'),rgba(255,255,255,'+(1-opacity)+')),url('+JSON.stringify(String(block.backgroundImage).startsWith('imageqcm/')?'../'+block.backgroundImage:block.backgroundImage)+')';
       node.style.backgroundRepeat='no-repeat';
       node.style.backgroundPosition=String(block.backgroundPosition||'right bottom');
-      node.style.backgroundSize=block.backgroundFit==='cover'?'cover':block.backgroundFit==='contain'?'contain':'auto 78%';
+      const bgScale=Number(block.backgroundScale);node.style.backgroundSize=bgScale>=10&&bgScale<100?bgScale+'% auto':block.backgroundFit==='cover'?'cover':block.backgroundFit==='contain'?'contain':'auto 78%';
     }
 
   return node;
