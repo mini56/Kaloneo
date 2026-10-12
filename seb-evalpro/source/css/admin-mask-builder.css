@@ -1,3 +1,4 @@
+@import url("./seb-button-styles.css");
 html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Calibri,"Segoe UI",Arial,sans-serif;background:linear-gradient(180deg,#fff 0%,#edf1f6 100%);color:#202a36}
 *{box-sizing:border-box}
 body{display:grid;grid-template-rows:auto minmax(0,1fr);padding:0}
@@ -15,3 +16,12 @@ body{display:grid;grid-template-rows:auto minmax(0,1fr);padding:0}
 .mask-preview-screen img{max-width:90%;max-height:68%;width:auto;height:auto;object-fit:contain}.mask-preview-text{white-space:pre-wrap;text-align:center;font-size:30px;font-weight:700;color:#004e70;line-height:1.25;max-width:90%}.mask-close-preview{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);padding:11px 20px;border:0;border-radius:8px;background:#0070c0;color:#fff;font-weight:700}
 .mask-shell button,.mask-topbar button{box-shadow:none!important;transform:none!important}
 @media(max-width:1000px){.mask-shell{grid-template-columns:260px 1fr}.mask-preview{grid-column:1/-1;min-height:280px}.form-grid{grid-template-columns:1fr 1fr}}
+
+/* Boutons KALONÉO : restaurer le relief sur cet écran. */
+.mask-topbar button:not(:disabled),.mask-shell button:not(:disabled){box-shadow:var(--kaloneo-btn-rest)!important;transition:box-shadow .15s ease,filter .15s ease;}
+
+/* Boutons KALONÉO : restaurer le relief sur cet écran. */
+.mask-topbar button:not(:disabled):hover,.mask-shell button:not(:disabled):hover{box-shadow:var(--kaloneo-btn-hover)!important;filter:brightness(.955);}
+
+/* Boutons KALONÉO : restaurer le relief sur cet écran. */
+.mask-topbar button:not(:disabled):active,.mask-shell button:not(:disabled):active{box-shadow:var(--kaloneo-btn-pressed)!important;filter:brightness(.935);}

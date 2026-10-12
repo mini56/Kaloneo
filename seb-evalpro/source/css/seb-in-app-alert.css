@@ -1,3 +1,4 @@
+@import url("./seb-button-styles.css");
 #seb-evalpro-alert-layer{position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;font-family:Arial,sans-serif}
 #seb-evalpro-alert-box{width:min(460px,92vw);max-height:82vh;overflow:auto;background:#fff;border:1px solid #aaa;border-radius:10px;box-shadow:0 14px 45px rgba(0,0,0,.34);padding:20px;box-sizing:border-box}
 #seb-evalpro-alert-title{font-size:19px;font-weight:700;color:#0070c0;margin:0 0 12px}

@@ -1,0 +1,28 @@
+/* Style commun KALONÉO — effets visuels uniquement, aucune logique modifiée.
+   Conserve les dimensions, placements, couleurs et contrôles désactivés. */
+:root{
+ --kaloneo-btn-rest:0 2px 0 rgba(0,60,95,.20),0 3px 7px rgba(0,45,70,.13);
+ --kaloneo-btn-hover:0 3px 0 rgba(0,75,115,.20),0 5px 11px rgba(0,54,89,.19);
+ --kaloneo-btn-pressed:inset 0 2px 4px rgba(0,50,70,.22);
+}
+:is(button,input[type="button"],input[type="submit"],input[type="reset"]):not(:disabled):not(.seb-action-btn):not(.calc-btn):not(.calc-btn-fermez){
+ box-shadow:var(--kaloneo-btn-rest)!important;
+ transition:box-shadow .15s ease,filter .15s ease;
+}
+:is(button,input[type="button"],input[type="submit"],input[type="reset"]):not(:disabled):not(.seb-action-btn):not(.calc-btn):not(.calc-btn-fermez):hover{
+ box-shadow:var(--kaloneo-btn-hover)!important;
+ filter:brightness(.955);
+}
+:is(button,input[type="button"],input[type="submit"],input[type="reset"]):not(:disabled):not(.seb-action-btn):not(.calc-btn):not(.calc-btn-fermez):active{
+ box-shadow:var(--kaloneo-btn-pressed)!important;
+ filter:brightness(.935);
+}
+:is(button,input[type="button"],input[type="submit"],input[type="reset"]):focus-visible{
+ outline:2px solid #0076b7;
+ outline-offset:2px;
+}
+/* Les commandes Quill conservent leur style compact d'éditeur. */
+.ql-toolbar button:not(:disabled){box-shadow:none!important;filter:none!important}
+@media print{
+ :is(button,input[type="button"],input[type="submit"],input[type="reset"]){box-shadow:none!important;filter:none!important}
+}
