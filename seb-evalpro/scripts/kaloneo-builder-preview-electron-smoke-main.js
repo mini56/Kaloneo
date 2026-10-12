@@ -591,7 +591,7 @@ app.whenReady().then(async()=>{
     if(!libraryOpen.ok)return fail('Ouverture du Restaurant depuis la bibliothèque impossible',libraryOpen);
     await wait(500);
     const restaurantSetup=await win.webContents.executeJavaScript(`(()=>{
-      if(!String(document.getElementById('test-title')?.value||'').includes('Restaurant')){
+      if(!String(document.getElementById('test-title')?.value||'').toLowerCase().includes('restaurant')){
         return {ok:false,reason:'Ouverture du Restaurant via bibliothèque impossible'};
       }
       const blocks=[...document.querySelectorAll('.exercise-block')];
