@@ -1,13 +1,7 @@
 name: 'Build Windows KALONÉO R88 — Build #93 Aperçu des tableaux et repli Bilan (branche existante)'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - '.github/workflows/build-r88-windows.yml'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r88-builder.yml'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/package.json'
+  # R88 / Build #93 publié : aucun nouveau lancement automatique.
+  # Le contrôle du tag publié empêche un doublon en manuel.
   workflow_dispatch:
 
 # Conserver ce groupe pour les futurs Builds Windows.
