@@ -2766,10 +2766,23 @@
   let pendingLiveTypingFrame=null;
   function queueLiveTypingPreview() {
     invalidateMiniPreview(); // Retirer immédiatement toute capture périmée.
+    const field=document.activeElement;
+    // Les modifications ciblées sont très légères : réagir pendant cette
+    // touche, sans attendre une frame éventuellement suspendue dans Electron.
+    if(field?.closest?.('.exercise-block') ||
+       ['test-title','test-scenario','test-instruction'].includes(field?.id)) {
+      if(pendingLiveTypingFrame!==null){
+        cancelAnimationFrame(pendingLiveTypingFrame);
+        pendingLiveTypingFrame=null;
+      }
+      refreshTypingPreview();
+      return;
+    }
+    // Autres propriétés : regrouper les calculs au prochain frame.
     if(pendingLiveTypingFrame!==null)return;
     pendingLiveTypingFrame=requestAnimationFrame(()=>{
       pendingLiveTypingFrame=null;
-      refreshTypingPreview(); // DOM direct au prochain rafraîchissement d'écran.
+      refreshTypingPreview();
     });
   }
   function flushTypingRefresh() {
