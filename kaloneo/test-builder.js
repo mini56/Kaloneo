@@ -1253,7 +1253,9 @@
       changed();renderBlocks();
     });
     label.appendChild(input);
-    if(block.type!=='image')body.appendChild(label);
+    // Garder l'entrée fichier pour les imports et les contrôles Electron, sans afficher un second choix d'image.
+    if(block.type==='image')label.hidden=true;
+    body.appendChild(label);
 
     if(block.type==='image'){
       const scalePanel=document.createElement('div');
