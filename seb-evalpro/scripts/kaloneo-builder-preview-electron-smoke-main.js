@@ -625,10 +625,12 @@ app.whenReady().then(async()=>{
       errorsSelect.value='variable_restaurant';errorsSelect.dispatchEvent(new Event('change',{bubbles:true}));
       const preview=document.getElementById('open-electron-preview');
       if(!preview)return {ok:false,reason:'Bouton aperçu absent'};
-      preview.click();
       return {ok:true,blocks:blocks.length,interline:interline.value};
     })()`,true);
     if(!restaurantSetup.ok)return fail('R48.2 : chargement Restaurant / interligne impossible',restaurantSetup);
+    // Démarrer la navigation APRÈS la promesse de préparation : évite de détruire
+    // le contexte Electron pendant l'exécution asynchrone du test.
+    await win.webContents.executeJavaScript("document.getElementById('open-electron-preview').click(); true");
     for(let attempt=0;attempt<30;attempt++){
       await wait(150);
       const p=await win.webContents.executeJavaScript('location.pathname');
