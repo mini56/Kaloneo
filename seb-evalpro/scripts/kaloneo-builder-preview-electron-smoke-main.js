@@ -583,7 +583,7 @@ app.whenReady().then(async()=>{
     await wait(400);
     const libraryOpen=await win.webContents.executeJavaScript(`(()=>{
       if(document.getElementById('r48-demo-restaurant'))return {ok:false,reason:'Bouton R48 obsolète toujours présent'};
-      const row=[...document.querySelectorAll('.test-library-item')].find(node=>String(node.textContent||'').includes('Restaurant'));
+      const row=[...document.querySelectorAll('.test-library-item')].find(node=>String(node.textContent||'').toLowerCase().includes('restaurant'));
       if(!row)return {ok:false,reason:'Restaurant absent de la bibliothèque simulée'};
       row.querySelector('.test-library-item-actions button').click();
       return {ok:true};
