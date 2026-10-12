@@ -1,13 +1,7 @@
 name: 'Build Windows KALONÉO R85 — Build #90 Aperçu immédiat sans écran bleu (branche existante)'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - '.github/workflows/build-r85-windows.yml'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r85-builder.yml'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/package.json'
+  # R85 / Build #90 publié et vérifié : pas de recompilation automatique.
+  # Le contrôle du tag publié bloque toute tentative de doublon.
   workflow_dispatch:
 
 # Conserver ce groupe pour les futurs Builds Windows.
