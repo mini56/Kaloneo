@@ -725,7 +725,7 @@
       navigation:{next:'host',abandon:'host-common'},
       runtime:{start:true,save:true,restore:true,finish:true},
       questions,
-      outputs:Array.isArray(m.outputs)&&m.outputs.length?clone(m.outputs):[
+      outputs:Array.isArray(m.outputs)?clone(m.outputs):[
         {id:'score',type:'number'},{id:'score_max',type:'number'},{id:'pourcentage',type:'number'},{id:'status',type:'string'}
       ],
       bilanContributions:Array.isArray(m.bilanContributions)?clone(m.bilanContributions):[]
