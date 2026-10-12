@@ -1,17 +1,6 @@
 name: 'Build Windows KALONÉO R83 — Build #88 Blocs compacts et sections repliables (branche existante)'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - 'kaloneo/test-builder.html'
-      - 'kaloneo/test-builder.css'
-      - 'kaloneo/test-builder.js'
-      - 'seb-evalpro/scripts/kaloneo-builder-preview-electron-smoke-main.js'
-      - '.github/workflows/build-r83-windows.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r83-builder.yml'
+  # Release R83 / Build #88 déjà publiée : désactiver le déclenchement automatique.
   workflow_dispatch:
 
 # Conserver ce groupe pour les futurs Builds Windows.
