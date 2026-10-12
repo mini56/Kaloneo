@@ -11,7 +11,9 @@
     blocks: [],
     imageLibraryTargetUid: null,
     imageLibraryItems: [],
-    sourceProtectedVersion: false
+    sourceProtectedVersion: false,
+    outputs: [],
+    bilanContributions: []
   };
   let developerUnlocked=false;
   let textColorTarget = null;
@@ -142,7 +144,9 @@
       pageBackgroundType:'none',
       pageBackgroundColor:'#EEF6FD',
       pageBackgroundImage:'',
-      pageBackgroundName:''
+      pageBackgroundName:'',
+      outputs:[{id:'score',type:'number'},{id:'score_max',type:'number'},{id:'pourcentage',type:'number'},{id:'status',type:'string'}],
+      bilanContributions:[]
     };
   }
 
@@ -180,12 +184,17 @@
       pageBackgroundType:$('page-background-type').value,
       pageBackgroundColor:$('page-background-color').value,
       pageBackgroundImage:String($('page-background-image-name')?.dataset?.imageData||''),
-      pageBackgroundName:String($('page-background-image-name')?.dataset?.imageName||'')
+      pageBackgroundName:String($('page-background-image-name')?.dataset?.imageName||''),
+      outputs:Core.clone(state.outputs),
+      bilanContributions:Core.clone(state.bilanContributions)
     };
   }
 
   function applyMeta(meta={}) {
     const m=Object.assign(defaultMeta(),meta);
+    state.outputs=Core.clone(Array.isArray(m.outputs)?m.outputs:defaultMeta().outputs);
+    state.bilanContributions=Core.clone(Array.isArray(m.bilanContributions)?m.bilanContributions:[]);
+    renderContractEditors();
     $('test-title').value=m.title;
     $('test-id').value=m.id;
     $('test-version').value=m.version;
@@ -2624,12 +2633,6 @@
     $('test-template').addEventListener('change',()=>applyTemplate($('test-template').value));
     $('add-block').addEventListener('click',()=>{
       state.blocks.push(baseBlock('text'));changed();renderBlocks();
-    });
-    $('r48-demo-restaurant').addEventListener('click',()=>{
-      if(!confirmDiscardChanges('Charger la démonstration Restaurant R48'))return;
-      const demo=window.KaloneoRestaurantR48Demo;
-      if(!demo){alert('La démonstration Restaurant R48 est introuvable.');return;}
-      loadDefinition(Core.clone(demo),'Restaurant R48 chargé depuis le modèle intégré');
     });
     $('open-electron-preview').addEventListener('click',async()=>{
       flushTypingRefresh();
