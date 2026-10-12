@@ -1,0 +1,163 @@
+name: 'Build Windows KALONÉO R78 — Build #83 Source Builder corrigée (branche existante)'
+on:
+  push:
+    branches:
+      - fix-r60-tri-rearm-only-20261011
+    paths:
+      - 'kaloneo/test-builder.js'
+      - 'seb-evalpro/scripts/kaloneo-builder-preview-electron-smoke-main.js'
+      - '.github/workflows/build-r78-windows.yml'
+      - 'seb-evalpro/package.json'
+      - 'seb-evalpro/build/installer.nsh'
+      - 'seb-evalpro/build/kaloneo-v1-fixes-r78-builder.yml'
+  workflow_dispatch:
+
+# Conserver ce groupe pour les futurs Builds R78, R78, etc.
+concurrency:
+  group: kaloneo-windows-setup-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-r78:
+    runs-on: windows-latest
+    timeout-minutes: 110
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - name: Checkout existing branch — Restaurant V1
+        uses: actions/checkout@v4
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Unique build gate — no duplicate of the previous published Setup
+        shell: pwsh
+        run: |
+          $p = Get-Content -Raw -Encoding UTF8 package.json | ConvertFrom-Json
+          $number = [int]$p.sebBuildNumber
+          $nsis = Get-Content -Raw -Encoding UTF8 build/installer.nsh
+          $cfg = Get-Content -Raw -Encoding UTF8 build/kaloneo-v1-fixes-r78-builder.yml
+          if ($number -ne 83) { throw "R78 doit être Build #83, trouvé #$number." }
+          if ($nsis -notmatch '!define SEB_BUILD_NUMBER "83"') { throw 'Numéro NSIS différent de Build #83.' }
+          if ($cfg -notmatch 'version: 0\.0\.107') { throw 'Version du paquet R78 incorrecte.' }
+          if ($cfg -notmatch 'PILOTE-22-R78-0\.0\.107-Windows-Setup') { throw 'Nom du Setup incohérent.' }
+          git fetch --depth=1 origin tag seb-kaloneo-v1-fixes-r77-test
+          if ($LASTEXITCODE -ne 0) { throw 'Impossible de lire le tag R77 pour garantir un build distinct.' }
+          $previousJson = (git show 'seb-kaloneo-v1-fixes-r77-test:seb-evalpro/package.json') -join [Environment]::NewLine
+          if ($LASTEXITCODE -ne 0) { throw 'Impossible de comparer au Build R77.' }
+          $previous = $previousJson | ConvertFrom-Json
+          if ($number -le [int]$previous.sebBuildNumber) {
+            throw "Build réutilisé ou régressif : R77 #$($previous.sebBuildNumber), R78 #$number."
+          }
+          Write-Host "Numéros validés : R77 Build #$($previous.sebBuildNumber), R78 Build #$number (0.0.107)."
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check restored Tri runtime and smoke syntax
+        run: |
+          node --check source/js/kaltest-pilot2-runtime.js
+          node --check ../kaloneo/test-builder.js
+          node --check ../kaloneo/bilan-catalog.js
+          node --check scripts/kaloneo-builder-preview-electron-smoke-main.js
+          node --check scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
+          node --check scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
+      - name: Verify 100 icons in native 96px format
+        run: node scripts/verify-r61-icons.js
+      - name: Check gallery filters without changing any stored image
+        run: |
+          node --check ../kaloneo/image-library-gallery.js
+          node --check ../kaloneo/test-builder.js
+          node scripts/kaloneo-image-gallery-visibility-smoke.js
+      - name: Generate historical KALTEST pilot data
+        run: node scripts/build-kaltest-pilot2-data.js
+      - name: Prepare authentic KALTEST candidate application
+        run: npm run prepare:web
+      - name: Verify common CSS button styles are bundled (no app behavior change)
+        shell: pwsh
+        run: |
+          if (-not (Test-Path 'app/web/css/seb-button-styles.css')) { throw 'Style commun des boutons non embarqué.' }
+          $base = Get-Content -Raw -Encoding UTF8 'app/web/css/seb-design-system.css'
+          $legacy = Get-Content -Raw -Encoding UTF8 'app/web/css/kaloneo-remaining-pages.css'
+          if ($base -notmatch 'seb-button-styles\.css' -or $legacy -notmatch 'seb-button-styles\.css') { throw 'Import CSS commun manquant.' }
+      - name: Verify Admin V1 save backups and persistence across app upgrades
+        run: node scripts/kaloneo-testsv1-developer-smoke.js
+      - name: Check Restaurant export includes the images from installed app/web
+        run: node scripts/kaloneo-export-restaurant-r69-smoke.js
+      - name: Verify Restaurant v3 promoted to official V1 and upgrade migration
+        run: node scripts/kaloneo-restaurant-v1-r70-smoke.js
+      - name: Verify original V1 and V2 coexist without delete regression
+        run: node scripts/kaloneo-edit-existing-test-smoke.js
+      - name: Verify V1 can be modified and saved in the real Electron Builder
+        run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
+      - name: Verify edited Restaurant instructions in the actual candidate runtime
+        run: npx electron --no-sandbox scripts/kaloneo-builder-r48-4-real-preview-electron-smoke-main.js
+      - name: Check Tri first attempt error and next chrono in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
+      - name: Check 125+ Briques errors and admin save in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
+      - name: Check full candidate parcours transitions in real Electron
+        id: full_journey
+        continue-on-error: true
+        run: npx electron --no-sandbox scripts/full-pilot-journey-smoke-main.js
+      - name: Check selected parcours execution in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-selected-parcours-electron-smoke-main.js
+      - name: Check validated NWTEXT exercise in real Electron
+        run: npx electron --no-sandbox scripts/nwtexte-functional-smoke-main.js
+      - name: Check e-mail exercise in real Electron
+        run: npx electron --no-sandbox scripts/nvmail-functional-smoke-main.js
+      - name: Check dynamic evaluation results and Bilan in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-bilan-dynamic-smoke-main.js
+      - name: Check validated Builder R48.10 auto columns in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-builder-r48-10-generic-columns-electron-smoke-main.js
+      - name: Check test icons in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-candidate-icon-electron-smoke-main.js
+      - name: Check preserved validated R48.10 / NWTEXT R55 / icons
+        run: node scripts/kaloneo-consolidation-regression.js
+      - name: Final gate - do not mask any full journey regression
+        if: always()
+        shell: pwsh
+        run: |
+          if ('${{ steps.full_journey.outcome }}' -ne 'success') {
+            throw 'Parcours complet non valide : la publication reste bloquee, meme si les autres controles passent.'
+          }
+      - name: Build Windows Setup R78
+        run: npx electron-builder --win nsis --config build/kaloneo-v1-fixes-r78-builder.yml --publish never
+
+      - name: Verify R78 Setup and calculate SHA256
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem -Path dist -Filter 'SEB-EvalPro-Kaloneo-PILOTE-22-R78-0.0.107-Windows-Setup.exe' -File | Select-Object -First 1
+          if (-not $setup) { throw 'Setup R78 introuvable apres compilation.' }
+          $hash = (Get-FileHash -Algorithm SHA256 $setup.FullName).Hash.ToUpperInvariant()
+          "SETUP_PATH=$($setup.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "SETUP_NAME=$($setup.Name)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "SETUP_SHA256=$hash" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "R78 Setup : $($setup.Name) SHA256=$hash"
+
+      - name: Upload R78 Setup as GitHub Actions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SEB-EvalPro-Kaloneo-PILOTE-22-R78-Windows-Setup
+          path: seb-evalpro/dist/SEB-EvalPro-Kaloneo-PILOTE-22-R78-0.0.107-Windows-Setup.exe
+          if-no-files-found: error
+
+      - name: Publish test release R78 (do not overwrite previous releases)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = 'seb-kaloneo-v1-fixes-r78-test'
+          $title = 'SEB EvalPro Kalonéo — R78 / Build #83 — Choix image unique et taille compacte — TEST'
+          if (gh release view $tag 2>$null) {
+            throw 'Release R78 deja presente : ne pas ecraser une release existante.'
+          }
+          $notes = @"
+          R78 VERSION DE TEST - Build #83 / version 0.0.107. Base R77 ; correction source du Builder : une seule commande image, les boutons de taille compacts et contrôlés en Electron.
+          - Aucun test V1 modifié. Le sélecteur fichier image inutile a été supprimé du code, et les réglages de taille ne cumulent plus deux dispositions CSS.
+          - Aucun test catalogue modifié, mêmes contrôles de non-régression.
+          SHA256 Setup : $env:SETUP_SHA256
+          "@
+          gh release create $tag $env:SETUP_PATH --target $env:GITHUB_SHA --title $title --notes $notes
