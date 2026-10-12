@@ -1046,3 +1046,61 @@ body{
 /* Les boutons de dialogue doivent conserver le même relief léger. */
 body dialog button:not(:disabled){box-shadow:0 2px 0 rgba(0,60,95,.22),0 3px 5px rgba(0,45,70,.12)!important}
 body dialog button:not(:disabled):active{box-shadow:inset 0 2px 4px rgba(0,50,70,.19)!important;transform:translateY(1px)!important}
+
+
+/* Bibliothèque d'images : voir l'intégralité de chaque image, sans recadrage.
+   Une boîte de dimensions explicites est indispensable à object-fit:contain. */
+#image-library-dialog .image-library-preview{
+  width:100%;
+  height:122px;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+#image-library-dialog .image-library-preview img{
+  display:block;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain!important;
+  object-position:center center!important;
+}
+
+/* Fenêtres du Builder : identité commune des boutons, sans toucher aux actions. */
+body .test-library-dialog .mini-btn:not(:disabled){
+  background:linear-gradient(180deg,#fff 0%,#f3f8fc 100%);
+  border:1px solid #004e70;
+  box-shadow:0 2px 0 rgba(0,60,95,.22),0 3px 6px rgba(0,45,70,.12)!important;
+  transition:background-color .14s ease,border-color .14s ease,
+    box-shadow .14s ease,transform .14s ease,color .14s ease;
+}
+body .test-library-dialog .mini-btn:not(:disabled):hover{
+  background:#e4f2fc!important;
+  border-color:#0076b7!important;
+  color:#004e70!important;
+  box-shadow:0 3px 0 rgba(0,75,115,.20),0 5px 11px rgba(0,54,89,.18)!important;
+  transform:translateY(-1px)!important;
+}
+body .test-library-dialog .mini-btn:not(:disabled):active{
+  background:#d9ebf8!important;
+  box-shadow:inset 0 2px 4px rgba(0,50,70,.20)!important;
+  transform:translateY(1px)!important;
+}
+body .test-library-dialog .mini-btn:focus-visible{
+  outline:2px solid #0076b7;
+  outline-offset:2px;
+}
+body .test-library-dialog .mini-btn.danger:not(:disabled){
+  border-color:#c62828;
+  color:#c62828;
+}
+body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
+  background:#ffebeb!important;
+  border-color:#bc2424!important;
+  color:#a91c1c!important;
+}
