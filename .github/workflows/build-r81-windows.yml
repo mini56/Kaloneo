@@ -1,17 +1,6 @@
 name: 'Build Windows KALONÉO R81 — Build #86 Blocs repliables (branche existante)'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - 'kaloneo/test-builder.html'
-      - 'kaloneo/test-builder.css'
-      - 'kaloneo/test-builder.js'
-      - 'seb-evalpro/scripts/kaloneo-builder-preview-electron-smoke-main.js'
-      - '.github/workflows/build-r81-windows.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r81-builder.yml'
+  # Release R81 / Build #86 publiée : aucune recompilation automatique de ce numéro.
   workflow_dispatch:
 
 # Conserver ce groupe pour les futurs Builds Windows.
