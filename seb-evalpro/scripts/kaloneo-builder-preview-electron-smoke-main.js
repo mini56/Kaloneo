@@ -242,7 +242,8 @@ app.whenReady().then(async()=>{
       const elements=[...target.querySelector('.block-header').children];
       const rects=elements.map(element=>element.getBoundingClientRect());
       const headerAligned=rects.every((r,i)=>r.width>0&&r.height>0&&
-        (i===0||r.left>=rects[i-1].right-1)&&Math.abs(r.top-rects[0].top)<5);
+        (i===0||r.left>=rects[i-1].right-1)&&
+        Math.abs((r.top+r.bottom)/2-(rects[0].top+rects[0].bottom)/2)<5);
       const remove=target.querySelector('.remove-block');
       const removeNotWrapped=remove.getBoundingClientRect().height<=36&&
         remove.scrollHeight<=remove.clientHeight+1&&
