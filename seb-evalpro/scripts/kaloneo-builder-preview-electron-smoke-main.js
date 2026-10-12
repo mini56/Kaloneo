@@ -1063,12 +1063,58 @@ app.whenReady().then(async()=>{
       font.value='24';font.dispatchEvent(new Event('change',{bubbles:true}));
       const selected=font.value;
       const active=font.isConnected;
-      document.getElementById('open-electron-preview').click();
-      return {ok:true,selected,active};
+      // R86 : plusieurs éditions successives ne doivent jamais détacher
+      // le contrôle en cours d'utilisation (ancienne perte du curseur).
+      const colorLabel=[...blocks[0].querySelectorAll('label')]
+        .find(x=>x.textContent?.startsWith('Couleur du bloc'));
+      const color=colorLabel?.querySelector('select');
+      if(!color)return {ok:false,reason:'Couleur du bloc absente'};
+      color.focus();color.value='#EEF6FD';
+      color.dispatchEvent(new Event('change',{bubbles:true}));
+      const colorKept=color.isConnected&&document.activeElement===color;
+      const oldTitle=[...blocks[0].querySelectorAll('label')]
+        .find(x=>x.textContent?.trim()==='Titre')?.querySelector('input');
+      if(!oldTitle)return {ok:false,reason:'Titre du tableau introuvable'};
+      oldTitle.focus();oldTitle.value='Singulier Pluriel modifié';
+      oldTitle.setSelectionRange(10,10);
+      oldTitle.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(resolve=>setTimeout(resolve,480));
+      const titleKept=oldTitle.isConnected&&document.activeElement===oldTitle&&
+        oldTitle.selectionStart===10;
+      const secondBlocks=[...document.querySelectorAll('.exercise-block')];
+      const otherTitle=[...secondBlocks[1].querySelectorAll('label')]
+        .find(x=>x.textContent?.trim()==='Titre')?.querySelector('input');
+      otherTitle.focus();otherTitle.value='Masculin Féminin modifié';
+      otherTitle.setSelectionRange(7,7);
+      otherTitle.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(resolve=>setTimeout(resolve,480));
+      const secondKept=otherTitle.isConnected&&document.activeElement===otherTitle&&
+        otherTitle.selectionStart===7;
+      // Le changement de zone force une reconstruction structurelle ;
+      // le contrôle choisi reste utilisable sans fermer le test.
+      const zone=secondBlocks[1].querySelector('.block-zone');
+      zone.focus();zone.value='left';
+      zone.dispatchEvent(new Event('change',{bubbles:true}));
+      const zoneKept=zone.isConnected&&document.activeElement===zone;
+      // Un changement de type peut reconstruire l'éditeur : retrouver
+      // le même sélecteur, mais sans modifier le type du vrai test.
+      const firstBlock=document.querySelector('.exercise-block');
+      const type=firstBlock.querySelector('.block-type');
+      type.focus();type.value='multiple-tables';
+      // Reconstitution réelle déclenchée par la commande de structure.
+      type.dispatchEvent(new Event('change',{bubbles:true}));
+      const restoredType=firstBlock.isConnected===false &&
+        document.activeElement?.classList?.contains('block-type') &&
+        document.activeElement?.closest('.exercise-block')?.dataset?.uid===firstBlock.dataset.uid;
+            document.getElementById('open-electron-preview').click();
+      return {ok:true,selected,active,colorKept,titleKept,secondKept,zoneKept,restoredType};
     })()`,true);
-    if(!genreFont.ok||genreFont.selected!=='24'||!genreFont.active) {
-      return fail('Taille de police dans Genre et nombre inutilisable',genreFont);
+    if(!genreFont.ok||genreFont.selected!=='24'||!genreFont.active||
+       !genreFont.colorKept||!genreFont.titleKept||!genreFont.secondKept||
+       !genreFont.zoneKept||!genreFont.restoredType) {
+      return fail('Genre et nombre : perte du curseur après plusieurs modifications',genreFont);
     }
+    console.log('KALONEO_GENRE_NOMBRE_MULTIPLE_EDITS_FOCUS=OK',JSON.stringify(genreFont));
     for(let attempt=0;attempt<30;attempt++){
       await wait(120);
       const p=win.webContents.getURL(); // Ne pas exécuter de JS dans un frame en cours de navigation.

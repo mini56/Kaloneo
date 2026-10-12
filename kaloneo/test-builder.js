@@ -1357,7 +1357,7 @@
       appendImageScaleControls(body,block,'imageScale','Taille de l’image dans le bloc');
       body.appendChild(selectField('Alignement de l’image',String(block.imageAlign||'center'),[
         ['center','Centré'],['left','Gauche'],['right','Droite']
-      ],value=>{block.imageAlign=value;changed();renderBlocks();}));
+      ],value=>{block.imageAlign=value;changed();}));
     }
     body.appendChild(inputField('Texte alternatif',block.mediaAlt||'',value=>{block.mediaAlt=value;changed();}));
 
@@ -1433,9 +1433,9 @@
       ['','Taille standard'],['14','14 px'],['16','16 px'],['18','18 px'],['20','20 px'],['22','22 px'],['24','24 px']
     ],value=>{block.fontSize=value?Number(value):'';changed();});
     const background=selectField('Couleur du bloc',String(block.backgroundColor||''),BLOCK_BACKGROUND_CHOICES,value=>{
+      // Changement visuel : ne pas détruire le select actif ni les autres champs.
       block.backgroundColor=value;
       changed();
-      renderBlocks();
     });
 
     row.append(font,background);
@@ -1751,8 +1751,53 @@
     }
   }
 
+  // Conserver le champ et la position du curseur quand une modification
+  // structurelle impose de recréer les contrôles de l'éditeur.
+  // Aucun changement des modèles KALTEST ou des fichiers V1.
+  function rememberBlockFocus(host) {
+    const focused=document.activeElement;
+    if(!focused || !host.contains(focused))return null;
+    const block=focused.closest?.('.exercise-block');
+    if(!block?.dataset?.uid)return null;
+    const path=[];
+    for(let node=focused;node!==block;node=node.parentElement){
+      if(!node?.parentElement)return null;
+      path.unshift(Array.prototype.indexOf.call(node.parentElement.children,node));
+    }
+    const editing=focused.tagName==='INPUT'||focused.tagName==='TEXTAREA';
+    let start=null,end=null,direction='none';
+    if(editing){
+      try{
+        start=focused.selectionStart;end=focused.selectionEnd;
+        direction=focused.selectionDirection||'none';
+      }catch(_){}
+    }
+    return {uid:block.dataset.uid,path,tagName:focused.tagName,
+      type:focused.type||'',original:focused,start,end,direction};
+  }
+
+  function restoreBlockFocus(host,snapshot) {
+    if(!snapshot || snapshot.original.isConnected)return;
+    // Ne pas reprendre le focus si une autre commande en a déjà pris possession.
+    if(document.activeElement && document.activeElement!==document.body)return;
+    const block=Array.from(host.children).find(node=>node.dataset.uid===snapshot.uid);
+    if(!block)return;
+    let control=block;
+    for(const index of snapshot.path)control=control?.children?.[index];
+    if(!control||control.tagName!==snapshot.tagName ||
+       (snapshot.tagName==='INPUT'&&control.type!==snapshot.type))return;
+    if(!control.matches('input,textarea,select,button')||control.disabled)return;
+    try{control.focus({preventScroll:true});}
+    catch(_){control.focus();}
+    if(Number.isInteger(snapshot.start)&&Number.isInteger(snapshot.end)&&
+       typeof control.setSelectionRange==='function'){
+      try{control.setSelectionRange(snapshot.start,snapshot.end,snapshot.direction);}catch(_){}
+    }
+  }
+
   function renderBlocks() {
     const host=$('blocks-editor');
+    const focusSnapshot=rememberBlockFocus(host);
     host.innerHTML='';
     const split=$('test-layout').value!=='single';
 
@@ -1836,6 +1881,7 @@
     });
 
     refreshPreview();
+    restoreBlockFocus(host,focusSnapshot);
   }
 
   function createQuestionPreview(block) {
