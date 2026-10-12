@@ -1,13 +1,7 @@
 name: 'Build Windows KALONÉO R86 — Build #91 Focus stable Genre et nombre (branche existante)'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - '.github/workflows/build-r86-windows.yml'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r86-builder.yml'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/package.json'
+  # R86 / Build #91 livré : empêcher toute recompilation automatique.
+  # Le contrôle du tag publié empêche aussi les duplications manuelles.
   workflow_dispatch:
 
 # Conserver ce groupe pour les futurs Builds Windows.
