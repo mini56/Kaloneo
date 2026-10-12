@@ -15,6 +15,7 @@ let savedLibraryPayload = null;
 let savedImageCalls = 0;
 let zipImportCalls = 0;
 let protectedLibraryMode = false;
+let restaurantFixture = null;
 let protectedOrganisation = null;
 const imageLibraryData = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120"><rect width="180" height="120" fill="#1b6c8e"/></svg>').toString('base64');
 let win = null;
@@ -65,9 +66,10 @@ ipcMain.handle('kaloneo-library:list-tests',()=>({
   tests:protectedLibraryMode ? [
     {id:'organisation_demenagement',version:'2.0.0',title:'Organisation d’une activité',category:'organisation',role:'test',scored:true,protectedVersion:false},
     {id:'organisation_demenagement',version:'1.0.0',title:'Organisation d’une activité',category:'organisation',role:'test',scored:true,protectedVersion:true}
-  ] : []
+  ] : []).concat(restaurantFixture?[{id:restaurantFixture.id,version:restaurantFixture.version,title:restaurantFixture.title,category:restaurantFixture.category,role:'test',scored:true,protectedVersion:false}]:[])
 }));
 ipcMain.handle('kaloneo-library:get-test',(_e,payload)=>{
+  if(restaurantFixture&&payload?.id===restaurantFixture.id)return {ok:true,definition:JSON.parse(JSON.stringify(restaurantFixture))};
   if(protectedLibraryMode && payload?.id==='organisation_demenagement' && payload?.version==='1.0.0' && protectedOrganisation) {
     return {ok:true,definition:JSON.parse(JSON.stringify(protectedOrganisation))};
   }
@@ -104,6 +106,7 @@ app.whenReady().then(async()=>{
   const root=path.join(__dirname,'..');
   const web=path.join(root,'app','web');
   protectedOrganisation=JSON.parse(fs.readFileSync(path.join(web,'kaltest','tests','organisation-demenagement','1.0.0','test.json'),'utf8'));
+  restaurantFixture=JSON.parse(fs.readFileSync(path.join(root,'r48-demo','planning-restaurant-builder-r48.json'),'utf8'));
   const builder=path.join(web,'kaloneo-builder','test-builder.html');
   const preview=path.join(web,'kaloneo-builder','test-preview.html');
   if(!fs.existsSync(builder)||!fs.existsSync(preview)) return fail('Builder ou page aperçu absent de app/web');
@@ -576,11 +579,19 @@ app.whenReady().then(async()=>{
 
     // R48.2 : reproduire la vraie page Restaurant avec interligne aéré,
     // sans barre de défilement dans le planning ou la colonne gauche.
-    const restaurantSetup=await win.webContents.executeJavaScript(`(()=>{
+    const restaurantSetup=await win.webContents.executeJavaScript(`(async()=>{
       window.confirm=()=>true;
-      const load=document.getElementById('r48-demo-restaurant');
-      if(!load)return {ok:false,reason:'Bouton Restaurant R48 manquant'};
-      load.click();
+      if(document.getElementById('r48-demo-restaurant'))return {ok:false,reason:'Bouton R48 obsolète toujours présent'};
+      document.getElementById('open-library-test').click();
+      await new Promise(resolve=>setTimeout(resolve,170));
+      const row=[...document.querySelectorAll('.test-library-item')]
+        .find(node=>String(node.textContent||'').includes('Restaurant'));
+      if(!row)return {ok:false,reason:'Restaurant absent de la bibliothèque simulée'};
+      row.querySelector('.test-library-item-actions button').click();
+      await new Promise(resolve=>setTimeout(resolve,220));
+      if(!String(document.getElementById('test-title')?.value||'').includes('Restaurant')){
+        return {ok:false,reason:'Ouverture du Restaurant via bibliothèque impossible'};
+      }
       const blocks=[...document.querySelectorAll('.exercise-block')];
       const labels=[...blocks.flatMap(b=>[...b.querySelectorAll('label')])];
       const interline=labels.find(x=>/Interligne/.test(x.textContent||'') && x.querySelector('select'))?.querySelector('select');
@@ -594,6 +605,25 @@ app.whenReady().then(async()=>{
       indicationsEditor.value=indicationsEditor.value.replace('Jacqueline','JacquelinX');
       indicationsEditor.dispatchEvent(new Event('input',{bubbles:true}));
       if(!indicationsEditor.value.includes('JacquelinX'))return {ok:false,reason:'Saisie indications perdue'};
+      // Vérification des commandes Sortie et Liaison Bilan sur une définition temporaire.
+      document.getElementById('add-output').click();
+      const custom=[...document.querySelectorAll('#outputs-editor .contract-row')].at(-1);
+      const id=custom?.querySelector('input');
+      if(!id)return {ok:false,reason:'Bouton Sortie inopérant'};
+      id.value='variable_restaurant';id.dispatchEvent(new Event('input',{bubbles:true}));
+      id.dispatchEvent(new Event('blur',{bubbles:true}));
+      const valueType=[...document.querySelectorAll('#outputs-editor .contract-row')].at(-1)?.querySelector('select');
+      if(!valueType)return {ok:false,reason:'Type de sortie absent'};
+      valueType.value='integer';valueType.dispatchEvent(new Event('change',{bubbles:true}));
+      document.getElementById('add-bilan-contribution').click();
+      const link=document.querySelector('#bilan-editor .contract-link-row select');
+      if(!link)return {ok:false,reason:'Bouton Liaison Bilan inopérant'};
+      link.value='bilan.competences_techniques.planning.repartition_taches';
+      link.dispatchEvent(new Event('change',{bubbles:true}));
+      const mapping=[...document.querySelectorAll('#bilan-editor .contract-bindings select')];
+      if(mapping.length!==2)return {ok:false,reason:'Entrées de la ligne Planning absentes'};
+      mapping[0].value='score';mapping[0].dispatchEvent(new Event('change',{bubbles:true}));
+      mapping[1].value='score_max';mapping[1].dispatchEvent(new Event('change',{bubbles:true}));
       const preview=document.getElementById('open-electron-preview');
       if(!preview)return {ok:false,reason:'Bouton aperçu absent'};
       preview.click();
@@ -608,6 +638,12 @@ app.whenReady().then(async()=>{
     await wait(400);
     const definitionIndications=previewDefinition?.presentation?.builderContent
       ?.filter(block=>block?.type==='text').map(block=>String(block.text||'')).join(' ')||'';
+    if(!previewDefinition?.outputs?.some(output=>output.id==='variable_restaurant'&&output.type==='integer')||
+       !previewDefinition?.bilanContributions?.some(link=>
+         link.lineId==='bilan.competences_techniques.planning.repartition_taches'&&
+         link.bindings?.score==='score'&&link.bindings?.score_max==='score_max')){
+      return fail('Sortie et liaison Bilan non conservées dans la définition KALTEST',previewDefinition?.bilanContributions);
+    }
     if(!definitionIndications.includes('JacquelinX')||definitionIndications.includes('Jacqueline')) {
       return fail('R72 : texte Restaurant modifié non transmis à la définition de l’aperçu',{definitionIndications});
     }
