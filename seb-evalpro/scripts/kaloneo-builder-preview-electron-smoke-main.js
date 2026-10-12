@@ -587,6 +587,13 @@ app.whenReady().then(async()=>{
       if(!interline)return {ok:false,reason:'Réglage interligne absent'};
       interline.value='1.5';
       interline.dispatchEvent(new Event('change',{bubbles:true}));
+      // Régression R72 : modifier les indications doit être transmis au véritable aperçu.
+      const indicationsEditor=[...document.querySelectorAll('.exercise-block textarea')]
+        .find(node=>String(node.value||'').includes('Jacqueline'));
+      if(!indicationsEditor)return {ok:false,reason:'Éditeur des indications Restaurant absent'};
+      indicationsEditor.value=indicationsEditor.value.replace('Jacqueline','JacquelinX');
+      indicationsEditor.dispatchEvent(new Event('input',{bubbles:true}));
+      if(!indicationsEditor.value.includes('JacquelinX'))return {ok:false,reason:'Saisie indications perdue'};
       const preview=document.getElementById('open-electron-preview');
       if(!preview)return {ok:false,reason:'Bouton aperçu absent'};
       preview.click();
@@ -599,6 +606,11 @@ app.whenReady().then(async()=>{
       if(/test-preview\.html$/i.test(p)) break;
     }
     await wait(400);
+    const definitionIndications=previewDefinition?.presentation?.builderContent
+      ?.filter(block=>block?.type==='text').map(block=>String(block.text||'')).join(' ')||'';
+    if(!definitionIndications.includes('JacquelinX')||definitionIndications.includes('Jacqueline')) {
+      return fail('R72 : texte Restaurant modifié non transmis à la définition de l’aperçu',{definitionIndications});
+    }
     const restaurantFit=await win.webContents.executeJavaScript(`(()=>{
       const zones=[...document.querySelectorAll('.kb-zone')];
       const grid=document.querySelector('.kb-table-wrap');
@@ -619,7 +631,7 @@ app.whenReady().then(async()=>{
         indications:measure(indications),
         bottomLeft,bottomInd,
         selects:selects.length,
-        instructionPresent:!!indications&&String(indications.textContent||'').includes('Jacqueline'),
+        instructionPresent:!!indications&&String(indications.textContent||'').includes('JacquelinX')&&!String(indications.textContent||'').includes('Jacqueline'),
         imagePresent:!!zones[1]?.querySelector('img')
       };
     })()`);
