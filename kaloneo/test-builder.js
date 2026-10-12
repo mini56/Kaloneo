@@ -28,6 +28,7 @@
   const activeGridEditorColumn=new Map(); // UI only: never saved into KALTEST
   const collapsedBlockUids=new Set(); // état d'affichage uniquement, jamais écrit dans les tests
   let builderDirty = false;
+  let changingInputField = false; // un champ saisi ne lance pas l'aperçu Electron à chaque caractère
   let savedFingerprint = String(localStorage.getItem(SAVED_FINGERPRINT_KEY) || '');
   let statusToken = 0;
 
@@ -650,7 +651,15 @@
         el.style.height=Math.max(42,el.scrollHeight)+'px';
       }
     };
-    el.addEventListener('input',()=>{grow();onInput(el.value);});
+    el.addEventListener('input',()=>{
+      grow();
+      changingInputField=true;
+      try{onInput(el.value);}
+      finally{changingInputField=false;}
+    });
+    // Quand un changement de dimensions exige une reconstruction de
+    // l'éditeur, attendre la validation du champ (pas chaque touche).
+    if(typeof options.onCommit==='function')el.addEventListener('change',()=>options.onCommit(el.value));
     if(el.tagName==='TEXTAREA') requestAnimationFrame(grow);
     wrap.appendChild(el);
     return wrap;
@@ -793,8 +802,8 @@
       t.headers=splitValues(value);
       ensureResponseColumns(block);
       changed();
-      renderBlocks();
-    },{placeholder:'N°; Réponses; Unités; Opérations effectuées'}));
+    },{placeholder:'N°; Réponses; Unités; Opérations effectuées',
+      onCommit:()=>renderBlocks()}));
 
     const grid=document.createElement('div');
     grid.className='column-editor';
@@ -875,8 +884,8 @@
     dims.className='field-row cols-3';
     dims.append(
       inputField('Titre du tableau',table.title||'',value=>{table.title=value;changed();}),
-      inputField('Lignes',table.rows,value=>{resizeGrid(table,value,table.cols);changed();renderBlocks();},{type:'number',min:1,max:30}),
-      inputField('Colonnes',table.cols,value=>{resizeGrid(table,table.rows,value);changed();renderBlocks();},{type:'number',min:1,max:20})
+      inputField('Lignes',table.rows,value=>{resizeGrid(table,value,table.cols);changed();},{type:'number',min:1,max:30,onCommit:()=>renderBlocks()}),
+      inputField('Colonnes',table.cols,value=>{resizeGrid(table,table.rows,value);changed();},{type:'number',min:1,max:20,onCommit:()=>renderBlocks()})
     );
     body.appendChild(dims);
     const layoutLabel=document.createElement('label');layoutLabel.className='inline-checkbox';
@@ -1635,7 +1644,8 @@
         }
         changed({typing:true});
       });
-      idField.querySelector('input').addEventListener('blur',()=>setTimeout(renderContractEditors,0));
+      // Ne pas recréer tous les champs au blur : cela volait le focus
+      // au contrôle sur lequel l'utilisateur venait de cliquer.
       const typeField=contractField('Type de donnée',output.type,CONTRACT_TYPES,value=>{
         output.type=value;renderContractEditors();changed();
       });
@@ -2691,7 +2701,8 @@
     refreshPreview();
   }
   function changed(options={}) {
-    if(options.typing===true){
+    const typing=options.typing===true||changingInputField;
+    if(typing){
       // Le moteur de capture Electron recharge une vraie page candidat : ne jamais le lancer pendant la frappe.
       // Conserver immédiatement la valeur dans le modèle, puis enregistrer et prévisualiser après une courte pause.
       if(pendingTypingRefresh)clearTimeout(pendingTypingRefresh);
@@ -2700,7 +2711,7 @@
       flushTypingRefresh();
     }
     if(!applyingHistory){
-      if(options.typing===true){
+      if(typing){
         // Regrouper uniquement la saisie continue, pas les actions ponctuelles.
         builderDirty=true;
         updateDirtyIndicator();

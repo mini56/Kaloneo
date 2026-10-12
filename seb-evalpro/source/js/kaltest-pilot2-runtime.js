@@ -1082,6 +1082,9 @@
     for (const definition of test.presentation?.tables || []) {
       const card = document.createElement('div');
       card.className = 'kaltest-table-card';
+      // Même réglage de police que les blocs Builder, sans remplacer le
+      // moteur historique qui positionne les deux tableaux Genre/Nombre.
+      if(definition.builderStyle)applyBuilderItemStyle(card,{style:definition.builderStyle});
 
       const title = document.createElement('h3');
       title.textContent = definition.title || '';

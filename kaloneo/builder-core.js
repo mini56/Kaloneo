@@ -165,12 +165,12 @@
     };
   }
   function tablesToBlocks(def){
-    return (def.presentation?.tables||[]).map((table,index)=>({
+    return (def.presentation?.tables||[]).map((table,index)=>withBuilderStyle({
       uid:'multi_table_'+index,
       type:'multiple-tables',
       zone:index===0?'left':'right',
       tableDefinition:clone(table)
-    }));
+    },{style:table.builderStyle||{}}));
   }
   function responseTableBlock(def){
     return {
@@ -660,6 +660,20 @@
         if(legacyOrganisation) delete def.presentation.organisationList;
         rebuildBuilderQuestions(def,model);
       }else{
+        // Les tableaux historiques (ex. Genre et nombre) conservent leur
+        // rendu et leur schéma d'origine. Les styles du Builder sont
+        // enregistrés par tableau, sans conversion destructrice en
+        // builderContent et sans toucher aux tests V1 d'origine.
+        if(Array.isArray(def.presentation.tables)){
+          const tableBlocks=(model.blocks||[]).filter(block=>block.type==='multiple-tables');
+          def.presentation.tables.forEach((table,index)=>{
+            const block=tableBlocks.find(entry=>entry.tableDefinition?.id===table.id) || tableBlocks[index];
+            if(!block)return;
+            const style=builderItemStyle(block);
+            if(Object.keys(style).length) table.builderStyle=style;
+            else if(Object.prototype.hasOwnProperty.call(table,'builderStyle')) delete table.builderStyle;
+          });
+        }
         updateImportedQuestions(def,model);
       }
       return def;

@@ -17,6 +17,8 @@ const importedImages = new Map();
 let zipImportCalls = 0;
 let protectedLibraryMode = false;
 let restaurantFixture = null;
+let genreNombreFixture = null;
+let genreLibraryMode = false;
 let protectedOrganisation = null;
 const imageLibraryData = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120"><rect width="180" height="120" fill="#1b6c8e"/></svg>').toString('base64');
 const imageLibraryAlternativeData = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120"><rect width="180" height="120" fill="#e67e22"/></svg>').toString('base64');
@@ -69,9 +71,11 @@ ipcMain.handle('kaloneo-library:list-tests',()=>({
     {id:'organisation_demenagement',version:'2.0.0',title:'Organisation d’une activité',category:'organisation',role:'test',scored:true,protectedVersion:false},
     {id:'organisation_demenagement',version:'1.0.0',title:'Organisation d’une activité',category:'organisation',role:'test',scored:true,protectedVersion:true}
   ] : []).concat(restaurantFixture?[{id:restaurantFixture.id,version:restaurantFixture.version,title:restaurantFixture.title,category:restaurantFixture.category,role:'test',scored:true,protectedVersion:false}]:[])
+    .concat(genreLibraryMode&&genreNombreFixture?[{id:genreNombreFixture.id,version:genreNombreFixture.version,title:genreNombreFixture.title,category:genreNombreFixture.category,role:'test',scored:true,protectedVersion:false}]:[])
 }));
 ipcMain.handle('kaloneo-library:get-test',(_e,payload)=>{
   if(restaurantFixture&&payload?.id===restaurantFixture.id)return {ok:true,definition:JSON.parse(JSON.stringify(restaurantFixture))};
+  if(genreLibraryMode&&genreNombreFixture&&payload?.id===genreNombreFixture.id)return {ok:true,definition:JSON.parse(JSON.stringify(genreNombreFixture))};
   if(protectedLibraryMode && payload?.id==='organisation_demenagement' && payload?.version==='1.0.0' && protectedOrganisation) {
     return {ok:true,definition:JSON.parse(JSON.stringify(protectedOrganisation))};
   }
@@ -119,6 +123,7 @@ app.whenReady().then(async()=>{
   const web=path.join(root,'app','web');
   protectedOrganisation=JSON.parse(fs.readFileSync(path.join(web,'kaltest','tests','organisation-demenagement','1.0.0','test.json'),'utf8'));
   restaurantFixture=JSON.parse(fs.readFileSync(path.join(root,'r48-demo','planning-restaurant-builder-r48.json'),'utf8'));
+  genreNombreFixture=JSON.parse(fs.readFileSync(path.join(root,'source','kaltest','tests','genre-nombre','1.0.0','test.json'),'utf8'));
   const builder=path.join(web,'kaloneo-builder','test-builder.html');
   const preview=path.join(web,'kaloneo-builder','test-preview.html');
   if(!fs.existsSync(builder)||!fs.existsSync(preview)) return fail('Builder ou page aperçu absent de app/web');
@@ -354,6 +359,56 @@ app.whenReady().then(async()=>{
       return fail('Sections Icônes / Sorties-Bilan ou largeur des boutons incorrectes',sectionCompact);
     }
     console.log('KALONEO_SECTION_FOLD_AND_COMPACT_BLOCK_HEADER=OK',JSON.stringify(sectionCompact));
+
+        const typingFocus=await win.webContents.executeJavaScript(`(async()=>{
+      document.getElementById('new-test').click();
+      let block=document.querySelector('.exercise-block');
+      let type=block.querySelector('.block-type');
+      type.value='response-table';type.dispatchEvent(new Event('change',{bubbles:true}));
+      block=document.querySelector('.exercise-block');
+      const header=[...block.querySelectorAll('label')].find(l=>l.textContent?.includes('En-têtes du tableau'))?.querySelector('input');
+      if(!header)return {ok:false,reason:'En-têtes de tableau introuvables'};
+      header.focus();
+      header.value='Colonne A; Colonne B; Colonne C';
+      header.setSelectionRange(9,9);
+      header.dispatchEvent(new Event('input',{bubbles:true}));
+      const focusAfterInput=document.activeElement===header&&header.isConnected&&header.selectionStart===9;
+      await new Promise(resolve=>setTimeout(resolve,410));
+      const focusAfterPause=document.activeElement===header&&header.isConnected&&header.selectionStart===9;
+      header.dispatchEvent(new Event('change',{bubbles:true}));
+      const updated=!!document.querySelector('.exercise-block')&&
+        document.querySelectorAll('.exercise-block .column-editor-row').length===3;
+      document.getElementById('new-test').click();
+      block=document.querySelector('.exercise-block');
+      type=block.querySelector('.block-type');
+      type.value='table-grid';type.dispatchEvent(new Event('change',{bubbles:true}));
+      const size=[...document.querySelectorAll('.exercise-block label')].find(l=>l.textContent?.trim().startsWith('Lignes'))?.querySelector('input');
+      if(!size)return {ok:false,reason:'Champ Lignes absent'};
+      size.focus();
+      size.value='12';size.dispatchEvent(new Event('input',{bubbles:true}));
+      const gridKeepsFocus=document.activeElement===size&&size.isConnected;
+      size.dispatchEvent(new Event('change',{bubbles:true}));
+      const gridUpdated=!!document.querySelector('.exercise-block .cell-grid-editor');
+      document.getElementById('new-test').click();
+      document.getElementById('add-output').click();
+      const output=document.querySelector('#outputs-editor .contract-row input');
+      output.focus();
+      output.value='variable_focus';
+      output.dispatchEvent(new Event('input',{bubbles:true}));
+      output.dispatchEvent(new Event('blur',{bubbles:true}));
+      const next=document.querySelector('#outputs-editor .contract-row select');
+      next.focus();
+      await new Promise(resolve=>setTimeout(resolve,30));
+      const nextKeepsFocus=document.activeElement===next&&next.isConnected;
+      document.getElementById('new-test').click();
+      return {ok:true,focusAfterInput,focusAfterPause,updated,gridKeepsFocus,gridUpdated,nextKeepsFocus};
+    })()`,true);
+    if(!typingFocus.ok||!typingFocus.focusAfterInput||!typingFocus.focusAfterPause||
+       !typingFocus.updated||!typingFocus.gridKeepsFocus||!typingFocus.gridUpdated||
+       !typingFocus.nextKeepsFocus){
+      return fail('Le curseur disparaît lors de la saisie dans le Builder',typingFocus);
+    }
+    console.log('KALONEO_BUILDER_INPUT_FOCUS_STABLE=OK',JSON.stringify(typingFocus));
 
             const setup=await win.webContents.executeJavaScript(`(async()=>{
       document.getElementById('test-title').value='Aperçu Electron Smoke';
@@ -947,7 +1002,50 @@ app.whenReady().then(async()=>{
     }
     console.log('R48_2_RESTAURANT_NO_SCROLL_ELECTRON=OK',JSON.stringify(restaurantFit));
 
-    console.log('KALONEO_PROTECTED_V1_UI=OK');
+    // Test ciblé sur le vrai JSON de Genre et nombre sans modifier le fichier V1.
+    genreLibraryMode=true;
+    await win.loadFile(builder);
+    await wait(650);
+    const genreFont=await win.webContents.executeJavaScript(`(async()=>{
+      window.confirm=()=>true;
+      document.getElementById('open-library-test').click();
+      await new Promise(resolve=>setTimeout(resolve,150));
+      const row=[...document.querySelectorAll('.test-library-item')].find(x=>x.textContent?.includes('Genre et nombre'));
+      const open=row?.querySelector('.test-library-item-actions button');
+      if(!open)return {ok:false,reason:'Genre et nombre absent de la bibliothèque simulée'};
+      open.click();
+      await new Promise(resolve=>setTimeout(resolve,210));
+      const blocks=[...document.querySelectorAll('.exercise-block')];
+      if(blocks.length!==2||blocks.some(x=>x.querySelector('.block-type')?.value!=='multiple-tables')){
+        return {ok:false,reason:'Genre et nombre : tableaux historiques non conservés',blocks:blocks.length};
+      }
+      const label=[...blocks[0].querySelectorAll('label')].find(x=>x.textContent?.startsWith('Taille de police'));
+      const font=label?.querySelector('select');
+      if(!font)return {ok:false,reason:'Taille de police indisponible'};
+      font.value='24';font.dispatchEvent(new Event('change',{bubbles:true}));
+      const selected=font.value;
+      const active=font.isConnected;
+      document.getElementById('open-electron-preview').click();
+      return {ok:true,selected,active};
+    })()`,true);
+    if(!genreFont.ok||genreFont.selected!=='24'||!genreFont.active) {
+      return fail('Taille de police dans Genre et nombre inutilisable',genreFont);
+    }
+    for(let attempt=0;attempt<30;attempt++){
+      await wait(120);
+      const p=await win.webContents.executeJavaScript('location.pathname');
+      if(/test-preview\.html$/i.test(p))break;
+    }
+    if(previewDefinition?.id!=='genre_nombre'||
+       previewDefinition.presentation?.tables?.[0]?.builderStyle?.fontSize!==24||
+       previewDefinition.presentation?.builderContent!==undefined||
+       previewDefinition.presentation?.tables?.[1]?.builderStyle!==undefined ||
+       previewDefinition.questions?.length!==genreNombreFixture.questions.length) {
+      return fail('Police de Genre et nombre non transmise au véritable aperçu Electron',previewDefinition?.presentation);
+    }
+    console.log('KALONEO_GENRE_NOMBRE_FONT_ELECTRON=OK');
+
+        console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
     console.log('KALONEO_BUILDER_PREVIEW_ELECTRON=OK');
     console.log(JSON.stringify({setup,shown,returned,definitionId:previewDefinition&&previewDefinition.id}));
