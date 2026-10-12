@@ -657,6 +657,13 @@ textarea {
   transform:none!important;
 }
 
+.image-scale-controls{display:grid;grid-template-columns:minmax(0,1fr) 34px 46px 34px 55px;gap:6px;align-items:end;margin:8px 0}
+.image-scale-controls label{min-width:0;font-size:12px}
+.image-scale-controls input[type="range"]{display:block;width:100%;min-width:0;margin:6px 0}
+.image-scale-controls output{text-align:center;font-size:12px;align-self:center}
+.builder-editor .image-scale-controls button{width:100%;height:30px;min-height:30px;padding:2px 5px!important;font-size:12px}
+.builder-topbar button:not(:disabled):hover,.builder-editor button:not(:disabled):hover,.builder-preview button:not(:disabled):hover,.modal button:not(:disabled):hover{background-color:#e1f1fc!important;border-color:#0071ae!important;color:#004e70!important;filter:brightness(.97)}
+.builder-topbar button.danger:not(:disabled):hover,.builder-editor button.danger:not(:disabled):hover,.modal button.danger:not(:disabled):hover{background-color:#ffe6e6!important;border-color:#d22121!important;color:#bd1515!important}
 /* PILOTE 22 R3 — scroll interne Conception et rendu média borné */
 html,body{
   width:100%;
