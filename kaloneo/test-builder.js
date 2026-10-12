@@ -1119,9 +1119,13 @@
     const root=$('image-library-list');
     if(!root)return;
     const search=normalizedSearch($('image-library-search')?.value||'');
+    // Galerie de conception : exclure les ressources techniques et regrouper les copies.
+    // Ne jamais modifier state.imageLibraryItems, les fichiers stockés ni les IDs utilisés par les tests.
+    const gallery=window.KaloneoImageGallery.prepare(state.imageLibraryItems||[]);
+    const visibleImages=gallery.images;
     const themeSelect=$('image-library-theme');
     const selectedTheme=String(themeSelect?.value||'');
-    const themes=[...new Set((state.imageLibraryItems||[]).map(item=>String(item.theme||item.category||'')).filter(Boolean))]
+    const themes=[...new Set(visibleImages.map(item=>String(item.theme||item.category||'')).filter(Boolean))]
       .sort((a,b)=>a.localeCompare(b,'fr'));
     if(themeSelect){
       const previous=selectedTheme;
@@ -1131,7 +1135,7 @@
     }
     const themeFilter=String(themeSelect?.value||'');
     const orientationFilter=String($('image-library-orientation')?.value||'');
-    const items=(state.imageLibraryItems||[]).filter(item=>{
+    const items=visibleImages.filter(item=>{
       const itemTheme=String(item.theme||item.category||'');
       if(themeFilter&&itemTheme!==themeFilter)return false;
       if(orientationFilter&&String(item.orientation||'')!==orientationFilter)return false;
@@ -1140,8 +1144,14 @@
     });
     root.replaceChildren();
     const status=$('image-library-status');
-    if(status) status.textContent=items.length+' image'+(items.length>1?'s':'')+' affichée'+(items.length>1?'s':'')+
-      (state.imageLibraryTargetUid?' — choisissez une image pour le bloc courant.':' — bibliothèque générale.');
+    if(status){
+      const shown=Math.min(items.length,250);
+      status.textContent=shown+' image'+(shown>1?'s':'')+' affichée'+(shown>1?'s':'')+
+        (items.length>shown?' sur '+items.length+' disponibles':'')+
+        (gallery.hiddenTechnical?', '+gallery.hiddenTechnical+' image'+(gallery.hiddenTechnical>1?'s':'')+' du programme masquée'+(gallery.hiddenTechnical>1?'s':''):'')+
+        (gallery.duplicates?', '+gallery.duplicates+' doublon'+(gallery.duplicates>1?'s':'')+' regroupé'+(gallery.duplicates>1?'s':''):'')+
+        (state.imageLibraryTargetUid?' — choisissez une image pour le bloc courant.':' — bibliothèque générale.');
+    }
 
     items.slice(0,250).forEach(item=>{
       const card=document.createElement('article');
