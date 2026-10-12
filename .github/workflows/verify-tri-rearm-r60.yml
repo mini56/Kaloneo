@@ -27,6 +27,7 @@ jobs:
       - name: Check restored Tri runtime and smoke syntax
         run: |
           node --check source/js/kaltest-pilot2-runtime.js
+          node --check scripts/kaloneo-builder-preview-electron-smoke-main.js
           node --check scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
           node --check scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
       - name: Generate historical KALTEST pilot data
