@@ -1,18 +1,6 @@
 name: 'Build Windows KALONÉO R82 — Build #87 Zones et bouton Aperçu (branche existante)'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - 'kaloneo/test-builder.html'
-      - 'kaloneo/test-builder.css'
-      - 'kaloneo/test-builder.js'
-      - 'seb-evalpro/scripts/kaloneo-builder-preview-electron-smoke-main.js'
-      - 'seb-evalpro/scripts/kaloneo-builder-parity-guard.js'
-      - '.github/workflows/build-r82-windows.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r82-builder.yml'
+  # Release R82 / Build #87 publiée : ne pas reconstruire automatiquement le même numéro.
   workflow_dispatch:
 
 # Conserver ce groupe pour les futurs Builds Windows.
