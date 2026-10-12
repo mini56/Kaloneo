@@ -303,7 +303,59 @@ app.whenReady().then(async()=>{
     }
     console.log('KALONEO_BLOCK_COLLAPSE_EXPAND_ELECTRON=OK',JSON.stringify(foldBehavior));
 
-        const setup=await win.webContents.executeJavaScript(`(async()=>{
+    const sectionCompact=await win.webContents.executeJavaScript(`(()=>{
+      const iconButton=document.getElementById('toggle-icon-library');
+      const iconBody=document.getElementById('icon-library-content');
+      const contractButton=document.getElementById('toggle-contract-section');
+      const contractBody=document.getElementById('contract-section-content');
+      if(!iconButton||!contractButton||!iconBody||!contractBody)return {ok:false,error:'Boutons de repli des sections absents'};
+      const iconCount=document.querySelectorAll('#icon-picker .icon-choice').length;
+      const outputsBefore=document.querySelectorAll('#outputs-editor .contract-item').length;
+      iconButton.click();contractButton.click();
+      const folded=iconBody.hidden&&contractBody.hidden&&
+        iconButton.getAttribute('aria-expanded')==='false'&&
+        contractButton.getAttribute('aria-expanded')==='false';
+      const stillPresent=iconCount===document.querySelectorAll('#icon-picker .icon-choice').length&&
+        outputsBefore===document.querySelectorAll('#outputs-editor .contract-item').length;
+      // Le bouton Icône existant doit ré-ouvrir la section repliée.
+      document.getElementById('jump-to-icon-picker').click();
+      const jumpedOpen=!iconBody.hidden&&iconButton.getAttribute('aria-expanded')==='true';
+      // L'ajout d'une sortie ouvre Sorties et Bilan sans perdre les précédentes.
+      document.getElementById('add-output').click();
+      const outputOpened=!contractBody.hidden&&contractButton.getAttribute('aria-expanded')==='true';
+      const outputAdded=document.querySelectorAll('#outputs-editor .contract-item').length===outputsBefore+1;
+      document.getElementById('new-test').click();
+      const allExpanded=!iconBody.hidden&&!contractBody.hidden;
+      const first=document.querySelector('.exercise-block');
+      const type=first?.querySelector('.block-type');
+      if(type){type.value='multiple-tables';type.dispatchEvent(new Event('change',{bubbles:true}));}
+      const header=document.querySelector('.exercise-block .block-header');
+      const typeField=header?.querySelector('.block-type');
+      const zone=header?.querySelector('.block-zone');
+      const remove=header?.querySelector('.remove-block');
+      const size=element=>Math.round(element?.getBoundingClientRect().width||0);
+      const font=element=>Math.round(parseFloat(getComputedStyle(element).fontSize)||0);
+      const rects=[...header?.children||[]].map(n=>n.getBoundingClientRect());
+      const order=rects.every((r,i)=>r.width>0&&(i===0||r.left>=rects[i-1].right-1));
+      const widthFits=header.scrollWidth<=header.clientWidth+2;
+      const values={ok:true,folded,stillPresent,jumpedOpen,outputOpened,outputAdded,
+        allExpanded,widthFits,order,kindWidth:size(typeField),zoneWidth:size(zone),deleteWidth:size(remove),
+        kindFont:font(typeField),zoneFont:font(zone),deleteFont:font(remove),
+        deleteText:remove?.textContent.trim(),collapsedBlocks:document.querySelectorAll('.exercise-block.is-collapsed').length};
+      document.getElementById('new-test').click();
+      return values;
+    })()`,true);
+    if(!sectionCompact.ok||!sectionCompact.folded||!sectionCompact.stillPresent||
+       !sectionCompact.jumpedOpen||!sectionCompact.outputOpened||!sectionCompact.outputAdded||
+       !sectionCompact.allExpanded||!sectionCompact.widthFits||!sectionCompact.order||
+       sectionCompact.kindWidth>182||sectionCompact.zoneWidth<100||sectionCompact.deleteWidth>85||
+       sectionCompact.kindFont<13||sectionCompact.zoneFont<13||sectionCompact.deleteFont<13||
+       sectionCompact.deleteText!=='Supprimer'){
+      return fail('Sections Icônes / Sorties-Bilan ou largeur des boutons incorrectes',sectionCompact);
+    }
+    console.log('KALONEO_SECTION_FOLD_AND_COMPACT_BLOCK_HEADER=OK',JSON.stringify(sectionCompact));
+
+            const setup=await win.webContents.executeJavaScript(`(async()=>{
       document.getElementById('test-title').value='Aperçu Electron Smoke';
       document.getElementById('test-title').dispatchEvent(new Event('input',{bubbles:true}));
       const scenario=document.getElementById('test-scenario');

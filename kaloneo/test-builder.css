@@ -167,22 +167,24 @@ textarea {
 
 .block-header {
   display: grid;
-  grid-template-columns: 28px minmax(100px,1fr) 108px 30px 30px 112px 30px;
-  gap: 6px;
-  align-items: center;
+  grid-template-columns: 28px minmax(142px,170px) 110px 30px 30px 82px 30px;
+  gap:7px;
+  justify-content:space-between;
+  align-items:center;
 }
 .block-header .remove-block{
-  width:112px;
+  width:82px;
   height:30px;
   min-height:30px;
   padding:3px 5px!important;
   white-space:nowrap;
-  font-size:11px;
+  font-size:13px;
   line-height:1;
 }
+.block-header .block-type,
 .block-header .block-zone{
-  padding:5px 4px;
-  font-size:12px;
+  padding:5px 5px;
+  font-size:13px;
 }
 .block-header .block-zone:disabled{
   opacity:.8;
@@ -453,7 +455,7 @@ textarea {
   .block-body .field-row.cols-3 { grid-template-columns: 1fr; }
 
   .block-header {
-    grid-template-columns: 28px minmax(100px,1fr) 108px 30px 30px 112px 30px;
+    grid-template-columns: 28px minmax(142px,170px) 110px 30px 30px 82px 30px;
     overflow-x:auto;
   }
 }
@@ -588,6 +590,28 @@ textarea {
   display:none!important;
 }
 
+
+/* Entêtes repliables des sections d'édition — seulement de l'état visuel.
+   Les contenus conservent leurs noeuds DOM et leurs valeurs. */
+.section-action-buttons{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.section-fold-btn{
+  width:30px;
+  min-width:30px;
+  height:30px;
+  min-height:30px;
+  padding:0!important;
+  font-size:19px;
+  line-height:1;
+}
+.collapsible-section-content[hidden]{display:none!important}
+.icon-library-panel.is-collapsed .section-title-row .muted,
+.builder-contract-section.is-collapsed>.section-title-row .muted{display:none}
+.icon-library-panel.is-collapsed,
+.builder-contract-section.is-collapsed{padding-bottom:9px}
+.icon-library-panel .section-title-row,
+.builder-contract-section>.section-title-row{gap:8px}
+.icon-library-panel .section-title-row>div:first-child,
+.builder-contract-section>.section-title-row>div:first-child{min-width:0}
 
 /* Bibliothèque d’icônes V5 restaurée et options de capacités communes. */
 .icon-library-panel{

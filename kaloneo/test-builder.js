@@ -33,6 +33,28 @@
 
   const $ = id => document.getElementById(id);
 
+  // Repli purement visuel : ne modifie ni le test, ni l'historique, ni les fichiers.
+  function setSectionExpanded(buttonId,expanded){
+    const button=$(buttonId);
+    const content=$(button?.getAttribute('aria-controls'));
+    if(!button||!content)return;
+    const section=button.closest('.icon-library-panel,.builder-contract-section');
+    content.hidden=!expanded;
+    section?.classList.toggle('is-collapsed',!expanded);
+    button.textContent=expanded?'▴':'▾';
+    button.setAttribute('aria-expanded',String(expanded));
+    const name=buttonId==='toggle-icon-library'?'la bibliothèque d’icônes':'Sorties et Bilan';
+    button.title=(expanded?'Réduire ':'Déployer ')+name;
+    button.setAttribute('aria-label',button.title);
+  }
+
+  function initSectionFold(buttonId){
+    $(buttonId)?.addEventListener('click',()=>{
+      const expanded=$(buttonId).getAttribute('aria-expanded')==='true';
+      setSectionExpanded(buttonId,!expanded);
+    });
+  }
+
   function uid(prefix='b') {
     return prefix + '_' + Math.random().toString(36).slice(2, 10);
   }
@@ -2777,7 +2799,10 @@
       alert('Bibliothèque d’icônes KALONÉO incomplète : 100 icônes attendues.');
     }
     renderIconPicker();
+    initSectionFold('toggle-icon-library');
+    initSectionFold('toggle-contract-section');
     $('jump-to-icon-picker')?.addEventListener('click',()=>{
+      setSectionExpanded('toggle-icon-library',true);
       $('icon-picker')?.closest('.icon-library-panel')?.scrollIntoView({block:'start',behavior:'smooth'});
       $('icon-search')?.focus({preventScroll:true});
     });
@@ -2891,12 +2916,14 @@
     });
 
     $('add-output').addEventListener('click',()=>{
+      setSectionExpanded('toggle-contract-section',true);
       let n=1;const ids=new Set(state.outputs.map(o=>o.id));
       while(ids.has('sortie_'+n))n++;
       state.outputs.push({id:'sortie_'+n,type:'number'});
       renderContractEditors();changed();
     });
     $('add-bilan-contribution').addEventListener('click',()=>{
+      setSectionExpanded('toggle-contract-section',true);
       state.bilanContributions.push({lineId:'',bindings:{}});
       renderContractEditors();changed();
     });
