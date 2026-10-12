@@ -235,7 +235,18 @@ app.whenReady().then(async()=>{
       const headerFits=target.querySelector('.block-header').scrollWidth<=target.querySelector('.block-header').clientWidth+2;
       const buttons=[...target.querySelectorAll('.block-header>button')];
       const correctOrder=buttons.at(-2)?.classList.contains('remove-block')&&buttons.at(-1)?.classList.contains('toggle-block');
-      const zoneWidth=Math.round(target.querySelector('.block-zone').getBoundingClientRect().width);
+      const zoneControl=target.querySelector('.block-zone');
+      const zoneWidth=Math.round(zoneControl.getBoundingClientRect().width);
+      const zoneVisible=zoneWidth>=85&&getComputedStyle(zoneControl).display!=='none';
+      const singleZone=zoneControl.disabled&&zoneControl.value==='single'&&zoneControl.selectedOptions[0]?.textContent==='Zone unique';
+      const elements=[...target.querySelector('.block-header').children];
+      const rects=elements.map(element=>element.getBoundingClientRect());
+      const headerAligned=rects.every((r,i)=>r.width>0&&r.height>0&&
+        (i===0||r.left>=rects[i-1].right-1)&&Math.abs(r.top-rects[0].top)<5);
+      const remove=target.querySelector('.remove-block');
+      const removeNotWrapped=remove.getBoundingClientRect().height<=36&&
+        remove.scrollHeight<=remove.clientHeight+1&&
+        getComputedStyle(remove).whiteSpace==='nowrap';
       const undo=document.getElementById('undo-change');
       const canUndo=!undo.disabled;
       // Changer l'ordre doit préserver l'état réduit du même bloc (UID stable).
@@ -247,17 +258,43 @@ app.whenReady().then(async()=>{
       const expanded=moved.getBoundingClientRect().height;
       const preserved=moved.querySelector('.block-body textarea')?.value==='Question conservée quand le bloc est réduit';
       const ariaRestored=movedButton.getAttribute('aria-expanded')==='true'&&!moved.querySelector('.block-body').hidden;
-      // Le pliage ne doit pas créer de nouveau pas dans l'historique Annuler.
+      // Le choix de zone doit rester actif en deux colonnes et retrouver
+      // sa valeur lorsque l'on repasse de une à deux colonnes.
+      const layout=document.getElementById('test-layout');
+      layout.value='50-50';
+      layout.dispatchEvent(new Event('change',{bubbles:true}));
+      const splitBlock=[...document.querySelectorAll('.exercise-block')].find(x=>x.dataset.uid===uid);
+      const splitZone=splitBlock?.querySelector('.block-zone');
+      const splitZoneVisible=!!splitZone&&!splitZone.disabled&&
+        splitZone.getBoundingClientRect().width>=85&&splitZone.value==='left';
+      if(splitZoneVisible){
+        splitZone.value='right';
+        splitZone.dispatchEvent(new Event('change',{bubbles:true}));
+      }
+      layout.value='single';
+      layout.dispatchEvent(new Event('change',{bubbles:true}));
+      const singleAgain=[...document.querySelectorAll('.exercise-block')].find(x=>x.dataset.uid===uid);
+      const singleAgainZone=singleAgain?.querySelector('.block-zone');
+      const uniqueZoneRestored=singleAgainZone?.disabled&&singleAgainZone.value==='single';
+      layout.value='50-50';
+      layout.dispatchEvent(new Event('change',{bubbles:true}));
+      const splitAgain=[...document.querySelectorAll('.exercise-block')].find(x=>x.dataset.uid===uid);
+      const selectedZonePreserved=splitAgain?.querySelector('.block-zone')?.value==='right';
       document.getElementById('new-test').click();
       return {
         ok:true,before,collapsed,expectedHeader,expanded,hidden,headerFits,correctOrder,
-        zoneWidth,canUndo,moveKeptFold,preserved,ariaRestored,
+        zoneWidth,zoneVisible,singleZone,headerAligned,removeNotWrapped,
+        splitZoneVisible,uniqueZoneRestored,selectedZonePreserved,
+        canUndo,moveKeptFold,preserved,ariaRestored,
         newTestHasOneBlock:document.querySelectorAll('.exercise-block').length===1
       };
     })()`,true);
     if(!foldBehavior.ok||!foldBehavior.hidden||!foldBehavior.headerFits||!foldBehavior.correctOrder||
        !foldBehavior.moveKeptFold||!foldBehavior.preserved||!foldBehavior.ariaRestored||
-       !foldBehavior.newTestHasOneBlock||foldBehavior.zoneWidth>118||
+       !foldBehavior.newTestHasOneBlock||!foldBehavior.zoneVisible||!foldBehavior.singleZone||
+       !foldBehavior.headerAligned||!foldBehavior.removeNotWrapped||
+       !foldBehavior.splitZoneVisible||!foldBehavior.uniqueZoneRestored||!foldBehavior.selectedZonePreserved||
+       foldBehavior.zoneWidth>118||
        foldBehavior.before-foldBehavior.collapsed<125||
        Math.abs(foldBehavior.collapsed-foldBehavior.expectedHeader)>36||
        foldBehavior.expanded<foldBehavior.collapsed+125) {
@@ -405,7 +442,7 @@ app.whenReady().then(async()=>{
         pageRect:(()=>{const r=document.getElementById('candidate-preview')?.getBoundingClientRect();return r?{width:r.width,height:r.height}:null})()
       };
     })()`);
-    if(!/vraie page/i.test(setup.button)||setup.title!=='Aperçu Electron Smoke'||setup.calculatorBrand!=='KALONÉO'||setup.calculatorOptionsHidden||
+    if(setup.button!=='Aperçu'||setup.title!=='Aperçu Electron Smoke'||setup.calculatorBrand!=='KALONÉO'||setup.calculatorOptionsHidden||
        !savedLibraryDefinition||savedLibraryDefinition.title!=='Aperçu Electron Smoke'||! /bibliothèque/i.test(setup.libraryStatus)||
        !setup.imagePresent||!setup.smallImageFits||!setup.imageAlignedRight||setup.blockFont!==''||!/238, 249, 242/.test(setup.blockBackground)||
        !setup.obsoleteButtonsAbsent||setup.previewScale>=1||
@@ -680,7 +717,7 @@ app.whenReady().then(async()=>{
        returned.scenario!=='[c=#005A8D]Scénario[/c] [b]plein[/b] écran'||
        returned.instruction!=='[i]Consigne[/i] plein [u]écran[/u]'||
        returned.calculatorBrand!=='KALONÉO'||
-       !/vraie page/i.test(returned.previewButton)||
+       returned.previewButton!=='Aperçu'||
        !/même test restauré/i.test(returned.draftStatus)) {
       return fail('retour au Builder : le test exact de l’aperçu n’a pas été restauré',returned);
     }

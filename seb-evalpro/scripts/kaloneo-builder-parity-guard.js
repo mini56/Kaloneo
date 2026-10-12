@@ -120,7 +120,7 @@ for(const token of [
   'builder-core.js','table-grid','Gratte-ciel 6 × 6','value="text-editor"',
   'value="chars-rest"','id="block1-width-chars"','id="last-block-remainder"',
   'id="calculator-brand"','Bibliothèque de tests','id="undo-change"','id="redo-change"',
-  'Nouveau test','Enregistrer','>Fermer</button>','candidate-preview-viewport','Voir la vraie page dans Electron'
+  'Nouveau test','Enregistrer','>Fermer</button>','candidate-preview-viewport','>Aperçu</button>'
 ]) if(!builderHtml.includes(token)) fail('Builder UI incomplet: '+token);
 
 for(const obsolete of ['id="import-json"','id="download-json"','id="refresh-preview"','id="preview-calculator"','class="preview-footer"','id="open-image-library"']){

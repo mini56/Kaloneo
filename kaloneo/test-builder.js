@@ -1741,9 +1741,26 @@
       });
 
       const zone=frag.querySelector('.block-zone');
-      zone.value=block.zone||'left';
-      zone.hidden=!split;
-      zone.addEventListener('change',()=>{block.zone=zone.value;changed();});
+      // Toujours conserver la case de zone dans l'en-tête afin que les
+      // commandes restent alignées, même en présentation sur une colonne.
+      if(split){
+        zone.value=block.zone||'left';
+        zone.disabled=false;
+        zone.title='Choisir la zone de ce bloc';
+      }else{
+        const singleOption=document.createElement('option');
+        singleOption.value='single';
+        singleOption.textContent='Zone unique';
+        zone.prepend(singleOption);
+        zone.value='single';
+        zone.disabled=true;
+        zone.title='Une seule colonne : zone unique';
+      }
+      zone.addEventListener('change',()=>{
+        if(!split)return;
+        block.zone=zone.value;
+        changed();
+      });
 
       frag.querySelector('.move-up').disabled=index===0;
       frag.querySelector('.move-up').addEventListener('click',()=>{

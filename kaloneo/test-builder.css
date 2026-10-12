@@ -167,9 +167,26 @@ textarea {
 
 .block-header {
   display: grid;
-  grid-template-columns: 28px minmax(105px,1fr) 106px 30px 30px max-content 30px;
+  grid-template-columns: 28px minmax(100px,1fr) 108px 30px 30px 112px 30px;
   gap: 6px;
   align-items: center;
+}
+.block-header .remove-block{
+  width:112px;
+  height:30px;
+  min-height:30px;
+  padding:3px 5px!important;
+  white-space:nowrap;
+  font-size:11px;
+  line-height:1;
+}
+.block-header .block-zone{
+  padding:5px 4px;
+  font-size:12px;
+}
+.block-header .block-zone:disabled{
+  opacity:.8;
+  cursor:not-allowed;
 }
 .block-header .block-type,
 .block-header .block-zone{
@@ -436,7 +453,7 @@ textarea {
   .block-body .field-row.cols-3 { grid-template-columns: 1fr; }
 
   .block-header {
-    grid-template-columns: 28px minmax(105px,1fr) 95px 30px 30px max-content 30px;
+    grid-template-columns: 28px minmax(100px,1fr) 108px 30px 30px 112px 30px;
     overflow-x:auto;
   }
 }
