@@ -63,7 +63,7 @@ ipcMain.handle('candidate-catalog:detail',()=>({ok:false}));
 ipcMain.handle('kaloneo-library:selected-runtime',()=>({ok:false,error:'Aucun runtime candidat dans ce smoke Builder.'}));
 ipcMain.handle('kaloneo-library:list-tests',()=>({
   ok:true,
-  tests:protectedLibraryMode ? [
+  tests:(protectedLibraryMode ? [
     {id:'organisation_demenagement',version:'2.0.0',title:'Organisation d’une activité',category:'organisation',role:'test',scored:true,protectedVersion:false},
     {id:'organisation_demenagement',version:'1.0.0',title:'Organisation d’une activité',category:'organisation',role:'test',scored:true,protectedVersion:true}
   ] : []).concat(restaurantFixture?[{id:restaurantFixture.id,version:restaurantFixture.version,title:restaurantFixture.title,category:restaurantFixture.category,role:'test',scored:true,protectedVersion:false}]:[])
