@@ -1434,7 +1434,7 @@
     body.innerHTML='';
     renderBlockStyleEditor(block,body);
     if(block.type==='text') {
-      const field=inputField('Texte',block.text,value=>{block.text=value;changed();},{
+      const field=inputField('Texte',block.text,value=>{block.text=value;changed({typing:true});},{
         multiline:true,
         placeholder:'Texte affiché au candidat',
         title:'Écrivez le contenu librement. Placez le curseur puis utilisez « Insérer une Question au curseur ».'
@@ -1762,9 +1762,10 @@
     const image=$('candidate-preview-snapshot');
     const status=$('candidate-preview-status');
     if(!image||!status)return;
+    // Garder la dernière capture visible pendant la frappe ; la nouvelle la remplace dès qu'elle est prête.
+    // Une seule capture sera lancée après la pause de saisie, jamais à chaque caractère.
     status.textContent='Actualisation du rendu candidat…';
     status.hidden=false;
-    image.hidden=true; // Ne jamais laisser croire que l'ancienne image est à jour.
     miniPreviewTimer=setTimeout(async()=>{
       const bridge=window.sebEvalPro;
       if(!bridge?.kaloneoRenderMiniPreview) {
@@ -1794,7 +1795,7 @@
       } catch(error) {
         if(revision===miniPreviewRevision)status.textContent='Impossible de calculer le rendu : '+String(error?.message||error);
       }
-    },600);
+    },850);
   }
 
   function fitMiniPreview() {
@@ -2402,9 +2403,21 @@
     await saveToLibrary({exportJson:true});
   }
 
-  function changed() {
+  let pendingTypingRefresh=null;
+  function flushTypingRefresh() {
+    if(pendingTypingRefresh){clearTimeout(pendingTypingRefresh);pendingTypingRefresh=null;}
     saveDraft(false);
     refreshPreview();
+  }
+  function changed(options={}) {
+    if(options.typing===true){
+      // Le moteur de capture Electron recharge une vraie page candidat : ne jamais le lancer pendant la frappe.
+      // Conserver immédiatement la valeur dans le modèle, puis enregistrer et prévisualiser après une courte pause.
+      if(pendingTypingRefresh)clearTimeout(pendingTypingRefresh);
+      pendingTypingRefresh=setTimeout(flushTypingRefresh,350);
+    }else{
+      flushTypingRefresh();
+    }
     if(!applyingHistory){
       builderDirty=true;
       updateDirtyIndicator();
@@ -2619,8 +2632,7 @@
       loadDefinition(Core.clone(demo),'Restaurant R48 chargé depuis le modèle intégré');
     });
     $('open-electron-preview').addEventListener('click',async()=>{
-      refreshPreview();
-      saveDraft(false);
+      flushTypingRefresh();
       const bridge=window.sebEvalPro;
       if(!bridge || typeof bridge.kaloneoOpenPreview!=='function') {
         alert('L’aperçu Electron est disponible depuis SEB EvalPro.');
