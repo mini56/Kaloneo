@@ -42,8 +42,8 @@ jobs:
           $cfg = Get-Content -Raw -Encoding UTF8 build/kaloneo-v1-fixes-r72-builder.yml
           if ($number -ne 77) { throw "R72 doit être Build #77, trouvé #$number." }
           if ($nsis -notmatch '!define SEB_BUILD_NUMBER "77"') { throw 'Numéro NSIS différent de Build #77.' }
-          if ($cfg -notmatch 'version: 0\.0\.100') { throw 'Version du paquet R72 incorrecte.' }
-          if ($cfg -notmatch 'PILOTE-22-R72-0\.0\.100-Windows-Setup') { throw 'Nom du Setup incohérent.' }
+          if ($cfg -notmatch 'version: 0\.0\.101') { throw 'Version du paquet R72 incorrecte.' }
+          if ($cfg -notmatch 'PILOTE-22-R72-0\.0\.101-Windows-Setup') { throw 'Nom du Setup incohérent.' }
           git fetch --depth=1 origin tag seb-kaloneo-v1-fixes-r71-test
           if ($LASTEXITCODE -ne 0) { throw 'Impossible de lire le tag R69 pour garantir un build distinct.' }
           $previousJson = (git show 'seb-kaloneo-v1-fixes-r71-test:seb-evalpro/package.json') -join [Environment]::NewLine
