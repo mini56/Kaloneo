@@ -1,15 +1,18 @@
-name: 'Build Windows KALONÉO R71 — Build #76 Restaurant V1 (branche existante)'
+name: 'Build Windows KALONÉO R72 — Build #77 Restaurant V1 (branche existante)'
 on:
   push:
     branches:
       - fix-r60-tri-rearm-only-20261011
     paths:
-      - 'seb-evalpro/source/kaltest/tests/planning-cantine/1.0.0/test.json'
+      - 'kaloneo/test-builder.js'
+      - 'kaloneo/test-preview.js'
+      - 'kaloneo/builder-core.js'
+      - 'seb-evalpro/source/js/kaltest-pilot2-runtime.js'
       - 'seb-evalpro/scripts/kaloneo-restaurant-v1-r70-smoke.js'
-      - '.github/workflows/build-r71-windows.yml'
+      - '.github/workflows/build-r72-windows.yml'
       - 'seb-evalpro/package.json'
       - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r71-builder.yml'
+      - 'seb-evalpro/build/kaloneo-v1-fixes-r72-builder.yml'
       - 'seb-evalpro/scripts/full-pilot-journey-smoke-main.js'
   workflow_dispatch:
 
@@ -17,7 +20,7 @@ permissions:
   contents: write
 
 jobs:
-  build-windows-r71:
+  build-windows-r72:
     runs-on: windows-latest
     timeout-minutes: 110
     defaults:
@@ -36,20 +39,20 @@ jobs:
           $p = Get-Content -Raw -Encoding UTF8 package.json | ConvertFrom-Json
           $number = [int]$p.sebBuildNumber
           $nsis = Get-Content -Raw -Encoding UTF8 build/installer.nsh
-          $cfg = Get-Content -Raw -Encoding UTF8 build/kaloneo-v1-fixes-r71-builder.yml
-          if ($number -ne 76) { throw "R71 doit être Build #76, trouvé #$number." }
-          if ($nsis -notmatch '!define SEB_BUILD_NUMBER "76"') { throw 'Numéro NSIS différent de Build #76.' }
-          if ($cfg -notmatch 'version: 0\.0\.100') { throw 'Version du paquet R71 incorrecte.' }
-          if ($cfg -notmatch 'PILOTE-22-R71-0\.0\.100-Windows-Setup') { throw 'Nom du Setup incohérent.' }
-          git fetch --depth=1 origin tag seb-kaloneo-v1-fixes-r69-test
+          $cfg = Get-Content -Raw -Encoding UTF8 build/kaloneo-v1-fixes-r72-builder.yml
+          if ($number -ne 77) { throw "R72 doit être Build #77, trouvé #$number." }
+          if ($nsis -notmatch '!define SEB_BUILD_NUMBER "77"') { throw 'Numéro NSIS différent de Build #77.' }
+          if ($cfg -notmatch 'version: 0\.0\.100') { throw 'Version du paquet R72 incorrecte.' }
+          if ($cfg -notmatch 'PILOTE-22-R72-0\.0\.100-Windows-Setup') { throw 'Nom du Setup incohérent.' }
+          git fetch --depth=1 origin tag seb-kaloneo-v1-fixes-r71-test
           if ($LASTEXITCODE -ne 0) { throw 'Impossible de lire le tag R69 pour garantir un build distinct.' }
-          $previousJson = (git show 'seb-kaloneo-v1-fixes-r69-test:seb-evalpro/package.json') -join [Environment]::NewLine
+          $previousJson = (git show 'seb-kaloneo-v1-fixes-r71-test:seb-evalpro/package.json') -join [Environment]::NewLine
           if ($LASTEXITCODE -ne 0) { throw 'Impossible de comparer au Build R69.' }
           $previous = $previousJson | ConvertFrom-Json
           if ($number -le [int]$previous.sebBuildNumber) {
-            throw "Build réutilisé ou régressif : R69 #$($previous.sebBuildNumber), R71 #$number."
+            throw "Build réutilisé ou régressif : R69 #$($previous.sebBuildNumber), R72 #$number."
           }
-          Write-Host "Numéros validés : R69 Build #$($previous.sebBuildNumber), R71 Build #$number (0.0.100)."
+          Write-Host "Numéros validés : R69 Build #$($previous.sebBuildNumber), R72 Build #$number (0.0.101)."
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Check restored Tri runtime and smoke syntax
@@ -102,43 +105,41 @@ jobs:
           if ('${{ steps.full_journey.outcome }}' -ne 'success') {
             throw 'Parcours complet non valide : la publication reste bloquee, meme si les autres controles passent.'
           }
-      - name: Build Windows Setup R71
-        run: npx electron-builder --win nsis --config build/kaloneo-v1-fixes-r71-builder.yml --publish never
+      - name: Build Windows Setup R72
+        run: npx electron-builder --win nsis --config build/kaloneo-v1-fixes-r72-builder.yml --publish never
 
-      - name: Verify R71 Setup and calculate SHA256
+      - name: Verify R72 Setup and calculate SHA256
         shell: pwsh
         run: |
-          $setup = Get-ChildItem -Path dist -Filter 'SEB-EvalPro-Kaloneo-PILOTE-22-R71-0.0.100-Windows-Setup.exe' -File | Select-Object -First 1
-          if (-not $setup) { throw 'Setup R71 introuvable apres compilation.' }
+          $setup = Get-ChildItem -Path dist -Filter 'SEB-EvalPro-Kaloneo-PILOTE-22-R72-0.0.101-Windows-Setup.exe' -File | Select-Object -First 1
+          if (-not $setup) { throw 'Setup R72 introuvable apres compilation.' }
           $hash = (Get-FileHash -Algorithm SHA256 $setup.FullName).Hash.ToUpperInvariant()
           "SETUP_PATH=$($setup.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "SETUP_NAME=$($setup.Name)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "SETUP_SHA256=$hash" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          Write-Host "R71 Setup : $($setup.Name) SHA256=$hash"
+          Write-Host "R72 Setup : $($setup.Name) SHA256=$hash"
 
-      - name: Upload R71 Setup as GitHub Actions artifact
+      - name: Upload R72 Setup as GitHub Actions artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SEB-EvalPro-Kaloneo-PILOTE-22-R71-Windows-Setup
-          path: seb-evalpro/dist/SEB-EvalPro-Kaloneo-PILOTE-22-R71-0.0.100-Windows-Setup.exe
+          name: SEB-EvalPro-Kaloneo-PILOTE-22-R72-Windows-Setup
+          path: seb-evalpro/dist/SEB-EvalPro-Kaloneo-PILOTE-22-R72-0.0.101-Windows-Setup.exe
           if-no-files-found: error
 
-      - name: Publish test release R71 (do not overwrite previous releases)
+      - name: Publish test release R72 (do not overwrite previous releases)
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = 'seb-kaloneo-v1-fixes-r71-test'
-          $title = 'SEB EvalPro Kalonéo — R71 / Build #76 — Restaurant V1 validé — TEST'
+          $tag = 'seb-kaloneo-v1-fixes-r72-test'
+          $title = 'SEB EvalPro Kalonéo — R72 / Build #77 — Restaurant V1 validé — TEST'
           if (gh release view $tag 2>$null) {
-            throw 'Release R71 deja presente : ne pas ecraser une release existante.'
+            throw 'Release R72 deja presente : ne pas ecraser une release existante.'
           }
           $notes = @"
-          R71 VERSION DE TEST - Build #76 / version 0.0.100. Base R69 / Build #74 plus Restaurant V1 du code R70; aucun Setup R70 publié.
-          - Correction ciblee : l'export d'un test lit les images dans app/web, inclus dans le Setup.
-          - Deux images identiques aux originaux HD deja presents, tests de V1 et migration ancienne V1 verifies.
-          - Le Restaurant v3 fourni par l'administrateur remplace la V1 système du parcours, sans modifier les autres tests.
-          - Controle Electron parcours complet adapte a la grille Restaurant V1 validee, controles des autres tests conserves.
+          R72 VERSION DE TEST - Build #77 / version 0.0.101. Base R71 / Build #76 ; fonction unique : redimensionnement des images dans les blocs du Builder.
+          - Image 10 à 100 %, boutons + / − / 100 %, aperçu et affichage candidat, persistance.
+          - Aucun test catalogue modifié, mêmes contrôles de non-régression.
           SHA256 Setup : $env:SETUP_SHA256
           "@
           gh release create $tag $env:SETUP_PATH --target $env:GITHUB_SHA --title $title --notes $notes
