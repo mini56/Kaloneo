@@ -579,16 +579,18 @@ app.whenReady().then(async()=>{
 
     // R48.2 : reproduire la vraie page Restaurant avec interligne aéré,
     // sans barre de défilement dans le planning ou la colonne gauche.
-    const restaurantSetup=await win.webContents.executeJavaScript(`(async()=>{
-      window.confirm=()=>true;
+    await win.webContents.executeJavaScript("window.confirm=()=>true; document.getElementById('open-library-test').click(); true");
+    await wait(400);
+    const libraryOpen=await win.webContents.executeJavaScript(`(()=>{
       if(document.getElementById('r48-demo-restaurant'))return {ok:false,reason:'Bouton R48 obsolète toujours présent'};
-      document.getElementById('open-library-test').click();
-      await new Promise(resolve=>setTimeout(resolve,170));
-      const row=[...document.querySelectorAll('.test-library-item')]
-        .find(node=>String(node.textContent||'').includes('Restaurant'));
+      const row=[...document.querySelectorAll('.test-library-item')].find(node=>String(node.textContent||'').includes('Restaurant'));
       if(!row)return {ok:false,reason:'Restaurant absent de la bibliothèque simulée'};
       row.querySelector('.test-library-item-actions button').click();
-      await new Promise(resolve=>setTimeout(resolve,220));
+      return {ok:true};
+    })()`);
+    if(!libraryOpen.ok)return fail('Ouverture du Restaurant depuis la bibliothèque impossible',libraryOpen);
+    await wait(500);
+    const restaurantSetup=await win.webContents.executeJavaScript(`(()=>{
       if(!String(document.getElementById('test-title')?.value||'').includes('Restaurant')){
         return {ok:false,reason:'Ouverture du Restaurant via bibliothèque impossible'};
       }
