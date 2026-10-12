@@ -3485,7 +3485,7 @@
       node.style.backgroundImage='linear-gradient(rgba(255,255,255,'+(1-opacity)+'),rgba(255,255,255,'+(1-opacity)+')),url('+JSON.stringify(String(style.backgroundImage))+')';
       node.style.backgroundRepeat='no-repeat';
       node.style.backgroundPosition=String(style.backgroundPosition||'right bottom');
-      node.style.backgroundSize=style.backgroundFit==='cover'?'cover':style.backgroundFit==='contain'?'contain':'auto 78%';
+      const bgScale=Number(style.backgroundScale);node.style.backgroundSize=bgScale>=10&&bgScale<100?bgScale+'% auto':style.backgroundFit==='cover'?'cover':style.backgroundFit==='contain'?'contain':'auto 78%';
     }
     return node;
   }
