@@ -42,6 +42,8 @@ jobs:
           node --check scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
       - name: Verify inactive Electron preview workers are always released
         run: node scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
+      - name: Check new tests with all Builder block formats and unique question IDs
+        run: node scripts/kaloneo-builder-future-roundtrip-smoke.js
       - name: Verify gallery contains test illustrations only, without deleting images
         run: |
           node --check ../kaloneo/image-library-gallery.js

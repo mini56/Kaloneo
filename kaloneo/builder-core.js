@@ -545,18 +545,46 @@
     };
   }
 
-  function rebuildBuilderQuestions(def,model){
-    const existing=new Map((def.questions||[]).map(q=>[q.id,q]));
-    const rebuilt=[];
+  // Une question peut être affichée simultanément comme bloc Question et
+  // comme cellule de grille. La définition KALTEST ne doit pourtant la
+  // déclarer qu'une fois. Un bloc Question porte les champs de notation
+  // complets et a priorité sur sa représentation simplifiée dans une grille.
+  function collectBuilderQuestions(blocks){
+    const questions=[];
+    const positions=new Map();
+    const explicit=new Set();
     let questionIndex=0;
-    for(const block of model.blocks||[]){
-      if(block.type==='question') rebuilt.push(blockQuestion(block,questionIndex++));
+    for(const block of blocks||[]){
+      let candidates=[];
+      if(block.type==='question')candidates=[blockQuestion(block,questionIndex++)];
       if(block.type==='table-grid'){
-        const qs=gridQuestions(block,questionIndex);
-        rebuilt.push(...qs);
-        questionIndex+=qs.length;
+        candidates=gridQuestions(block,questionIndex);
+        questionIndex+=candidates.length;
+      }
+      for(const question of candidates){
+        const id=String(question.id);
+        const position=positions.get(id);
+        if(position===undefined){
+          positions.set(id,questions.length);
+          questions.push(question);
+          if(block.type==='question')explicit.add(id);
+        }else if(block.type==='question'){
+          // Mettre à jour l'objet canonique sans déplacer l'ordre des
+          // questions, même si le bloc explicite est placé après la grille.
+          questions[position]=question;
+          explicit.add(id);
+        }else if(!explicit.has(id)){
+          // Plusieurs grilles référençant la même question conservent sa
+          // première déclaration ; les répétitions sont des vues.
+        }
       }
     }
+    return questions;
+  }
+
+  function rebuildBuilderQuestions(def,model){
+    const existing=new Map((def.questions||[]).map(q=>[q.id,q]));
+    const rebuilt=collectBuilderQuestions(model.blocks);
     const presetKeepsQuestions=(model.blocks||[]).some(block=>block.type==='html-js'&&block.preset);
     if(presetKeepsQuestions&&rebuilt.length===0){
       def.questions=clone(def.questions||[]);
@@ -684,16 +712,7 @@
       return def;
     }
 
-    const questions=[];
-    let index=0;
-    for(const block of model.blocks||[]){
-      if(block.type==='question') questions.push(blockQuestion(block,index++));
-      if(block.type==='table-grid'){
-        const qs=gridQuestions(block,index);
-        questions.push(...qs);
-        index+=qs.length;
-      }
-    }
+    const questions=collectBuilderQuestions(model.blocks);
     const features=['runtime.basic'];
     if(questions.length) features.push('questionnaire.basic');
     if(questions.some(q=>q.response?.type==='free-text'||q.manualEvaluation===true)) features.push('questionnaire.free-text-manual');

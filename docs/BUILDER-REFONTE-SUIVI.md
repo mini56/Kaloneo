@@ -149,3 +149,9 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Même lorsqu'une capture a commencé, les étapes coûteuses suivantes sont évitées si une nouvelle édition est arrivée ; le `finally` ferme toujours le processus.
 - Au début d'un travail sorti de la file, l'accès administrateur et l'absence d'un candidat actif sont recontrôlés : un aperçu devenu inautorisé ne peut pas démarrer plus tard.
 - Régression fictive étendue à quatre demandes en rafale : seule la dernière capture en attente démarre ; les moteurs obsolètes ne sont pas créés et tous ceux démarrés sont détruits. Aucun changement de CSS, des images, du catalogue, des V1 ou des barèmes.
+
+## Test futur avec 12 formats de blocs (13 octobre 2026)
+
+- Un essai entièrement inédit combinant bloc Question et cellule de grille a révélé une définition produite avec deux questions de même ID. `analyzeDefinition` la rejetait : vrai problème de compatibilité des futurs tests.
+- La collecte des questions est désormais unique pour les nouveaux tests comme pour ceux modifiés après import. Les répétitions dans les grilles sont des références, et le bloc Question explicite fournit prioritairement le barème complet sans déplacer l'ordre.
+- Contrôle du cycle Builder chargement → sauvegarde → rechargement avec douze blocs différents, références de grille, scripts, image et mise à l'échelle, textes à trous, et exercice inventé ; aucune modification des KALTEST validés.
