@@ -99,3 +99,10 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Les médias image/audio/vidéo du dernier aperçu autonome délèguent à `renderMedia` comme le Builder et le candidat.
 - Conserve les chemins d'images `imageqcm/`, la taille et l'alignement, les classes CSS `kb-media`/`kb-audio`, les commandes des lecteurs et le bloc vide.
 - Contrôle générique d'une image fictive, avec taille 65 % et alignement à droite ; aucune ressource du catalogue n'a été modifiée.
+
+## Questions de l'aperçu autonome (13 octobre 2026)
+
+- Les questions simples de l'aperçu Electron autonome passent désormais par `renderQuestion`, déjà partagé entre Builder et candidat.
+- Options facultatives `rowTag` et `captionClassName` : le mode aperçu utilise `div` pour éviter une étiquette englobant d'autres étiquettes dans les QCM ; le candidat et le Builder conservent le comportement par défaut.
+- Les types de réponses, options, champs d'unité et styles de l'aperçu sont maintenus.
+- Contrôle d'une question fictive sans référence à un test connu.

@@ -195,6 +195,23 @@ const futureImage=sharedPresentation.renderMedia({
 assert.strictEqual(futureImage.children[0].src,'../imageqcm/new-example.png');
 assert.strictEqual(futureImage.children[0].style.width,'65%');
 assert.strictEqual(futureImage.style.justifyContent,'flex-end');
+// Un énoncé inédit conserve le contenu du candidat et une étiquette de titre.
+const questionDoc={
+  createElement(tag){return {tagName:tag,className:'',children:[],textContent:'',
+    append(...items){this.children.push(...items);},
+    appendChild(node){this.children.push(node);return node;}};}
+};
+const freshQuestion=sharedPresentation.renderQuestion({
+  doc:questionDoc,question:{id:'fresh_q_42',prompt:'Question totalement nouvelle'},
+  rowTag:'div',captionClassName:'kb-question-label',
+  makeAnswer:()=>questionDoc.createElement('input')
+});
+assert.strictEqual(freshQuestion.tagName,'div');
+assert.strictEqual(freshQuestion.children[0].className,'kb-question-label');
+assert.strictEqual(freshQuestion.children[0].textContent,'Question totalement nouvelle');
+assert.strictEqual(freshQuestion.children[1].tagName,'input');
+assert(preview.includes('KaloneoSharedPresentation.renderQuestion('),
+  'Aperçu Electron : question générique encore dupliquée');
 assert(common.includes('function equalAutomaticColumns('),'R48.10 function missing in shared presentation engine');
 assert(preview.includes('KaloneoSharedPresentation.renderGridTable('),
   'Aperçu Electron autonome sans grille partagée');

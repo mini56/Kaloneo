@@ -84,11 +84,12 @@
     appendText(source.slice(cursor));
   }
 
-  function renderQuestion({doc,question,makeAnswer,example=false,className=''}) {
+  function renderQuestion({doc,question,makeAnswer,example=false,className='',rowTag='label',captionClassName=''}) {
     if(!doc||typeof makeAnswer!=='function')throw new TypeError('Question sans moteur de réponse.');
-    const row=doc.createElement('label');
+    const row=doc.createElement(rowTag);
     row.className='kaloneo-shared-question'+(className?' '+className:'');
     const caption=doc.createElement('span');
+    caption.className=captionClassName;
     caption.textContent=String(question?.prompt||'');
     if(example){
       const tag=doc.createElement('strong');

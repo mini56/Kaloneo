@@ -53,16 +53,17 @@ function makeAnswerControl(question){
 function renderQuestion(block){
   const q=block.question||{};
   const wrap=el('section','kb-block');
-  wrap.append(el('label','kb-question-label',q.prompt||'Question'));
-  wrap.append(makeAnswerControl({
-    id:q.id,
-    response:{type:q.responseType||'text',options:Core.splitValues(q.options||'')}
+  wrap.append(window.KaloneoSharedPresentation.renderQuestion({
+    doc:document,question:{id:q.id,prompt:q.prompt||'Question'},
+    // Un bloc multi-choix ne doit pas être contenu dans une étiquette <label>.
+    rowTag:'div',captionClassName:'kb-question-label',
+    makeAnswer:()=>makeAnswerControl({
+      id:q.id,response:{type:q.responseType||'text',options:Core.splitValues(q.options||'')}
+    })
   }));
   if(q.unitInput){
-    const unit=el('input','kb-input');
-    unit.placeholder='Unité';
-    unit.style.marginTop='6px';
-    wrap.append(unit);
+    const unit=el('input','kb-input');unit.placeholder='Unité';
+    unit.style.marginTop='6px';wrap.append(unit);
   }
   return wrap;
 }
@@ -195,7 +196,7 @@ function renderMedia(block){
     resource:{data:source,alt:block.mediaAlt||block.mediaName||'Image'},
     style:{imageScale:block.imageScale,imageAlign:block.imageAlign},
     className:'kb-block kb-media-block',imageClass:'kb-media',
-    videoClassName:'kb-media',videoClass:'kb-media',
+    videoClass:'kb-media',
     emptyText:'',
     resolveSource:value=>value.startsWith('imageqcm/')?'../'+value:value
   });
