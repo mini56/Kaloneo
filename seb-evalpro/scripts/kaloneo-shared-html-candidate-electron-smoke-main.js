@@ -77,7 +77,7 @@ app.whenReady().then(async()=>{
   win.webContents.on('preload-error',(_e,p,error)=>fail(new Error('Preload '+p+': '+error)));
   await win.loadFile(path.join(web,'kaltest-pilot2.html'),{query:{kaloneoPreview:'1'}});
   await wait(1000);
-  const page=await win.webContents.executeJavaScript('(()=>{
+  const page=await win.webContents.executeJavaScript(`(()=>{
     const frames=[...document.querySelectorAll("iframe.kaltest-builder-html")];
     return {
       testId:document.body.dataset.sebKaltestId,
@@ -88,7 +88,7 @@ app.whenReady().then(async()=>{
           width:r.width,height:r.height,left:r.left};
       })
     };
-  })()');
+  })()`);
   assert.equal(page.testId,definition.id,'nouveau KALTEST non chargé');
   assert.equal(page.visible,true,'exercice non visible');
   assert.equal(page.frames.length,2,'deux iframes attendues');
