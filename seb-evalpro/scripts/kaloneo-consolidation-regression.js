@@ -15,6 +15,27 @@ const candidatePage=source('source/kaltest-pilot2.html');
 // Le calcul R48.10 n'est plus dupliqué : il est dans le module commun,
  // tandis que l'aperçu historique indépendant conserve sa fonction.
 const common=source('../kaloneo/shared-presentation.js');
+// Les blocs HTML et HTML/JS passent par le même iframe sandboxé
+// sans modifier le contenu ni les classes de présentation propres aux deux vues.
+const sharedPresentation=require('../../kaloneo/shared-presentation.js');
+const fakeDocument={createElement:tag=>({tagName:tag,className:'',sandbox:'',srcdoc:''})};
+for(const type of ['html','html-js']){
+  const block={type,html:'<p>Exercice inédit</p>',js:'document.body.dataset.test="ok";'};
+  const builderFrame=sharedPresentation.renderHtmlFrame({
+    doc:fakeDocument,block,className:'preview-html-frame'
+  });
+  const candidateFrame=sharedPresentation.renderHtmlFrame({
+    doc:fakeDocument,block,className:'kb-frame'
+  });
+  assert.strictEqual(builderFrame.tagName,'iframe');
+  assert.strictEqual(builderFrame.sandbox,'allow-scripts');
+  assert.strictEqual(candidateFrame.sandbox,'allow-scripts');
+  assert.strictEqual(builderFrame.srcdoc,candidateFrame.srcdoc);
+  assert(builderFrame.srcdoc.includes('Exercice inédit'));
+  assert.strictEqual(builderFrame.srcdoc.includes('document.body.dataset.test'),type==='html-js');
+}
+assert(builder.includes('KaloneoSharedPresentation.renderHtmlFrame('));
+assert(preview.includes('KaloneoSharedPresentation.renderHtmlFrame('));
 assert(common.includes('function equalAutomaticColumns('),'R48.10 function missing in shared presentation engine');
 assert(preview.includes('function equalAutomaticColumns('),'R48.10 function missing in standalone preview');
 // Les deux écrans délèguent toute la grille au moteur partagé.
