@@ -87,3 +87,9 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Adaptateurs de cellules de l'aperçu conservés : texte fixe, image, audio, vidéo, champ, choix ; `skipHiddenCells` est local à cette vue pour maintenir son comportement antérieur.
 - Les paramètres `titleTag` / `titleClassName` conservent les styles préexistants dans la fenêtre Electron autonome.
 - Nouveau contrôle générique : titres, en-têtes, cellules visibles et masquées dans une grille qui n'appartient pas au catalogue.
+
+## Tableaux de réponses de l'aperçu autonome (13 octobre 2026)
+
+- L'aperçu Electron autonome utilise maintenant `renderResponseTable`, déjà appelé par le Builder et le candidat.
+- Préservation de la ligne vide « Aucune question définie », du libellé, de l'unité et des champs de réponse propres à l'aperçu.
+- Aucun changement des barèmes, des réponses ni des V1. Contrôles structurels ajoutés avec une question inexistante dans le catalogue.

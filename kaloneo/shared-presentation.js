@@ -196,7 +196,7 @@
   // Tableau de réponses générique. Le squelette des lignes, en-têtes et
   // dimensions est commun ; seuls les champs spécifiques à l'éditeur ou
   // au candidat sont fournis par une fonction de rappel.
-  function renderResponseTable({doc,headers=[],columns=[],rows=[],renderCell,className='',wrapperClassName=''}) {
+  function renderResponseTable({doc,headers=[],columns=[],rows=[],renderCell,renderEmptyRow,className='',wrapperClassName=''}) {
     if(!doc||typeof renderCell!=='function')
       throw new TypeError('Tableau de réponses KALTEST invalide.');
     const wrap=doc.createElement('div');
@@ -224,6 +224,14 @@
         tr.appendChild(td);
       }
       tbody.appendChild(tr);
+    }
+    if(!rows.length&&typeof renderEmptyRow==='function'){
+      const cells=renderEmptyRow({doc,headers,columns});
+      if(Array.isArray(cells)&&cells.length){
+        const empty=doc.createElement('tr');
+        for(const cell of cells)if(cell)empty.appendChild(cell);
+        tbody.appendChild(empty);
+      }
     }
     table.appendChild(tbody);
     wrap.appendChild(table);

@@ -163,6 +163,22 @@ const novelGridBody=novelGridTable.children.find(n=>n.tagName==='tbody');
 assert.strictEqual(novelGridBody.children.length,1);
 assert.strictEqual(novelGridBody.children[0].children.length,1,'Cellule masquée dans aperçu');
 assert.strictEqual(novelGridBody.children[0].children[0].textContent,'Visible');
+// Tableau de réponses fictif : même squelette et aucun champ historique imposé.
+const answerTable=sharedPresentation.renderResponseTable({
+  doc:gridDoc,headers:['Question','Réponse'],rows:[{id:'q_future'}],columns:[],
+  renderCell:({cell,row,colIndex})=>{cell.textContent=colIndex===0?row.id:'Réponse future';}
+});
+const answerStructure=answerTable.children.find(node=>node.tagName==='table');
+const answerRows=answerStructure.children.find(node=>node.tagName==='tbody');
+assert.strictEqual(answerRows.children.length,1);
+assert.strictEqual(answerRows.children[0].children[1].textContent,'Réponse future');
+const answerEmpty=sharedPresentation.renderResponseTable({
+  doc:gridDoc,headers:['A'],rows:[],renderCell:()=>{},
+  renderEmptyRow:({doc})=>{const td=doc.createElement('td');td.textContent='Aucune question';return [td];}
+});
+assert.strictEqual(answerEmpty.children[0].children[1].children.length,1);
+assert(preview.includes('KaloneoSharedPresentation.renderResponseTable('),
+  'Aperçu Electron : tableau de réponses non partagé');
 assert(common.includes('function equalAutomaticColumns('),'R48.10 function missing in shared presentation engine');
 assert(preview.includes('KaloneoSharedPresentation.renderGridTable('),
   'Aperçu Electron autonome sans grille partagée');

@@ -68,42 +68,28 @@ function renderQuestion(block){
 }
 
 function renderResponseTable(block){
-  const def=block.responseTable||{};
-  const headers=Array.isArray(def.headers)&&def.headers.length?def.headers:['Question N°','Réponse','Unités'];
-  const columns=Array.isArray(def.columns)?def.columns:[];
-  const wrap=el('div','kb-block kb-table-wrap');
-  const table=el('table','kb-table');
-  const head=el('thead');const hr=el('tr');
-  headers.forEach((h,i)=>{
-    const th=el('th','',h);applyColumn(th,columns[i]);hr.append(th);
-  });
-  head.append(hr);table.append(head);
-  const body=el('tbody');
+  const definition=block.responseTable||{};
+  const headers=Array.isArray(definition.headers)&&definition.headers.length
+    ?definition.headers:['Question N°','Réponse','Unités'];
+  const columns=Array.isArray(definition.columns)?definition.columns:[];
   const questions=state.definition?.questions||[];
-  questions.forEach((q,index)=>{
-    const tr=el('tr');
-    headers.forEach((h,i)=>{
-      const td=el('td');
-      applyColumn(td,columns[i]);
-      if(i===0) td.textContent=String(index+1);
-      else if(i===1) td.append(makeAnswerControl(q));
-      else if(i===2&&q.unitInput){
-        const input=el('input','kb-input');input.placeholder='Unité';td.append(input);
+  return window.KaloneoSharedPresentation.renderResponseTable({
+    doc:document,headers,columns,rows:questions,
+    className:'kb-table',wrapperClassName:'kb-block kb-table-wrap',
+    renderCell:({cell,row:question,rowIndex,colIndex})=>{
+      if(colIndex===0)cell.textContent=String(rowIndex+1);
+      else if(colIndex===1)cell.appendChild(makeAnswerControl(question));
+      else if(colIndex===2&&question.unitInput){
+        const unit=el('input','kb-input');unit.placeholder='Unité';cell.appendChild(unit);
       }
-      tr.append(td);
-    });
-    body.append(tr);
+    },
+    renderEmptyRow:({doc,headers})=>{
+      const cell=doc.createElement('td');
+      cell.className='kb-empty';cell.textContent='Aucune question définie';
+      cell.colSpan=headers.length;
+      return [cell];
+    }
   });
-  if(!questions.length){
-    const tr=el('tr');const td=el('td','kb-empty','Aucune question définie');td.colSpan=headers.length;tr.append(td);body.append(tr);
-  }
-  table.append(body);wrap.append(table);return wrap;
-}
-
-function applyColumn(node,col){
-  if(!col)return;
-  if(Number(col.widthChars)>=3) node.style.width=Number(col.widthChars)+'ch';
-  node.classList.add(col.align==='left'?'left':'center');
 }
 
 function renderGrid(block){
