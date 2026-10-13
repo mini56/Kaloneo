@@ -1041,20 +1041,6 @@
 
   // R48.10 validé : colonnes égales si toutes automatiques,
   // sauf tableau de mise en page, cellules fusionnées ou largeur manuelle.
-  function equalAutomaticColumns(table) {
-    const count=Math.max(
-      Number(table?.cols)||0,
-      Array.isArray(table?.headers)?table.headers.length:0,
-      ...((table?.cells||[]).map(row=>Array.isArray(row)?row.length:0))
-    );
-    if(count<2||table.layoutOnly===true)return 0;
-    if(Array.from({length:count},(_,i)=>table.columns?.[i])
-      .some(column=>Number(column?.widthChars)>=3))return 0;
-    if((table.cells||[]).some(row=>(row||[]).some(cell=>
-      Number(cell?.rowSpan)>1||Number(cell?.colSpan)>1)))return 0;
-    return count;
-  }
-
   function renderGridEditor(block,body) {
     const table=block.table||(block.table=Core.createGridBlock(3,3).table);
     resizeGrid(table,table.rows||3,table.cols||3);
@@ -2187,16 +2173,6 @@
     });
   }
 
-  function applyPreviewColumn(cell,col) {
-    if(!cell||!col)return;
-    if(Number(col.widthChars)>=3) {
-      cell.style.width=Number(col.widthChars)+'ch';
-      cell.style.minWidth=Number(col.widthChars)+'ch';
-      cell.style.maxWidth=Number(col.widthChars)+'ch';
-    }
-    if(col.align) cell.style.textAlign=col.align;
-  }
-
   function gridPreview(block) {
     const t=block.table||{};
     const wrap=document.createElement('div');
@@ -2204,21 +2180,15 @@
     if(t.title) {const h=document.createElement('h3');h.textContent=t.title;wrap.appendChild(h);}
     const table=document.createElement('table');
     table.className='preview-grid-table';
-    const equal=equalAutomaticColumns(t);
+    const equal=window.KaloneoSharedPresentation.equalAutomaticColumns(t);
     if(equal){
       table.classList.add('preview-grid-equal-auto');
-      const group=document.createElement('colgroup');
-      for(let i=0;i<equal;i++){
-        const col=document.createElement('col');
-        col.style.width=(100/equal)+'%';
-        group.appendChild(col);
-      }
-      table.appendChild(group);
+      window.KaloneoSharedPresentation.addEqualColGroup(table,equal);
     }
     if(t.layoutOnly===true){table.classList.add('kaloneo-layout-only');table.style.border='0';table.style.background='transparent';}
     if(Array.isArray(t.headers)&&t.headers.length) {
       const tr=document.createElement('tr');
-      t.headers.forEach((h,i)=>{const th=document.createElement('th');th.textContent=h;applyPreviewColumn(th,t.columns?.[i]);tr.appendChild(th);});
+      t.headers.forEach((h,i)=>{const th=document.createElement('th');th.textContent=h;window.KaloneoSharedPresentation.applyColumn(th,t.columns?.[i]);tr.appendChild(th);});
       const thead=document.createElement('thead');thead.appendChild(tr);table.appendChild(thead);
     }
     const tbody=document.createElement('tbody');
@@ -2227,7 +2197,7 @@
       row.forEach((cell,i)=>{
         const td=document.createElement('td');
         if(t.layoutOnly===true){td.style.border='0';td.style.background='transparent';}
-        applyPreviewColumn(td,t.columns?.[i]);
+        window.KaloneoSharedPresentation.applyColumn(td,t.columns?.[i]);
         if((cell.rowSpan||1)>1) td.rowSpan=cell.rowSpan;
         if((cell.colSpan||1)>1) td.colSpan=cell.colSpan;
         if(cell.kind==='fixed-text'||cell.kind==='choice-option') td.textContent=cell.value||'';
@@ -2256,14 +2226,14 @@
     const table=document.createElement('table');
     table.className='preview-grid-table';
     const tr=document.createElement('tr');
-    t.headers.forEach((h,i)=>{const th=document.createElement('th');th.textContent=h;applyPreviewColumn(th,t.columns[i]);tr.appendChild(th);});
+    t.headers.forEach((h,i)=>{const th=document.createElement('th');th.textContent=h;window.KaloneoSharedPresentation.applyColumn(th,t.columns[i]);tr.appendChild(th);});
     const thead=document.createElement('thead');thead.appendChild(tr);table.appendChild(thead);
     const tbody=document.createElement('tbody');
     const questions=state.blocks.filter(b=>b.type==='question');
     questions.forEach((q,index)=>{
       const row=document.createElement('tr');
       t.headers.forEach((h,i)=>{
-        const td=document.createElement('td');applyPreviewColumn(td,t.columns[i]);
+        const td=document.createElement('td');window.KaloneoSharedPresentation.applyColumn(td,t.columns[i]);
         if(i===0) td.textContent=String(index+1);
         else {const input=document.createElement('input');input.type='text';td.appendChild(input);}
         row.appendChild(td);

@@ -262,6 +262,33 @@ app.whenReady().then(async()=>{
        !novelMedia.audio||novelMedia.missing!=='Vidéo à importer')
       return fail('Moteur commun : média d’un test inédit non rendu',novelMedia);
     console.log('KALONEO_SHARED_RENDERER_UNKNOWN_TEST_MEDIA=OK',JSON.stringify(novelMedia));
+    const novelGrid=await win.webContents.executeJavaScript(`(()=>{
+      const shared=window.KaloneoSharedPresentation;
+      const arbitrary={title:'Tableau futur',cols:5,headers:['A','B','C','D','E'],
+        cells:[Array.from({length:5},()=>({kind:'candidate-answer'}))]};
+      const count=shared.equalAutomaticColumns(arbitrary);
+      const table=document.createElement('table');
+      shared.addEqualColGroup(table,count);
+      const cell=document.createElement('td');
+      shared.applyColumn(cell,{widthChars:16,align:'right'});
+      const hasSpan=shared.equalAutomaticColumns({
+        cols:3,cells:[[{kind:'fixed-text',colSpan:2},{kind:'fixed-text'}]]
+      });
+      const fixedWidth=shared.equalAutomaticColumns({
+        cols:3,columns:[{widthChars:12}],cells:[]
+      });
+      return {
+        count,cols:table.querySelectorAll('col').length,
+        colWidth:table.querySelector('col')?.style.width,
+        width:cell.style.width,align:cell.style.textAlign,
+        hasSpan,fixedWidth
+      };
+    })()`,true);
+    if(novelGrid.count!==5||novelGrid.cols!==5||novelGrid.colWidth!=='20%'||
+       novelGrid.width!=='16ch'||novelGrid.align!=='right'||
+       novelGrid.hasSpan!==0||novelGrid.fixedWidth!==0)
+      return fail('Moteur commun : règles d’un tableau inédit non respectées',novelGrid);
+    console.log('KALONEO_SHARED_RENDERER_UNKNOWN_TEST_GRID=OK',JSON.stringify(novelGrid));
 
     const initial=await win.webContents.executeJavaScript(`(()=>{
       const title=document.getElementById('test-title');

@@ -102,5 +102,43 @@
     return wrap;
   }
 
-  return Object.freeze({columns,renderZones,renderQuestion,renderMedia});
+
+  function equalAutomaticColumns(table){
+    const count=Math.max(
+      Number(table?.cols)||0,
+      Array.isArray(table?.headers)?table.headers.length:0,
+      ...((table?.cells||[]).map(row=>Array.isArray(row)?row.length:0))
+    );
+    if(count<2||table?.layoutOnly===true)return 0;
+    if(Array.from({length:count},(_,i)=>table.columns?.[i])
+      .some(column=>Number(column?.widthChars)>=3))return 0;
+    if((table.cells||[]).some(row=>(row||[]).some(cell=>
+      Number(cell?.rowSpan)>1||Number(cell?.colSpan)>1)))return 0;
+    return count;
+  }
+
+  function applyColumn(cell,column){
+    if(!cell||!column)return;
+    const width=Number(column.widthChars);
+    if(Number.isFinite(width)&&width>=3){
+      cell.style.width=width+'ch';
+      cell.style.minWidth=width+'ch';
+      cell.style.maxWidth=width+'ch';
+    }
+    if(['left','center','right'].includes(column.align))
+      cell.style.textAlign=column.align;
+  }
+
+  function addEqualColGroup(table,count){
+    if(!table||count<2)return;
+    const group=table.ownerDocument.createElement('colgroup');
+    for(let i=0;i<count;i++){
+      const col=table.ownerDocument.createElement('col');
+      col.style.width=(100/count)+'%';
+      group.appendChild(col);
+    }
+    table.appendChild(group);
+  }
+
+  return Object.freeze({columns,renderZones,renderQuestion,renderMedia,equalAutomaticColumns,applyColumn,addEqualColGroup});
 });

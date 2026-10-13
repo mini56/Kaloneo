@@ -1231,34 +1231,6 @@
     });
   }
 
-  function applyBuilderColumn(cell, definition) {
-    if (!cell || !definition) return;
-    const widthChars = Number(definition.widthChars);
-    if (Number.isFinite(widthChars) && widthChars >= 3) {
-      cell.style.width = widthChars + 'ch';
-      cell.style.minWidth = widthChars + 'ch';
-      cell.style.maxWidth = widthChars + 'ch';
-    }
-    if (definition.align === 'left' || definition.align === 'center') {
-      cell.style.textAlign = definition.align;
-    }
-  }
-
-  // R48.10 : règle de mise en page générale, indépendante de l'ID du test.
-  function equalAutomaticColumns(definition) {
-    const columnsCount=Math.max(
-      Number(definition?.cols)||0,
-      Array.isArray(definition?.headers)?definition.headers.length:0,
-      ...((definition?.cells||[]).map(row=>Array.isArray(row)?row.length:0))
-    );
-    if(columnsCount<2||definition.layoutOnly===true) return 0;
-    if(Array.from({length:columnsCount},(_,i)=>definition.columns?.[i])
-      .some(column=>Number(column?.widthChars)>=3))return 0;
-    if((definition.cells||[]).some(row=>(row||[]).some(cell=>
-      Number(cell?.rowSpan)>1||Number(cell?.colSpan)>1)))return 0;
-    return columnsCount;
-  }
-
   function renderBuilderGrid(test, item) {
     const definition = item.table || {};
     const wrapper = document.createElement('div');
@@ -1273,16 +1245,10 @@
     const table = document.createElement('table');
     table.className = 'kaltest-table kaltest-builder-grid';
     if(definition.compact===true)table.classList.add('kaltest-builder-grid-compact');
-    const equalColumns=equalAutomaticColumns(definition);
+    const equalColumns=window.KaloneoSharedPresentation.equalAutomaticColumns(definition);
     if(equalColumns){
       table.classList.add('kaltest-builder-grid-equal-auto');
-      const group=document.createElement('colgroup');
-      for(let i=0;i<equalColumns;i++){
-        const column=document.createElement('col');
-        column.style.width=(100/equalColumns)+'%';
-        group.appendChild(column);
-      }
-      table.appendChild(group);
+      window.KaloneoSharedPresentation.addEqualColGroup(table,equalColumns);
     }
     if (definition.layoutOnly === true) {table.classList.add('kaloneo-layout-only');table.style.border='0';table.style.background='transparent';}
 
@@ -1292,7 +1258,7 @@
       definition.headers.forEach((label, index) => {
         const th = document.createElement('th');
         th.textContent = String(label || '');
-        applyBuilderColumn(th, definition.columns?.[index]);
+        window.KaloneoSharedPresentation.applyColumn(th, definition.columns?.[index]);
         row.appendChild(th);
       });
       thead.appendChild(row);
@@ -1308,7 +1274,7 @@
       for (let columnIndex = 0; columnIndex < rowDefinition.length; columnIndex += 1) {
         const cellDefinition = rowDefinition[columnIndex] || {};
         const td = document.createElement('td');
-        applyBuilderColumn(td, definition.columns?.[columnIndex]);
+        window.KaloneoSharedPresentation.applyColumn(td, definition.columns?.[columnIndex]);
         if(definition.layoutOnly===true){td.style.border='0';td.style.background='transparent';}
 
         const rowSpan = Math.max(1, Number(cellDefinition.rowSpan) || 1);
@@ -1443,7 +1409,7 @@
     headers.forEach((label, index) => {
       const th = document.createElement('th');
       th.textContent = label;
-      applyBuilderColumn(th, columns[index]);
+      window.KaloneoSharedPresentation.applyColumn(th, columns[index]);
       head.appendChild(th);
     });
     thead.appendChild(head);
@@ -1454,7 +1420,7 @@
       const tr = document.createElement('tr');
       headers.forEach((_header, columnIndex) => {
         const td = document.createElement('td');
-        applyBuilderColumn(td, columns[columnIndex]);
+        window.KaloneoSharedPresentation.applyColumn(td, columns[columnIndex]);
         if (columnIndex === 0) {
           td.textContent = String(index + 1);
         } else if (columnIndex === 1) {
