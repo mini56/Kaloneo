@@ -2245,22 +2245,15 @@
   }
 
   function inlinePreview(block) {
-    const wrap=document.createElement('div');
-    wrap.className='preview-inline-flow';
-    const bank=document.createElement('div');bank.className='preview-word-bank';
-    (block.wordBank||[]).forEach(w=>{const s=document.createElement('span');s.textContent=w;bank.appendChild(s);});
-    wrap.appendChild(bank);
-    const flow=document.createElement('div');
-    (block.flow||[]).forEach(item=>{
-      if(item.type==='text') {
-        flow.appendChild(document.createTextNode(item.text||''));
-        if(item.breakAfterSentence) {flow.appendChild(document.createElement('br'));flow.appendChild(document.createElement('br'));}
-      } else if(item.type==='question') {
-        const input=document.createElement('input');input.type='text';input.placeholder=item.questionId||'';flow.appendChild(input);
+    return window.KaloneoSharedPresentation.renderInlineFlow({
+      doc:document,wordBank:block.wordBank||[],flow:block.flow||[],
+      className:'preview-inline-flow',bankClass:'preview-word-bank',
+      makeAnswer:(questionId)=>{
+        const input=document.createElement('input');
+        input.type='text';input.placeholder=questionId||'';
+        return input;
       }
     });
-    wrap.appendChild(flow);
-    return wrap;
   }
 
   // Le rendu des tableaux historiques est isolé dans

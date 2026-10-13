@@ -289,6 +289,42 @@ app.whenReady().then(async()=>{
        novelGrid.hasSpan!==0||novelGrid.fixedWidth!==0)
       return fail('Moteur commun : règles d’un tableau inédit non respectées',novelGrid);
     console.log('KALONEO_SHARED_RENDERER_UNKNOWN_TEST_GRID=OK',JSON.stringify(novelGrid));
+    const futureInline=await win.webContents.executeJavaScript(`(()=>{
+      const shared=window.KaloneoSharedPresentation;
+      const doc=document;
+      const parts=[
+        {type:'text',text:'Le futur ',breakAfterSentence:false},
+        {type:'question',questionId:'new_question_a'},
+        {type:'text',text:' se prépare.',breakAfterSentence:true},
+        {type:'question',questionId:'new_question_b'}
+      ];
+      const opts={doc,wordBank:['futur','stage','atelier'],
+        flow:parts,makeAnswer:(id)=>{
+          const input=doc.createElement('input');input.dataset.questionId=id;return input;
+        }};
+      const candidate=shared.renderInlineFlow({...opts,className:'kaltest-inline-work',
+        bankClass:'kaltest-word-bank',flowClass:'kaltest-inline-flow'});
+      const builder=shared.renderInlineFlow({...opts,className:'preview-inline-flow',
+        bankClass:'preview-word-bank'});
+      const summary=(el)=>({
+        words:[...el.querySelectorAll('.kaloneo-shared-word-bank span')].map(x=>x.textContent),
+        inputs:[...el.querySelectorAll('input')].map(x=>x.dataset.questionId),
+        br:el.querySelectorAll('br').length,
+        text:el.querySelector('.kaloneo-shared-flow-content')?.textContent,
+        layers:el.children.length
+      });
+      return {candidate:summary(candidate),builder:summary(builder),
+        classNames:[candidate.className,builder.className]};
+    })()`,true);
+    if(JSON.stringify(futureInline.candidate)!==JSON.stringify(futureInline.builder)||
+       futureInline.candidate.words.join('|')!=='futur|stage|atelier'||
+       futureInline.candidate.inputs.join('|')!=='new_question_a|new_question_b'||
+       futureInline.candidate.br!==2||
+       futureInline.candidate.text!=='Le futur  se prépare.'||
+       futureInline.candidate.layers!==2)
+      return fail('Moteur commun : flux à trous d’un test inédit incohérent',futureInline);
+    console.log('KALONEO_SHARED_RENDERER_UNKNOWN_TEST_INLINE_FLOW=OK',JSON.stringify(futureInline));
+
 
     const initial=await win.webContents.executeJavaScript(`(()=>{
       const title=document.getElementById('test-title');

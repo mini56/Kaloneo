@@ -1363,34 +1363,15 @@
   }
 
   function renderBuilderInlineFlow(test, item) {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'kaltest-inline-work';
-
-    const bank = document.createElement('div');
-    bank.className = 'kaltest-word-bank';
-    for (const word of item.wordBank || []) {
-      const span = document.createElement('span');
-      span.textContent = String(word);
-      bank.appendChild(span);
-    }
-    wrapper.appendChild(bank);
-
-    const flow = document.createElement('div');
-    flow.className = 'kaltest-inline-flow';
-    for (const part of item.flow || []) {
-      if (part.type === 'text') {
-        flow.appendChild(document.createTextNode(part.text || ''));
-        if (part.breakAfterSentence === true) {
-          flow.appendChild(document.createElement('br'));
-          flow.appendChild(document.createElement('br'));
-        }
-      } else if (part.type === 'question') {
-        const question = questionById(test, part.questionId);
-        if (question) flow.appendChild(makeInput(test, question, { compact:true }));
+    return window.KaloneoSharedPresentation.renderInlineFlow({
+      doc:document,wordBank:item.wordBank||[],flow:item.flow||[],
+      className:'kaltest-inline-work',
+      bankClass:'kaltest-word-bank',flowClass:'kaltest-inline-flow',
+      makeAnswer:(questionId)=>{
+        const question=questionById(test,questionId);
+        return question?makeInput(test,question,{compact:true}):null;
       }
-    }
-    wrapper.appendChild(flow);
-    return wrapper;
+    });
   }
 
   function renderBuilderResponseTable(test, item) {

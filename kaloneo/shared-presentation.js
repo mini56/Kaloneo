@@ -103,6 +103,36 @@
   }
 
 
+  function renderInlineFlow({doc,wordBank=[],flow=[],makeAnswer,className='',bankClass='',flowClass=''}) {
+    if(!doc||typeof makeAnswer!=='function')
+      throw new TypeError('Flux de réponse KALTEST invalide.');
+    const wrap=doc.createElement('div');
+    wrap.className='kaloneo-shared-inline-flow'+(className?' '+className:'');
+    const bank=doc.createElement('div');
+    bank.className='kaloneo-shared-word-bank'+(bankClass?' '+bankClass:'');
+    for(const word of wordBank||[]){
+      const span=doc.createElement('span');
+      span.textContent=String(word);
+      bank.appendChild(span);
+    }
+    wrap.appendChild(bank);
+    const content=doc.createElement('div');
+    content.className='kaloneo-shared-flow-content'+(flowClass?' '+flowClass:'');
+    for(const part of flow||[]){
+      if(part?.type==='text'){
+        content.appendChild(doc.createTextNode(String(part.text||'')));
+        if(part.breakAfterSentence===true){
+          content.append(doc.createElement('br'),doc.createElement('br'));
+        }
+      }else if(part?.type==='question'){
+        const answer=makeAnswer(part.questionId,part);
+        if(answer)content.appendChild(answer);
+      }
+    }
+    wrap.appendChild(content);
+    return wrap;
+  }
+
   function equalAutomaticColumns(table){
     const count=Math.max(
       Number(table?.cols)||0,
@@ -140,5 +170,5 @@
     table.appendChild(group);
   }
 
-  return Object.freeze({columns,renderZones,renderQuestion,renderMedia,equalAutomaticColumns,applyColumn,addEqualColGroup});
+  return Object.freeze({columns,renderZones,renderQuestion,renderMedia,renderInlineFlow,equalAutomaticColumns,applyColumn,addEqualColGroup});
 });
