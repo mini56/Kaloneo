@@ -119,3 +119,9 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Construit directement un KALTEST inédit sans importer aucun test existant : grille, tableau de réponses, tableau de questions, image et deux zones.
 - Contrôle dans le véritable Electron : lignes/en-têtes, géométrie des colonnes, saisies, image, fermeture, capture et absence de sauvegarde candidat.
 - N'est pas une validation humaine des pixels ni de la fluidité d'une version installée.
+
+## Parité Electron autonome / vrai moteur candidat (13 octobre 2026)
+
+- Le smoke d'un test entièrement **inédit** charge maintenant successivement l'aperçu autonome et le **vrai moteur candidat**, avec une seule et même définition KALTEST.
+- Comparaison ciblée des deux colonnes, grille, tableau de réponses, champs, médias, textes et captures ; aucun test V1 modifié.
+- La présentation `table-definition` reste volontairement contrôlée au niveau des questions et non des en-têtes : son DOM historique candidat n'est pas encore harmonisé. Cette dette doit être traitée génériquement et avec contrôle visuel préalable.

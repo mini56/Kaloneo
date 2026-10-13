@@ -32,6 +32,34 @@ ipcMain.on('candidate-catalog:results-workspace-load-sync',event=>event.returnVa
 ipcMain.handle('kaloneo-builder:get-preview',()=>({ok:true,definition}));
 ipcMain.handle('kaloneo-builder:close-preview',()=>true);
 ipcMain.handle('state:save',()=>{saves++;return {ok:true};});
+
+const runtime={ok:true,runtime:{
+  id:'synthetic-future-runtime',
+  title:'Parcours fictif indépendant du catalogue',builderPreview:true,
+  launchOptions:{showCorrectionsDuringParcours:false},
+  introduction:null,tests:[definition],fin:null
+}};
+const ok={ok:true};
+ipcMain.on('kaloneo-library:selected-runtime-sync',event=>event.returnValue=runtime);
+ipcMain.handle('kaloneo-library:selected-runtime',()=>runtime);
+ipcMain.handle('admin:status',()=>true);
+ipcMain.handle('admin:verify',()=>true);
+ipcMain.handle('admin:lock',()=>true);
+ipcMain.handle('candidate:active',()=>null);
+ipcMain.handle('replay:capture-page',()=>ok);
+ipcMain.handle('replay:list',()=>[]);
+ipcMain.handle('bilan-history:list',()=>[]);
+ipcMain.handle('candidate-catalog:list',()=>[]);
+ipcMain.handle('candidate-catalog:sync',()=>ok);
+ipcMain.handle('candidate-catalog:detail',()=>({ok:false}));
+ipcMain.handle('candidate-catalog:workspace-save',()=>ok);
+ipcMain.handle('candidate-catalog:end-bilan',()=>ok);
+ipcMain.handle('ai:status',()=>({available:false}));
+ipcMain.handle('ai:cancel-current',()=>ok);
+ipcMain.handle('kaloneo-library:get-mask-screen',()=>({ok:false}));
+ipcMain.handle('kaloneo-library:list-tests',()=>({ok:true,tests:[]}));
+ipcMain.handle('kaloneo-library:list-mask-screens',()=>({ok:true,maskScreens:[]}));
+
 const timeout=setTimeout(()=>{console.error('FRESH_KALTEST_PREVIEW: TIMEOUT');app.exit(2);},45000);
 function fail(error){console.error('FRESH_KALTEST_PREVIEW: FAIL',error?.stack||String(error));app.exit(2);}
 app.whenReady().then(async()=>{
@@ -82,11 +110,61 @@ app.whenReady().then(async()=>{
   assert.equal(observed.hasClose,true);
   const picture=await win.webContents.capturePage();
   assert.ok(!picture.isEmpty(),'capture Electron vide');
+  // La même définition nouvellement créée doit être lisible par le moteur
+  // candidat réel, sans fixture ni exception liée à son identifiant.
+  win.show();
+  await win.loadFile(path.join(root,'app','web','kaltest-pilot2.html'),{
+    query:{kaloneoPreview:'1'}
+  });
+  await new Promise(resolve=>setTimeout(resolve,1100));
+  const candidateCheck=()=>{
+    const host=document.getElementById('kaltest-content');
+    const zones=[...host?.querySelectorAll('.kaltest-builder-runtime-zone')||[]];
+    const grid=host?.querySelector('.kaltest-builder-grid');
+    const answerTable=[...host?.querySelectorAll('.kaltest-table')||[]]
+      .find(table=>table!==grid);
+    const image=host?.querySelector('.kaltest-builder-media img');
+    const ar=zones[0]?.getBoundingClientRect();
+    const br=zones[1]?.getBoundingClientRect();
+    return {
+      id:document.body.dataset.sebKaltestId,
+      visible:document.getElementById('page-exercise')?.classList.contains('visible'),
+      zoneCount:zones.length,
+      horizontal:!!(ar&&br&&br.left>=ar.right-2&&ar.width>100&&br.width>100),
+      header:[...grid?.querySelectorAll('thead th')||[]].map(x=>x.textContent),
+      gridRows:grid?.querySelectorAll('tbody tr').length||0,
+      gridText:grid?.querySelector('tbody td')?.textContent||'',
+      answerHeaders:[...answerTable?.querySelectorAll('thead th')||[]].map(x=>x.textContent),
+      answerRows:answerTable?.querySelectorAll('tbody tr').length||0,
+      editableInputs:host?.querySelectorAll('input,select,textarea').length||0,
+      historicalQuestion:host?.textContent.includes('Question beta')||false,
+      imageLoaded:!!(image?.complete&&image.naturalWidth>0),
+      imageAlt:image?.alt||''
+    };
+  };
+  const candidate=await win.webContents.executeJavaScript('('+candidateCheck.toString()+')()');
+  assert.equal(candidate.id,definition.id,'Le candidat ne charge pas le test fictif');
+  assert.equal(candidate.visible,true,'Écran candidat non visible');
+  assert.equal(candidate.zoneCount,observed.zoneCount,'Les zones du candidat diffèrent de l’aperçu');
+  assert.equal(candidate.horizontal,observed.horizontal,'Colonnes alignées différemment');
+  assert.deepEqual(candidate.header,observed.headers[0],'En-têtes de la grille divergents');
+  assert.equal(candidate.gridRows,observed.rowCounts[0],'Grille de taille différente');
+  assert.equal(candidate.gridText,observed.gridText,'Texte de grille incohérent');
+  assert.deepEqual(candidate.answerHeaders,observed.headers[1],'En-têtes de réponse divergents');
+  assert.equal(candidate.answerRows,observed.rowCounts[1],'Table de réponses incohérente');
+  assert.ok(candidate.historicalQuestion,'Question de tableau absente côté candidat');
+  assert.equal(candidate.imageLoaded,observed.imageReady,'Image manquante côté candidat');
+  assert.equal(candidate.imageAlt,observed.imageAlt,'Texte alternatif de l’image différent');
+  assert.ok(candidate.editableInputs>=3,'Le candidat ne présente pas les champs attendus');
+  const candidateScreenshot=await win.webContents.capturePage();
+  assert.ok(!candidateScreenshot.isEmpty(),'Capture candidat vide');
+  assert.equal(saves,0,'L’aperçu candidat a modifié le stockage');
   assert.equal(saves,0,'aperçu enregistre des données candidat');
   console.log('FRESH_KALTEST_PREVIEW: OK',JSON.stringify({
     columns:observed.zoneCount,tableCount:observed.tableCount,
     rowCounts:observed.rowCounts,imageReady:observed.imageReady,
-    screenshot:picture.getSize(),saves
+    screenshot:picture.getSize(),candidateScreenshot:candidateScreenshot.getSize(),
+    candidateInputs:candidate.editableInputs,saves
   }));
   clearTimeout(timeout);win.destroy();app.quit();
  }catch(error){fail(error);}
