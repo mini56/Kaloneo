@@ -17,6 +17,21 @@ assert(previewHtml.includes('<script src="shared-presentation.js"></script>'),
   'Aperçu Electron autonome sans module commun');
 assert(previewHtml.indexOf('shared-presentation.js')<previewHtml.indexOf('test-preview.js'),
   'Aperçu Electron : module commun chargé trop tard');
+assert(preview.includes('KaloneoSharedPresentation.renderInlineFlow('),
+  'Le texte à trous de l’aperçu Electron autonome doit utiliser le moteur partagé');
+const inlineDocument={
+  createElement(tag){return {tagName:tag,children:[],textContent:'',className:'',
+    appendChild(child){this.children.push(child);return child;},
+    append(...children){this.children.push(...children);}};},
+  createTextNode(value){return {tagName:'#text',textContent:value};}
+};
+const inlineResult=sharedPresentation.renderInlineFlow({
+  doc:inlineDocument,wordBank:[],
+  flow:[{type:'text',text:'Phrase inédite '},{type:'question',questionId:'q_new'}],
+  omitEmptyBank:true,makeAnswer:id=>{const n=inlineDocument.createElement('input');n.placeholder=id;return n;}
+});
+assert.strictEqual(inlineResult.children.length,1,'Banque vide affichée dans l’aperçu historique');
+assert.strictEqual(inlineResult.children[0].children[1]?.placeholder,'q_new');
 assert(preview.includes('KaloneoSharedPresentation.renderZones('),
   'L’aperçu autonome doit partager le calcul des colonnes et la création des zones');
 // Le calcul R48.10 n'est plus dupliqué : il est dans le module commun,

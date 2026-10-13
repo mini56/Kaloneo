@@ -181,20 +181,22 @@ function renderGrid(block){
 }
 
 function renderInline(block){
-  const wrap=el('section','kb-block');
-  const bank=el('div','kb-word-bank');
-  (block.wordBank||[]).forEach(word=>bank.append(el('span','',word)));
-  if(block.wordBank?.length) wrap.append(bank);
-  const flow=el('div','kb-inline-flow');
-  (block.flow||[]).forEach(item=>{
-    if(item.type==='text'){
-      flow.append(document.createTextNode(item.text||''));
-      if(item.breakAfterSentence){flow.append(document.createElement('br'));flow.append(document.createElement('br'));}
-    } else if(item.type==='question'){
-      const input=el('input');input.placeholder=String(item.questionId||'');flow.append(input);
+  return window.KaloneoSharedPresentation.renderInlineFlow({
+    doc:document,
+    wordBank:block.wordBank||[],
+    flow:block.flow||[],
+    className:'kb-block',
+    bankClass:'kb-word-bank',
+    flowClass:'kb-inline-flow',
+    // L'aperçu historique masquait la banque lorsqu'elle était vide.
+    // Les autres vues gardent leur comportement précédent.
+    omitEmptyBank:true,
+    makeAnswer:questionId=>{
+      const input=el('input');
+      input.placeholder=String(questionId||'');
+      return input;
     }
   });
-  wrap.append(flow);return wrap;
 }
 
 function renderMultipleTable(block){

@@ -163,7 +163,7 @@
   }
 
 
-  function renderInlineFlow({doc,wordBank=[],flow=[],makeAnswer,className='',bankClass='',flowClass=''}) {
+  function renderInlineFlow({doc,wordBank=[],flow=[],makeAnswer,className='',bankClass='',flowClass='',omitEmptyBank=false}) {
     if(!doc||typeof makeAnswer!=='function')
       throw new TypeError('Flux de réponse KALTEST invalide.');
     const wrap=doc.createElement('div');
@@ -175,7 +175,7 @@
       span.textContent=String(word);
       bank.appendChild(span);
     }
-    wrap.appendChild(bank);
+    if(!omitEmptyBank||(wordBank||[]).length)wrap.appendChild(bank);
     const content=doc.createElement('div');
     content.className='kaloneo-shared-flow-content'+(flowClass?' '+flowClass:'');
     for(const part of flow||[]){

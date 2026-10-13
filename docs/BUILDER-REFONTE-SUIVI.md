@@ -66,3 +66,9 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Les anciennes classes visuelles `kb-layout`, `kb-zone`, `r50-50`, `r40-60`, `r60-40` sont préservées ; le calcul des largeurs passe par la définition KALTEST ou son modèle.
 - Les messages de zone vide sont conservés et ne sont pas enregistrés dans les tests.
 - Tests génériques de ratios ajoutés, avec contrôle Electron existant bloquant.
+
+## Texte à trous de l'aperçu autonome
+
+- Le bloc `inline-flow` de l'aperçu Electron ne reconstruit plus la banque de mots et les champs avec un renderer parallèle : il délègue à `renderInlineFlow`.
+- Une option générique `omitEmptyBank` préserve le rendu historique sans banque visible lorsque la liste est vide ; le Builder et le candidat conservent leur mode antérieur par défaut.
+- Garde CI avec une question nouvelle, indépendante du catalogue.
