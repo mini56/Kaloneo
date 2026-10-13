@@ -60,6 +60,20 @@
     return row;
   }
 
+  function renderHtmlFrame({doc,block={},className='',emptyText='Bloc HTML vide'}) {
+    if(!doc)throw new TypeError('Document HTML absent.');
+    const frame=doc.createElement('iframe');
+    frame.className=className;
+    frame.sandbox='allow-scripts';
+    const markup=block.html||'<em>'+emptyText+'</em>';
+    const script=block.type==='html-js'&&block.js
+      ?'<script>'+String(block.js).replace(/<\/script/gi,'<\\/script')+'</script>'
+      :'';
+    frame.srcdoc='<!doctype html><html><body style="font-family:Calibri,Arial,sans-serif;margin:10px">'+
+      markup+script+'</body></html>';
+    return frame;
+  }
+
   function renderMedia({doc,type,resource={},style={},className='',imageClass='',videoClass='',resolveSource,emptyText=''}) {
     if(!doc||!['image','audio','video'].includes(type))
       throw new TypeError('Média KALTEST inconnu.');
@@ -269,5 +283,5 @@
     table.appendChild(group);
   }
 
-  return Object.freeze({columns,renderZones,renderQuestion,renderMedia,renderInlineFlow,renderResponseTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup});
+  return Object.freeze({columns,renderZones,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup});
 });
