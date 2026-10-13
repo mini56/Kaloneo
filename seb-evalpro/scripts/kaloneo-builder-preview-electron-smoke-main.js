@@ -1054,49 +1054,41 @@ app.whenReady().then(async()=>{
     // Préparer deux étapes d'historique consécutives juste avant l'aperçu :
     // Annuler doit retrouver le titre provisoire après fermeture d'Electron.
     const previewHistoryBefore=await win.webContents.executeJavaScript(`(async()=>{
-      try {
-        const title=document.getElementById('test-title');
-        if(!title)return {error:'missing title',url:location.href,ready:document.readyState};
-        title.value='Aperçu Electron Smoke - étape annulable';
-        title.dispatchEvent(new Event('input',{bubbles:true}));
-        await new Promise(resolve=>setTimeout(resolve,445));
-        title.value='Aperçu Electron Smoke';
-        title.dispatchEvent(new Event('input',{bubbles:true}));
-        await new Promise(resolve=>setTimeout(resolve,445));
-        const undo=document.getElementById('undo-change');
-        return {title:title.value,undoEnabled:!!undo&&!undo.disabled,
-          url:location.href,render:!!window.KaloneoSharedPresentation?.renderRichContext};
-      } catch(error) {
-        return {error:String(error),stack:String(error?.stack||''),url:location.href};
-      }
-    })()`,true).catch(error=>({
-      hostError:String(error?.stack||error),url:win.webContents.getURL(),
-      crashed:win.webContents.isDestroyed()
-    }));
-    console.log('KALONEO_PREVIEW_HISTORY_DIAGNOSTIC',JSON.stringify(previewHistoryBefore));
+      const title=document.getElementById('test-title');
+      title.value='Aperçu Electron Smoke - étape annulable';
+      title.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(resolve=>setTimeout(resolve,445));
+      title.value='Aperçu Electron Smoke';
+      title.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(resolve=>setTimeout(resolve,445));
+      return {title:title.value,undoEnabled:!document.getElementById('undo-change').disabled};
+    })()`,true);
     if(previewHistoryBefore.title!=='Aperçu Electron Smoke'||!previewHistoryBefore.undoEnabled)
       return fail('Historique pré-aperçu : modifications successives non annulables',previewHistoryBefore);
 
     // Régression utilisateur : les blocs repliés restent repliés après Aperçu.
     const foldsBeforePreview=await win.webContents.executeJavaScript(`(()=>{
-      try{
-        const blocks=[...document.querySelectorAll('.exercise-block')];
-        if(!blocks.length)return {count:0,error:'aucun bloc'};
-        const missingToggle=blocks.filter(block=>!block.querySelector('.toggle-block')).map(block=>block.dataset.uid||'?');
-        if(missingToggle.length)return {count:blocks.length,error:'bouton repli absent',missingToggle};
-        blocks.forEach(block=>block.querySelector('.toggle-block').click());
-        const contract=document.getElementById('toggle-contract-section');
-        if(contract?.getAttribute('aria-expanded')==='true')contract.click();
-        const contractCollapsed=contract?.getAttribute('aria-expanded')==='false'
-          &&document.getElementById('contract-section-content')?.hidden===true;
-        return {count:blocks.length,folded:[...document.querySelectorAll('.exercise-block.is-collapsed')].map(x=>x.dataset.uid),contractCollapsed};
-      }catch(error){return {error:String(error),stack:String(error?.stack||''),url:location.href};}
-    })()`).catch(error=>({hostError:String(error?.stack||error),url:win.webContents.getURL()}));
-    console.log('KALONEO_FOLDS_DIAGNOSTIC',JSON.stringify(foldsBeforePreview));
+      const blocks=[...document.querySelectorAll('.exercise-block')];
+      if(!blocks.length)return {count:0};
+      blocks.forEach(block=>block.querySelector('.toggle-block').click());
+      const contract=document.getElementById('toggle-contract-section');
+      if(contract?.getAttribute('aria-expanded')==='true')contract.click();
+      const contractCollapsed=contract?.getAttribute('aria-expanded')==='false'
+        &&document.getElementById('contract-section-content')?.hidden===true;
+      return {count:blocks.length,folded:[...document.querySelectorAll('.exercise-block.is-collapsed')].map(x=>x.dataset.uid),contractCollapsed};
+    })()`);
     if(foldsBeforePreview.count<1||foldsBeforePreview.folded.length!==foldsBeforePreview.count||
        !foldsBeforePreview.contractCollapsed)
       return fail('Impossible de préparer les blocs repliés avant le retour Aperçu',foldsBeforePreview);
-        await win.webContents.executeJavaScript(`document.getElementById('open-electron-preview').click();true`);
+    // Le bouton déclenche une navigation Electron : programmer le clic après
+    // l'accusé d'exécution JS évite la destruction du contexte pendant l'IPC.
+    // La boucle suivante vérifie toujours que le nouvel écran s'est ouvert.
+    await win.webContents.executeJavaScript(`(()=>{
+      const button=document.getElementById('open-electron-preview');
+      if(!button)throw new Error('Bouton Aperçu introuvable');
+      setTimeout(()=>button.click(),80);
+      return true;
+    })()`);
     for(let i=0;i<30;i++){
       await wait(120);
       const p=win.webContents.getURL(); // Ne pas exécuter de JS dans un frame en cours de navigation.
