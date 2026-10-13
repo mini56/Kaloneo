@@ -331,10 +331,11 @@ function renderBlock(block){
     renderRichContext(node,block.text||'Bloc texte vide');
   }
   else if(block.type==='html'||block.type==='html-js'){
-    const wrap=el('section','kb-block');const frame=el('iframe','kb-frame');frame.sandbox='allow-scripts';
-    const script=block.type==='html-js'&&block.js?'<script>'+String(block.js).replace(/<\/script/gi,'<\\/script')+'<\/script>':'';
-    frame.srcdoc='<!doctype html><html><body style="font-family:Calibri,Arial,sans-serif;margin:10px">'+(block.html||'<em>Bloc HTML vide</em>')+script+'</body></html>';
-    wrap.append(frame);node=wrap;
+    const wrap=el('section','kb-block');
+    wrap.append(window.KaloneoSharedPresentation.renderHtmlFrame({
+      doc:document,block,className:'kb-frame'
+    }));
+    node=wrap;
   }
   else if(['image','audio','video'].includes(block.type)) node=renderMedia(block);
   else if(block.type==='question') node=renderQuestion(block);
