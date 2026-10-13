@@ -182,3 +182,9 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Correction générique : quand le manifeste enregistré du parcours existe, `afficherResultat()` produit immédiatement les fiches à partir de `state.tests[id]`, strictement pour les IDs du manifeste. Aucune réutilisation du DOM historique, ni regroupement par mots-clés. Les réponses non notées (courriel, textes, commentaires) restent accessibles dans leur fiche d'origine, comme texte échappé ; aucune limite arbitraire de 12 détails.
 - Si le manifeste manque mais qu'un état KALTEST existe, la page refuse de fabriquer des notes à partir d'anciens scores. Cela privilégie l'intégrité de l'évaluation.
 - Le code candidat, les barèmes, les fichiers V1, les images et la miniature du Builder ne sont pas modifiés. Une validation Electron sur données volontairement contaminées est nécessaire avant la livraison.
+
+## Contrôle Electron des résultats isolés par test (13 octobre 2026)
+
+- Test volontairement contaminé : trois activités inédites (dont Mail et Inventaire), quatrième exercice non exécuté, ancien DOM mélangeant des scores et anciennes valeurs `page8` stockées.
+- Vérifier que chaque fiche ne contient que les données `state.tests[id]` correspondantes, que les données fantômes ou issues d'anciennes pages n'apparaissent pas, qu'une nouvelle catégorie fonctionne et qu'un message HTML du candidat ne peut créer un faux titre.
+- Test d'absence de manifeste : la page doit avertir au lieu d'utiliser des scores historiques.
