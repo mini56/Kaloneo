@@ -1,13 +1,5 @@
 name: 'KALONÉO R95 - Setup de test visuel - Build 100'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - '.github/workflows/build-r95-results-test.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r95-results-test-builder.yml'
   workflow_dispatch:
 
 concurrency:
