@@ -35,7 +35,7 @@ jobs:
           $nsis=Get-Content -Raw -Encoding UTF8 build/installer.nsh
           if ([int]$p.sebBuildNumber -ne 98) { throw 'Build #98 requis.' }
           if ($nsis -notmatch '!define SEB_BUILD_NUMBER "98"') { throw 'Numéro NSIS incoherent.' }
-          if ($cfg -notmatch 'version: 0\.0\.121' -or $cfg -notmatch 'PILOTE-22-R93-0\.0\.121-Windows-Setup') { throw 'Version R93 incoherente.' }
+          if ($cfg -notmatch 'version: 0\.0\.122' -or $cfg -notmatch 'PILOTE-22-R93-0\.0\.122-Windows-Setup') { throw 'Version R93 incoherente.' }
           git fetch --depth=1 origin tag seb-kaloneo-r92-refonte-visuels-test
           if ($LASTEXITCODE -ne 0) { throw 'Tag de la version test R92 absent.' }
           $oldJson=(git show 'seb-kaloneo-r92-refonte-visuels-test:seb-evalpro/package.json') -join [Environment]::NewLine

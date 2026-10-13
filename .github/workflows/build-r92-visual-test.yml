@@ -1,13 +1,5 @@
 name: 'KALONÉO R92 - Setup de test visuel - Build 97'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - '.github/workflows/build-r92-visual-test.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r92-visual-test-builder.yml'
   workflow_dispatch:
 
 concurrency:
