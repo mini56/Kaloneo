@@ -1250,57 +1250,6 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 }
 
 
-/* Aperçu direct historique Organisation : huit étapes visibles, chacune sur
-   UNE ligne comme dans le vrai candidat, sans écraser les autres questions. */
-.preview-zone.preview-organisation-work{
-  gap:5px;
-  justify-content:space-evenly;
-  padding:10px;
-  border:1px solid rgba(0,78,112,.20);
-  border-radius:12px;
-  background:rgba(255,255,255,.96);
-}
-.preview-zone.preview-organisation-work>.preview-content-block.preview-organisation-row{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 150px;
-  align-items:center;
-  gap:9px;
-  flex:0 0 auto;
-  min-height:37px;
-  margin:0;
-  padding:5px 7px;
-  border:0;
-  border-bottom:1px solid rgba(0,78,112,.12);
-  border-radius:6px;
-  background:#fff;
-  font-size:16px;
-  line-height:1.2;
-  white-space:normal;
-  color:#27313a;
-}
-.preview-zone.preview-organisation-work>.preview-organisation-row:nth-child(odd){
-  background:#fff0e2;
-}
-.preview-zone.preview-organisation-work>.preview-organisation-row:last-child{
-  flex:0 0 auto;
-  border-bottom:0;
-}
-.preview-organisation-text{min-width:0;overflow-wrap:break-word}
-.preview-organisation-answer{
-  display:block;
-  width:100%;
-  min-width:0;
-  height:31px;
-  min-height:31px;
-  padding:3px 6px;
-  border:1px solid #8398b0;
-  border-radius:7px;
-  background:#fff;
-  font-size:16px;
-  text-align:center;
-}
-
-
 /* Question générique : disposition partagée avec le vrai moteur candidat.
    Le rendu est horizontal, sans condition sur l'identifiant d'un test. */
 .preview-question.kaloneo-shared-question{
