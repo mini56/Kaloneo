@@ -365,6 +365,61 @@ app.whenReady().then(async()=>{
        futureResponseTable.editor.alignment!=='center')
       return fail('Tableau de réponses générique : rendu du test inédit incorrect',futureResponseTable);
     console.log('KALONEO_SHARED_RENDERER_UNKNOWN_TEST_RESPONSE_TABLE=OK',JSON.stringify(futureResponseTable));
+    const futureFreeGrid=await win.webContents.executeJavaScript(`(()=>{
+      const shared=window.KaloneoSharedPresentation;
+      const definition={
+        title:'Grille future créée demain',compact:true,cols:3,
+        headers:['Nom','Réponse','Options'],
+        columns:[{widthChars:15},null,{align:'center'}],
+        cells:[
+          [{kind:'fixed-text',value:'Ligne A',rowSpan:2},
+           {kind:'candidate-answer',questionId:'nouv1'},
+           {kind:'choice-option',value:'Oui'}],
+          [{kind:'select',questionId:'nouv2'},
+           {kind:'fixed-text',value:'Fusion',colSpan:2}]
+        ]
+      };
+      const cells=[];
+      const renderCell=({cell,cellDefinition,rowIndex,colIndex})=>{
+        cells.push({rowIndex,colIndex,kind:cellDefinition.kind});
+        cell.textContent=String(cellDefinition.value||cellDefinition.kind);
+      };
+      const b=shared.renderGridTable({doc:document,definition,renderCell,
+        className:'preview-grid-table',wrapperClassName:'preview-grid-wrap'});
+      const c=shared.renderGridTable({doc:document,definition,renderCell,
+        className:'kaltest-table kaltest-builder-grid',wrapperClassName:'kaltest-table-wrap',
+        compactClassName:'kaltest-builder-grid-compact'});
+      const extract=x=>({
+        header:[...x.querySelectorAll('th')].map(h=>h.textContent),
+        rowCount:x.querySelectorAll('tbody tr').length,
+        cellCount:x.querySelectorAll('tbody td').length,
+        rowSpan:x.querySelector('tbody tr:first-child td')?.rowSpan,
+        colSpan:x.querySelector('tbody tr:last-child td:last-child')?.colSpan,
+        title:x.querySelector('h3')?.textContent,
+        width:x.querySelector('thead th:first-child')?.style.width,
+        align:x.querySelector('thead th:last-child')?.style.textAlign
+      });
+      const transparent=shared.renderGridTable({doc:document,
+        definition:{layoutOnly:true,cells:[[{kind:'fixed-text',value:'Simple'}]]},
+        renderCell});
+      return {
+        builder:extract(b),candidate:extract(c),
+        compact:c.querySelector('table')?.classList.contains('kaltest-builder-grid-compact'),
+        transparent:transparent.querySelector('table')?.classList.contains('kaloneo-layout-only'),
+        noEquals:b.querySelectorAll('col').length===0,
+        calls:cells.length
+      };
+    })()`,true);
+    if(JSON.stringify(futureFreeGrid.builder)!==JSON.stringify(futureFreeGrid.candidate)||
+       futureFreeGrid.builder.rowCount!==2||futureFreeGrid.builder.cellCount!==5||
+       futureFreeGrid.builder.rowSpan!==2||futureFreeGrid.builder.colSpan!==2||
+       futureFreeGrid.builder.width!=='15ch'||futureFreeGrid.builder.align!=='center'||
+       futureFreeGrid.builder.title!=='Grille future créée demain'||
+       !futureFreeGrid.compact||!futureFreeGrid.transparent||!futureFreeGrid.noEquals||
+       futureFreeGrid.calls!==11)
+      return fail('Grille libre future : moteur partagé incompatible',futureFreeGrid);
+    console.log('KALONEO_SHARED_RENDERER_UNKNOWN_TEST_FREE_GRID=OK',JSON.stringify(futureFreeGrid));
+
 
 
 

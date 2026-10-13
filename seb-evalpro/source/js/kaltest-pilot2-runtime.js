@@ -1232,56 +1232,15 @@
   }
 
   function renderBuilderGrid(test, item) {
-    const definition = item.table || {};
-    const wrapper = document.createElement('div');
-    wrapper.className = 'kaltest-table-wrap kaltest-builder-grid-wrap';
-
-    if (definition.title) {
-      const title = document.createElement('h3');
-      title.textContent = definition.title;
-      wrapper.appendChild(title);
-    }
-
-    const table = document.createElement('table');
-    table.className = 'kaltest-table kaltest-builder-grid';
-    if(definition.compact===true)table.classList.add('kaltest-builder-grid-compact');
-    const equalColumns=window.KaloneoSharedPresentation.equalAutomaticColumns(definition);
-    if(equalColumns){
-      table.classList.add('kaltest-builder-grid-equal-auto');
-      window.KaloneoSharedPresentation.addEqualColGroup(table,equalColumns);
-    }
-    if (definition.layoutOnly === true) {table.classList.add('kaloneo-layout-only');table.style.border='0';table.style.background='transparent';}
-
-    if (Array.isArray(definition.headers) && definition.headers.length) {
-      const thead = document.createElement('thead');
-      const row = document.createElement('tr');
-      definition.headers.forEach((label, index) => {
-        const th = document.createElement('th');
-        th.textContent = String(label || '');
-        window.KaloneoSharedPresentation.applyColumn(th, definition.columns?.[index]);
-        row.appendChild(th);
-      });
-      thead.appendChild(row);
-      table.appendChild(thead);
-    }
-
-    const tbody = document.createElement('tbody');
-    const testState = testStateFor(test);
-
-    for (const rowDefinition of definition.cells || []) {
-      const tr = document.createElement('tr');
-
-      for (let columnIndex = 0; columnIndex < rowDefinition.length; columnIndex += 1) {
-        const cellDefinition = rowDefinition[columnIndex] || {};
-        const td = document.createElement('td');
-        window.KaloneoSharedPresentation.applyColumn(td, definition.columns?.[columnIndex]);
-        if(definition.layoutOnly===true){td.style.border='0';td.style.background='transparent';}
-
-        const rowSpan = Math.max(1, Number(cellDefinition.rowSpan) || 1);
-        const colSpan = Math.max(1, Number(cellDefinition.colSpan) || 1);
-        if (rowSpan > 1) td.rowSpan = rowSpan;
-        if (colSpan > 1) td.colSpan = colSpan;
-
+    const definition=item.table||{};
+    const testState=testStateFor(test);
+    return window.KaloneoSharedPresentation.renderGridTable({
+      doc:document,definition,
+      className:'kaltest-table kaltest-builder-grid',
+      wrapperClassName:'kaltest-table-wrap kaltest-builder-grid-wrap',
+      compactClassName:'kaltest-builder-grid-compact',
+      equalClassName:'kaltest-builder-grid-equal-auto',
+      renderCell:({cell:td,cellDefinition,rowNode:tr})=>{
         if (cellDefinition.kind === 'fixed-text') {
           td.textContent = String(cellDefinition.value || '');
         } else if (cellDefinition.kind === 'candidate-answer' ||
@@ -1350,19 +1309,11 @@
           video.className = 'seb-media-video';
           td.appendChild(video);
         }
-
-        tr.appendChild(td);
       }
-
-      tbody.appendChild(tr);
-    }
-
-    table.appendChild(tbody);
-    wrapper.appendChild(table);
-    return wrapper;
+    });
   }
 
-  function renderBuilderInlineFlow(test, item) {
+    function renderBuilderInlineFlow(test, item) {
     return window.KaloneoSharedPresentation.renderInlineFlow({
       doc:document,wordBank:item.wordBank||[],flow:item.flow||[],
       className:'kaltest-inline-work',

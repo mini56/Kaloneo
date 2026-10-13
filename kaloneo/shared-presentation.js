@@ -170,6 +170,68 @@
     return wrap;
   }
 
+  // Rendu de la structure d'un tableau libre, identique dans l'éditeur
+  // et dans le candidat. Le contrôle de réponse reste au client appelant.
+  function renderGridTable({doc,definition={},renderCell,className='',wrapperClassName='',compactClassName='',equalClassName=''}) {
+    if(!doc||typeof renderCell!=='function')throw new TypeError('Grille KALTEST invalide.');
+    const wrap=doc.createElement('div');
+    wrap.className='kaloneo-shared-grid-wrap'+(wrapperClassName?' '+wrapperClassName:'');
+    if(definition.title){
+      const title=doc.createElement('h3');
+      title.textContent=String(definition.title);
+      wrap.appendChild(title);
+    }
+    const table=doc.createElement('table');
+    table.className='kaloneo-shared-grid-table'+(className?' '+className:'');
+    if(definition.compact===true&&compactClassName)table.classList.add(compactClassName);
+    const equal=equalAutomaticColumns(definition);
+    if(equal){
+      if(equalClassName)table.classList.add(equalClassName);
+      addEqualColGroup(table,equal);
+    }
+    if(definition.layoutOnly===true){
+      table.classList.add('kaloneo-layout-only');
+      table.style.border='0';
+      table.style.background='transparent';
+    }
+    if(Array.isArray(definition.headers)&&definition.headers.length){
+      const thead=doc.createElement('thead');
+      const tr=doc.createElement('tr');
+      definition.headers.forEach((value,index)=>{
+        const th=doc.createElement('th');
+        th.textContent=String(value||'');
+        applyColumn(th,definition.columns?.[index]);
+        tr.appendChild(th);
+      });
+      thead.appendChild(tr);
+      table.appendChild(thead);
+    }
+    const tbody=doc.createElement('tbody');
+    for(const [rowIndex,definitionRow] of (definition.cells||[]).entries()){
+      const tr=doc.createElement('tr');
+      for(const [colIndex,cellDefinitionRaw] of (definitionRow||[]).entries()){
+        const cellDefinition=cellDefinitionRaw||{};
+        const td=doc.createElement('td');
+        applyColumn(td,definition.columns?.[colIndex]);
+        if(definition.layoutOnly===true){
+          td.style.border='0';
+          td.style.background='transparent';
+        }
+        const rowSpan=Math.max(1,Number(cellDefinition.rowSpan)||1);
+        const colSpan=Math.max(1,Number(cellDefinition.colSpan)||1);
+        if(rowSpan>1)td.rowSpan=rowSpan;
+        if(colSpan>1)td.colSpan=colSpan;
+        const node=renderCell({cell:td,cellDefinition,rowIndex,colIndex,rowNode:tr});
+        if(node&&node.nodeType)td.appendChild(node);
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    return wrap;
+  }
+
   function equalAutomaticColumns(table){
     const count=Math.max(
       Number(table?.cols)||0,
@@ -207,5 +269,5 @@
     table.appendChild(group);
   }
 
-  return Object.freeze({columns,renderZones,renderQuestion,renderMedia,renderInlineFlow,renderResponseTable,equalAutomaticColumns,applyColumn,addEqualColGroup});
+  return Object.freeze({columns,renderZones,renderQuestion,renderMedia,renderInlineFlow,renderResponseTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup});
 });

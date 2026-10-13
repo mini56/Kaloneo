@@ -2175,31 +2175,11 @@
 
   function gridPreview(block) {
     const t=block.table||{};
-    const wrap=document.createElement('div');
-    wrap.className='preview-grid-wrap';
-    if(t.title) {const h=document.createElement('h3');h.textContent=t.title;wrap.appendChild(h);}
-    const table=document.createElement('table');
-    table.className='preview-grid-table';
-    const equal=window.KaloneoSharedPresentation.equalAutomaticColumns(t);
-    if(equal){
-      table.classList.add('preview-grid-equal-auto');
-      window.KaloneoSharedPresentation.addEqualColGroup(table,equal);
-    }
-    if(t.layoutOnly===true){table.classList.add('kaloneo-layout-only');table.style.border='0';table.style.background='transparent';}
-    if(Array.isArray(t.headers)&&t.headers.length) {
-      const tr=document.createElement('tr');
-      t.headers.forEach((h,i)=>{const th=document.createElement('th');th.textContent=h;window.KaloneoSharedPresentation.applyColumn(th,t.columns?.[i]);tr.appendChild(th);});
-      const thead=document.createElement('thead');thead.appendChild(tr);table.appendChild(thead);
-    }
-    const tbody=document.createElement('tbody');
-    (t.cells||[]).forEach(row=>{
-      const tr=document.createElement('tr');
-      row.forEach((cell,i)=>{
-        const td=document.createElement('td');
-        if(t.layoutOnly===true){td.style.border='0';td.style.background='transparent';}
-        window.KaloneoSharedPresentation.applyColumn(td,t.columns?.[i]);
-        if((cell.rowSpan||1)>1) td.rowSpan=cell.rowSpan;
-        if((cell.colSpan||1)>1) td.colSpan=cell.colSpan;
+    return window.KaloneoSharedPresentation.renderGridTable({
+      doc:document,definition:t,
+      className:'preview-grid-table',wrapperClassName:'preview-grid-wrap',
+      equalClassName:'preview-grid-equal-auto',
+      renderCell:({cell:td,cellDefinition:cell})=>{
         if(cell.kind==='fixed-text'||cell.kind==='choice-option') td.textContent=cell.value||'';
         else if(['candidate-answer','select','unit'].includes(cell.kind)) {
           const input=document.createElement(cell.kind==='select'?'select':'input');
@@ -2210,16 +2190,11 @@
           }
           td.appendChild(input);
         } else if(['image','audio','video'].includes(cell.kind)) td.textContent=cell.value||cell.kind;
-        tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
+      }
     });
-    table.appendChild(tbody);
-    wrap.appendChild(table);
-    return wrap;
   }
 
-  function responseTablePreview(block) {
+    function responseTablePreview(block) {
     const t=ensureResponseColumns(block);
     return window.KaloneoSharedPresentation.renderResponseTable({
       doc:document,headers:t.headers||[],columns:t.columns||[],
