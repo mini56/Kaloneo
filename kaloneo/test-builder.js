@@ -2227,58 +2227,8 @@
     return wrap;
   }
 
-  // Reproduction locale du renderer candidat renderGenreNombre :
-  // mêmes tableaux, mêmes questions et mêmes cellules, sans charger Electron.
-  // La source reste la définition courante V1 ; rien n'est écrit dans le test.
-  function legacyGrammarTablePreview(block) {
-    const definition=block.tableDefinition||{};
-    const wrap=document.createElement('div');
-    wrap.className='preview-grammar-card';
-    const title=document.createElement('h3');
-    title.textContent=definition.title||'Tableau';
-    wrap.appendChild(title);
-    const table=document.createElement('table');
-    table.className='preview-grammar-table';
-    const headers=Array.isArray(definition.headers)?definition.headers:[];
-    if(headers.length){
-      const thead=document.createElement('thead');
-      const tr=document.createElement('tr');
-      headers.forEach(label=>{
-        const th=document.createElement('th');
-        th.textContent=String(label||'');
-        tr.appendChild(th);
-      });
-      thead.appendChild(tr);
-      table.appendChild(thead);
-    }
-    const questions=new Map((state.sourceDefinition?.questions||[]).map(q=>[String(q.id),q]));
-    const tbody=document.createElement('tbody');
-    for(const id of definition.questionIds||[]) {
-      const q=questions.get(String(id));
-      if(!q)continue;
-      const rawPrompt=String(q.prompt||'');
-      const prompt=normalizedSearch(rawPrompt);
-      const source=rawPrompt.match(/«\s*([^»]+?)\s*»/)?.[1]?.trim()||'';
-      const targetLeft=headers.length>1&&prompt.includes(normalizedSearch(headers[0]));
-      const tr=document.createElement('tr');
-      const left=document.createElement('td');
-      const right=document.createElement('td');
-      const answer=document.createElement('input');
-      answer.type='text';
-      answer.readOnly=true;answer.tabIndex=-1;
-      answer.setAttribute('aria-label','Réponse à compléter');
-      const fixed=targetLeft?right:left;
-      fixed.textContent=source;
-      fixed.className='preview-grammar-source';
-      (targetLeft?left:right).appendChild(answer);
-      tr.append(left,right);
-      tbody.appendChild(tr);
-    }
-    table.appendChild(tbody);
-    wrap.appendChild(table);
-    return wrap;
-  }
-
+  // Le rendu des tableaux historiques est isolé dans
+  // builder-legacy-table-preview.js (mêmes classes CSS et mêmes données).
   function blockPreview(block) {
     const wrap=document.createElement('div');
     wrap.className='preview-content-block';
@@ -2330,7 +2280,7 @@
     } else if(block.type==='inline-flow') {
       node=inlinePreview(block);
     } else if(block.type==='multiple-tables') {
-      node=legacyGrammarTablePreview(block);
+      node=window.KaloneoBuilderLegacyTablePreview.render(block,state.sourceDefinition);
     }
     node.classList.add('preview-content-block');
     return applyPreviewBlockStyle(node,block);

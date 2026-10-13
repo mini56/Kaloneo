@@ -1162,6 +1162,8 @@ app.whenReady().then(async()=>{
       if(blocks.length!==2||blocks.some(x=>x.querySelector('.block-type')?.value!=='multiple-tables')){
         return {ok:false,reason:'Genre et nombre : tableaux historiques non conservés',blocks:blocks.length};
       }
+      const rendererLoaded=typeof window.KaloneoBuilderLegacyTablePreview?.render==='function';
+      if(!rendererLoaded)return {ok:false,reason:'Module autonome des tableaux historiques non chargé'};
       const grammarTables=[...document.querySelectorAll('#preview-exercise .preview-grammar-table')];
       const grammarRows=grammarTables.map(table=>table.tBodies[0]?.rows.length||0);
       const grammarSources=grammarTables.map(table=>
