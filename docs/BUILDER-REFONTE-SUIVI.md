@@ -174,3 +174,11 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Dernier code de référence : `e07cd5752059997aeacabfdc96e29ca3ef330e64`, run `38445356377` (SUCCESS).
 - L'utilisateur a déjà validé dans la R93 le rendu photographié du vrai candidat pour Gratte-ciel, Rangement du stock et Tri de chevilles. La R94 ne modifie aucun des styles et rendus candidat : elle ajoute le nettoyage des processus, la gestion des captures obsolètes, la correction générique des IDs de questions et les gardes des barèmes/ressources.
 - Préparer une Release R94 / Build #99 / 0.0.123 distincte ; conserver les Releases R93 et R91. Ne jamais compiler deux fois avec le même numéro. L'autorisation finale des interfaces appartient à l'utilisateur après test local.
+
+## Alerte critique — Résultats de la R94 (13 octobre 2026)
+
+- L'utilisateur a exécuté un parcours complet : le candidat fonctionne, MAIS les fiches de la page Résultats mélangent parfois des réponses Mail avec d'autres tests. Les bilans non vérifiés de la R94 ne sont pas fiables.
+- Cause trouvée : `qcm-runtime.js` reconstruisait d'abord les anciens résultats de pages 2–8 puis les regroupait heuristiquement selon les textes des titres. Des fragments DOM hérités pouvaient migrer sous le mauvais test. Des scores anciens pouvaient même être calculés avant regroupement.
+- Correction générique : quand le manifeste enregistré du parcours existe, `afficherResultat()` produit immédiatement les fiches à partir de `state.tests[id]`, strictement pour les IDs du manifeste. Aucune réutilisation du DOM historique, ni regroupement par mots-clés. Les réponses non notées (courriel, textes, commentaires) restent accessibles dans leur fiche d'origine, comme texte échappé ; aucune limite arbitraire de 12 détails.
+- Si le manifeste manque mais qu'un état KALTEST existe, la page refuse de fabriquer des notes à partir d'anciens scores. Cela privilégie l'intégrité de l'évaluation.
+- Le code candidat, les barèmes, les fichiers V1, les images et la miniature du Builder ne sont pas modifiés. Une validation Electron sur données volontairement contaminées est nécessaire avant la livraison.

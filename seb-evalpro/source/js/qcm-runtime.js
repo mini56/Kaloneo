@@ -419,7 +419,7 @@ function sebDescribeCanonicalResult(test, testState) {
       line.className = 'ligne';
       let shown = 0;
       for (const [, value] of entries) {
-        if (shown >= 12) break;
+        // Afficher toutes les questions réellement enregistrées.
         const span = document.createElement('span');
         const correct = value.correct === true;
         const answered = value.answer !== undefined || value.user !== undefined || value.value !== undefined;
@@ -433,195 +433,166 @@ function sebDescribeCanonicalResult(test, testState) {
       if (shown) wrap.appendChild(line);
     }
   }
+  const recorded=testState?.answers&&typeof testState.answers==='object'
+    ?testState.answers:{};
+  const known=new Set(Object.keys(details||{}));
+  const extra=Object.entries(recorded).filter(([key,value])=>
+    !known.has(key)&&value!==undefined&&value!==null&&
+    String(value).trim()!=='');
+  if(extra.length){
+    const heading=document.createElement('p');
+    heading.textContent='Autres réponses enregistrées dans ce test :';
+    wrap.appendChild(heading);
+    for(const [key,value] of extra){
+      const p=document.createElement('p');
+      p.className='ligne';
+      const readable=Array.isArray(value)?value.join(' ; '):String(value);
+      // Pas d'innerHTML : les réponses (courriel et texte compris) ne
+      // peuvent pas fabriquer des titres de tests ou du HTML arbitraire.
+      p.textContent=String(key)+' : '+readable;
+      p.style.whiteSpace='pre-wrap';
+      p.style.overflowWrap='anywhere';
+      wrap.appendChild(p);
+    }
+  }
+  const supplemental=testState?.supplemental;
+  if(supplemental&&typeof supplemental==='object'){
+    for(const [questionId,fields] of Object.entries(supplemental)){
+      if(!fields||typeof fields!=='object')continue;
+      for(const [fieldId,value] of Object.entries(fields)){
+        if(value===undefined||value===null||String(value).trim()==='')continue;
+        const p=document.createElement('p');
+        p.className='ligne';
+        p.textContent=questionId+' / '+fieldId+' : '+String(value);
+        p.style.whiteSpace='pre-wrap';
+        wrap.appendChild(p);
+      }
+    }
+  }
 
   return wrap;
 }
 
+// Les résultats des parcours KALTEST proviennent EXCLUSIVEMENT de la
+// définition exécutée et de state.tests[id]. Aucun bloc des pages historiques
+// n'est jamais rattaché à un test par son titre, sa position ou son contenu.
 function sebApplyDynamicResultsLayout() {
-  const manifest = sebReadKaloneoResultsManifest();
   const result = document.getElementById('resultat');
-  if (!manifest || !result || !Array.isArray(manifest.tests) || !manifest.tests.length) return false;
+  if (!result) return false;
+  let manifest = null;
+  try {
+    manifest = JSON.parse(sessionStorage.getItem(SEB_KALONEO_RESULTS_MANIFEST_KEY) || 'null');
+  } catch (_) {}
+  if (!manifest || !Array.isArray(manifest.tests) || !manifest.tests.length) return false;
 
-  const canonicalState = sebReadCanonicalKaltestState();
-  const canonicalTests = canonicalState && canonicalState.tests && typeof canonicalState.tests === 'object'
-    ? canonicalState.tests
-    : {};
-
-  // Le manifeste est la liste officielle du parcours. Pour les dossiers créés
-  // avant R10, les métadonnées du catalogue servent uniquement à restituer le
-  // vrai titre et la vraie section — jamais à ajouter un test non exécuté.
+  const state = sebReadCanonicalKaltestState();
+  const states = state && typeof state.tests === 'object' ? state.tests : null;
   const catalog = sebReadCatalogMetadata();
-  const selectedTests = manifest.tests.filter(test => {
-    if (!test || !test.id) return false;
-    const meta = catalog.get(String(test.id)) || {};
-    const category = sebNormalizeResultText(meta.category || test.category || '');
-    return category !== 'transition';
-  });
-  const byId = new Map();
-  selectedTests.forEach(test => {
-    const id = String(test.id);
-    const meta = catalog.get(id) || {};
-    byId.set(id, {
-      ...test,
-      // Le catalogue courant est la référence pour les libellés et sections.
-      title:String(meta.title || test.title || id),
-      category:id === 'planning_cantine' ? 'planification' : String(meta.category || test.category || 'autres'),
-      scored:meta.scored !== undefined ? meta.scored !== false : test.scored !== false
-    });
-  });
-  Object.keys(canonicalTests).forEach(id => {
-    if (String(id) === 'fin_parcours') return;
-    const meta = catalog.get(String(id)) || {};
-    if (sebNormalizeResultText(meta.category || '') === 'transition') return;
-    if (!byId.has(String(id))) {
-      byId.set(String(id), {
-        id:String(id),
-        version:String(meta.version || ''),
-        title:String(meta.title || id).replace(/^./, char => char.toUpperCase()),
-        category:String(id) === 'planning_cantine' ? 'planification' : String(meta.category || 'autres'),
-        scored:meta.scored !== false
-      });
-    }
-  });
-  const effectiveTests = Array.from(byId.values());
-  const selectedById = new Map(effectiveTests.map(test => [String(test.id), test]));
-  const groupedNodes = new Map(effectiveTests.map(test => [String(test.id), []]));
-  const preserved = [];
-  let currentId = '';
-  let pendingHr = null;
-
-  for (const node of Array.from(result.children)) {
-    if (node.tagName === 'STYLE') {
-      preserved.push(node);
-      continue;
-    }
-
-    if (node.tagName === 'HR') {
-      pendingHr = node;
-      currentId = '';
-      continue;
-    }
-
-    let identified = '';
-    if (/^H[1-6]$/.test(node.tagName || '')) {
-      identified = sebResultTestIdFromHeading(node.textContent);
-    }
-    if (!identified) identified = sebResultTestIdFromStandaloneBlock(node);
-
-    if (identified) {
-      currentId = selectedById.has(identified) ? identified : '';
-      pendingHr = null;
-      if (currentId) {
-        // Le vrai titre vient du catalogue KALONÉO, pas des anciens "Page 4 / Page 5".
-        if (/^H[1-6]$/.test(node.tagName || '')) {
-          node.textContent = String(selectedById.get(currentId).title || currentId);
-          node.dataset.sebCurrentTestTitle = '1';
-        }
-        groupedNodes.get(currentId).push(node);
-      }
-      continue;
-    }
-
-    const text = sebNormalizeResultText(node.textContent);
-    if (pendingHr) {
-      // Le score global historique additionnait même des pages hors parcours.
-      // Il est volontairement retiré : les scores restent présentés test par test.
-      if (text.startsWith('score final')) {
-        pendingHr = null;
-        currentId = '';
-        continue;
-      }
-      pendingHr = null;
-    }
-
-    if (currentId && selectedById.has(currentId)) {
-      groupedNodes.get(currentId).push(node);
-    } else if (
-      node.tagName === 'P' &&
-      (text.includes('identite du candidat') || text.includes('nom') && text.includes('prenom') && text.includes('groupe'))
-    ) {
-      preserved.push(node);
-    }
-  }
-
-  const fragment = document.createDocumentFragment();
-  preserved.forEach(node => fragment.appendChild(node));
-
+  const create = (tag,text,className) => {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    if (text !== undefined) el.textContent = String(text);
+    return el;
+  };
+  const documentRoot = document.createDocumentFragment();
+  const heading = create('h2','Résultats des tests du parcours');
+  documentRoot.appendChild(heading);
   if (manifest.parcoursTitle) {
-    const parcours = document.createElement('div');
-    parcours.className = 'seb-results-parcours-title';
-    parcours.style.cssText = 'margin:12px 0 18px;padding:10px 12px;border:1px solid #9cc2e5;border-radius:6px;background:#f7fbff;color:#1f4e79;font-weight:700;';
-    parcours.textContent = 'Parcours réalisé : ' + String(manifest.parcoursTitle);
-    fragment.appendChild(parcours);
+    const parcours = create('div','Parcours réalisé : '+String(manifest.parcoursTitle),
+      'seb-results-parcours-title');
+    parcours.style.cssText='margin:12px 0 18px;padding:10px 12px;border:1px solid #9cc2e5;border-radius:6px;background:#f7fbff;color:#1f4e79;font-weight:700;';
+    documentRoot.appendChild(parcours);
+  }
+  // L'identité et le manifeste viennent du dossier candidat actuellement
+  // ouvert, jamais d'une ancienne page de résultats au contenu non typé.
+  try {
+    const candidate=JSON.parse(sessionStorage.getItem('candidat_data')||'{}')||{};
+    const identity=[
+      ['Nom',candidate.nom],['Prénom',candidate.prenom||candidate['prénom']],
+      ['Groupe',candidate.groupe],['Lieu',candidate.lieu||candidate.ville],
+      ['Date',candidate.date||candidate.dateEvaluation||candidate.dateTest]
+    ].filter(([,value])=>value!==undefined&&value!==null&&String(value).trim());
+    if (identity.length) {
+      documentRoot.appendChild(create('p',identity.map(([key,value])=>key+' : '+value).join('   •   '),'seb-results-candidate'));
+    }
+  } catch (_) {}
+
+  if (!states) {
+    const warning=create('p',
+      'Résultats indisponibles : les données originales par test sont absentes. '+
+      'Aucune note n’a été reconstituée à partir d’anciennes pages.',
+      'commentaire');
+    warning.dataset.resultsIntegrity='missing-canonical-state';
+    documentRoot.appendChild(warning);
+    result.replaceChildren(documentRoot);
+    return true;
   }
 
-  const categories = new Map();
-  effectiveTests.forEach(test => {
-    const category = sebResultCategoryLabel(test.category);
-    if (!categories.has(category)) categories.set(category, []);
-    categories.get(category).push(test);
-  });
+  const groups=new Map();
+  const seen=new Set();
+  for (const item of manifest.tests) {
+    const id=String(item?.id||'');
+    if (!id||seen.has(id)) continue;
+    seen.add(id);
+    const metadata=catalog.get(id)||{};
+    const category=sebNormalizeResultText(metadata.category||item.category||'autres');
+    if (id==='fin_parcours'||id==='transition_video_f1'||
+        ['transition','introduction','fin'].includes(category)) continue;
+    const test={
+      id,
+      title:String(metadata.title||item.title||id),
+      category:id==='planning_cantine'?'planification':String(metadata.category||item.category||'autres'),
+      scored:metadata.scored!==undefined?metadata.scored!==false:item.scored!==false
+    };
+    const label=sebResultCategoryLabel(test.category);
+    if(!groups.has(label))groups.set(label,[]);
+    groups.get(label).push(test);
+  }
 
-  categories.forEach((tests, category) => {
-    const section = document.createElement('section');
-    section.className = 'seb-results-category';
-    section.dataset.category = category;
-    section.style.cssText = 'margin:18px 0 24px;';
-
-    const title = document.createElement('h2');
-    title.textContent = category;
-    title.style.cssText = 'margin:0 0 10px;padding:8px 10px;background:#d9eaf7;color:#1f4e79;border-radius:5px;font-size:20px;';
-    section.appendChild(title);
-
-    tests.forEach(test => {
-      const card = document.createElement('article');
-      card.className = 'seb-result-test-card';
-      card.dataset.testId = String(test.id);
-      card.style.cssText = 'margin:0 0 12px;padding:12px 14px;border:1px solid #d6dce6;border-radius:7px;background:#fff;';
-
-      const nodes = groupedNodes.get(String(test.id)) || [];
-
-      // Le nom du test est toujours le premier élément du bloc.
-      const testTitle = document.createElement('h3');
-      testTitle.textContent = String(test.title || test.id);
-      testTitle.style.cssText = 'margin:0 0 8px;color:#0b567d;font-size:18px;';
-      card.appendChild(testTitle);
-
-      const canonicalSummary = sebDescribeCanonicalResult(test, canonicalTests[String(test.id)]);
-      if (canonicalSummary) card.appendChild(canonicalSummary);
-
-      // Les anciens blocs restent utiles pour les commentaires/détails lisibles,
-      // mais leurs titres et scores doublons ne doivent plus polluer l'affichage.
-      nodes.forEach(node => {
-        if (/^H[1-6]$/.test(node.tagName || '')) return;
-        const nodeText = sebNormalizeResultText(node.textContent);
-        if (
-          node.tagName === 'P' &&
-          (nodeText.startsWith('score ') || nodeText.startsWith('score:') || nodeText.startsWith('score total'))
-        ) return;
-        card.appendChild(node);
-      });
-
-      if (!nodes.length && !canonicalSummary) {
-        const empty = document.createElement('p');
-        empty.className = 'commentaire';
-        empty.textContent = test.scored === false
-          ? 'Étape non notée — aucun résultat chiffré.'
-          : 'Aucun résultat enregistré pour ce test.';
-        card.appendChild(empty);
-      }
-
+  for(const [category,tests] of groups){
+    const section=create('section',undefined,'seb-results-category');
+    section.dataset.category=category;
+    section.style.cssText='margin:18px 0 24px;';
+    const sectionTitle=create('h2',category);
+    sectionTitle.style.cssText='margin:0 0 10px;padding:8px 10px;background:#d9eaf7;color:#1f4e79;border-radius:5px;font-size:20px;';
+    section.appendChild(sectionTitle);
+    for(const test of tests){
+      const card=create('article',undefined,'seb-result-test-card');
+      card.dataset.testId=test.id;
+      card.style.cssText='margin:0 0 12px;padding:12px 14px;border:1px solid #d6dce6;border-radius:7px;background:#fff;';
+      const title=create('h3',test.title);
+      title.style.cssText='margin:0 0 8px;color:#0b567d;font-size:18px;';
+      card.appendChild(title);
+      // La clé de la fiche et celle des réponses DOIVENT être identiques.
+      // Ne jamais utiliser un résultat d'une autre fiche, même s'il reste
+      // en mémoire dans l'historique ou dans un ancien tableau de scores.
+      const ownState=Object.prototype.hasOwnProperty.call(states,test.id)
+        ? states[test.id] : null;
+      const ownSummary=sebDescribeCanonicalResult(test,ownState);
+      if(ownSummary)card.appendChild(ownSummary);
+      else card.appendChild(create('p',
+        'Résultat propre à ce test indisponible — aucune autre donnée utilisée.',
+        'commentaire'));
       section.appendChild(card);
-    });
-
-    fragment.appendChild(section);
-  });
-
-  result.replaceChildren(fragment);
+    }
+    documentRoot.appendChild(section);
+  }
+  // Ne conserver aucun enfant du rendu historique : c'était la cause du
+  // déplacement de résultats Mail/Planning/etc. sous d'autres titres.
+  result.replaceChildren(documentRoot);
   return true;
 }
 
 function afficherResultat() {
+  // Le parcours KALTEST s'appuie UNIQUEMENT sur son état par test. Le
+  // constructeur historique ci-dessous ne doit jamais calculer les scores
+  // d'un candidat KALTEST ni mélanger des blocs de pages 2..8.
+  if (sebApplyDynamicResultsLayout()) return;
+  if (sebReadCanonicalKaltestState()) {
+    const host=document.getElementById('resultat');
+    if(host)host.textContent='Résultats non fiables : manifeste du parcours absent. Vérifiez le dossier candidat.';
+    return;
+  }
   console.log("🧩 Initialisation de l'affichage des résultats...");
 
   let reponses = {};
