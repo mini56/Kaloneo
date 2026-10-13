@@ -40,6 +40,7 @@ let candidateTransfer = null;
 let candidateProtection = null;
 let kaloneoLibrary = null;
 let kaloneoBuilderPreviewDefinition = null;
+let kaloneoBuilderPreviewEditorHistory = null;
 let kaloneoBuilderPreviewFullscreenActive = false;
 let kaloneoMiniPreviewWorker = null;
 let kaloneoMiniPreviewDefinition = null;
@@ -1495,7 +1496,7 @@ ipcMain.handle('kaloneo-mask:close-preview', () => {
   return true;
 });
 
-ipcMain.handle('kaloneo-builder:open-preview', (_event, definition) => {
+ipcMain.handle('kaloneo-builder:open-preview', (_event, definition, editorHistory) => {
   if (!mainWindow || mainWindow.isDestroyed() || !adminSessionUnlocked) {
     return { ok:false, error:'Accès administrateur requis.' };
   }
@@ -1512,6 +1513,11 @@ ipcMain.handle('kaloneo-builder:open-preview', (_event, definition) => {
   }
   try {
     kaloneoBuilderPreviewDefinition = JSON.parse(JSON.stringify(definition));
+    // Sauvegarde transitoire en mémoire pendant l'aperçu : aucun quota
+    // sessionStorage/localStorage, même avec des images HD.
+    kaloneoBuilderPreviewEditorHistory =
+      editorHistory?.schema===1 && Array.isArray(editorHistory.entries)
+        ?editorHistory:null;
     adminCandidateResultsMode = false;
     kaloneoBuilderPreviewFullscreenActive=true;
     applyAdminWindowMode(true);
@@ -1519,6 +1525,7 @@ ipcMain.handle('kaloneo-builder:open-preview', (_event, definition) => {
     return { ok:true };
   } catch (error) {
     kaloneoBuilderPreviewDefinition = null;
+    kaloneoBuilderPreviewEditorHistory = null;
     kaloneoBuilderPreviewFullscreenActive=false;
     applyAdminWindowMode(true);
     return { ok:false, error:error && error.message ? error.message : String(error) };
@@ -1630,8 +1637,10 @@ ipcMain.handle('kaloneo-builder:consume-preview', () => {
   if (!kaloneoBuilderPreviewDefinition) return { ok:false, error:'Aucun aperçu KALONÉO à restaurer.' };
   try {
     const definition = JSON.parse(JSON.stringify(kaloneoBuilderPreviewDefinition));
+    const editorHistory=kaloneoBuilderPreviewEditorHistory;
     kaloneoBuilderPreviewDefinition = null;
-    return { ok:true, definition };
+    kaloneoBuilderPreviewEditorHistory = null;
+    return { ok:true, definition, editorHistory };
   } catch (error) {
     return { ok:false, error:error && error.message ? error.message : String(error) };
   }

@@ -1837,7 +1837,7 @@ function injectAdminBar() {
     const quit = await ipcRenderer.invoke('admin:quit-application').catch(() => false);
     if (!quit) {
       closingSession = false;
-      if (!isAdminBilanPage() && !isAdminCandidatesPage() && !adminCandidateResultsWorkspace) {
+      if (!isAdminBilanPage() && !isAdminCandidatesPage() && !isTestsParcoursWorkspacePage() && !adminCandidateResultsWorkspace) {
         periodicSaveTimer = setInterval(() => saveNow(false), SAVE_CHECKPOINT_MS);
       }
       scheduleSave();
@@ -1895,7 +1895,7 @@ function injectAdminBar() {
       if (!completed || !completed.ok) {
         closingSession = false;
         candidateJourneyCompleted = false;
-        if (!isAdminBilanPage() && !isAdminCandidatesPage() && !adminCandidateResultsWorkspace) {
+        if (!isAdminBilanPage() && !isAdminCandidatesPage() && !isTestsParcoursWorkspacePage() && !adminCandidateResultsWorkspace) {
           periodicSaveTimer = setInterval(() => saveNow(false), SAVE_CHECKPOINT_MS);
         }
         scheduleSave();
@@ -2073,7 +2073,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (adminCandidateResultsWorkspace) {
     showReadOnlyCandidateResults();
   } else {
-    if (!isAdminBilanPage() && !isAdminTestsParcoursPage()) {
+    if (!isAdminBilanPage() && !isTestsParcoursWorkspacePage()) {
       document.addEventListener('input', scheduleSave, true);
       document.addEventListener('change', scheduleSave, true);
       document.addEventListener('click', scheduleSave, true);
@@ -2168,7 +2168,7 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
   kaloneoSelectedParcoursRuntime: () => ipcRenderer.invoke('kaloneo-library:selected-runtime'),
   kaloneoSelectedParcoursRuntimeSync: () => ipcRenderer.sendSync('kaloneo-library:selected-runtime-sync'),
   kaloneoSaveParcours: (payload) => ipcRenderer.invoke('kaloneo-library:save-parcours', payload),
-  kaloneoOpenPreview: (definition) => ipcRenderer.invoke('kaloneo-builder:open-preview', definition),
+  kaloneoOpenPreview: (definition,editorHistory) => ipcRenderer.invoke('kaloneo-builder:open-preview', definition,editorHistory),
   kaloneoRenderMiniPreview: (definition) => ipcRenderer.invoke('kaloneo-builder:render-mini-preview', definition),
   kaloneoGetPreviewDefinition: () => ipcRenderer.invoke('kaloneo-builder:get-preview'),
   kaloneoConsumePreviewDefinition: () => ipcRenderer.invoke('kaloneo-builder:consume-preview'),

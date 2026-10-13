@@ -10,6 +10,7 @@ function fail(message, details) {
 
 let state = {version:1,sessionStorage:{},localStorage:{},lastPage:'kaltest-pilot2.html',lastEvaluationPage:'kaltest-pilot2.html'};
 let previewDefinition = null;
+let previewEditorHistory = null;
 let savedLibraryDefinition = null;
 let savedLibraryPayload = null;
 let savedImageCalls = 0;
@@ -142,10 +143,17 @@ app.whenReady().then(async()=>{
   genreNombreFixture=JSON.parse(fs.readFileSync(path.join(root,'source','kaltest','tests','genre-nombre','1.0.0','test.json'),'utf8'));
   const builder=path.join(web,'kaloneo-builder','test-builder.html');
   const preview=path.join(web,'kaloneo-builder','test-preview.html');
+  // Contrôle de l'absence du checkpoint à 5 secondes sur les pages Builder,
+  // sans désactiver la sauvegarde des vrais candidats.
+  const preloadSource=fs.readFileSync(path.join(root,'src','preload.js'),'utf8');
+  if(!preloadSource.includes('if (!isAdminBilanPage() && !isTestsParcoursWorkspacePage()) {')||
+     !preloadSource.includes('const SAVE_CHECKPOINT_MS = 5000;'))
+    return fail('Checkpoint de sauvegarde candidat encore actif dans le Builder');
   if(!fs.existsSync(builder)||!fs.existsSync(preview)) return fail('Builder ou page aperçu absent de app/web');
 
-  ipcMain.handle('kaloneo-builder:open-preview',async(_event,definition)=>{
+  ipcMain.handle('kaloneo-builder:open-preview',async(_event,definition,editorHistory)=>{
     previewDefinition=JSON.parse(JSON.stringify(definition||{}));
+    previewEditorHistory=editorHistory||null;
     await win.loadFile(preview);
     return {ok:true};
   });
@@ -153,8 +161,10 @@ app.whenReady().then(async()=>{
   ipcMain.handle('kaloneo-builder:consume-preview',()=>{
     if(!previewDefinition)return {ok:false,error:'absent'};
     const definition=JSON.parse(JSON.stringify(previewDefinition));
+    const editorHistory=previewEditorHistory;
     previewDefinition=null;
-    return {ok:true,definition};
+    previewEditorHistory=null;
+    return {ok:true,definition,editorHistory};
   });
   ipcMain.handle('kaloneo-builder:close-preview',async()=>{
     await win.loadFile(builder,{query:{resume:'preview'}});
@@ -802,6 +812,21 @@ app.whenReady().then(async()=>{
     }
     console.log('KALONEO_BUILDER_PC_IMAGE_IMPORT=OK',JSON.stringify({images:importedImages.size,saves:savedImageCalls}));
 
+    // Préparer deux étapes d'historique consécutives juste avant l'aperçu :
+    // Annuler doit retrouver le titre provisoire après fermeture d'Electron.
+    const previewHistoryBefore=await win.webContents.executeJavaScript(`(async()=>{
+      const title=document.getElementById('test-title');
+      title.value='Aperçu Electron Smoke - étape annulable';
+      title.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(resolve=>setTimeout(resolve,445));
+      title.value='Aperçu Electron Smoke';
+      title.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(resolve=>setTimeout(resolve,445));
+      return {title:title.value,undoEnabled:!document.getElementById('undo-change').disabled};
+    })()`,true);
+    if(previewHistoryBefore.title!=='Aperçu Electron Smoke'||!previewHistoryBefore.undoEnabled)
+      return fail('Historique pré-aperçu : modifications successives non annulables',previewHistoryBefore);
+
     // Régression utilisateur : les blocs repliés restent repliés après Aperçu.
     const foldsBeforePreview=await win.webContents.executeJavaScript(`(()=>{
       const blocks=[...document.querySelectorAll('.exercise-block')];
@@ -974,6 +999,27 @@ app.whenReady().then(async()=>{
        !foldsAfterPreview.contractCollapsed)
       return fail('Retour Aperçu : les blocs repliés sont tous rouverts', {foldsBeforePreview,foldsAfterPreview});
     console.log('KALONEO_PREVIEW_PRESERVES_COLLAPSED_BLOCKS=OK',JSON.stringify(foldsAfterPreview));
+    const historyAfterPreview=await win.webContents.executeJavaScript(`(()=>{
+      const title=document.getElementById('test-title');
+      const undo=document.getElementById('undo-change');
+      const redo=document.getElementById('redo-change');
+      const before=title?.value||'';
+      const undoEnabled=!undo.disabled;
+      undo.click();
+      const afterUndo=title?.value||'';
+      const redoEnabled=!redo.disabled;
+      redo.click();
+      const afterRedo=title?.value||'';
+      return {before,undoEnabled,afterUndo,redoEnabled,afterRedo,undoEnabledAfterRedo:!undo.disabled};
+    })()`,true);
+    if(!historyAfterPreview.undoEnabled||!historyAfterPreview.redoEnabled||
+       historyAfterPreview.before!=='Aperçu Electron Smoke'||
+       historyAfterPreview.afterUndo!=='Aperçu Electron Smoke - étape annulable'||
+       historyAfterPreview.afterRedo!=='Aperçu Electron Smoke'||
+       !historyAfterPreview.undoEnabledAfterRedo)
+      return fail('Historique Annuler/Rétablir perdu au retour de l’aperçu Electron',historyAfterPreview);
+    console.log('KALONEO_PREVIEW_HISTORY_UNDO_REDO_PRESERVED=OK',JSON.stringify(historyAfterPreview));
+    console.log('KALONEO_BUILDER_NO_IDLE_FIVE_SECOND_CHECKPOINT=OK');
     if(!/test-builder\.html$/i.test(returned.path)||
        returned.title!=='Aperçu Electron Smoke'||
        returned.scenario!=='[c=#005A8D]Scénario[/c] [b]plein[/b] écran'||

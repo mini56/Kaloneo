@@ -622,6 +622,77 @@
     updateDirtyIndicator();
   }
 
+
+  // L'aperçu Electron recharge la page Builder : conserver la pile des
+  // modifications dans le processus principal, pas dans localStorage.
+  // Les données des images sont partagées grâce aux tokens de l'historique.
+  function capturePreviewHistory() {
+    commitHistorySnapshot();
+    return {
+      schema:1,
+      id:$('test-id')?.value||'',
+      version:$('test-version')?.value||'',
+      entries:historyEntries.map(entry=>({json:entry.json,fingerprint:entry.fingerprint})),
+      index:historyIndex,
+      savedFingerprint,
+      media:Array.from(historyMediaIdToData.entries())
+    };
+  }
+
+  function restorePreviewHistory(snapshot) {
+    if(!snapshot||snapshot.schema!==1||snapshot.id!==$('test-id')?.value||
+       snapshot.version!==$('test-version')?.value||
+       !Array.isArray(snapshot.entries)||!snapshot.entries.length||
+       snapshot.entries.length>HISTORY_LIMIT||!Array.isArray(snapshot.media)||
+       !Number.isInteger(snapshot.index)||snapshot.index<0||
+       snapshot.index>=snapshot.entries.length)return false;
+    try{
+      const nextMedia=new Map();
+      for(const item of snapshot.media){
+        if(!Array.isArray(item)||item.length!==2||
+           typeof item[0]!=='string'||typeof item[1]!=='string'||
+           !/^data:(?:image|audio|video)\//i.test(item[1]))return false;
+        nextMedia.set(item[0],item[1]);
+      }
+      const entries=snapshot.entries.map(entry=>{
+        if(!entry||typeof entry.json!=='string'||
+           typeof entry.fingerprint!=='string'||
+           historyFingerprint(entry.json)!==entry.fingerprint)
+          throw new Error('Historique d’aperçu incomplet.');
+        return {json:entry.json,fingerprint:entry.fingerprint};
+      });
+      const revive=(key,value)=>{
+        if(value&&typeof value==='object'&&
+           Object.keys(value).length===1&&typeof value.__kaloneoHistoryMedia==='string'){
+          if(!nextMedia.has(value.__kaloneoHistoryMedia))
+            throw new Error('Image absente de l’historique.');
+          return nextMedia.get(value.__kaloneoHistoryMedia);
+        }
+        return value;
+      };
+      const model=JSON.parse(entries[snapshot.index].json,revive);
+      if(model?.meta?.id!==snapshot.id||model?.meta?.version!==snapshot.version)
+        return false;
+      historyMediaDataToId.clear();
+      historyMediaIdToData.clear();
+      for(const [id,data] of nextMedia.entries()){
+        historyMediaIdToData.set(id,data);
+        historyMediaDataToId.set(data,id);
+      }
+      historyEntries=entries;
+      historyIndex=snapshot.index;
+      savedFingerprint=typeof snapshot.savedFingerprint==='string'
+        ?snapshot.savedFingerprint:'';
+      applyHistoryEntry(entries[historyIndex]);
+      syncHistoryButtons();
+      return true;
+    }catch(error){
+      console.warn('KALONÉO : historique du retour aperçu non restaurable',error);
+      resetHistory({markSaved:false});
+      return false;
+    }
+  }
+
   function markCurrentSaved() {
     commitHistorySnapshot();
     const entry=historyEntries[historyIndex]||captureHistoryEntry();
@@ -3145,6 +3216,7 @@
             'Retour de l’aperçu Electron — même test restauré',
             {markSaved:false,protectedVersion:protectedFromDraft}
           );
+          if(preview.editorHistory)restorePreviewHistory(preview.editorHistory);
           restorePreviewFoldState();
           restored = true;
         }
@@ -3325,9 +3397,10 @@
         return;
       }
       const definition=Core.modelToDefinition(currentModel());
+      const editorHistory=capturePreviewHistory();
       savePreviewFoldState();
       try {
-        const result=await bridge.kaloneoOpenPreview(definition);
+        const result=await bridge.kaloneoOpenPreview(definition,editorHistory);
         if(!result || result.ok!==true) {
           try{sessionStorage.removeItem(PREVIEW_FOLD_KEY);}catch(_){}
           alert('Aperçu impossible : '+String(result?.error||'erreur inconnue'));
