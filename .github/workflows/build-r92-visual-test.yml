@@ -11,8 +11,8 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: kaloneo-crossregression-${{ github.ref }}
-  cancel-in-progress: true
+  group: kaloneo-r92-setup-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: write
