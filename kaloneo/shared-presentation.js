@@ -284,12 +284,13 @@
 
   // Rendu de la structure d'un tableau libre, identique dans l'éditeur
   // et dans le candidat. Le contrôle de réponse reste au client appelant.
-  function renderGridTable({doc,definition={},renderCell,className='',wrapperClassName='',compactClassName='',equalClassName=''}) {
+  function renderGridTable({doc,definition={},renderCell,className='',wrapperClassName='',compactClassName='',equalClassName='',titleTag='h3',titleClassName='',skipHiddenCells=false}) {
     if(!doc||typeof renderCell!=='function')throw new TypeError('Grille KALTEST invalide.');
     const wrap=doc.createElement('div');
     wrap.className='kaloneo-shared-grid-wrap'+(wrapperClassName?' '+wrapperClassName:'');
     if(definition.title){
-      const title=doc.createElement('h3');
+      const title=doc.createElement(titleTag);
+      title.className=titleClassName;
       title.textContent=String(definition.title);
       wrap.appendChild(title);
     }
@@ -323,6 +324,7 @@
       const tr=doc.createElement('tr');
       for(const [colIndex,cellDefinitionRaw] of (definitionRow||[]).entries()){
         const cellDefinition=cellDefinitionRaw||{};
+        if(skipHiddenCells&&cellDefinition.hidden===true)continue;
         const td=doc.createElement('td');
         applyColumn(td,definition.columns?.[colIndex]);
         if(definition.layoutOnly===true){

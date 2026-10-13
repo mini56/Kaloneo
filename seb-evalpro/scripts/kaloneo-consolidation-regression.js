@@ -139,8 +139,35 @@ const emptyTable=sharedPresentation.renderQuestionTable({
 assert.strictEqual(emptyTable.children[0].children[1].children.length,1);
 assert(preview.includes('KaloneoSharedPresentation.renderQuestionTable('));
 assert(source('../kaloneo/builder-legacy-table-preview.js').includes('KaloneoSharedPresentation.renderQuestionTable('));
+// Grille inédite : structure partagée, titre contextuel et cellules masquées
+// dans l'aperçu, sans changer la politique des cellules côté candidat.
+const gridDoc={
+  createElement(tag){
+    return {tagName:tag,children:[],style:{},ownerDocument:gridDoc,className:'',
+      textContent:'',classList:{items:[],add(...values){this.items.push(...values);}},
+      appendChild(node){this.children.push(node);return node;}};
+  }
+};
+const novelGrid=sharedPresentation.renderGridTable({
+  doc:gridDoc,
+  definition:{title:'Grille inconnue',headers:['A','B'],cols:2,
+    cells:[[{kind:'fixed-text',value:'Visible'},{kind:'fixed-text',hidden:true,value:'Caché'}]]},
+  className:'kb-table',wrapperClassName:'kb-block',titleTag:'div',
+  titleClassName:'kb-question-label',skipHiddenCells:true,
+  renderCell:({cell,cellDefinition})=>{cell.textContent=cellDefinition.value||'';}
+});
+assert.strictEqual(novelGrid.children[0].tagName,'div');
+assert.strictEqual(novelGrid.children[0].textContent,'Grille inconnue');
+const novelGridTable=novelGrid.children.find(n=>n.tagName==='table');
+const novelGridBody=novelGridTable.children.find(n=>n.tagName==='tbody');
+assert.strictEqual(novelGridBody.children.length,1);
+assert.strictEqual(novelGridBody.children[0].children.length,1,'Cellule masquée dans aperçu');
+assert.strictEqual(novelGridBody.children[0].children[0].textContent,'Visible');
 assert(common.includes('function equalAutomaticColumns('),'R48.10 function missing in shared presentation engine');
-assert(preview.includes('function equalAutomaticColumns('),'R48.10 function missing in standalone preview');
+assert(preview.includes('KaloneoSharedPresentation.renderGridTable('),
+  'Aperçu Electron autonome sans grille partagée');
+assert(!preview.includes('function equalAutomaticColumns('),
+  'Aperçu Electron conserve une copie de calcul des colonnes');
 // Les deux écrans délèguent toute la grille au moteur partagé.
 // C'est dans renderGridTable que sont appelés equalAutomaticColumns,
 // addEqualColGroup et applyColumn : ne plus exiger d'appels dupliqués.

@@ -79,3 +79,11 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Le Builder (aperçu direct des tableaux historiques) et l'aperçu Electron autonome délèguent la structure des titres, en-têtes et lignes au même module. Le rendu de chaque cellule reste un adaptateur, sans référence à un identifiant de test.
 - La vue candidat `table-definition` conserve provisoirement sa présentation existante, pour éviter de modifier sans test visuel les V1 historiques.
 - Un contrôle de matrice totalement inédite vérifie les lignes, en-têtes et états vides. **Cela ne vaut pas validation visuelle finale.**
+
+## Grilles de l'aperçu Electron autonome (13 octobre 2026)
+
+- Suppression du calcul de colonnes et de la construction des cellules en double dans `test-preview.js`.
+- Cet aperçu délègue désormais ses grilles au même `renderGridTable` que le Builder et le candidat.
+- Adaptateurs de cellules de l'aperçu conservés : texte fixe, image, audio, vidéo, champ, choix ; `skipHiddenCells` est local à cette vue pour maintenir son comportement antérieur.
+- Les paramètres `titleTag` / `titleClassName` conservent les styles préexistants dans la fenêtre Electron autonome.
+- Nouveau contrôle générique : titres, en-têtes, cellules visibles et masquées dans une grille qui n'appartient pas au catalogue.
