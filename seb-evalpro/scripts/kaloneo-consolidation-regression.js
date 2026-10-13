@@ -17,12 +17,21 @@ assert(previewHtml.includes('<script src="shared-presentation.js"></script>'),
   'Aperçu Electron autonome sans module commun');
 assert(previewHtml.indexOf('shared-presentation.js')<previewHtml.indexOf('test-preview.js'),
   'Aperçu Electron : module commun chargé trop tard');
+assert(preview.includes('KaloneoSharedPresentation.renderZones('),
+  'L’aperçu autonome doit partager le calcul des colonnes et la création des zones');
 // Le calcul R48.10 n'est plus dupliqué : il est dans le module commun,
  // tandis que l'aperçu historique indépendant conserve sa fonction.
 const common=source('../kaloneo/shared-presentation.js');
 // Exercice fictif jamais ajouté au catalogue : les trois vues passent par le
 // même constructeur HTML sans changer les configurations propres aux écrans.
 const sharedPresentation=require('../../kaloneo/shared-presentation.js');
+assert.strictEqual(sharedPresentation.columns('single'),'minmax(0,1fr)');
+assert.strictEqual(sharedPresentation.columns('50-50'),'minmax(0,1fr) minmax(0,1fr)');
+assert.strictEqual(sharedPresentation.columns('40-60'),'minmax(0,40fr) minmax(0,60fr)');
+assert.strictEqual(sharedPresentation.columns('60-40'),'minmax(0,60fr) minmax(0,40fr)');
+assert.strictEqual(sharedPresentation.columns('chars-rest',
+  {blocks:[{widthChars:24},{remainder:true}]}),'24ch minmax(0,1fr)');
+
 const fakeDocument={createElement:tag=>({tagName:tag,className:'',sandbox:'',srcdoc:''})};
 for(const type of ['html','html-js']){
   const script='document.body.dataset.example="nouveau";';

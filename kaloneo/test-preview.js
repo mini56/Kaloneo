@@ -311,27 +311,32 @@ function buildLayout(page){
   const m=state.model.meta||{};
   const workspace=el('section','kb-workspace');
   const layout=el('div','kb-layout');
-  if(m.layout==='50-50')layout.classList.add('r50-50');
-  else if(m.layout==='40-60')layout.classList.add('r40-60');
-  else if(m.layout==='60-40')layout.classList.add('r60-40');
-  else if(m.layout==='chars-rest'){
-    layout.classList.add('r50-50');
-    const a=Number(m.block1WidthChars);
-    const b=Number(m.block2WidthChars);
-    layout.style.gridTemplateColumns=(a>=3?a+'ch':'minmax(0,1fr)')+' '+(m.lastBlockRemainder?'minmax(0,1fr)':(b>=3?b+'ch':'minmax(0,1fr)'));
-  }else layout.classList.add('single');
+  const supported=['50-50','40-60','60-40','chars-rest'];
+  const mode=supported.includes(m.layout)?m.layout:'single';
+  if(mode==='50-50')layout.classList.add('r50-50');
+  else if(mode==='40-60')layout.classList.add('r40-60');
+  else if(mode==='60-40')layout.classList.add('r60-40');
+  else if(mode==='chars-rest')layout.classList.add('r50-50');
+  else layout.classList.add('single');
 
-  if(m.layout==='single'){
-    const zone=el('div','kb-zone');
-    state.model.blocks.forEach(block=>zone.append(renderBlock(block)));
-    if(!state.model.blocks.length)zone.append(el('div','kb-empty','Aucun bloc Exercice'));
-    layout.append(zone);
-  }else{
-    const left=el('div','kb-zone'),right=el('div','kb-zone');
-    state.model.blocks.forEach(block=>(block.zone==='right'?right:left).append(renderBlock(block)));
-    if(!left.childNodes.length)left.append(el('div','kb-empty','Zone gauche vide'));
-    if(!right.childNodes.length)right.append(el('div','kb-empty','Zone droite vide'));
-    layout.append(left,right);
+  // Rendu structurel identique au Builder et au candidat : seules les classes
+  // visuelles propres à cette fenêtre Electron restent locales.
+  const zones=window.KaloneoSharedPresentation.renderZones({
+    host:layout,
+    items:state.model.blocks||[],
+    layout:mode,
+    blockSizing:state.definition?.presentation?.blockSizing||{
+      blocks:[{widthChars:m.block1WidthChars},
+        {widthChars:m.block2WidthChars,remainder:m.lastBlockRemainder!==false}]
+    },
+    zoneClass:'kb-zone',
+    renderItem:block=>renderBlock(block)
+  });
+  if(!zones.left.childNodes.length){
+    zones.left.append(el('div','kb-empty',mode==='single'?'Aucun bloc Exercice':'Zone gauche vide'));
+  }
+  if(zones.right&&!zones.right.childNodes.length){
+    zones.right.append(el('div','kb-empty','Zone droite vide'));
   }
   workspace.append(layout);
   page.append(workspace);

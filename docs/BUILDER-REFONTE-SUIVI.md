@@ -59,3 +59,10 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Le contrôleur de l'aperçu autonome consommait déjà des fonctions partagées, mais sa page HTML n'importait pas `shared-presentation.js`.
 - La page `test-preview.html` importe désormais le moteur commun avant `test-preview.js`.
 - Une garde CI vérifie cet ordre. Le contrôle réel Electron reste obligatoire avant toute validation de cette étape.
+
+## Aperçu Electron — colonnes génériques raccordées
+
+- La fonction `buildLayout` ne répartit plus elle-même les blocs dans les zones : elle délègue à `KaloneoSharedPresentation.renderZones`, utilisé aussi dans le Builder et le candidat.
+- Les anciennes classes visuelles `kb-layout`, `kb-zone`, `r50-50`, `r40-60`, `r60-40` sont préservées ; le calcul des largeurs passe par la définition KALTEST ou son modèle.
+- Les messages de zone vide sont conservés et ne sont pas enregistrés dans les tests.
+- Tests génériques de ratios ajoutés, avec contrôle Electron existant bloquant.
