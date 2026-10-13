@@ -339,48 +339,7 @@
     $('test-scored').disabled=practical;
   }
 
-  function displayMultiline(value) {
-    return String(value || '').replace(/\\n/g,'\n');
-  }
-
-  function renderRichContext(target,value) {
-    if(!target)return;
-    target.replaceChildren();
-    const source=displayMultiline(value);
-    const token=/\[(\/)?(b|i|u|c)(?:=(#[0-9a-f]{6}))?\]/gi;
-    const stack=[{node:target,tag:null}];
-    let cursor=0;
-    const appendText=text=>{
-      const parts=String(text).split('\n');
-      parts.forEach((part,index)=>{
-        if(part)stack.at(-1).node.appendChild(document.createTextNode(part));
-        if(index<parts.length-1)stack.at(-1).node.appendChild(document.createElement('br'));
-      });
-    };
-    let match;
-    while((match=token.exec(source))){
-      appendText(source.slice(cursor,match.index));
-      const closing=Boolean(match[1]);
-      const tag=String(match[2]||'').toLowerCase();
-      if(!closing){
-        let element;
-        if(tag==='c'){
-          element=document.createElement('span');
-          if(/^#[0-9a-f]{6}$/i.test(String(match[3]||''))) element.style.color=match[3];
-        }else{
-          element=document.createElement(tag==='b'?'strong':tag==='i'?'em':'u');
-        }
-        stack.at(-1).node.appendChild(element);
-        stack.push({node:element,tag});
-      }else{
-        for(let i=stack.length-1;i>0;i-=1){
-          if(stack[i].tag===tag){stack.length=i;break;}
-        }
-      }
-      cursor=token.lastIndex;
-    }
-    appendText(source.slice(cursor));
-  }
+  const renderRichContext=window.KaloneoSharedPresentation.renderRichContext;
 
   function applyMarkupToTextarea(input,format,onChanged,color='') {
     if(!input)return;

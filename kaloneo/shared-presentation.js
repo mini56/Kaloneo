@@ -43,6 +43,47 @@
     return {left,right};
   }
 
+  // Interprétation canonique du balisage de contexte KALTEST.
+  // Uniquement le DOM : aucun accès à la notation, au stockage ni aux tests.
+  function renderRichContext(target,value){
+    if(!target)return;
+    target.replaceChildren();
+    const doc=target.ownerDocument;
+    const source=String(value||'').replace(/\\n/g,'\n');
+    const token=/\[(\/)?(b|i|u|c)(?:=(#[0-9a-f]{6}))?\]/gi;
+    const stack=[{node:target,tag:null}];
+    const appendText=text=>{
+      const parts=String(text).split('\n');
+      parts.forEach((part,index)=>{
+        if(part)stack.at(-1).node.appendChild(doc.createTextNode(part));
+        if(index<parts.length-1)stack.at(-1).node.appendChild(doc.createElement('br'));
+      });
+    };
+    let cursor=0,match;
+    while((match=token.exec(source))){
+      appendText(source.slice(cursor,match.index));
+      const closing=Boolean(match[1]);
+      const tag=String(match[2]||'').toLowerCase();
+      if(!closing){
+        let element;
+        if(tag==='c'){
+          element=doc.createElement('span');
+          if(/^#[0-9a-f]{6}$/i.test(String(match[3]||'')))element.style.color=match[3];
+        }else{
+          element=doc.createElement(tag==='b'?'strong':tag==='i'?'em':'u');
+        }
+        stack.at(-1).node.appendChild(element);
+        stack.push({node:element,tag});
+      }else{
+        for(let i=stack.length-1;i>0;i-=1){
+          if(stack[i].tag===tag){stack.length=i;break;}
+        }
+      }
+      cursor=token.lastIndex;
+    }
+    appendText(source.slice(cursor));
+  }
+
   function renderQuestion({doc,question,makeAnswer,example=false,className=''}) {
     if(!doc||typeof makeAnswer!=='function')throw new TypeError('Question sans moteur de réponse.');
     const row=doc.createElement('label');
@@ -288,5 +329,5 @@
     table.appendChild(group);
   }
 
-  return Object.freeze({columns,renderZones,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup});
+  return Object.freeze({columns,renderZones,renderRichContext,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup});
 });

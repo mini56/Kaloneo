@@ -53,6 +53,31 @@ const scriptEscaping=sharedPresentation.renderHtmlFrame({
 assert(scriptEscaping.srcdoc.includes('<\\/script>'));
 for(const [name,content] of [['Builder',builder],['aperçu',preview],['candidat',candidate]])
   assert(content.includes('KaloneoSharedPresentation.renderHtmlFrame('),'HTML commun absent : '+name);
+// Le texte enrichi d'un nouveau KALTEST doit être identique dans les trois vues.
+const mockDoc={
+  createElement(tag){return {tagName:tag,children:[],style:{},
+    appendChild(child){this.children.push(child);return child;},
+    replaceChildren(...children){this.children=[...children];}};},
+  createTextNode(value){return {tagName:'#text',textContent:value};}
+};
+const richHost=mockDoc.createElement('section');
+richHost.ownerDocument=mockDoc;
+sharedPresentation.renderRichContext(richHost,'[b]Gras [i]italique[/i][/b]\\n[c=#123456]couleur[/c] [u]souligné[/u]');
+const serial=node=>node.tagName==='#text'?node.textContent:
+  '<'+node.tagName+(node.style?.color?' color="'+node.style.color+'"':'')+'>'+
+  (node.children||[]).map(serial).join('')+'</'+node.tagName+'>';
+const serialized=serial(richHost);
+for(const fragment of ['<strong>Gras <em>italique</em></strong>','<br></br>',
+  '<span color="#123456">couleur</span>','<u>souligné</u>'])
+  assert(serialized.includes(fragment),'Balisage commun absent : '+fragment);
+sharedPresentation.renderRichContext(richHost,'[b]remplacé[/b]');
+assert(!serial(richHost).includes('Gras'),'Le rendu commun doit remplacer et non accumuler');
+for(const [screen,sourceText] of [['Builder',builder],['Aperçu',preview],['Candidat',candidate]]){
+  assert(sourceText.includes('window.KaloneoSharedPresentation.renderRichContext'),
+    'Moteur de texte partagé absent : '+screen);
+  assert(!sourceText.includes('function renderRichContext('),
+    'Ancien parser de texte encore dupliqué : '+screen);
+}
 assert(common.includes('function equalAutomaticColumns('),'R48.10 function missing in shared presentation engine');
 assert(preview.includes('function equalAutomaticColumns('),'R48.10 function missing in standalone preview');
 // Les deux écrans délèguent toute la grille au moteur partagé.

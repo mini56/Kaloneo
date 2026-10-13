@@ -25,6 +25,7 @@ definition.bilanContributions=[];
 definition.features=['runtime.basic','layout.split','content.html-js'];
 definition.behavior={validateBeforeAdvance:false};
 definition.presentation={layout:'50-50',builderContent:[
+  {type:'text',zone:'left',text:'[b]Texte inédit[/b]\\n[c=#123456]Couleur[/c]'},
   {type:'html',zone:'left',
    html:'<p id="synthetic-static">Contenu HTML inédit</p><script>window.addEventListener("message",function(e){if(e.data==="kaloneo-synthetic-ping")window.parent.postMessage({marker:"kaloneo-synthetic-html",from:"plain"},"*");});</script>'},
   {type:'html-js',zone:'right',
@@ -82,6 +83,9 @@ app.whenReady().then(async()=>{
     return {
       testId:document.body.dataset.sebKaltestId,
       visible:document.getElementById("page-exercise")?.classList.contains("visible"),
+      richBold:[...document.querySelectorAll('#kaltest-content .kaltest-builder-content-item strong')].some(el=>el.textContent==='Texte inédit'),
+      richColor:[...document.querySelectorAll('#kaltest-content .kaltest-builder-content-item span')].some(el=>el.textContent==='Couleur'&&!!el.style.color),
+      richBreak:!![...document.querySelectorAll('#kaltest-content .kaltest-builder-content-item')].find(el=>el.textContent.includes('Texte inédit'))?.querySelector('br'),
       frames:frames.map(frame=>{
         const r=frame.getBoundingClientRect();
         return {sandbox:frame.getAttribute("sandbox"),srcdoc:frame.getAttribute("srcdoc"),
@@ -92,6 +96,9 @@ app.whenReady().then(async()=>{
   assert.equal(page.testId,definition.id,'nouveau KALTEST non chargé');
   assert.equal(page.visible,true,'exercice non visible');
   assert.equal(page.frames.length,2,'deux iframes attendues');
+  assert.equal(page.richBold,true,'gras du texte enrichi absent');
+  assert.equal(page.richColor,true,'couleur du texte enrichi absente');
+  assert.equal(page.richBreak,true,'retour à la ligne du texte enrichi absent');
   assert.equal(page.frames[0].sandbox,'','HTML simple : scripts non autorisés');
   assert.equal(page.frames[1].sandbox,'allow-scripts','HTML/JS : scripts autorisés');
   assert.ok(page.frames.every(frame=>frame.width>100&&frame.height>20),'blocs visuellement absents');

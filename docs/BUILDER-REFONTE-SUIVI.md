@@ -46,3 +46,10 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Construction à l'exécution d'un exercice inédit à deux colonnes, avec HTML simple et HTML/JS ; aucun KALTEST validé n'est modifié.
 - Vérifie le DOM candidat, la taille et la position visibles des iframes, l'isolation du HTML simple, l'exécution du script HTML/JS, une capture Electron non vide et l'absence de sauvegarde candidat.
 - Ce contrôle complète mais **ne remplace pas** une comparaison visuelle humaine entre le Builder, Electron et l'application installée.
+
+## Textes enrichis : nouvelle étape de refonte
+
+- Suppression des trois interpréteurs dupliqués des balises de texte `[b]`, `[i]`, `[u]`, `[c=#RRGGBB]` et des retours de ligne.
+- Fonction unique `renderRichContext` dans `kaloneo/shared-presentation.js`, appelée par le Builder, l'aperçu et le véritable moteur candidat ; aucun changement de la structure KALTEST, des barèmes ou du CSS.
+- Contrôle générique Node ajouté (imbrication, couleurs, sauts de ligne, rafraîchissement), complété par un contrôle du DOM réel Electron sur un exercice fictif.
+- Ne pas annoncer une parité visuelle complète sur la seule base de ces contrôles.
