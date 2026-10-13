@@ -2221,27 +2221,16 @@
 
   function responseTablePreview(block) {
     const t=ensureResponseColumns(block);
-    const wrap=document.createElement('div');
-    wrap.className='preview-grid-wrap';
-    const table=document.createElement('table');
-    table.className='preview-grid-table';
-    const tr=document.createElement('tr');
-    t.headers.forEach((h,i)=>{const th=document.createElement('th');th.textContent=h;window.KaloneoSharedPresentation.applyColumn(th,t.columns[i]);tr.appendChild(th);});
-    const thead=document.createElement('thead');thead.appendChild(tr);table.appendChild(thead);
-    const tbody=document.createElement('tbody');
-    const questions=state.blocks.filter(b=>b.type==='question');
-    questions.forEach((q,index)=>{
-      const row=document.createElement('tr');
-      t.headers.forEach((h,i)=>{
-        const td=document.createElement('td');window.KaloneoSharedPresentation.applyColumn(td,t.columns[i]);
-        if(i===0) td.textContent=String(index+1);
-        else {const input=document.createElement('input');input.type='text';td.appendChild(input);}
-        row.appendChild(td);
-      });
-      tbody.appendChild(row);
+    return window.KaloneoSharedPresentation.renderResponseTable({
+      doc:document,headers:t.headers||[],columns:t.columns||[],
+      rows:state.blocks.filter(b=>b.type==='question'),
+      className:'preview-grid-table',wrapperClassName:'preview-grid-wrap',
+      renderCell:({cell,rowIndex,colIndex})=>{
+        if(colIndex===0){cell.textContent=String(rowIndex+1);return;}
+        const input=document.createElement('input');input.type='text';
+        cell.appendChild(input);
+      }
     });
-    table.appendChild(tbody);wrap.appendChild(table);
-    return wrap;
   }
 
   function inlinePreview(block) {

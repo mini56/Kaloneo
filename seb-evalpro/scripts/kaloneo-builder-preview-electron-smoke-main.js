@@ -324,6 +324,48 @@ app.whenReady().then(async()=>{
        futureInline.candidate.layers!==2)
       return fail('Moteur commun : flux à trous d’un test inédit incohérent',futureInline);
     console.log('KALONEO_SHARED_RENDERER_UNKNOWN_TEST_INLINE_FLOW=OK',JSON.stringify(futureInline));
+    const futureResponseTable=await win.webContents.executeJavaScript(`(()=>{
+      const shared=window.KaloneoSharedPresentation;
+      const rows=Array.from({length:8},(_,i)=>({id:'future_question_'+(i+1)}));
+      const headers=['N°','Réponse','Unité','Justification'];
+      const options={
+        doc:document,headers,columns:[{widthChars:6},null,{align:'center'},null],rows,
+        renderCell:({cell,row,rowIndex,colIndex})=>{
+          if(colIndex===0){cell.textContent=String(rowIndex+1);return;}
+          const input=document.createElement('input');
+          input.dataset.questionId=row.id;
+          input.dataset.col=String(colIndex);
+          cell.appendChild(input);
+        }
+      };
+      const editor=shared.renderResponseTable({...options,
+        className:'preview-grid-table',wrapperClassName:'preview-grid-wrap'});
+      const candidate=shared.renderResponseTable({...options,
+        className:'kaltest-table',wrapperClassName:'kaltest-table-wrap'});
+      const extract=el=>({
+        headers:[...el.querySelectorAll('thead th')].map(x=>x.textContent),
+        rows:el.querySelectorAll('tbody tr').length,
+        cells:[...el.querySelectorAll('tbody tr')].map(x=>x.cells.length),
+        inputs:el.querySelectorAll('tbody input').length,
+        first:el.querySelector('tbody tr td')?.textContent,
+        last:el.querySelector('tbody tr:last-child td')?.textContent,
+        width:el.querySelector('thead th')?.style.width,
+        alignment:el.querySelector('thead th:nth-child(3)')?.style.textAlign
+      });
+      return {editor:extract(editor),candidate:extract(candidate)};
+    })()`,true);
+    if(JSON.stringify(futureResponseTable.editor)!==JSON.stringify(futureResponseTable.candidate)||
+       futureResponseTable.editor.headers.length!==4||
+       futureResponseTable.editor.rows!==8||
+       futureResponseTable.editor.cells.some(n=>n!==4)||
+       futureResponseTable.editor.inputs!==24||
+       futureResponseTable.editor.first!=='1'||
+       futureResponseTable.editor.last!=='8'||
+       futureResponseTable.editor.width!=='6ch'||
+       futureResponseTable.editor.alignment!=='center')
+      return fail('Tableau de réponses générique : rendu du test inédit incorrect',futureResponseTable);
+    console.log('KALONEO_SHARED_RENDERER_UNKNOWN_TEST_RESPONSE_TABLE=OK',JSON.stringify(futureResponseTable));
+
 
 
     const initial=await win.webContents.executeJavaScript(`(()=>{

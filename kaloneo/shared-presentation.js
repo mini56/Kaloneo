@@ -133,6 +133,43 @@
     return wrap;
   }
 
+  // Tableau de réponses générique. Le squelette des lignes, en-têtes et
+  // dimensions est commun ; seuls les champs spécifiques à l'éditeur ou
+  // au candidat sont fournis par une fonction de rappel.
+  function renderResponseTable({doc,headers=[],columns=[],rows=[],renderCell,className='',wrapperClassName=''}) {
+    if(!doc||typeof renderCell!=='function')
+      throw new TypeError('Tableau de réponses KALTEST invalide.');
+    const wrap=doc.createElement('div');
+    wrap.className='kaloneo-shared-response-wrap'+(wrapperClassName?' '+wrapperClassName:'');
+    const table=doc.createElement('table');
+    table.className='kaloneo-shared-response-table'+(className?' '+className:'');
+    const thead=doc.createElement('thead');
+    const head=doc.createElement('tr');
+    for(let i=0;i<headers.length;i++){
+      const th=doc.createElement('th');
+      th.textContent=String(headers[i]||'');
+      applyColumn(th,columns[i]);
+      head.appendChild(th);
+    }
+    thead.appendChild(head);
+    table.appendChild(thead);
+    const tbody=doc.createElement('tbody');
+    for(const [rowIndex,rowData] of rows.entries()){
+      const tr=doc.createElement('tr');
+      for(let colIndex=0;colIndex<headers.length;colIndex++){
+        const td=doc.createElement('td');
+        applyColumn(td,columns[colIndex]);
+        const value=renderCell({cell:td,row:rowData,rowIndex,colIndex});
+        if(value&&value.nodeType)td.appendChild(value);
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    return wrap;
+  }
+
   function equalAutomaticColumns(table){
     const count=Math.max(
       Number(table?.cols)||0,
@@ -170,5 +207,5 @@
     table.appendChild(group);
   }
 
-  return Object.freeze({columns,renderZones,renderQuestion,renderMedia,renderInlineFlow,equalAutomaticColumns,applyColumn,addEqualColGroup});
+  return Object.freeze({columns,renderZones,renderQuestion,renderMedia,renderInlineFlow,renderResponseTable,equalAutomaticColumns,applyColumn,addEqualColGroup});
 });

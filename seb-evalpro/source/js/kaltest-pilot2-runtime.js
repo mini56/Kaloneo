@@ -1376,50 +1376,25 @@
 
   function renderBuilderResponseTable(test, item) {
     const definition = item.definition || {};
-    const wrapper = document.createElement('div');
-    wrapper.className = 'kaltest-table-wrap';
-
-    const table = document.createElement('table');
-    table.className = 'kaltest-table';
-
-    const headers = definition.headers || ['Question N°','Réponse','Unités'];
-    const columns = definition.columns || [];
-    const thead = document.createElement('thead');
-    const head = document.createElement('tr');
-
-    headers.forEach((label, index) => {
-      const th = document.createElement('th');
-      th.textContent = label;
-      window.KaloneoSharedPresentation.applyColumn(th, columns[index]);
-      head.appendChild(th);
-    });
-    thead.appendChild(head);
-    table.appendChild(thead);
-
-    const tbody = document.createElement('tbody');
-    (test.questions || []).forEach((question, index) => {
-      const tr = document.createElement('tr');
-      headers.forEach((_header, columnIndex) => {
-        const td = document.createElement('td');
-        window.KaloneoSharedPresentation.applyColumn(td, columns[columnIndex]);
-        if (columnIndex === 0) {
-          td.textContent = String(index + 1);
-        } else if (columnIndex === 1) {
-          td.appendChild(makeInput(test, question, { compact:true }));
-        } else if (columnIndex === 2) {
-          td.appendChild(makeUnitInput(test, question));
-        } else {
-          const field = question.supplementalFields?.[columnIndex - 3];
-          if (field) td.appendChild(makeSupplementalInput(test, question, field));
+    return window.KaloneoSharedPresentation.renderResponseTable({
+      doc:document,
+      headers:definition.headers||['Question N°','Réponse','Unités'],
+      columns:definition.columns||[],
+      rows:test.questions||[],
+      className:'kaltest-table',wrapperClassName:'kaltest-table-wrap',
+      renderCell:({cell,row:question,rowIndex,colIndex})=>{
+        if(colIndex===0){
+          cell.textContent=String(rowIndex+1);
+        }else if(colIndex===1){
+          cell.appendChild(makeInput(test,question,{compact:true}));
+        }else if(colIndex===2){
+          cell.appendChild(makeUnitInput(test,question));
+        }else{
+          const field=question.supplementalFields?.[colIndex-3];
+          if(field)cell.appendChild(makeSupplementalInput(test,question,field));
         }
-        tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
+      }
     });
-
-    table.appendChild(tbody);
-    wrapper.appendChild(table);
-    return wrapper;
   }
 
   function renderAutoevaluation(test, host) {
