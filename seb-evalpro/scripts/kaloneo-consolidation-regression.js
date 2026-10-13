@@ -37,9 +37,10 @@ assert(preview.includes('KaloneoSharedPresentation.renderZones('),
 // Le calcul R48.10 n'est plus dupliqué : il est dans le module commun,
  // tandis que l'aperçu historique indépendant conserve sa fonction.
 const common=source('../kaloneo/shared-presentation.js');
+const sharedPresentation=require('../../kaloneo/shared-presentation.js');
 // Exercice fictif jamais ajouté au catalogue : les trois vues passent par le
 // même constructeur HTML sans changer les configurations propres aux écrans.
-const sharedPresentation=require('../../kaloneo/shared-presentation.js');
+
 assert.strictEqual(sharedPresentation.columns('single'),'minmax(0,1fr)');
 assert.strictEqual(sharedPresentation.columns('50-50'),'minmax(0,1fr) minmax(0,1fr)');
 assert.strictEqual(sharedPresentation.columns('40-60'),'minmax(0,40fr) minmax(0,60fr)');
