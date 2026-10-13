@@ -237,6 +237,31 @@ app.whenReady().then(async()=>{
        unknownTest.sizing!=='38ch minmax(0,1fr)')
       return fail('Moteur commun : un test inédit ne se rend pas indépendamment de son ID',unknownTest);
     console.log('KALONEO_SHARED_RENDERER_UNKNOWN_TEST_EIGHT_QUESTIONS=OK',JSON.stringify(unknownTest));
+    const novelMedia=await win.webContents.executeJavaScript(`(()=>{
+      const shared=window.KaloneoSharedPresentation;
+      const media=shared.renderMedia({
+        doc:document,type:'image',
+        resource:{data:'data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22/%3E',alt:'Image libre'},
+        style:{imageScale:55,imageAlign:'right'},
+        className:'preview-media-block',imageClass:'preview-media'
+      });
+      const img=media.querySelector('img');
+      const sound=shared.renderMedia({doc:document,type:'audio',resource:{data:'data:audio/wav;base64,AAA='}});
+      const empty=shared.renderMedia({doc:document,type:'video',resource:{},emptyText:'Vidéo à importer'});
+      return {
+        image:img?.src?.startsWith('data:image/svg+xml,'),
+        scale:img?.style.width,
+        alignment:media.style.justifyContent,
+        alt:img?.alt,
+        audio:sound.querySelector('audio')?.controls===true,
+        missing:empty.textContent
+      };
+    })()`,true);
+    if(!novelMedia.image||novelMedia.scale!=='55%'||
+       novelMedia.alignment!=='flex-end'||novelMedia.alt!=='Image libre'||
+       !novelMedia.audio||novelMedia.missing!=='Vidéo à importer')
+      return fail('Moteur commun : média d’un test inédit non rendu',novelMedia);
+    console.log('KALONEO_SHARED_RENDERER_UNKNOWN_TEST_MEDIA=OK',JSON.stringify(novelMedia));
 
     const initial=await win.webContents.executeJavaScript(`(()=>{
       const title=document.getElementById('test-title');

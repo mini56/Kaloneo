@@ -2310,22 +2310,22 @@
         (block.type==='html-js'&&block.js?'<script>'+block.js.replace(/<\/script/gi,'<\\/script')+'</script>':'')+
         '</body></html>';
       wrap.appendChild(frame);
-    } else if(block.type==='image'&&block.mediaData) {
-      wrap.classList.add('preview-media-block');
-      const img=document.createElement('img');img.className='preview-media';img.src=String(block.mediaData).startsWith('imageqcm/')?'../'+block.mediaData:block.mediaData;img.alt=block.mediaAlt||block.mediaName||'Image';
-      const scale=Number(block.imageScale);if(scale>=10&&scale<100){img.style.width=scale+'%';img.style.height='auto';img.style.maxHeight='100%';}
-      if(['left','right'].includes(block.imageAlign)){
-        wrap.style.justifyContent=block.imageAlign==='left'?'flex-start':'flex-end';
-        img.style.margin='auto 0';
-      }
-      wrap.appendChild(img);
-    } else if(block.type==='audio'&&block.mediaData) {
-      const a=document.createElement('audio');a.controls=true;a.src=block.mediaData;a.style.width='100%';wrap.appendChild(a);
-    } else if(block.type==='video'&&block.mediaData) {
-      wrap.classList.add('preview-media-block');
-      const v=document.createElement('video');v.controls=true;v.src=block.mediaData;v.className='preview-media';wrap.appendChild(v);
     } else if(['image','audio','video'].includes(block.type)) {
-      wrap.textContent=block.mediaPlaceholder||'Aucun média sélectionné';
+      // Le Builder et le candidat partagent aussi le même rendu de média.
+      node=window.KaloneoSharedPresentation.renderMedia({
+        doc:document,type:block.type,
+        // Une ressource seulement nommée reste à importer dans le Builder.
+        resource:{data:block.mediaData||'',alt:block.mediaAlt||block.mediaName||'Image'},
+        style:{imageScale:block.imageScale,imageAlign:block.imageAlign},
+        className:'preview-media-block',imageClass:'preview-media',
+        videoClass:'preview-media',
+        emptyText:block.mediaPlaceholder||'Aucun média sélectionné',
+        resolveSource:src=>src.startsWith('imageqcm/')?'../'+src:src
+      });
+      if(block.type==='audio'){
+        const audio=node.querySelector('audio');
+        if(audio)audio.style.width='100%';
+      }
     } else if(block.type==='text-editor') {
       wrap.classList.add('preview-text-editor');
       const toolbar=document.createElement('div');

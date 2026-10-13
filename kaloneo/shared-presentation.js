@@ -60,5 +60,47 @@
     return row;
   }
 
-  return Object.freeze({columns,renderZones,renderQuestion});
+  function renderMedia({doc,type,resource={},style={},className='',imageClass='',videoClass='',resolveSource,emptyText=''}) {
+    if(!doc||!['image','audio','video'].includes(type))
+      throw new TypeError('Média KALTEST inconnu.');
+    const wrap=doc.createElement('div');
+    wrap.className='kaloneo-shared-media'+(className?' '+className:'');
+    const raw=String(resource.data||resource.name||'');
+    if(!raw){
+      if(emptyText)wrap.textContent=emptyText;
+      return wrap;
+    }
+    const source=typeof resolveSource==='function'?resolveSource(raw):raw;
+    if(type==='image'){
+      const img=doc.createElement('img');
+      img.src=source;
+      img.alt=resource.alt||resource.name||'';
+      if(imageClass)img.className=imageClass;
+      const scale=Number(style.imageScale);
+      if(Number.isFinite(scale)&&scale>=10&&scale<100){
+        img.style.width=scale+'%';
+        img.style.height='auto';
+        img.style.maxHeight='100%';
+      }
+      if(['left','right'].includes(style.imageAlign)){
+        wrap.style.justifyContent=style.imageAlign==='left'?'flex-start':'flex-end';
+        img.style.margin='auto 0';
+      }
+      wrap.appendChild(img);
+    }else if(type==='audio'){
+      const audio=doc.createElement('audio');
+      audio.controls=true;
+      audio.src=source;
+      wrap.appendChild(audio);
+    }else{
+      const video=doc.createElement('video');
+      video.controls=true;
+      video.src=source;
+      if(videoClass)video.className=videoClass;
+      wrap.appendChild(video);
+    }
+    return wrap;
+  }
+
+  return Object.freeze({columns,renderZones,renderQuestion,renderMedia});
 });

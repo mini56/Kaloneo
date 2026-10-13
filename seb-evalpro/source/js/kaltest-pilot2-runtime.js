@@ -1223,41 +1223,12 @@
 
 
   function renderBuilderMedia(item) {
-    const wrap = document.createElement('div');
-    wrap.className = 'kaltest-builder-media';
-    const resource = item.resource || {};
-    if (item.type === 'image') {
-      if (resource.data || resource.name) {
-        const img = document.createElement('img');
-        img.src = resource.data || resource.name;
-        img.alt = resource.alt || resource.name || '';
-        img.className = 'seb-media-image';
-        const scale=Number(item?.style?.imageScale);
-        if(Number.isFinite(scale)&&scale>=10&&scale<100){img.style.width=scale+'%';img.style.height='auto';img.style.maxHeight='100%';}
-        if(['left','right'].includes(item?.style?.imageAlign)){
-          wrap.style.justifyContent=item.style.imageAlign==='left'?'flex-start':'flex-end';
-          img.style.margin='auto 0';
-        }
-        wrap.appendChild(img);
-      }
-      return wrap;
-    }
-    if (item.type === 'audio') {
-      const audio = document.createElement('audio');
-      audio.controls = true;
-      audio.src = resource.data || resource.name || '';
-      wrap.appendChild(audio);
-      return wrap;
-    }
-    if (item.type === 'video') {
-      const video = document.createElement('video');
-      video.controls = true;
-      video.src = resource.data || resource.name || '';
-      video.className = 'seb-media-video';
-      wrap.appendChild(video);
-      return wrap;
-    }
-    return wrap;
+    return window.KaloneoSharedPresentation.renderMedia({
+      doc:document,type:item.type,
+      resource:item.resource||{},style:item.style||{},
+      className:'kaltest-builder-media',
+      imageClass:'seb-media-image',videoClass:'seb-media-video'
+    });
   }
 
   function applyBuilderColumn(cell, definition) {
