@@ -23,6 +23,35 @@
   const SAVED_FINGERPRINT_KEY = 'kaloneo_test_builder_saved_fingerprint';
   let historyEntries = [];
   let historyIndex = -1;
+  // Chaque image/vidéo n'occupe qu'une seule copie en mémoire, même après
+  // trente Annuler/Rétablir. Les brouillons restent des JSON KALTEST complets.
+  const historyMediaDataToId=new Map();
+  const historyMediaIdToData=new Map();
+  function historyMediaToken(value){
+    let id=historyMediaDataToId.get(value);
+    if(!id){
+      let hash=2166136261;
+      for(let i=0;i<value.length;i++){
+        hash^=value.charCodeAt(i);
+        hash=Math.imul(hash,16777619);
+      }
+      id=value.length.toString(36)+'_'+(hash>>>0).toString(36);
+      while(historyMediaIdToData.has(id)&&historyMediaIdToData.get(id)!==value)id+='_';
+      historyMediaDataToId.set(value,id);
+      historyMediaIdToData.set(id,value);
+    }
+    return {__kaloneoHistoryMedia:id};
+  }
+  function historyRehydrate(key,value){
+    if(value&&typeof value==='object'&&
+       Object.keys(value).length===1&&typeof value.__kaloneoHistoryMedia==='string'){
+      if(!historyMediaIdToData.has(value.__kaloneoHistoryMedia))
+        throw new Error('Ressource d’historique absente : restauration impossible.');
+      return historyMediaIdToData.get(value.__kaloneoHistoryMedia);
+    }
+    return value;
+  }
+
   let historyTimer = null;
   let applyingHistory = false;
   let draftPersistenceFailed=false;
@@ -506,7 +535,9 @@
       sourceProtectedVersion:state.sourceProtectedVersion===true,
       meta:collectMeta(),
       blocks:state.blocks
-    });
+    },(key,value)=>
+      typeof value==='string'&&/^data:(?:image|audio|video)\//i.test(value)
+        ?historyMediaToken(value):value);
     return {json,fingerprint:historyFingerprint(json)};
   }
 
@@ -574,12 +605,14 @@
       clearTimeout(historyTimer);
       historyTimer=null;
     }
+    historyMediaDataToId.clear();
+    historyMediaIdToData.clear();
     const entry=captureHistoryEntry();
     historyEntries=[entry];
     historyIndex=0;
     if(options.markSaved===true){
       savedFingerprint=entry.fingerprint;
-      localStorage.setItem(SAVED_FINGERPRINT_KEY,savedFingerprint);
+      try{localStorage.setItem(SAVED_FINGERPRINT_KEY,savedFingerprint);}catch(_){}
       builderDirty=false;
     }else{
       setDirtyFromFingerprint(entry.fingerprint);
@@ -592,7 +625,10 @@
     commitHistorySnapshot();
     const entry=historyEntries[historyIndex]||captureHistoryEntry();
     savedFingerprint=entry.fingerprint;
-    localStorage.setItem(SAVED_FINGERPRINT_KEY,savedFingerprint);
+    try{localStorage.setItem(SAVED_FINGERPRINT_KEY,savedFingerprint);}catch(_){}
+    // Un enregistrement réussi dans la bibliothèque reste valable
+    // même si le stockage du brouillon local est saturé.
+    draftPersistenceFailed=false;
     builderDirty=false;
     updateDirtyIndicator();
   }
@@ -601,7 +637,7 @@
     if(!entry)return;
     applyingHistory=true;
     try{
-      const model=JSON.parse(entry.json);
+      const model=JSON.parse(entry.json,historyRehydrate);
       state.idLocked=Boolean(model.idLocked);
       state.sourceDefinition=model.sourceDefinition||null;
       state.sourceProtectedVersion=model.sourceProtectedVersion===true;
@@ -3234,7 +3270,7 @@
     });
     $('test-title').addEventListener('input',()=>{
       if(!state.idLocked)$('test-id').value=normalizeIdFromTitle();
-      changed();
+      changed({typing:true});
     });
 
     document.querySelectorAll('.context-rich-field .context-format-btn').forEach(button=>{
@@ -3291,7 +3327,7 @@
           if(['calculator-compatible','chrono-enabled','admin-intervention','external-material'].includes(id))syncCapabilityOptions();
           if(id==='page-background-type')syncPageBackgroundOptions();
         }
-        changed();
+        changed({typing:eventName==='input'});
       });
     });
 

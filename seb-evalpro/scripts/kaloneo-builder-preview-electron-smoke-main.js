@@ -222,6 +222,30 @@ app.whenReady().then(async()=>{
        history.afterRedo.value!=='Saisie immédiate'||history.afterRedo.undoDisabled||!history.afterRedo.redoDisabled){
       return fail('Annuler / Rétablir du Builder incorrect',history);
     }
+    // Audit P0 : une modification uniquement de disposition doit être
+    // sauvegardée et annulable, sans double traitement input/change.
+    const layoutOnly=await win.webContents.executeJavaScript(`(()=>{
+      const layout=document.getElementById('test-layout');
+      const before=layout.value;
+      layout.value='50-50';
+      layout.dispatchEvent(new Event('change',{bubbles:true}));
+      const draft=JSON.parse(localStorage.getItem('kaloneo_test_builder_v2')||'null');
+      const dirty=String(document.getElementById('draft-status')?.textContent||'');
+      document.getElementById('undo-change').click();
+      const undone=layout.value;
+      document.getElementById('redo-change').click();
+      const redone=layout.value;
+      layout.value=before;
+      layout.dispatchEvent(new Event('change',{bubbles:true}));
+      return {before,draft:draft?.meta?.layout,dirty,undone,redone,reset:layout.value};
+    })()`);
+    if(layoutOnly.before!=='single'||layoutOnly.draft!=='50-50'||
+       !/Modifications non enregistrées/.test(layoutOnly.dirty)||
+       layoutOnly.undone!=='single'||layoutOnly.redone!=='50-50'||layoutOnly.reset!=='single'){
+      return fail('Audit P0 : disposition seule non conservée dans le brouillon et l’historique',layoutOnly);
+    }
+    console.log('KALONEO_BUILDER_LAYOUT_DRAFT_UNDO_P0=OK');
+
     // Vérifier une frappe immédiatement visible, sans overlay ni capture Electron.
     const miniBeforeTyping=miniRenderCalls;
     const liveTyping=await win.webContents.executeJavaScript(`(async()=>{
@@ -254,6 +278,20 @@ app.whenReady().then(async()=>{
       });
     }
     console.log('KALONEO_BUILDER_LIVE_TYPING_NO_BLUE_SCREEN=OK',JSON.stringify(liveTyping));
+    const inputUndo=await win.webContents.executeJavaScript(`(()=>{
+      const input=document.getElementById('test-title');
+      input.focus();
+      const e=new KeyboardEvent('keydown',{key:'z',ctrlKey:true,bubbles:true,cancelable:true});
+      input.dispatchEvent(e);
+      const ownNotBlocked=!e.defaultPrevented;
+      const global=new KeyboardEvent('keydown',{key:'z',ctrlKey:true,bubbles:true,cancelable:true});
+      document.dispatchEvent(global);
+      return {ownNotBlocked,globalHandled:global.defaultPrevented};
+    })()`);
+    if(!inputUndo.ownNotBlocked||!inputUndo.globalHandled)
+      return fail('Audit P2 : Ctrl+Z doit rester natif dans les champs',inputUndo);
+    console.log('KALONEO_BUILDER_NATIVE_FIELD_UNDO=OK');
+
 
     const foldBehavior=await win.webContents.executeJavaScript(`(async()=>{
       const add=document.getElementById('add-block');
@@ -1100,6 +1138,12 @@ app.whenReady().then(async()=>{
       const label=[...blocks[0].querySelectorAll('label')].find(x=>x.textContent?.startsWith('Taille de police'));
       const font=label?.querySelector('select');
       if(!font)return {ok:false,reason:'Taille de police indisponible'};
+      const tableFields=[...blocks[0].querySelectorAll('label')];
+      const field=(name)=>tableFields.find(x=>x.textContent?.startsWith(name))?.querySelector('input');
+      const historicalLocked=field('ID du tableau')?.readOnly===true&&
+        field('En-têtes')?.readOnly===true&&
+        field('Questions utilisées')?.readOnly===true;
+      if(!historicalLocked)return {ok:false,reason:'IDs historiques non protégés'};
       font.value='24';font.dispatchEvent(new Event('change',{bubbles:true}));
       const selected=font.value;
       const active=font.isConnected;
@@ -1170,10 +1214,13 @@ app.whenReady().then(async()=>{
        previewDefinition.presentation?.tables?.[0]?.builderStyle?.fontSize!==24||
        previewDefinition.presentation?.builderContent!==undefined||
        previewDefinition.presentation?.tables?.[1]?.builderStyle!==undefined ||
+       previewDefinition.presentation?.tables?.[0]?.title!=='Singulier Pluriel modifié' ||
+       previewDefinition.presentation?.tables?.[1]?.title!=='Masculin Féminin modifié' ||
        previewDefinition.questions?.length!==genreNombreFixture.questions.length) {
       return fail('Police de Genre et nombre non transmise au véritable aperçu Electron',previewDefinition?.presentation);
     }
     console.log('KALONEO_GENRE_NOMBRE_FONT_ELECTRON=OK');
+    console.log('KALONEO_BUILDER_LEGACY_TABLE_TITLE_SAVED_P0=OK');
 
         console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
