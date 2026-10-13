@@ -292,6 +292,44 @@ app.whenReady().then(async()=>{
       return fail('Audit P2 : Ctrl+Z doit rester natif dans les champs',inputUndo);
     console.log('KALONEO_BUILDER_NATIVE_FIELD_UNDO=OK');
 
+    // Audit A4 : simuler un stockage plein, vérifier l'alerte visible et
+    // la reprise normale lorsque le stockage redevient accessible.
+    const quotaFailure=await win.webContents.executeJavaScript(`(async()=>{
+      const original=Storage.prototype.setItem;
+      const title=document.getElementById('test-title');
+      Storage.prototype.setItem=function(key,value){
+        if(key==='kaloneo_test_builder_v2')
+          throw new DOMException('Stockage plein (simulation)','QuotaExceededError');
+        return original.call(this,key,value);
+      };
+      try{
+        title.focus();
+        title.value='Essai quota local';
+        title.dispatchEvent(new Event('input',{bubbles:true}));
+        await new Promise(resolve=>setTimeout(resolve,470));
+        const notice=String(document.getElementById('draft-status')?.textContent||'');
+        const editable=title.isConnected&&!title.disabled;
+        return {notice,editable};
+      }finally{Storage.prototype.setItem=original;}
+    })()`,true);
+    if(!/Brouillon non sauvegardé/i.test(quotaFailure.notice)||!quotaFailure.editable)
+      return fail('Audit A4 : erreur de quota du brouillon non signalée',quotaFailure);
+    const quotaRecovery=await win.webContents.executeJavaScript(`(async()=>{
+      const title=document.getElementById('test-title');
+      title.value='Saisie immédiate';
+      title.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(resolve=>setTimeout(resolve,470));
+      return {
+        notice:String(document.getElementById('draft-status')?.textContent||''),
+        saved:JSON.parse(localStorage.getItem('kaloneo_test_builder_v2')||'null')?.meta?.title
+      };
+    })()`,true);
+    if(/Brouillon non sauvegardé/i.test(quotaRecovery.notice)||
+       quotaRecovery.saved!=='Saisie immédiate')
+      return fail('Audit A4 : impossible de reprendre la sauvegarde du brouillon',quotaRecovery);
+    console.log('KALONEO_BUILDER_DRAFT_QUOTA_RECOVERY=OK');
+
+
 
     const foldBehavior=await win.webContents.executeJavaScript(`(async()=>{
       const add=document.getElementById('add-block');
