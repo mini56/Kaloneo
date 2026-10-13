@@ -60,16 +60,21 @@
     return row;
   }
 
-  function renderHtmlFrame({doc,block={},className='',emptyText='Bloc HTML vide'}) {
+  // Le candidat conserve le HTML du KALTEST (script), tandis que le Builder
+  // édite ce même bloc sous la forme js. Aucune dépendance à un test précis.
+  function renderHtmlFrame({doc,block={},className='',emptyText='Bloc HTML vide',
+    sandbox='allow-scripts',bodyStyle='font-family:Calibri,Arial,sans-serif;margin:10px'}) {
     if(!doc)throw new TypeError('Document HTML absent.');
     const frame=doc.createElement('iframe');
     frame.className=className;
-    frame.sandbox='allow-scripts';
-    const markup=block.html||'<em>'+emptyText+'</em>';
-    const script=block.type==='html-js'&&block.js
-      ?'<script>'+String(block.js).replace(/<\/script/gi,'<\\/script')+'</script>'
+    frame.sandbox=sandbox;
+    const markup=block.html|| (emptyText?'<em>'+emptyText+'</em>':'');
+    const scriptSource=block.js??block.script;
+    const script=block.type==='html-js'&&scriptSource
+      ?'<script>'+String(scriptSource).replace(/<\/script/gi,'<\\/script')+'</script>'
       :'';
-    frame.srcdoc='<!doctype html><html><body style="font-family:Calibri,Arial,sans-serif;margin:10px">'+
+    const bodyAttribute=bodyStyle?' style="'+String(bodyStyle).replace(/"/g,'&quot;')+'"':'';
+    frame.srcdoc='<!doctype html><html><body'+bodyAttribute+'>'+
       markup+script+'</body></html>';
     return frame;
   }

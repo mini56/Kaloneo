@@ -3382,13 +3382,13 @@
       return wrap;
     }
     if (item.type === 'html' || item.type === 'html-js') {
-      const frame = document.createElement('iframe');
-      frame.className = 'kaltest-builder-html';
-      frame.setAttribute('sandbox', item.type === 'html-js' ? 'allow-scripts' : '');
-      const script = item.type === 'html-js' && item.script
-        ? '<script>' + String(item.script).replace(/<\/script/gi, '<\\/script') + '<\/script>'
-        : '';
-      frame.srcdoc = '<!doctype html><html><body>' + (item.html || '') + script + '</body></html>';
+      const frame=window.KaloneoSharedPresentation.renderHtmlFrame({
+        doc:document,block:item,className:'kaltest-builder-html',
+        // Un bloc HTML simple ne peut pas exécuter de scripts côté candidat.
+        sandbox:item.type==='html-js'?'allow-scripts':'',
+        // Préserver la présentation historique du candidat, sans style ajouté.
+        bodyStyle:'',emptyText:''
+      });
       wrap.appendChild(frame);
       return wrap;
     }

@@ -15,27 +15,44 @@ const candidatePage=source('source/kaltest-pilot2.html');
 // Le calcul R48.10 n'est plus dupliqué : il est dans le module commun,
  // tandis que l'aperçu historique indépendant conserve sa fonction.
 const common=source('../kaloneo/shared-presentation.js');
-// Les blocs HTML et HTML/JS passent par le même iframe sandboxé
-// sans modifier le contenu ni les classes de présentation propres aux deux vues.
+// Exercice fictif jamais ajouté au catalogue : les trois vues passent par le
+// même constructeur HTML sans changer les configurations propres aux écrans.
 const sharedPresentation=require('../../kaloneo/shared-presentation.js');
 const fakeDocument={createElement:tag=>({tagName:tag,className:'',sandbox:'',srcdoc:''})};
 for(const type of ['html','html-js']){
-  const block={type,html:'<p>Exercice inédit</p>',js:'document.body.dataset.test="ok";'};
+  const script='document.body.dataset.example="nouveau";';
+  const block={type,html:'<p>Exercice inédit</p>',js:script};
+  const canonicalBlock={type,html:block.html,script};
   const builderFrame=sharedPresentation.renderHtmlFrame({
     doc:fakeDocument,block,className:'preview-html-frame'
   });
-  const candidateFrame=sharedPresentation.renderHtmlFrame({
+  const previewFrame=sharedPresentation.renderHtmlFrame({
     doc:fakeDocument,block,className:'kb-frame'
   });
-  assert.strictEqual(builderFrame.tagName,'iframe');
+  const candidateFrame=sharedPresentation.renderHtmlFrame({
+    doc:fakeDocument,block:canonicalBlock,className:'kaltest-builder-html',
+    sandbox:type==='html-js'?'allow-scripts':'',bodyStyle:'',emptyText:''
+  });
   assert.strictEqual(builderFrame.sandbox,'allow-scripts');
-  assert.strictEqual(candidateFrame.sandbox,'allow-scripts');
-  assert.strictEqual(builderFrame.srcdoc,candidateFrame.srcdoc);
+  assert.strictEqual(previewFrame.sandbox,'allow-scripts');
+  assert.strictEqual(candidateFrame.sandbox,type==='html-js'?'allow-scripts':'');
+  assert.strictEqual(builderFrame.srcdoc,previewFrame.srcdoc);
   assert(builderFrame.srcdoc.includes('Exercice inédit'));
-  assert.strictEqual(builderFrame.srcdoc.includes('document.body.dataset.test'),type==='html-js');
+  assert(candidateFrame.srcdoc.includes('Exercice inédit'));
+  assert(!candidateFrame.srcdoc.includes('font-family:Calibri'));
+  assert.strictEqual(builderFrame.srcdoc.includes(script),type==='html-js');
+  assert.strictEqual(candidateFrame.srcdoc.includes(script),type==='html-js');
 }
-assert(builder.includes('KaloneoSharedPresentation.renderHtmlFrame('));
-assert(preview.includes('KaloneoSharedPresentation.renderHtmlFrame('));
+const emptyHtml=sharedPresentation.renderHtmlFrame({
+  doc:fakeDocument,block:{type:'html',html:''},bodyStyle:'',emptyText:'',sandbox:''
+});
+assert(emptyHtml.srcdoc.includes('<body></body>'));
+const scriptEscaping=sharedPresentation.renderHtmlFrame({
+  doc:fakeDocument,block:{type:'html-js',html:'',script:'var t="</script>";'}
+});
+assert(scriptEscaping.srcdoc.includes('<\\/script>'));
+for(const [name,content] of [['Builder',builder],['aperçu',preview],['candidat',candidate]])
+  assert(content.includes('KaloneoSharedPresentation.renderHtmlFrame('),'HTML commun absent : '+name);
 assert(common.includes('function equalAutomaticColumns('),'R48.10 function missing in shared presentation engine');
 assert(preview.includes('function equalAutomaticColumns('),'R48.10 function missing in standalone preview');
 // Les deux écrans délèguent toute la grille au moteur partagé.
