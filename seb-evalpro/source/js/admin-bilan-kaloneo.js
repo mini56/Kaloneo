@@ -135,12 +135,18 @@ function buildContext(){
 
   if(manifest&&Array.isArray(manifest.tests))manifest.tests.forEach(add);
 
-  // Compatibilité avec les dossiers R8/R9 dont le manifeste pouvait être incomplet.
-  Object.keys(states).forEach(id=>{
-    if(EXCLUDED_IDS.has(String(id)))return;
-    const m=meta.get(String(id))||{};
-    add({id:String(id),title:m.title||id,category:m.category||'autres',scored:m.scored,activityType:m.activityType});
-  });
+  // Lorsqu'un manifeste existe, il définit SEUL la liste des tests
+  // exécutés : d'anciens résultats encore présents en mémoire ne doivent
+  // jamais ajouter un exercice Mail, Maths ou autre au Bilan du candidat.
+  // Pour les tout anciens dossiers sans manifeste, l'état reste le seul
+  // secours historique disponible.
+  if(!(manifest&&Array.isArray(manifest.tests))) {
+    Object.keys(states).forEach(id=>{
+      if(EXCLUDED_IDS.has(String(id)))return;
+      const m=meta.get(String(id))||{};
+      add({id:String(id),title:m.title||id,category:m.category||'autres',scored:m.scored,activityType:m.activityType});
+    });
+  }
 
   const tests=order.map(id=>byId.get(id)).filter(Boolean);
   return{

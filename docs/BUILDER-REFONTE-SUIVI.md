@@ -188,3 +188,9 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Test volontairement contaminé : trois activités inédites (dont Mail et Inventaire), quatrième exercice non exécuté, ancien DOM mélangeant des scores et anciennes valeurs `page8` stockées.
 - Vérifier que chaque fiche ne contient que les données `state.tests[id]` correspondantes, que les données fantômes ou issues d'anciennes pages n'apparaissent pas, qu'une nouvelle catégorie fonctionne et qu'un message HTML du candidat ne peut créer un faux titre.
 - Test d'absence de manifeste : la page doit avertir au lieu d'utiliser des scores historiques.
+
+## Étanchéité Résultats / Bilan (13 octobre 2026)
+
+- Le Bilan institutionnel ajoutait à la liste du manifeste tous les IDs trouvés dans le stockage de résultats, même lorsqu'ils n'avaient jamais fait partie du parcours exécuté.
+- Correction : quand la liste du manifeste du parcours est présente, elle est seule autoritaire ; aucun test additionnel du stockage n'est autorisé à créer une rubrique ou une note au Bilan. Le mode historique sans manifeste est conservé pour les anciens dossiers.
+- Le smoke Electron du Bilan contient désormais un résultat Mail et un exercice complètement inédit **absents du parcours** : ils doivent rester invisibles, tout comme la transition F1, sans altérer les scores légitimes.

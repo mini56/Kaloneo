@@ -58,6 +58,14 @@ const kaltest = {
       supplemental:{autoeval2_choix:{commentaire:'Je préfère prendre mon temps pour envoyer un message.'}},
       result:{score:0,scoreMax:0,percentage:0,details:{}}
     },
+    redaction_email:{
+      status:'COMPLETED',result:{score:6,scoreMax:6,percentage:100,
+        details:{mail_subject:{value:'MAIL_NE_DOIT_PAS_CONTAMINER_BILAN',correct:true}}}
+    },
+    test_futur_hors_parcours:{
+      status:'COMPLETED',result:{score:99,scoreMax:99,percentage:100,
+        details:{q:{value:'FANTOME_NE_DOIT_PAS_APPARAITRE',correct:true}}}
+    },
     transition_video_f1:{status:'COMPLETED',result:{score:0,scoreMax:0,percentage:0,details:{}}}
   }
 };
@@ -134,6 +142,8 @@ app.whenReady().then(async()=>{
 
     if(!before.enabled) return fail('mode Bilan KALONÉO non activé',before);
     if(before.visibleIds.includes('transition_video_f1')) return fail('transition présente dans la source Bilan',before);
+    if(before.visibleIds.includes('redaction_email')||before.visibleIds.includes('test_futur_hors_parcours'))
+      return fail('Résultat parasite ajouté au Bilan depuis un test absent du manifeste',before);
     if(before.generatedPerTest!==0) return fail('le Bilan est encore construit avec une ligne par exercice',before);
     if(before.textareas!==0) return fail('une zone texte supplémentaire est encore présente dans la colonne Commentaires',before);
     const mustRows=['fabrication-plan','fabrication-tracage','fabrication-decoupe','fabrication-assemblage','fabrication-finition',
