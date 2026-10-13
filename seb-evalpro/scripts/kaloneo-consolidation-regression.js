@@ -12,8 +12,14 @@ const save=source('src/main.js');
 const html=source('../kaloneo/test-builder.html');
 const guide=source('../kaloneo/test-builder.css');
 const candidatePage=source('source/kaltest-pilot2.html');
-for(const [name,content] of [['Builder',builder],['preview',preview],['candidate',candidate]]){
- assert(content.includes('function equalAutomaticColumns('),'R48.10 function missing in '+name);
+// Le calcul R48.10 n'est plus dupliqué : il est dans le module commun,
+ // tandis que l'aperçu historique indépendant conserve sa fonction.
+const common=source('../kaloneo/shared-presentation.js');
+assert(common.includes('function equalAutomaticColumns('),'R48.10 function missing in shared presentation engine');
+assert(preview.includes('function equalAutomaticColumns('),'R48.10 function missing in standalone preview');
+for(const [name,content] of [['Builder',builder],['candidate',candidate]]){
+ assert(content.includes('window.KaloneoSharedPresentation.equalAutomaticColumns('),
+   'R48.10 shared delegation missing in '+name);
 }
 for(const item of ['preview-grid-equal-auto','builder-grid-width-explanation']){
  assert(builder.includes(item),'R48.10 Builder feature missing: '+item);
