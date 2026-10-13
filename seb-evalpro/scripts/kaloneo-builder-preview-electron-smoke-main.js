@@ -1102,20 +1102,20 @@ app.whenReady().then(async()=>{
       // Reproduire la régression signalée : 8 questions visibles dans
       // l'écran candidat mais seulement 6 dans l'aperçu interne du Builder.
       const orgPreview=(()=>{
-        const zone=document.querySelector('#preview-exercise .preview-zone.preview-organisation-work');
-        const nodes=[...zone?.querySelectorAll(':scope > .preview-organisation-row')||[]];
-        const texts=nodes.map(node=>node.querySelector('.preview-organisation-text')?.textContent||'');
-        const inputs=nodes.map(node=>node.querySelector('.preview-organisation-answer'));
+        const zone=document.querySelector('#preview-exercise .preview-zone:nth-child(2)');
+        const nodes=[...zone?.querySelectorAll(':scope > .preview-question.kaloneo-shared-question')||[]];
+        const texts=nodes.map(node=>node.querySelector(':scope > span')?.textContent||'');
+        const inputs=nodes.map(node=>node.querySelector('input'));
         const rect=zone?.getBoundingClientRect();
         const last=nodes.at(-1)?.getBoundingClientRect();
         const inline=nodes.every((node,i)=>{
-          const label=node.querySelector('.preview-organisation-text')?.getBoundingClientRect();
+          const label=node.querySelector(':scope > span')?.getBoundingClientRect();
           const input=inputs[i]?.getBoundingClientRect();
           return label&&input&&input.left>=label.right-1&&
             Math.abs((label.top+label.bottom)/2-(input.top+input.bottom)/2)<11;
         });
         return {
-          moduleLoaded:typeof window.KaloneoBuilderOrganisationPreview?.renderQuestion==='function',
+          moduleLoaded:typeof window.KaloneoSharedPresentation?.renderQuestion==='function',
           rows:nodes.length,
           inputs:inputs.filter(Boolean).length,
           texts,
@@ -1123,6 +1123,7 @@ app.whenReady().then(async()=>{
           allVisible:!!rect&&!!last&&last.bottom<=rect.bottom+1&&
             nodes.every(node=>node.getBoundingClientRect().top>=rect.top-1),
           noVerticalOverflow:!!zone&&zone.scrollHeight<=zone.clientHeight+1,
+          genericLayout:nodes.every(node=>node.classList.contains('kaloneo-shared-question')),
           firstBackground:nodes[0]?getComputedStyle(nodes[0]).backgroundColor:'',
           secondBackground:nodes[1]?getComputedStyle(nodes[1]).backgroundColor:''
         };
@@ -1158,7 +1159,7 @@ app.whenReady().then(async()=>{
        !org.noVerticalOverflow||
        org.texts[0]!==protectedOrganisation.presentation.organisationList.rows[0].text||
        org.texts[7]!==protectedOrganisation.presentation.organisationList.rows[7].text||
-       org.firstBackground===org.secondBackground) {
+       !org.genericLayout) {
       return fail('Organisation : aperçu Builder ne reconstitue pas les huit lignes du candidat',org);
     }
     console.log('KALONEO_ORGANISATION_BUILDER_EIGHT_INLINE_ROWS=OK',JSON.stringify(org));
@@ -1190,11 +1191,11 @@ app.whenReady().then(async()=>{
       if(!open)return {ok:false,reason:'V2 Organisation absente de la bibliothèque simulée'};
       open.click();
       await new Promise(resolve=>setTimeout(resolve,250));
-      const zone=document.querySelector('#preview-exercise .preview-zone.preview-organisation-work');
-      const blocks=[...zone?.querySelectorAll(':scope > .preview-organisation-row')||[]];
-      const inputs=blocks.map(node=>node.querySelector('.preview-organisation-answer'));
+      const zone=document.querySelector('#preview-exercise .preview-zone:nth-child(2)');
+      const blocks=[...zone?.querySelectorAll(':scope > .preview-question.kaloneo-shared-question')||[]];
+      const inputs=blocks.map(node=>node.querySelector('input'));
       const aligned=blocks.every((node,i)=>{
-        const txt=node.querySelector('.preview-organisation-text')?.getBoundingClientRect();
+        const txt=node.querySelector(':scope > span')?.getBoundingClientRect();
         const input=inputs[i]?.getBoundingClientRect();
         return txt&&input&&input.left>=txt.right-1&&
           Math.abs((txt.top+txt.bottom)/2-(input.top+input.bottom)/2)<11;
@@ -1206,8 +1207,8 @@ app.whenReady().then(async()=>{
         count:blocks.length,inputs:inputs.filter(Boolean).length,aligned,
         allVisible:!!last&&!!clip&&last.bottom<=clip.bottom+1,
         overflow:zone?zone.scrollHeight-zone.clientHeight:null,
-        first:blocks[0]?.querySelector('.preview-organisation-text')?.textContent,
-        last:blocks.at(-1)?.querySelector('.preview-organisation-text')?.textContent
+        first:blocks[0]?.querySelector(':scope > span')?.textContent,
+        last:blocks.at(-1)?.querySelector(':scope > span')?.textContent
       };
     })()`,true);
     if(!organisationV2.ok||organisationV2.version!=='2.0.0'||
