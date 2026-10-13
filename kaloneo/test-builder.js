@@ -1093,7 +1093,7 @@
     const widthExplanation=document.createElement('p');
     widthExplanation.className='muted builder-grid-width-explanation';
     const updateWidthExplanation=()=>{
-      const equal=equalAutomaticColumns(table);
+      const equal=window.KaloneoSharedPresentation.equalAutomaticColumns(table);
       widthExplanation.textContent=equal?
         'Largeurs automatiques : les '+equal+' colonnes ont exactement la même largeur.':
         'Les largeurs saisies sont prioritaires ; une colonne sans largeur peut prendre le reste.';
