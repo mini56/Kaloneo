@@ -64,6 +64,7 @@
   let pcPickerBusy=false;
   let pcImportBusy=false;
   let imageThumbObserver=null;
+  let imageSearchTimer=null;
   let imageThumbGeneration=0;
   let activeImageThumbs=0;
   const imageThumbQueue=[];
@@ -1546,8 +1547,9 @@
 
     const name=document.createElement('div');
     name.className='file-preview-name';
+    const feminine=block.type!=='audio';
     name.textContent=block.mediaData
-      ?kindLabel.charAt(0).toUpperCase()+kindLabel.slice(1)+' sélectionné'+(block.type==='image'?'e':'')+' : '+(block.mediaName||kindLabel+' intégré')
+      ?kindLabel.charAt(0).toUpperCase()+kindLabel.slice(1)+' sélectionné'+(feminine?'e':'')+' : '+(block.mediaName||kindLabel+' intégré'+(feminine?'e':''))
       :(block.mediaPlaceholder||'Aucun fichier sélectionné');
     body.appendChild(name);
 
@@ -3241,7 +3243,15 @@
     $('redo-change').addEventListener('click',redoChange);
     $('open-library-test').addEventListener('click',()=>{openLibraryDialog().catch(error=>alert('Bibliothèque inaccessible : '+String(error?.message||error)));});
     $('close-image-library').addEventListener('click',()=>$('image-library-dialog').close());
-    $('image-library-search').addEventListener('input',renderImageLibrary);
+    $('image-library-search').addEventListener('input',()=>{
+      // Une recherche de 250 images ne doit pas reconstruire 250 fiches
+      // à chaque caractère tapé. La saisie reste instantanée.
+      if(imageSearchTimer)clearTimeout(imageSearchTimer);
+      imageSearchTimer=setTimeout(()=>{
+        imageSearchTimer=null;
+        if($('image-library-dialog')?.open)renderImageLibrary();
+      },130);
+    });
     $('image-library-theme').addEventListener('change',renderImageLibrary);
     $('image-library-orientation').addEventListener('change',renderImageLibrary);
     $('image-library-import-pc').addEventListener('click',()=>{
