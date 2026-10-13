@@ -14,6 +14,8 @@ let savedLibraryDefinition = null;
 let savedLibraryPayload = null;
 let savedImageCalls = 0;
 const importedImages = new Map();
+const BuilderCore=require('../../kaloneo/builder-core.js');
+let organisationV2Fixture=null;
 let zipImportCalls = 0;
 let protectedLibraryMode = false;
 let restaurantFixture = null;
@@ -81,6 +83,8 @@ ipcMain.handle('kaloneo-library:list-tests',()=>({
 ipcMain.handle('kaloneo-library:get-test',(_e,payload)=>{
   if(restaurantFixture&&payload?.id===restaurantFixture.id)return {ok:true,definition:JSON.parse(JSON.stringify(restaurantFixture))};
   if(genreLibraryMode&&genreNombreFixture&&payload?.id===genreNombreFixture.id)return {ok:true,definition:JSON.parse(JSON.stringify(genreNombreFixture))};
+  if(protectedLibraryMode&&payload?.id==='organisation_demenagement'&&payload?.version==='2.0.0'&&organisationV2Fixture)
+    return {ok:true,definition:JSON.parse(JSON.stringify(organisationV2Fixture))};
   if(protectedLibraryMode && payload?.id==='organisation_demenagement' && payload?.version==='1.0.0' && protectedOrganisation) {
     return {ok:true,definition:JSON.parse(JSON.stringify(protectedOrganisation))};
   }
@@ -127,6 +131,13 @@ app.whenReady().then(async()=>{
   const root=path.join(__dirname,'..');
   const web=path.join(root,'app','web');
   protectedOrganisation=JSON.parse(fs.readFileSync(path.join(web,'kaltest','tests','organisation-demenagement','1.0.0','test.json'),'utf8'));
+  // Une V2 dérivée du vrai moteur Builder : elle n'a plus organisationList.
+  // C'est précisément le format v2.0.0 montré par l'utilisateur.
+  organisationV2Fixture=BuilderCore.modelToDefinition(BuilderCore.definitionToModel(protectedOrganisation));
+  organisationV2Fixture.version='2.0.0';
+  if(!Array.isArray(organisationV2Fixture.presentation?.builderContent)||
+     organisationV2Fixture.presentation?.organisationList)
+    return fail('Le fixture V2 Organisation ne représente pas le schéma Builder attendu');
   restaurantFixture=JSON.parse(fs.readFileSync(path.join(root,'r48-demo','planning-restaurant-builder-r48.json'),'utf8'));
   genreNombreFixture=JSON.parse(fs.readFileSync(path.join(root,'source','kaltest','tests','genre-nombre','1.0.0','test.json'),'utf8'));
   const builder=path.join(web,'kaloneo-builder','test-builder.html');
@@ -1067,6 +1078,47 @@ app.whenReady().then(async()=>{
       return fail('V1 administrateur : ouverture, édition ou sauvegarde sans Développeur incorrecte',{protectedV1,savedLibraryDefinition,savedLibraryPayload});
     }
 
+
+    // Une version 2.0.0 enregistrée par le Builder doit afficher, elle aussi,
+    // toutes les huit lignes alignées. Le modèle V1 ne suffit pas comme test.
+    const organisationV2=await win.webContents.executeJavaScript(`(async()=>{
+      document.getElementById('open-library-test').click();
+      await new Promise(resolve=>setTimeout(resolve,160));
+      const rows=[...document.querySelectorAll('.test-library-item')];
+      const row=rows.find(node=>node.textContent?.includes('Organisation d’une activité')&&node.textContent?.includes('v2.0.0'));
+      const open=row?.querySelector('.test-library-item-actions button');
+      if(!open)return {ok:false,reason:'V2 Organisation absente de la bibliothèque simulée'};
+      open.click();
+      await new Promise(resolve=>setTimeout(resolve,250));
+      const zone=document.querySelector('#preview-exercise .preview-zone.preview-organisation-work');
+      const blocks=[...zone?.querySelectorAll(':scope > .preview-organisation-row')||[]];
+      const inputs=blocks.map(node=>node.querySelector('.preview-organisation-answer'));
+      const aligned=blocks.every((node,i)=>{
+        const txt=node.querySelector('.preview-organisation-text')?.getBoundingClientRect();
+        const input=inputs[i]?.getBoundingClientRect();
+        return txt&&input&&input.left>=txt.right-1&&
+          Math.abs((txt.top+txt.bottom)/2-(input.top+input.bottom)/2)<11;
+      });
+      const last=blocks.at(-1)?.getBoundingClientRect();
+      const clip=zone?.getBoundingClientRect();
+      return {
+        ok:true,version:document.getElementById('test-version')?.value,
+        count:blocks.length,inputs:inputs.filter(Boolean).length,aligned,
+        allVisible:!!last&&!!clip&&last.bottom<=clip.bottom+1,
+        overflow:zone?zone.scrollHeight-zone.clientHeight:null,
+        first:blocks[0]?.querySelector('.preview-organisation-text')?.textContent,
+        last:blocks.at(-1)?.querySelector('.preview-organisation-text')?.textContent
+      };
+    })()`,true);
+    if(!organisationV2.ok||organisationV2.version!=='2.0.0'||
+       organisationV2.count!==8||organisationV2.inputs!==8||
+       !organisationV2.aligned||!organisationV2.allVisible||
+       organisationV2.overflow>1||
+       organisationV2.first!==protectedOrganisation.presentation.organisationList.rows[0].text||
+       organisationV2.last!==protectedOrganisation.presentation.organisationList.rows[7].text){
+      return fail('Organisation V2 Builder : huit lignes alignées et visibles non garanties',organisationV2);
+    }
+    console.log('KALONEO_ORGANISATION_V2_BUILDER_EIGHT_INLINE_ROWS=OK',JSON.stringify(organisationV2));
 
     // Une fenêtre Electron invisible peut être bridée à 1024 px par l'écran CI :
     // imposer le viewport utilisé par les captures utilisateur (1366×720).

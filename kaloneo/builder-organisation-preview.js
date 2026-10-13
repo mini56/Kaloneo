@@ -5,17 +5,30 @@
  */
 (function(root){
   'use strict';
-  function renderQuestion(block,sourceDefinition){
-    const rows=sourceDefinition?.presentation?.organisationList?.rows;
+  function resolveRow(block,sourceDefinition){
     const questionId=String(block?.question?.id||'');
-    if(block?.type!=='question'||!Array.isArray(rows)||!rows.some(row=>String(row.questionId)===questionId))
-      return null;
-
+    if(sourceDefinition?.id!=='organisation_demenagement'||block?.type!=='question'||
+       block.zone!=='right'||!/^organisation_[1-8]$/.test(questionId))return null;
+    // V1 historique avec organisationList, ou V2 enregistrée par le Builder
+    // dans builderContent : les deux formats restent pris en charge.
+    const presentation=sourceDefinition?.presentation||{};
+    if(Array.isArray(presentation.organisationList?.rows))
+      return presentation.organisationList.rows.find(row=>String(row.questionId)===questionId)||null;
+    if(Array.isArray(presentation.builderContent))
+      return presentation.builderContent.find(item=>
+        item?.type==='question'&&item.zone==='right'&&String(item.questionId)===questionId)||null;
+    return null;
+  }
+  function isQuestion(block,sourceDefinition){
+    return Boolean(resolveRow(block,sourceDefinition));
+  }
+  function renderQuestion(block,sourceDefinition){
+    const original=resolveRow(block,sourceDefinition);
+    if(!original)return null;
     const wrap=document.createElement('div');
     wrap.className='preview-organisation-row';
     const text=document.createElement('span');
     text.className='preview-organisation-text';
-    const original=rows.find(row=>String(row.questionId)===questionId);
     text.textContent=block.question?.prompt||original?.text||'';
     const answer=document.createElement('input');
     answer.className='preview-organisation-answer';
@@ -28,5 +41,5 @@
     wrap.append(text,answer);
     return wrap;
   }
-  root.KaloneoBuilderOrganisationPreview=Object.freeze({renderQuestion});
+  root.KaloneoBuilderOrganisationPreview=Object.freeze({renderQuestion,isQuestion});
 })(window);

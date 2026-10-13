@@ -2469,11 +2469,9 @@
     } else {
       const left=document.createElement('div');left.className='preview-zone';
       const right=document.createElement('div');right.className='preview-zone';
-      const organisationRows=state.sourceDefinition?.presentation?.organisationList?.rows;
       const rightBlocks=state.blocks.filter(block=>block.zone==='right');
-      if(Array.isArray(organisationRows)&&organisationRows.length&&rightBlocks.length&&
-        rightBlocks.every(block=>block.type==='question'&&
-          organisationRows.some(row=>String(row.questionId)===String(block.question?.id)))){
+      if(rightBlocks.length&&rightBlocks.every(block=>
+        window.KaloneoBuilderOrganisationPreview?.isQuestion(block,state.sourceDefinition))){
         right.classList.add('preview-organisation-work');
       }
       if(m.layout==='chars-rest') {
