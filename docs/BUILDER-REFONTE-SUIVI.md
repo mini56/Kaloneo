@@ -161,3 +161,10 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Une grille enregistrée peut comporter une cellule qui fait référence à une question déjà définie. Au retour du Builder, les valeurs implicites du champ de grille (réponse vide, 1 point) ne doivent pas remplacer les réponses et points canoniques.
 - Lors de la conversion d'une définition importée, le moteur compare désormais les valeurs de grille à leurs valeurs d'origine. Seuls les champs réellement modifiés dans la grille mettent à jour la question ; les autres données de correction restent inchangées.
 - Ce traitement s'applique à tous les ID de question et types de grille, sans aucune exception pour un test historique. Le test synthétique vérifie le barème d'origine, une modification des points et la modification d'une réponse attendue.
+
+## Audit automatique du catalogue complet (13 octobre 2026)
+
+- Le premier audit manuel sur les 24 définitions du catalogue a confirmé que leur passage par le Builder sans édition conserve les identifiants de questions et les champs de notation.
+- Nouveau garde-fou CI `kaloneo-catalog-roundtrip-score-guard.js` : découvre automatiquement tous les `test.json` du catalogue, y compris les futurs, sans condition par ID.
+- Il vérifie la présence, l'ordre et l'unicité des questions, leurs réponses/barèmes/types, les sorties et contributions Bilan, ainsi que les contenus image/audio/vidéo embarqués ; aucun fichier de test n'est modifié.
+- Ce contrôle vérifie l'intégrité des données, **pas** l'équivalence visuelle de tous les écrans ; les captures réelles validées par l'utilisateur restent la référence.
