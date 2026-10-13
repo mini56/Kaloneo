@@ -184,6 +184,60 @@ app.whenReady().then(async()=>{
     await win.loadFile(builder);
     await wait(900);
 
+    // Contrôle d'un test inédit : aucun ID/catalogue/fixture particulier.
+    // Vérifier le moteur commun de colonnes et la structure Q/R partagée.
+    const unknownTest=await win.webContents.executeJavaScript(`(()=>{
+      const shared=window.KaloneoSharedPresentation;
+      if(!shared)return {ok:false,reason:'Moteur partagé non chargé'};
+      const host=document.createElement('div');
+      host.className='preview-exercise layout-50-50';
+      host.style.cssText='width:1180px;height:560px;position:fixed;left:-2000px;top:0;';
+      document.body.appendChild(host);
+      const futureDefinition={
+        id:'nouveau_test_sans_code_particulier_2027',
+        questions:Array.from({length:8},(_,i)=>({id:'inedite_'+i,prompt:'Question inédite '+(i+1)}))
+      };
+      const items=[
+        {type:'image',zone:'left',alt:'Illustration libre'},
+        ...futureDefinition.questions.map(q=>({type:'question',zone:'right',question:q}))
+      ];
+      const zones=shared.renderZones({
+        host,items,layout:'50-50',zoneClass:'preview-zone',
+        renderItem:item=>item.type==='question'?
+          shared.renderQuestion({
+            doc:document,question:item.question,className:'preview-question',
+            makeAnswer:()=>{const input=document.createElement('input');input.type='text';return input;}
+          }):
+          Object.assign(document.createElement('div'),{textContent:item.alt})
+      });
+      const rows=[...zones.right.querySelectorAll('.kaloneo-shared-question')];
+      const inputs=rows.map(row=>row.querySelector('input'));
+      const aligned=rows.every((row,i)=>{
+        const cap=row.querySelector('span')?.getBoundingClientRect();
+        const inp=inputs[i]?.getBoundingClientRect();
+        return cap&&inp&&inp.left>=cap.right-1;
+      });
+      const result={
+        id:futureDefinition.id,count:rows.length,
+        inputs:inputs.filter(Boolean).length,aligned,
+        columns:host.style.gridTemplateColumns,
+        otherZone:zones.left.textContent.includes('Illustration libre'),
+        single:shared.columns('single'),
+        unequal:shared.columns('40-60'),
+        sizing:shared.columns('chars-rest',{blocks:[{widthChars:38},{remainder:true}]}),
+        fromRealCandidateScript:Boolean(shared.renderQuestion)
+      };
+      host.remove();
+      return result;
+    })()`,true);
+    if(unknownTest.count!==8||unknownTest.inputs!==8||!unknownTest.aligned||
+       !unknownTest.otherZone||!unknownTest.columns.includes('1fr')||
+       unknownTest.single!=='minmax(0,1fr)'||
+       unknownTest.unequal!=='minmax(0,40fr) minmax(0,60fr)'||
+       unknownTest.sizing!=='38ch minmax(0,1fr)')
+      return fail('Moteur commun : un test inédit ne se rend pas indépendamment de son ID',unknownTest);
+    console.log('KALONEO_SHARED_RENDERER_UNKNOWN_TEST_EIGHT_QUESTIONS=OK',JSON.stringify(unknownTest));
+
     const initial=await win.webContents.executeJavaScript(`(()=>{
       const title=document.getElementById('test-title');
       const editor=document.querySelector('.builder-editor');

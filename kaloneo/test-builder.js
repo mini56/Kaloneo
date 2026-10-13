@@ -2155,46 +2155,36 @@
   }
 
   function createQuestionPreview(block) {
-    // Les questions de la V1 Organisation possèdent un rendu candidat dédié.
-    // Conserver leurs lignes compactes plutôt que la carte Q/R générique,
-    // qui empile les champs et masque les deux dernières questions.
-    const organisation=window.KaloneoBuilderOrganisationPreview?.renderQuestion(block,state.sourceDefinition);
-    if(organisation)return organisation;
     const q=block.question||{};
-    const wrap=document.createElement('div');
-    wrap.className='preview-question';
-    const label=document.createElement('label');
-    label.textContent=q.prompt||'Question sans texte';
-    wrap.appendChild(label);
-    if(q.example) {
-      const tag=document.createElement('span');
-      tag.className='example-tag';
-      tag.textContent='Exemple';
-      label.appendChild(tag);
-    }
-    if(['single-choice','select','boolean'].includes(q.responseType)) {
-      const select=document.createElement('select');
-      const empty=document.createElement('option');empty.textContent='Choisir…';select.appendChild(empty);
-      const values=q.responseType==='boolean'?['Vrai','Faux']:splitValues(q.options);
-      values.forEach(v=>{const o=document.createElement('option');o.textContent=v;select.appendChild(o);});
-      wrap.appendChild(select);
-    } else if(q.responseType==='multiple-choice') {
-      const choices=document.createElement('div');
-      splitValues(q.options).forEach(v=>{const l=document.createElement('label');l.className='inline-checkbox';const cb=document.createElement('input');cb.type='checkbox';l.append(cb,document.createTextNode(' '+v));choices.appendChild(l);});
-      wrap.appendChild(choices);
-    } else if(q.responseType==='free-text') {
-      const input=document.createElement('textarea');
-      input.rows=5;
-      input.className='preview-free-text';
-      input.placeholder='Votre réponse';
-      wrap.appendChild(input);
-    } else {
-      const input=document.createElement('input');
-      input.type='text';
-      input.placeholder=q.responseType==='duration'?'Ex. 9h15':'Votre réponse';
-      wrap.appendChild(input);
-    }
-    return wrap;
+    // Toutes les nouvelles questions utilisent exactement la structure du
+    // moteur candidat, quel que soit le nom ou l'ID du test.
+    return window.KaloneoSharedPresentation.renderQuestion({
+      doc:document,question:q,example:Boolean(q.example),
+      className:'preview-question',
+      makeAnswer:()=>{
+        if(['single-choice','select','boolean'].includes(q.responseType)){
+          const select=document.createElement('select');
+          const empty=document.createElement('option');empty.textContent='Choisir…';select.appendChild(empty);
+          const values=q.responseType==='boolean'?['Vrai','Faux']:splitValues(q.options);
+          values.forEach(v=>{const o=document.createElement('option');o.textContent=v;select.appendChild(o);});
+          return select;
+        }
+        if(q.responseType==='multiple-choice'){
+          const choices=document.createElement('div');
+          splitValues(q.options).forEach(v=>{const l=document.createElement('label');l.className='inline-checkbox';const cb=document.createElement('input');cb.type='checkbox';l.append(cb,document.createTextNode(' '+v));choices.appendChild(l);});
+          return choices;
+        }
+        if(q.responseType==='free-text'){
+          const input=document.createElement('textarea');input.rows=5;
+          input.className='preview-free-text';input.placeholder='Votre réponse';
+          return input;
+        }
+        const input=document.createElement('input');
+        input.type='text';
+        input.placeholder=q.responseType==='duration'?'Ex. 9h15':'Votre réponse';
+        return input;
+      }
+    });
   }
 
   function applyPreviewColumn(cell,col) {
@@ -2533,28 +2523,16 @@
     host.className='preview-exercise layout-'+m.layout;
     host.innerHTML='';
 
-    if(m.layout==='single') {
-      const zone=document.createElement('div');zone.className='preview-zone';
-      state.blocks.forEach(block=>zone.appendChild(previewBlockNode(block)));
-      host.appendChild(zone);
-    } else {
-      const left=document.createElement('div');left.className='preview-zone';
-      const right=document.createElement('div');right.className='preview-zone';
-      const rightBlocks=state.blocks.filter(block=>block.zone==='right');
-      if(rightBlocks.length&&rightBlocks.every(block=>
-        window.KaloneoBuilderOrganisationPreview?.isQuestion(block,state.sourceDefinition))){
-        right.classList.add('preview-organisation-work');
-      }
-      if(m.layout==='chars-rest') {
-        const a=Number(m.block1WidthChars);
-        const b=Number(m.block2WidthChars);
-        host.style.gridTemplateColumns=(a>=3?a+'ch':'minmax(0,1fr)')+' '+(m.lastBlockRemainder?'minmax(0,1fr)':(b>=3?b+'ch':'minmax(0,1fr)'));
-      } else {
-        host.style.removeProperty('grid-template-columns');
-      }
-      state.blocks.forEach(block=>(block.zone==='right'?right:left).appendChild(previewBlockNode(block)));
-      host.append(left,right);
-    }
+    // Disposition unique partagée avec le vrai candidat, sans aiguillage
+    // par ID du test et sans duplication des calculs de largeur.
+    const sizing=m.layout==='chars-rest'?{blocks:[
+      {widthChars:m.block1WidthChars},
+      {widthChars:m.block2WidthChars,remainder:m.lastBlockRemainder}
+    ]}:null;
+    window.KaloneoSharedPresentation.renderZones({
+      host,items:state.blocks,layout:m.layout,blockSizing:sizing,
+      renderItem:previewBlockNode,zoneClass:'preview-zone'
+    });
     if(!options.liveOnly)validate();
     requestAnimationFrame(fitMiniPreview);
     if(!options.liveOnly)refreshRealMiniPreview();

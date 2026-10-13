@@ -3553,12 +3553,11 @@
     if (item.type === 'question') {
       const question = questionById(test, item.questionId);
       if (question) {
-        const label = document.createElement('label');
-        label.className = 'kaltest-builder-question';
-        const title = document.createElement('span');
-        title.textContent = question.prompt || '';
-        label.append(title, makeInput(test, question));
-        wrap.appendChild(label);
+        wrap.appendChild(window.KaloneoSharedPresentation.renderQuestion({
+          doc:document,question,
+          className:'kaltest-builder-question',
+          makeAnswer:()=>makeInput(test,question)
+        }));
       }
       return wrap;
     }
@@ -3598,37 +3597,12 @@
     const layout = String(test.presentation?.layout || 'single');
     const shell = document.createElement('div');
     shell.className = 'kaltest-builder-runtime-layout';
-
-    if (layout === 'single') {
-      shell.style.gridTemplateColumns = 'minmax(0,1fr)';
-    } else if (layout === '50-50') {
-      shell.style.gridTemplateColumns = 'minmax(0,1fr) minmax(0,1fr)';
-    } else if (layout === '40-60') {
-      shell.style.gridTemplateColumns = 'minmax(0,40fr) minmax(0,60fr)';
-    } else if (layout === '60-40') {
-      shell.style.gridTemplateColumns = 'minmax(0,60fr) minmax(0,40fr)';
-    } else if (layout === 'chars-rest') {
-      const sizing = test.presentation?.blockSizing?.blocks || [];
-      const first = Number(sizing[0]?.widthChars);
-      const second = Number(sizing[1]?.widthChars);
-      shell.style.gridTemplateColumns =
-        (Number.isFinite(first) && first >= 3 ? first + 'ch' : 'minmax(0,1fr)') + ' ' +
-        (sizing[1]?.remainder === true ? 'minmax(0,1fr)' :
-          (Number.isFinite(second) && second >= 3 ? second + 'ch' : 'minmax(0,1fr)'));
-    }
-
-    const left = document.createElement('section');
-    left.className = 'kaltest-builder-runtime-zone';
-    const right = document.createElement('section');
-    right.className = 'kaltest-builder-runtime-zone';
-
-    for (const item of content) {
-      const node = renderBuilderContentItem(test, item);
-      (item.zone === 'right' ? right : left).appendChild(node);
-    }
-
-    shell.appendChild(left);
-    if (layout !== 'single') shell.appendChild(right);
+    window.KaloneoSharedPresentation.renderZones({
+      host:shell,items:content,layout,
+      blockSizing:test.presentation?.blockSizing,
+      zoneClass:'kaltest-builder-runtime-zone',
+      renderItem:item=>renderBuilderContentItem(test,item)
+    });
     host.appendChild(shell);
     return true;
   }

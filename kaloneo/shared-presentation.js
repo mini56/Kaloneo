@@ -1,0 +1,64 @@
+/*
+ * Moteur commun des présentations KALTEST génériques.
+ * Pas de liste de tests, de données candidat, ni de barème ici.
+ * Le même code est chargé dans le Builder et dans le vrai moteur candidat.
+ */
+(function(root,factory){
+  'use strict';
+  const api=factory();
+  if(root)root.KaloneoSharedPresentation=api;
+  if(typeof module!=='undefined'&&module.exports)module.exports=api;
+})(typeof window==='undefined'?null:window,function(){
+  'use strict';
+
+  function columns(layout,sizing){
+    if(layout==='single'||!layout)return 'minmax(0,1fr)';
+    if(layout==='50-50')return 'minmax(0,1fr) minmax(0,1fr)';
+    if(layout==='40-60')return 'minmax(0,40fr) minmax(0,60fr)';
+    if(layout==='60-40')return 'minmax(0,60fr) minmax(0,40fr)';
+    if(layout==='chars-rest'){
+      const widths=sizing?.blocks||[];
+      const a=Number(widths[0]?.widthChars),b=Number(widths[1]?.widthChars);
+      return (Number.isFinite(a)&&a>=3?a+'ch':'minmax(0,1fr)')+' '+
+        (widths[1]?.remainder===true?'minmax(0,1fr)':
+          Number.isFinite(b)&&b>=3?b+'ch':'minmax(0,1fr)');
+    }
+    return 'minmax(0,1fr) minmax(0,1fr)';
+  }
+
+  function renderZones({host,items,layout,blockSizing,renderItem,zoneClass=''}){
+    if(!host||typeof renderItem!=='function')throw new TypeError('Hôte de présentation invalide.');
+    const doc=host.ownerDocument;
+    const single=layout==='single'||!layout;
+    host.style.gridTemplateColumns=columns(layout,blockSizing);
+    const left=doc.createElement('section');
+    const right=doc.createElement('section');
+    left.className=right.className=zoneClass;
+    for(const item of items||[]){
+      const rendered=renderItem(item);
+      if(rendered)(single||item?.zone!=='right'?left:right).appendChild(rendered);
+    }
+    host.appendChild(left);
+    if(!single)host.appendChild(right);
+    return {left,right};
+  }
+
+  function renderQuestion({doc,question,makeAnswer,example=false,className=''}) {
+    if(!doc||typeof makeAnswer!=='function')throw new TypeError('Question sans moteur de réponse.');
+    const row=doc.createElement('label');
+    row.className='kaloneo-shared-question'+(className?' '+className:'');
+    const caption=doc.createElement('span');
+    caption.textContent=String(question?.prompt||'');
+    if(example){
+      const tag=doc.createElement('strong');
+      tag.className='example-tag';tag.textContent='Exemple';
+      caption.appendChild(tag);
+    }
+    const answer=makeAnswer(question);
+    if(answer)row.append(caption,answer);
+    else row.appendChild(caption);
+    return row;
+  }
+
+  return Object.freeze({columns,renderZones,renderQuestion});
+});
