@@ -17,9 +17,18 @@ const candidatePage=source('source/kaltest-pilot2.html');
 const common=source('../kaloneo/shared-presentation.js');
 assert(common.includes('function equalAutomaticColumns('),'R48.10 function missing in shared presentation engine');
 assert(preview.includes('function equalAutomaticColumns('),'R48.10 function missing in standalone preview');
+// Les deux écrans délèguent toute la grille au moteur partagé.
+// C'est dans renderGridTable que sont appelés equalAutomaticColumns,
+// addEqualColGroup et applyColumn : ne plus exiger d'appels dupliqués.
+assert(common.includes('const equal=equalAutomaticColumns(definition);'),
+  'R48.10 equal widths not applied by common grid renderer');
+assert(common.includes('addEqualColGroup(table,equal);'),
+  'R48.10 equal colgroup not applied in common grid');
+assert(common.includes('applyColumn(th,definition.columns?.[index]);'),
+  'R48.10 header dimensions not shared');
 for(const [name,content] of [['Builder',builder],['candidate',candidate]]){
- assert(content.includes('window.KaloneoSharedPresentation.equalAutomaticColumns('),
-   'R48.10 shared delegation missing in '+name);
+ assert(content.includes('window.KaloneoSharedPresentation.renderGridTable('),
+   'R48.10 common grid rendering missing in '+name);
 }
 for(const item of ['preview-grid-equal-auto','builder-grid-width-explanation']){
  assert(builder.includes(item),'R48.10 Builder feature missing: '+item);
