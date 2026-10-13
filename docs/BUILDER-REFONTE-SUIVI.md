@@ -106,3 +106,9 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Options facultatives `rowTag` et `captionClassName` : le mode aperçu utilise `div` pour éviter une étiquette englobant d'autres étiquettes dans les QCM ; le candidat et le Builder conservent le comportement par défaut.
 - Les types de réponses, options, champs d'unité et styles de l'aperçu sont maintenus.
 - Contrôle d'une question fictive sans référence à un test connu.
+
+## Protection du curseur au changement de test (13 octobre 2026)
+
+- Run rouge `38428061612` : perte de focus après une frappe/pause et sur le sélecteur suivant.
+- Protection du `requestAnimationFrame` différé de `focusTitleField()` : si un champ reçoit le focus entre-temps, la demande vers le titre est abandonnée. Applicable à tous les blocs.
+- Aucun KALTEST ni barème modifié. Le contrôle Electron existant vérifie la pause et la transition de focus.

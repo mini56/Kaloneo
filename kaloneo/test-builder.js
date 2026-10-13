@@ -3009,19 +3009,25 @@
     }
   }
 
+  // Ne jamais reprendre le curseur après un clic ou une frappe dans un autre
+  // champ, même si Electron exécute tardivement le requestAnimationFrame.
+  let focusSequence=0;
+  let titleFocusRequest=0;
+  document.addEventListener('focusin',()=>{focusSequence++;},true);
   function focusTitleField() {
-    requestAnimationFrame(() => {
-      const title = $('test-title');
-      if (!title) return;
-      title.disabled = false;
-      title.readOnly = false;
+    const request=++titleFocusRequest;
+    const sequence=focusSequence;
+    requestAnimationFrame(()=>{
+      const title=$('test-title');
+      if(!title)return;
+      title.disabled=false;
+      title.readOnly=false;
       title.removeAttribute('aria-disabled');
-      try {
-        title.focus({ preventScroll:true });
-        title.setSelectionRange(0, title.value.length);
-      } catch (_) {
-        title.focus();
-      }
+      if(request!==titleFocusRequest||sequence!==focusSequence)return;
+      try{
+        title.focus({preventScroll:true});
+        title.setSelectionRange(0,title.value.length);
+      }catch(_){title.focus();}
     });
   }
 
