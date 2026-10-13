@@ -230,6 +230,58 @@
     return wrap;
   }
 
+  // Structure unique des tableaux de questions pour les vues d'aperçu.
+  // Chaque vue décide seulement du contenu des cellules : texte ou réponses.
+  function renderQuestionTable({doc,definition={},wrapperClassName='',tableClassName='',
+    titleTag='h3',titleClassName='',titleFallback='',questionById,renderCells,renderEmptyRow}) {
+    if(!doc||typeof renderCells!=='function')
+      throw new TypeError('Tableau de questions KALTEST invalide.');
+    const wrap=doc.createElement('div');
+    wrap.className=wrapperClassName;
+    const title=definition.title||titleFallback;
+    if(title){
+      const heading=doc.createElement(titleTag);
+      heading.className=titleClassName;
+      heading.textContent=String(title);
+      wrap.appendChild(heading);
+    }
+    const table=doc.createElement('table');
+    table.className=tableClassName;
+    const headers=Array.isArray(definition.headers)?definition.headers:[];
+    if(headers.length){
+      const thead=doc.createElement('thead');
+      const tr=doc.createElement('tr');
+      for(const heading of headers){
+        const th=doc.createElement('th');
+        th.textContent=String(heading||'');
+        tr.appendChild(th);
+      }
+      thead.appendChild(tr);
+      table.appendChild(thead);
+    }
+    const tbody=doc.createElement('tbody');
+    const ids=Array.isArray(definition.questionIds)?definition.questionIds:[];
+    for(const [index,id] of ids.entries()){
+      const question=typeof questionById==='function'?questionById(id):null;
+      const cells=renderCells({doc,id,question,index,headers});
+      if(!Array.isArray(cells)||!cells.length)continue;
+      const tr=doc.createElement('tr');
+      for(const cell of cells)if(cell)tr.appendChild(cell);
+      tbody.appendChild(tr);
+    }
+    if(!ids.length&&typeof renderEmptyRow==='function'){
+      const cells=renderEmptyRow({doc,headers});
+      if(Array.isArray(cells)&&cells.length){
+        const tr=doc.createElement('tr');
+        for(const cell of cells)if(cell)tr.appendChild(cell);
+        tbody.appendChild(tr);
+      }
+    }
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    return wrap;
+  }
+
   // Rendu de la structure d'un tableau libre, identique dans l'éditeur
   // et dans le candidat. Le contrôle de réponse reste au client appelant.
   function renderGridTable({doc,definition={},renderCell,className='',wrapperClassName='',compactClassName='',equalClassName=''}) {
@@ -329,5 +381,5 @@
     table.appendChild(group);
   }
 
-  return Object.freeze({columns,renderZones,renderRichContext,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup});
+  return Object.freeze({columns,renderZones,renderRichContext,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderQuestionTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup});
 });

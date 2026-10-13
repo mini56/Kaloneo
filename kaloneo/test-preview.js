@@ -200,26 +200,26 @@ function renderInline(block){
 }
 
 function renderMultipleTable(block){
-  const d=block.tableDefinition||{};
-  const wrap=el('div','kb-block kb-table-wrap');
-  if(d.title) wrap.append(el('div','kb-question-label',d.title));
-  const table=el('table','kb-table');
-  const headers=Array.isArray(d.headers)?d.headers:[];
-  if(headers.length){
-    const head=el('thead');const tr=el('tr');headers.forEach(h=>tr.append(el('th','',h)));head.append(tr);table.append(head);
-  }
-  const body=el('tbody');
-  const qmap=questionMap();
-  (d.questionIds||[]).forEach(id=>{
-    const q=qmap.get(String(id))||{id,prompt:String(id),response:{type:'text'}};
-    const tr=el('tr');tr.append(el('td','left',q.prompt||String(id)));
-    const td=el('td');td.append(makeAnswerControl(q));tr.append(td);
-    body.append(tr);
+  const definition=block.tableDefinition||{};
+  const questions=questionMap();
+  return window.KaloneoSharedPresentation.renderQuestionTable({
+    doc:document,definition,wrapperClassName:'kb-block kb-table-wrap',
+    tableClassName:'kb-table',titleTag:'div',titleClassName:'kb-question-label',
+    questionById:id=>questions.get(String(id)),
+    renderCells:({doc,id,question})=>{
+      const q=question||{id,prompt:String(id),response:{type:'text'}};
+      const left=doc.createElement('td');left.className='left';
+      left.textContent=q.prompt||String(id);
+      const right=doc.createElement('td');right.appendChild(makeAnswerControl(q));
+      return [left,right];
+    },
+    renderEmptyRow:({doc,headers})=>{
+      const cell=doc.createElement('td');
+      cell.className='kb-empty';cell.textContent='Tableau à compléter';
+      cell.colSpan=Math.max(1,headers.length);
+      return [cell];
+    }
   });
-  if(!(d.questionIds||[]).length){
-    const tr=el('tr');const td=el('td','kb-empty','Tableau à compléter');td.colSpan=Math.max(1,headers.length);tr.append(td);body.append(tr);
-  }
-  table.append(body);wrap.append(table);return wrap;
 }
 
 function renderTextEditor(block){

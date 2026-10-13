@@ -72,3 +72,10 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Le bloc `inline-flow` de l'aperçu Electron ne reconstruit plus la banque de mots et les champs avec un renderer parallèle : il délègue à `renderInlineFlow`.
 - Une option générique `omitEmptyBank` préserve le rendu historique sans banque visible lorsque la liste est vide ; le Builder et le candidat conservent leur mode antérieur par défaut.
 - Garde CI avec une question nouvelle, indépendante du catalogue.
+
+## Tableaux de questions (13 octobre 2026)
+
+- Nouveau squelette générique `renderQuestionTable` dans `shared-presentation.js`.
+- Le Builder (aperçu direct des tableaux historiques) et l'aperçu Electron autonome délèguent la structure des titres, en-têtes et lignes au même module. Le rendu de chaque cellule reste un adaptateur, sans référence à un identifiant de test.
+- La vue candidat `table-definition` conserve provisoirement sa présentation existante, pour éviter de modifier sans test visuel les V1 historiques.
+- Un contrôle de matrice totalement inédite vérifie les lignes, en-têtes et états vides. **Cela ne vaut pas validation visuelle finale.**

@@ -108,6 +108,37 @@ for(const [screen,sourceText] of [['Builder',builder],['Aperçu',preview],['Cand
   assert(!sourceText.includes('function renderRichContext('),
     'Ancien parser de texte encore dupliqué : '+screen);
 }
+// Même squelette d'en-têtes et de lignes, y compris pour un tableau totalement inédit.
+const tableDoc={
+  createElement(tag){return {tagName:tag,children:[],className:'',textContent:'',
+    appendChild(node){this.children.push(node);return node;}};}
+};
+const tableDefinition={title:'Nouvelle matrice',headers:['Avant','Après'],
+  questionIds:['unique_a','unique_b']};
+const createTable=()=>sharedPresentation.renderQuestionTable({
+  doc:tableDoc,definition:tableDefinition,
+  wrapperClassName:'test-wrap',tableClassName:'test-table',
+  questionById:id=>({id,prompt:'Ligne '+id}),
+  renderCells:({doc,question})=>{
+    const left=doc.createElement('td');left.textContent=question.prompt;
+    const right=doc.createElement('td');right.textContent='Réponse';
+    return [left,right];
+  }
+});
+const novelTable=createTable();
+const novelTableTag=novelTable.children.find(el=>el.tagName==='table');
+assert.strictEqual(novelTableTag.children[0].tagName,'thead');
+assert.deepStrictEqual(novelTableTag.children[0].children[0].children.map(c=>c.textContent),['Avant','Après']);
+assert.strictEqual(novelTableTag.children[1].children.length,2);
+assert.strictEqual(novelTableTag.children[1].children[1].children[0].textContent,'Ligne unique_b');
+const emptyTable=sharedPresentation.renderQuestionTable({
+  doc:tableDoc,definition:{headers:['Vide']},
+  renderCells:()=>[],
+  renderEmptyRow:({doc})=>{const td=doc.createElement('td');td.textContent='Sans réponse';return [td];}
+});
+assert.strictEqual(emptyTable.children[0].children[1].children.length,1);
+assert(preview.includes('KaloneoSharedPresentation.renderQuestionTable('));
+assert(source('../kaloneo/builder-legacy-table-preview.js').includes('KaloneoSharedPresentation.renderQuestionTable('));
 assert(common.includes('function equalAutomaticColumns('),'R48.10 function missing in shared presentation engine');
 assert(preview.includes('function equalAutomaticColumns('),'R48.10 function missing in standalone preview');
 // Les deux écrans délèguent toute la grille au moteur partagé.
