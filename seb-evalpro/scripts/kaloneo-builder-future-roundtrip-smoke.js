@@ -92,4 +92,25 @@ multiGrid.blocks.push(Core.clone(multiGrid.blocks.find(item=>item.type==='table-
 const twoGrids=Core.modelToDefinition(multiGrid);
 assert(Core.analyzeDefinition(twoGrids).ok);
 assert.equal(twoGrids.questions.length,1);
+assert.equal(twoGrids.questions[0].points,2,'Note originale écrasée par les cellules');
+assert.deepEqual(twoGrids.questions[0].acceptedAnswers,question.acceptedAnswers,
+  'Réponse canonique originale effacée par une grille non modifiée');
+// Les changements explicites au barème dans une grille restent enregistrables,
+// sans toucher aux autres champs de la question.
+const changedPoints=Core.definitionToModel(definition);
+changedPoints.blocks=changedPoints.blocks.filter(item=>item.type!=='question');
+const scoreCell=changedPoints.blocks.find(item=>item.type==='table-grid').table.cells[0][1];
+scoreCell.points=4;
+const rescored=Core.modelToDefinition(changedPoints);
+assert(Core.analyzeDefinition(rescored).ok);
+assert.equal(rescored.questions.length,1);
+assert.equal(rescored.questions[0].points,4,'Correction de grille non enregistrée');
+assert.deepEqual(rescored.questions[0].acceptedAnswers,question.acceptedAnswers,
+  'Éditer les points ne doit pas effacer la réponse attendue');
+// Effacer volontairement une réponse attendue reste possible lorsque la valeur
+// d'une cellule a réellement changé depuis sa définition source.
+scoreCell.acceptedAnswers='nouvelle réponse';
+const rewritten=Core.modelToDefinition(changedPoints);
+assert.deepEqual(rewritten.questions[0].acceptedAnswers,['nouvelle réponse']);
+assert.equal(rewritten.questions[0].points,4);
 console.log('KALONEO_FUTURE_BLOCKS_ROUNDTRIP_UNIQUE_QUESTION=OK');

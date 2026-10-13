@@ -155,3 +155,9 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Un essai entièrement inédit combinant bloc Question et cellule de grille a révélé une définition produite avec deux questions de même ID. `analyzeDefinition` la rejetait : vrai problème de compatibilité des futurs tests.
 - La collecte des questions est désormais unique pour les nouveaux tests comme pour ceux modifiés après import. Les répétitions dans les grilles sont des références, et le bloc Question explicite fournit prioritairement le barème complet sans déplacer l'ordre.
 - Contrôle du cycle Builder chargement → sauvegarde → rechargement avec douze blocs différents, références de grille, scripts, image et mise à l'échelle, textes à trous, et exercice inventé ; aucune modification des KALTEST validés.
+
+## Préservation des barèmes canoniques dans les grilles (13 octobre 2026)
+
+- Une grille enregistrée peut comporter une cellule qui fait référence à une question déjà définie. Au retour du Builder, les valeurs implicites du champ de grille (réponse vide, 1 point) ne doivent pas remplacer les réponses et points canoniques.
+- Lors de la conversion d'une définition importée, le moteur compare désormais les valeurs de grille à leurs valeurs d'origine. Seuls les champs réellement modifiés dans la grille mettent à jour la question ; les autres données de correction restent inchangées.
+- Ce traitement s'applique à tous les ID de question et types de grille, sans aucune exception pour un test historique. Le test synthétique vérifie le barème d'origine, une modification des points et la modification d'une réponse attendue.

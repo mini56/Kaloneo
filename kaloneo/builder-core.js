@@ -585,12 +585,35 @@
   function rebuildBuilderQuestions(def,model){
     const existing=new Map((def.questions||[]).map(q=>[q.id,q]));
     const rebuilt=collectBuilderQuestions(model.blocks);
+    const explicitIds=new Set((model.blocks||[])
+      .filter(b=>b.type==='question').map(b=>String(b.question?.id||'')));
+    // Pour les grilles déjà enregistrées, comparer les métadonnées d'origine
+    // plutôt que d'écraser une correction complète par leurs valeurs par défaut.
+    const initialGrids=(model.sourceDefinition?.presentation?.builderContent||[])
+      .filter(item=>item.type==='table-grid')
+      .map(item=>({type:'table-grid',table:item.table||{}}));
+    const initialGridQuestions=new Map(collectBuilderQuestions(initialGrids)
+      .map(question=>[String(question.id),question]));
     const presetKeepsQuestions=(model.blocks||[]).some(block=>block.type==='html-js'&&block.preset);
     if(presetKeepsQuestions&&rebuilt.length===0){
       def.questions=clone(def.questions||[]);
     }else if(rebuilt.length||Object.prototype.hasOwnProperty.call(def,'questions')){
       def.questions=rebuilt.map(q=>{
         const previous=existing.get(q.id);
+        const initial=initialGridQuestions.get(String(q.id));
+        if(previous&&!explicitIds.has(String(q.id))&&initial){
+          // La grille contient une référence à la question canonique. Un
+          // champ de grille ne la modifie que s'il a réellement changé depuis
+          // son import. Préserver ainsi réponses, unités, points et correction
+          // d'origine, même avec plusieurs cellules montrant la même question.
+          const result=clone(previous);
+          for(const key of ['prompt','response','acceptedAnswers','points']){
+            if(JSON.stringify(q[key])!==JSON.stringify(initial[key])){
+              result[key]=clone(q[key]);
+            }
+          }
+          return result;
+        }
         // R48.1: une grille importée peut conserver ses libellés historiques.
         // L'éditeur ne doit pas les écraser par « Réponse id » lors d'un changement de style.
         const prompt=(previous?.prompt && q.prompt==='Réponse '+q.id)?previous.prompt:q.prompt;
