@@ -26,10 +26,10 @@ definition.features=['runtime.basic','layout.split','content.html-js'];
 definition.behavior={validateBeforeAdvance:false};
 definition.presentation={layout:'50-50',builderContent:[
   {type:'html',zone:'left',
-   html:'<p id="synthetic-static">Contenu HTML inédit</p><script>document.body.dataset.bad="oui"</script>'},
+   html:'<p id="synthetic-static">Contenu HTML inédit</p><script>window.addEventListener("message",function(e){if(e.data==="kaloneo-synthetic-ping")window.parent.postMessage({marker:"kaloneo-synthetic-html",from:"plain"},"*");});</script>'},
   {type:'html-js',zone:'right',
    html:'<p id="synthetic-script">Bloc script inédit</p>',
-   script:'document.getElementById("synthetic-script").dataset.executed="oui";'}
+   script:"document.getElementById(\"synthetic-script\").dataset.executed=\"oui\";window.addEventListener(\"message\",function(e){if(e.data===\"kaloneo-synthetic-ping\")window.parent.postMessage({marker:\"kaloneo-synthetic-html\",from:\"html-js\",executed:document.getElementById(\"synthetic-script\").dataset.executed},\"*\");});"}
 ]};
 const runtime={ok:true,runtime:{
   id:'synthetic-html-engine-preview',title:'Contrôle générique',builderPreview:true,
@@ -99,19 +99,26 @@ app.whenReady().then(async()=>{
   assert.ok(page.frames[0].srcdoc.includes('Contenu HTML inédit'));
   assert.ok(page.frames[1].srcdoc.includes('dataset.executed'));
   await wait(350);
-  const children=win.webContents.mainFrame.frames.filter(frame=>frame.url.startsWith('about:srcdoc'));
-  const states=[];
-  for(const frame of children)states.push(await frame.executeJavaScript(
-    '({plain:!!document.getElementById("synthetic-static"),script:!!document.getElementById("synthetic-script"),executed:document.getElementById("synthetic-script")?.dataset.executed||"",bad:document.body.dataset.bad||""})'));
-  assert.ok(states.some(value=>value.plain&&!value.bad),'HTML simple inaccessible ou script exécuté');
-  assert.ok(states.some(value=>value.script&&value.executed==='oui'),'JavaScript HTML/JS non exécuté');
+  // Les iframes sandboxées n'autorisent pas l'injection de JS du test.
+  // postMessage vérifie réellement le script exécuté, sans désactiver le sandbox.
+  const messages=await win.webContents.executeJavaScript(
+    'new Promise(resolve=>{'+
+      'const messages=[];'+
+      'window.addEventListener("message",event=>{if(event.data?.marker==="kaloneo-synthetic-html")messages.push(event.data);});'+
+      'document.querySelectorAll("iframe.kaltest-builder-html").forEach(frame=>frame.contentWindow.postMessage("kaloneo-synthetic-ping","*"));'+
+      'setTimeout(()=>resolve(messages),1200);'+
+    '})');
+  assert.ok(messages.some(value=>value.from==='html-js'&&value.executed==='oui'),
+    'JavaScript HTML/JS non exécuté');
+  assert.ok(!messages.some(value=>value.from==='plain'),
+    'HTML simple a exécuté un script alors que son sandbox l’interdit');
   const picture=await win.webContents.capturePage();
   assert.ok(!picture.isEmpty(),'capture Electron vide');
   assert.equal(saves,0,'aperçu écrit dans les données candidat');
   assert.equal(replays,0,'aperçu ajoute un replay');
   console.log('SYNTHETIC_HTML_JS_ELECTRON: OK',JSON.stringify({
     id:definition.id,iframes:page.frames.map(({sandbox,width,left})=>({sandbox,width,left})),
-    states,screenshot:picture.getSize(),saves,replays
+    messages,screenshot:picture.getSize(),saves,replays
   }));
   clearTimeout(timeout);win.destroy();app.quit();
  }catch(error){fail(error);}
