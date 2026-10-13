@@ -194,3 +194,10 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Le Bilan institutionnel ajoutait à la liste du manifeste tous les IDs trouvés dans le stockage de résultats, même lorsqu'ils n'avaient jamais fait partie du parcours exécuté.
 - Correction : quand la liste du manifeste du parcours est présente, elle est seule autoritaire ; aucun test additionnel du stockage n'est autorisé à créer une rubrique ou une note au Bilan. Le mode historique sans manifeste est conservé pour les anciens dossiers.
 - Le smoke Electron du Bilan contient désormais un résultat Mail et un exercice complètement inédit **absents du parcours** : ils doivent rester invisibles, tout comme la transition F1, sans altérer les scores légitimes.
+
+## R95 — contrôle des résultats sur une vraie évaluation (13 octobre 2026)
+
+- Les runs `38472934898` (Résultats) et `38473430288` (Bilan) sont VERTS. Une correction stricte protège le lien entre identifiant de test et résultat ; Bilan ignore les données d'autres tests hors du manifeste.
+- Préparation d'une Release de test R95 / Build #100 / 0.0.124, isolée des anciens Setups R94 et R93, avec compilation conditionnée aux essais Electron de contamination et à toutes les régressions existantes.
+- Les visuels du Builder, les fichiers KALTEST, les barèmes, la navigation et les images ne sont pas modifiés dans cette livraison.
+- Les résultats de la R94 doivent être considérés comme provisoires jusqu'à comparaison des résultats après ouverture du même dossier candidat dans la R95.
