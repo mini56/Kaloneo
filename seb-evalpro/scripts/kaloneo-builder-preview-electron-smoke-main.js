@@ -29,7 +29,7 @@ let win = null;
 let miniRenderCalls = 0;
 ipcMain.handle('kaloneo-builder:render-mini-preview',()=>{
   miniRenderCalls++;
-  return {ok:false,error:'Capture Electron simulée pour le test du Builder'};
+  return {ok:true,image:imageLibraryData,report:{overflowZones:0,tableHorizontalOverflow:false,brokenImages:[]}};
 });
 
 ipcMain.on('app:edition-sync', event => {
@@ -538,6 +538,31 @@ app.whenReady().then(async()=>{
       });
     }
     console.log('KALONEO_BUILDER_LIVE_TYPING_NO_BLUE_SCREEN=OK',JSON.stringify(liveTyping));
+    // Une saisie affiche immédiatement le DOM; l'image réelle apparaît
+    // seulement après une pause et disparaît à la prochaine frappe.
+    const idleRealPreview=await win.webContents.executeJavaScript(`(async()=>{
+      const snapshot=document.getElementById('candidate-preview-snapshot');
+      await new Promise(resolve=>setTimeout(resolve,2100));
+      const before={
+        visible:!snapshot.hidden,hasImage:snapshot.src.startsWith('data:image/'),
+        warning:document.getElementById('candidate-preview-warning')?.textContent||'',
+        directVisible:getComputedStyle(document.getElementById('candidate-preview')).visibility==='visible'
+      };
+      const field=document.querySelector('.exercise-block .block-body textarea');
+      if(!field)return {before,fieldMissing:true};
+      field.focus();field.value+=' Modification suivante';
+      field.dispatchEvent(new Event('input',{bubbles:true}));
+      return {before,hiddenImmediately:snapshot.hidden,
+        focused:document.activeElement===field,
+        updated:document.getElementById('preview-exercise')?.textContent.includes('Modification suivante')};
+    })()`,true);
+    if(!idleRealPreview.before.visible||!idleRealPreview.before.hasImage||
+       !idleRealPreview.before.directVisible||
+       !/Rendu réel candidat/.test(idleRealPreview.before.warning)||
+       !idleRealPreview.hiddenImmediately||!idleRealPreview.focused||
+       !idleRealPreview.updated||miniRenderCalls<=miniBeforeTyping)
+      return fail('Capture fidèle inactive ou perte de focus dans le Builder',idleRealPreview);
+    console.log('KALONEO_BUILDER_REAL_AFTER_IDLE_STABLE_FOCUS=OK');
     const inputUndo=await win.webContents.executeJavaScript(`(()=>{
       const input=document.getElementById('test-title');
       input.focus();

@@ -2254,7 +2254,7 @@
     const status=$('candidate-preview-status');
     if(status)status.hidden=true; // Aucun écran intermédiaire sur le rendu direct.
     const warning=$('candidate-preview-warning');
-    if(warning)warning.textContent='Aperçu direct — vérification du rendu candidat après une pause.';
+    if(warning)warning.textContent='Aperçu simplifié — contrôle candidat après une pause.';
   }
 
   function scheduleMiniPreviewCapture(delay=MINI_PREVIEW_IDLE_MS) {
@@ -2293,7 +2293,7 @@
         if(result.report?.brokenImages?.length)warnings.push('image introuvable');
         if(warning)warning.textContent=warnings.length?
           'À corriger dans le rendu candidat : '+warnings.join(', ')+'.':
-          'Rendu candidat fidèle 1366 × 768 vérifié.';
+          'Rendu réel candidat Electron (1366 × 768) — à comparer visuellement.';
       }catch(error) {
         if(revision===miniPreviewRevision) {
           if(status)status.textContent='Impossible de calculer le rendu : '+String(error?.message||error);
@@ -2311,12 +2311,14 @@
   }
 
   function refreshRealMiniPreview() {
-    // Retour au fonctionnement fluide du Builder historique : afficher le
-    // DOM direct sans le remplacer par des captures après chaque pause.
-    // Le bouton « Aperçu » ouvre toujours le vrai moteur candidat Electron.
+    // La saisie reste immédiatement visible dans le DOM du Builder.
+    // Après une pause, présenter la véritable page du moteur candidat :
+    // toutes les mises en page, y compris les renderers historiques.
+    // Aucune tâche périodique : une capture par modification terminée.
     invalidateMiniPreview();
     const warning=$('candidate-preview-warning');
-    if(warning)warning.textContent='Aperçu direct — bouton « Aperçu » pour voir l’écran candidat réel.';
+    if(warning)warning.textContent='Aperçu simplifié pendant la saisie — rendu réel candidat après une pause.';
+    scheduleMiniPreviewCapture();
   }
 
   function fitMiniPreview() {
@@ -3262,6 +3264,8 @@
         alert('L’aperçu Electron est disponible depuis SEB EvalPro.');
         return;
       }
+      // Arrêter la miniature avant d'ouvrir l'écran candidat interactif.
+      invalidateMiniPreview();
       const definition=Core.modelToDefinition(currentModel());
       const editorHistory=capturePreviewHistory();
       savePreviewFoldState();

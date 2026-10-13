@@ -125,3 +125,12 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Le smoke d'un test entièrement **inédit** charge maintenant successivement l'aperçu autonome et le **vrai moteur candidat**, avec une seule et même définition KALTEST.
 - Comparaison ciblée des deux colonnes, grille, tableau de réponses, champs, médias, textes et captures ; aucun test V1 modifié.
 - La présentation `table-definition` reste volontairement contrôlée au niveau des questions et non des en-têtes : son DOM historique candidat n'est pas encore harmonisé. Cette dette doit être traitée génériquement et avec contrôle visuel préalable.
+
+## Aperçu du Builder — correction du rendu après essai R92 (13 octobre 2026)
+
+- Retour utilisateur : le visuel dans le Builder est insuffisant, par exemple sur Tri de chevilles. C'est l'aperçu direct, pas une autorisation de modifier les V1.
+- Constat dans le code : `refreshRealMiniPreview()` désactivait toujours les captures photographiées du moteur candidat. Les rendus spécialisés n'avaient donc aucun équivalent visuel dans le DOM simplifié.
+- Correction générique : pendant la frappe, le DOM direct reste réactif ; après une pause, le Builder affiche le rendu réel du moteur candidat Electron grâce à la fonctionnalité déjà présente. Les anciennes captures sont masquées immédiatement à la nouvelle frappe ; le bouton Aperçu ouvre toujours le vrai écran interactif.
+- Aucune modification des tests ou médias. Les demandes de capture sont déclenchées par les changements, sans polling, et sérialisées côté Electron.
+- Contrôle Electron de non-régression : capture fictive pour tester le branchement de l'image, la reprise du focus et l'invalidation pendant la frappe. Une inspection visuelle humaine de l'application sera encore nécessaire.
+- R92 Build #97 reste la version installable jugée correcte avant ce correctif. R91 reste le secours.
