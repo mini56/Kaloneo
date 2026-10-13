@@ -39,3 +39,10 @@
 ## Règle de validation
 
 Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérification fonctionnelle réelle**. Ne jamais utiliser « testé à 100 % » sur la seule base de CI. R91 reste le secours installable jusqu'à validation.
+
+## Contrôle Electron ajouté le 13 octobre 2026
+
+- Script de test : `seb-evalpro/scripts/kaloneo-shared-html-candidate-electron-smoke-main.js` ; déclenché par `.github/workflows/verify-tri-rearm-r60.yml`.
+- Construction à l'exécution d'un exercice inédit à deux colonnes, avec HTML simple et HTML/JS ; aucun KALTEST validé n'est modifié.
+- Vérifie le DOM candidat, la taille et la position visibles des iframes, l'isolation du HTML simple, l'exécution du script HTML/JS, une capture Electron non vide et l'absence de sauvegarde candidat.
+- Ce contrôle complète mais **ne remplace pas** une comparaison visuelle humaine entre le Builder, Electron et l'application installée.

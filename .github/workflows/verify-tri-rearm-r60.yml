@@ -35,6 +35,7 @@ jobs:
           node --check ../kaloneo/test-preview.js
           node --check ../kaloneo/test-builder.js
           node --check scripts/kaloneo-builder-preview-electron-smoke-main.js
+          node --check scripts/kaloneo-shared-html-candidate-electron-smoke-main.js
           node --check scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
           node --check scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
       - name: Verify gallery contains test illustrations only, without deleting images
@@ -72,6 +73,8 @@ jobs:
         run: npx electron --no-sandbox scripts/kaloneo-bilan-dynamic-smoke-main.js
       - name: Check validated Builder R48.10 auto columns in real Electron
         run: npx electron --no-sandbox scripts/kaloneo-builder-r48-10-generic-columns-electron-smoke-main.js
+      - name: Check synthetic HTML/JS in the real candidate Electron engine
+        run: npx electron --no-sandbox scripts/kaloneo-shared-html-candidate-electron-smoke-main.js
       - name: Check test icons in real Electron
         run: npx electron --no-sandbox scripts/kaloneo-candidate-icon-electron-smoke-main.js
       - name: Check preserved validated R48.10 / NWTEXT R55 / icons
