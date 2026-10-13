@@ -134,3 +134,11 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Aucune modification des tests ou médias. Les demandes de capture sont déclenchées par les changements, sans polling, et sérialisées côté Electron.
 - Contrôle Electron de non-régression : capture fictive pour tester le branchement de l'image, la reprise du focus et l'invalidation pendant la frappe. Une inspection visuelle humaine de l'application sera encore nécessaire.
 - R92 Build #97 reste la version installable jugée correcte avant ce correctif. R91 reste le secours.
+
+## Arrêt des processus de miniature Electron (13 octobre 2026)
+
+- Les trois tests réels montrés par l'utilisateur (Puzzle Gratte-Ciel, Stock et Tri de chevilles) affichent correctement le rendu candidat dans le Builder R93. **Préserver ce rendu visuel.**
+- Le processus invisible `kaloneoMiniPreviewWorker` conservait une page candidat après la capture avec `backgroundThrottling:false` et `offscreen:true`. Des scripts pouvaient continuer en arrière-plan.
+- Correction générale : libérer le worker dans un bloc `finally` après capture ou erreur, effacer sa définition et prévenir la suppression de la référence d'un worker plus récent par un événement `closed` tardif. La capture déjà affichée est conservée.
+- Contrôle du vrai handler IPC avec quatre tests fictifs : succès, page non prête, erreur de capture puis nouveau succès, plus contrôle de file sérialisée et refus d'appel non autorisé.
+- L'origine exacte de l'activité périodique Windows n'est pas encore établie. Aucun fichier V1, image, barème ni CSS changé. Aucune nouvelle Release ni Setup pour cette étape.

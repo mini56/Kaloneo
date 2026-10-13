@@ -35,10 +35,13 @@ jobs:
           node --check ../kaloneo/test-preview.js
           node --check ../kaloneo/test-builder.js
           node --check scripts/kaloneo-builder-preview-electron-smoke-main.js
+          node --check scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
           node --check scripts/kaloneo-new-test-preview-electron-smoke-main.js
           node --check scripts/kaloneo-shared-html-candidate-electron-smoke-main.js
           node --check scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
           node --check scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
+      - name: Verify inactive Electron preview workers are always released
+        run: node scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
       - name: Verify gallery contains test illustrations only, without deleting images
         run: |
           node --check ../kaloneo/image-library-gallery.js

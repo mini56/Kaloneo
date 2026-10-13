@@ -1550,7 +1550,10 @@ function getKaloneoMiniPreviewWorker() {
       offscreen:true
     }
   });
-  kaloneoMiniPreviewWorker.on('closed',()=>{kaloneoMiniPreviewWorker=null;});
+  const worker=kaloneoMiniPreviewWorker;
+  worker.on('closed',()=>{
+    if(kaloneoMiniPreviewWorker===worker)kaloneoMiniPreviewWorker=null;
+  });
   return kaloneoMiniPreviewWorker;
 }
 
@@ -1568,6 +1571,7 @@ ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition) => {
   // d'une image encore en cours de génération.
   const job=kaloneoMiniPreviewJob.catch(()=>{}).then(async()=>{
     const worker=getKaloneoMiniPreviewWorker();
+    try {
     const source=path.join(__dirname,'..','app','web','kaltest-pilot2.html');
     kaloneoMiniPreviewDefinition=submitted;
     // Les machines Windows et les runners CI peuvent limiter la taille
@@ -1617,6 +1621,17 @@ ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition) => {
       return {ok:false,error:'Capture tronquée : '+size.width+' × '+size.height};
     }
     return {ok:true,image:screenshot.resize({width:1366,height:768}).toDataURL(),report};
+    } finally {
+      // L'image a été copiée : ne laisser aucun moteur candidat caché tourner
+      // après la capture, même si la page n'a pas chargé ou une erreur survient.
+      try{
+        if(!worker.isDestroyed())worker.destroy();
+      }catch(error){
+        console.warn('KALONÉO : fermeture miniature Electron impossible',error);
+      }
+      if(kaloneoMiniPreviewWorker===worker)kaloneoMiniPreviewWorker=null;
+      kaloneoMiniPreviewDefinition=null;
+    }
   });
   kaloneoMiniPreviewJob=job;
   return job.catch(error=>({ok:false,error:String(error?.message||error)}));
