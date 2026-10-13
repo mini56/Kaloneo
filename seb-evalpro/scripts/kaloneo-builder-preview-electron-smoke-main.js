@@ -1054,15 +1054,26 @@ app.whenReady().then(async()=>{
     // Préparer deux étapes d'historique consécutives juste avant l'aperçu :
     // Annuler doit retrouver le titre provisoire après fermeture d'Electron.
     const previewHistoryBefore=await win.webContents.executeJavaScript(`(async()=>{
-      const title=document.getElementById('test-title');
-      title.value='Aperçu Electron Smoke - étape annulable';
-      title.dispatchEvent(new Event('input',{bubbles:true}));
-      await new Promise(resolve=>setTimeout(resolve,445));
-      title.value='Aperçu Electron Smoke';
-      title.dispatchEvent(new Event('input',{bubbles:true}));
-      await new Promise(resolve=>setTimeout(resolve,445));
-      return {title:title.value,undoEnabled:!document.getElementById('undo-change').disabled};
-    })()`,true);
+      try {
+        const title=document.getElementById('test-title');
+        if(!title)return {error:'missing title',url:location.href,ready:document.readyState};
+        title.value='Aperçu Electron Smoke - étape annulable';
+        title.dispatchEvent(new Event('input',{bubbles:true}));
+        await new Promise(resolve=>setTimeout(resolve,445));
+        title.value='Aperçu Electron Smoke';
+        title.dispatchEvent(new Event('input',{bubbles:true}));
+        await new Promise(resolve=>setTimeout(resolve,445));
+        const undo=document.getElementById('undo-change');
+        return {title:title.value,undoEnabled:!!undo&&!undo.disabled,
+          url:location.href,render:!!window.KaloneoSharedPresentation?.renderRichContext};
+      } catch(error) {
+        return {error:String(error),stack:String(error?.stack||''),url:location.href};
+      }
+    })()`,true).catch(error=>({
+      hostError:String(error?.stack||error),url:win.webContents.getURL(),
+      crashed:win.webContents.isDestroyed()
+    }));
+    console.log('KALONEO_PREVIEW_HISTORY_DIAGNOSTIC',JSON.stringify(previewHistoryBefore));
     if(previewHistoryBefore.title!=='Aperçu Electron Smoke'||!previewHistoryBefore.undoEnabled)
       return fail('Historique pré-aperçu : modifications successives non annulables',previewHistoryBefore);
 
