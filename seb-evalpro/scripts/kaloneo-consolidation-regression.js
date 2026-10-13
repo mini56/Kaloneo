@@ -11,7 +11,12 @@ const css=source('source/css/kaltest-pilot2.css');
 const save=source('src/main.js');
 const html=source('../kaloneo/test-builder.html');
 const guide=source('../kaloneo/test-builder.css');
+const previewHtml=source('../kaloneo/test-preview.html');
 const candidatePage=source('source/kaltest-pilot2.html');
+assert(previewHtml.includes('<script src="shared-presentation.js"></script>'),
+  'Aperçu Electron autonome sans module commun');
+assert(previewHtml.indexOf('shared-presentation.js')<previewHtml.indexOf('test-preview.js'),
+  'Aperçu Electron : module commun chargé trop tard');
 // Le calcul R48.10 n'est plus dupliqué : il est dans le module commun,
  // tandis que l'aperçu historique indépendant conserve sa fonction.
 const common=source('../kaloneo/shared-presentation.js');

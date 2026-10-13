@@ -53,3 +53,9 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Fonction unique `renderRichContext` dans `kaloneo/shared-presentation.js`, appelée par le Builder, l'aperçu et le véritable moteur candidat ; aucun changement de la structure KALTEST, des barèmes ou du CSS.
 - Contrôle générique Node ajouté (imbrication, couleurs, sauts de ligne, rafraîchissement), complété par un contrôle du DOM réel Electron sur un exercice fictif.
 - Ne pas annoncer une parité visuelle complète sur la seule base de ces contrôles.
+
+## Dépendance du moteur commun dans l'aperçu Electron
+
+- Le contrôleur de l'aperçu autonome consommait déjà des fonctions partagées, mais sa page HTML n'importait pas `shared-presentation.js`.
+- La page `test-preview.html` importe désormais le moteur commun avant `test-preview.js`.
+- Une garde CI vérifie cet ordre. Le contrôle réel Electron reste obligatoire avant toute validation de cette étape.
