@@ -112,3 +112,10 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Run rouge `38428061612` : perte de focus après une frappe/pause et sur le sélecteur suivant.
 - Protection du `requestAnimationFrame` différé de `focusTitleField()` : si un champ reçoit le focus entre-temps, la demande vers le titre est abandonnée. Applicable à tous les blocs.
 - Aucun KALTEST ni barème modifié. Le contrôle Electron existant vérifie la pause et la transition de focus.
+
+## Essai Electron sur test synthétique indépendant du catalogue (13 octobre 2026)
+
+- Nouveau smoke `seb-evalpro/scripts/kaloneo-new-test-preview-electron-smoke-main.js` intégré à la CI.
+- Construit directement un KALTEST inédit sans importer aucun test existant : grille, tableau de réponses, tableau de questions, image et deux zones.
+- Contrôle dans le véritable Electron : lignes/en-têtes, géométrie des colonnes, saisies, image, fermeture, capture et absence de sauvegarde candidat.
+- N'est pas une validation humaine des pixels ni de la fluidité d'une version installée.
