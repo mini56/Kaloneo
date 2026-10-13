@@ -1079,15 +1079,20 @@ app.whenReady().then(async()=>{
 
     // Régression utilisateur : les blocs repliés restent repliés après Aperçu.
     const foldsBeforePreview=await win.webContents.executeJavaScript(`(()=>{
-      const blocks=[...document.querySelectorAll('.exercise-block')];
-      if(!blocks.length)return {count:0};
-      blocks.forEach(block=>block.querySelector('.toggle-block').click());
-      const contract=document.getElementById('toggle-contract-section');
-      if(contract?.getAttribute('aria-expanded')==='true')contract.click();
-      const contractCollapsed=contract?.getAttribute('aria-expanded')==='false'
-        &&document.getElementById('contract-section-content')?.hidden===true;
-      return {count:blocks.length,folded:[...document.querySelectorAll('.exercise-block.is-collapsed')].map(x=>x.dataset.uid),contractCollapsed};
-    })()`);
+      try{
+        const blocks=[...document.querySelectorAll('.exercise-block')];
+        if(!blocks.length)return {count:0,error:'aucun bloc'};
+        const missingToggle=blocks.filter(block=>!block.querySelector('.toggle-block')).map(block=>block.dataset.uid||'?');
+        if(missingToggle.length)return {count:blocks.length,error:'bouton repli absent',missingToggle};
+        blocks.forEach(block=>block.querySelector('.toggle-block').click());
+        const contract=document.getElementById('toggle-contract-section');
+        if(contract?.getAttribute('aria-expanded')==='true')contract.click();
+        const contractCollapsed=contract?.getAttribute('aria-expanded')==='false'
+          &&document.getElementById('contract-section-content')?.hidden===true;
+        return {count:blocks.length,folded:[...document.querySelectorAll('.exercise-block.is-collapsed')].map(x=>x.dataset.uid),contractCollapsed};
+      }catch(error){return {error:String(error),stack:String(error?.stack||''),url:location.href};}
+    })()`).catch(error=>({hostError:String(error?.stack||error),url:win.webContents.getURL()}));
+    console.log('KALONEO_FOLDS_DIAGNOSTIC',JSON.stringify(foldsBeforePreview));
     if(foldsBeforePreview.count<1||foldsBeforePreview.folded.length!==foldsBeforePreview.count||
        !foldsBeforePreview.contractCollapsed)
       return fail('Impossible de préparer les blocs repliés avant le retour Aperçu',foldsBeforePreview);
