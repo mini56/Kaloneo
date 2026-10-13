@@ -988,6 +988,34 @@ app.whenReady().then(async()=>{
       await new Promise(resolve=>setTimeout(resolve,220));
       const version=document.getElementById('test-version');
       const save=document.getElementById('save-draft');
+      // Reproduire la régression signalée : 8 questions visibles dans
+      // l'écran candidat mais seulement 6 dans l'aperçu interne du Builder.
+      const orgPreview=(()=>{
+        const zone=document.querySelector('#preview-exercise .preview-zone.preview-organisation-work');
+        const nodes=[...zone?.querySelectorAll(':scope > .preview-organisation-row')||[]];
+        const texts=nodes.map(node=>node.querySelector('.preview-organisation-text')?.textContent||'');
+        const inputs=nodes.map(node=>node.querySelector('.preview-organisation-answer'));
+        const rect=zone?.getBoundingClientRect();
+        const last=nodes.at(-1)?.getBoundingClientRect();
+        const inline=nodes.every((node,i)=>{
+          const label=node.querySelector('.preview-organisation-text')?.getBoundingClientRect();
+          const input=inputs[i]?.getBoundingClientRect();
+          return label&&input&&input.left>=label.right-1&&
+            Math.abs((label.top+label.bottom)/2-(input.top+input.bottom)/2)<11;
+        });
+        return {
+          moduleLoaded:typeof window.KaloneoBuilderOrganisationPreview?.renderQuestion==='function',
+          rows:nodes.length,
+          inputs:inputs.filter(Boolean).length,
+          texts,
+          inline,
+          allVisible:!!rect&&!!last&&last.bottom<=rect.bottom+1&&
+            nodes.every(node=>node.getBoundingClientRect().top>=rect.top-1),
+          noVerticalOverflow:!!zone&&zone.scrollHeight<=zone.clientHeight+1,
+          firstBackground:nodes[0]?getComputedStyle(nodes[0]).backgroundColor:'',
+          secondBackground:nodes[1]?getComputedStyle(nodes[1]).backgroundColor:''
+        };
+      })();
       const before={
         ok:true,
         version:version?.value||'',
@@ -1004,6 +1032,7 @@ app.whenReady().then(async()=>{
       return {
         ok:true,
         before,
+        orgPreview,
         after:{
           version:version?.value||'',
           versionReadOnly:!!version?.readOnly,
@@ -1013,6 +1042,15 @@ app.whenReady().then(async()=>{
       };
     })()`,true);
 
+    const org=protectedV1.orgPreview||{};
+    if(!org.moduleLoaded||org.rows!==8||org.inputs!==8||!org.inline||!org.allVisible||
+       !org.noVerticalOverflow||
+       org.texts[0]!==protectedOrganisation.presentation.organisationList.rows[0].text||
+       org.texts[7]!==protectedOrganisation.presentation.organisationList.rows[7].text||
+       org.firstBackground===org.secondBackground) {
+      return fail('Organisation : aperçu Builder ne reconstitue pas les huit lignes du candidat',org);
+    }
+    console.log('KALONEO_ORGANISATION_BUILDER_EIGHT_INLINE_ROWS=OK',JSON.stringify(org));
     if(!protectedV1.ok||
        protectedV1.before.version!=='1.0.0'||
        !protectedV1.before.versionReadOnly||

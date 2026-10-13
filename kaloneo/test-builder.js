@@ -2084,6 +2084,11 @@
   }
 
   function createQuestionPreview(block) {
+    // Les questions de la V1 Organisation possèdent un rendu candidat dédié.
+    // Conserver leurs lignes compactes plutôt que la carte Q/R générique,
+    // qui empile les champs et masque les deux dernières questions.
+    const organisation=window.KaloneoBuilderOrganisationPreview?.renderQuestion(block,state.sourceDefinition);
+    if(organisation)return organisation;
     const q=block.question||{};
     const wrap=document.createElement('div');
     wrap.className='preview-question';
@@ -2464,6 +2469,13 @@
     } else {
       const left=document.createElement('div');left.className='preview-zone';
       const right=document.createElement('div');right.className='preview-zone';
+      const organisationRows=state.sourceDefinition?.presentation?.organisationList?.rows;
+      const rightBlocks=state.blocks.filter(block=>block.zone==='right');
+      if(Array.isArray(organisationRows)&&organisationRows.length&&rightBlocks.length&&
+        rightBlocks.every(block=>block.type==='question'&&
+          organisationRows.some(row=>String(row.questionId)===String(block.question?.id)))){
+        right.classList.add('preview-organisation-work');
+      }
       if(m.layout==='chars-rest') {
         const a=Number(m.block1WidthChars);
         const b=Number(m.block2WidthChars);
