@@ -1,13 +1,7 @@
 name: 'Build Windows KALONÉO R91 — Build #96 Historique et activité périodique du Builder (branche existante)'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - '.github/workflows/build-r91-windows.yml'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r91-builder.yml'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/package.json'
+  # R91 / Build #96 publié : aucune recompilation automatique.
+  # Le contrôle du tag empêche également une duplication manuelle.
   workflow_dispatch:
 
 # Conserver ce groupe pour les futurs Builds Windows.
