@@ -1,13 +1,7 @@
 name: 'Build Windows KALONÉO R90 — Build #95 Aperçu Organisation V1 V2 complet (branche existante)'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - '.github/workflows/build-r90-windows.yml'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r90-builder.yml'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/package.json'
+  # R90 / Build #95 publié : désactiver toute recompilation automatique.
+  # Le contrôle du tag bloque également tout doublon manuel.
   workflow_dispatch:
 
 # Conserver ce groupe pour les futurs Builds Windows.
