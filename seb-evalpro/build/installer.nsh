@@ -2,7 +2,7 @@
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
 
-!define SEB_BUILD_NUMBER "96"
+!define SEB_BUILD_NUMBER "97"
 !define SEB_BUILD_LABEL "Build #${SEB_BUILD_NUMBER}"
 
 # Désinstallation/mise à jour sûre.
