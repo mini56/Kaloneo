@@ -19,6 +19,7 @@ assert(previewHtml.indexOf('shared-presentation.js')<previewHtml.indexOf('test-p
   'Aperçu Electron : module commun chargé trop tard');
 assert(preview.includes('KaloneoSharedPresentation.renderInlineFlow('),
   'Le texte à trous de l’aperçu Electron autonome doit utiliser le moteur partagé');
+const sharedPresentation=require('../../kaloneo/shared-presentation.js');
 const inlineDocument={
   createElement(tag){return {tagName:tag,children:[],textContent:'',className:'',
     appendChild(child){this.children.push(child);return child;},
@@ -37,7 +38,6 @@ assert(preview.includes('KaloneoSharedPresentation.renderZones('),
 // Le calcul R48.10 n'est plus dupliqué : il est dans le module commun,
  // tandis que l'aperçu historique indépendant conserve sa fonction.
 const common=source('../kaloneo/shared-presentation.js');
-const sharedPresentation=require('../../kaloneo/shared-presentation.js');
 // Exercice fictif jamais ajouté au catalogue : les trois vues passent par le
 // même constructeur HTML sans changer les configurations propres aux écrans.
 
