@@ -669,6 +669,11 @@
           def.presentation.tables.forEach((table,index)=>{
             const block=tableBlocks.find(entry=>entry.tableDefinition?.id===table.id) || tableBlocks[index];
             if(!block)return;
+            // Les métadonnées des tableaux historiques sont réellement
+            // sauvegardées. Les identifiants/en-têtes sont protégés par
+            // l'éditeur pour éviter de modifier la logique de correction.
+            if(block.tableDefinition&&typeof block.tableDefinition.title==='string')
+              table.title=block.tableDefinition.title;
             const style=builderItemStyle(block);
             if(style) table.builderStyle=style;
             else if(Object.prototype.hasOwnProperty.call(table,'builderStyle')) delete table.builderStyle;

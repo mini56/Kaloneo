@@ -25,6 +25,8 @@
   let historyIndex = -1;
   let historyTimer = null;
   let applyingHistory = false;
+  let draftPersistenceFailed=false;
+
   const activeGridEditorColumn=new Map(); // UI only: never saved into KALTEST
   const collapsedBlockUids=new Set(); // état d'affichage uniquement, jamais écrit dans les tests
   const PREVIEW_FOLD_KEY='kaloneo_builder_preview_fold_state_v1';
@@ -496,7 +498,15 @@
   }
 
   function captureHistoryEntry() {
-    const json=JSON.stringify(currentModel());
+    // Sérialiser le modèle une seule fois : currentModel() faisait deux
+    // clones profonds supplémentaires de la V1 et de toutes ses images HD.
+    const json=JSON.stringify({
+      idLocked:state.idLocked,
+      sourceDefinition:state.sourceDefinition,
+      sourceProtectedVersion:state.sourceProtectedVersion===true,
+      meta:collectMeta(),
+      blocks:state.blocks
+    });
     return {json,fingerprint:historyFingerprint(json)};
   }
 
@@ -510,8 +520,10 @@
   function updateDirtyIndicator() {
     const status=$('draft-status');
     if(!status)return;
-    status.classList.toggle('dirty',builderDirty);
-    status.textContent=builderDirty?'Modifications non enregistrées':'Enregistré';
+    status.classList.toggle('dirty',builderDirty||draftPersistenceFailed);
+    status.textContent=draftPersistenceFailed
+      ?'⚠ Brouillon non sauvegardé — espace local insuffisant. Enregistrez le test.'
+      :(builderDirty?'Modifications non enregistrées':'Enregistré');
   }
 
   function transientStatus(text,delay=1600) {
@@ -627,8 +639,26 @@
   }
 
   function saveDraft(showStatus=true) {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(currentModel()));
-    if(showStatus)transientStatus('Brouillon local sauvegardé',1200);
+    try{
+      localStorage.setItem(DRAFT_KEY,JSON.stringify({
+        idLocked:state.idLocked,
+        sourceDefinition:state.sourceDefinition,
+        sourceProtectedVersion:state.sourceProtectedVersion===true,
+        meta:collectMeta(),
+        blocks:state.blocks
+      }));
+      draftPersistenceFailed=false;
+      if(showStatus)transientStatus('Brouillon local sauvegardé',1200);
+      else updateDirtyIndicator();
+      return true;
+    }catch(error){
+      // QuotaReachedError ou écriture bloquée : ne jamais masquer l'échec,
+      // ne jamais afficher « Enregistré » pour un brouillon perdu.
+      draftPersistenceFailed=true;
+      updateDirtyIndicator();
+      console.error('KALONÉO : brouillon non sauvegardé',error);
+      return false;
+    }
   }
 
   function restoreDraft() {
@@ -1031,7 +1061,7 @@
           value.type='text';
           value.placeholder=cell.kind==='fixed-text'?'Texte affiché':'Option affichée';
           value.value=cell.value||'';
-          value.addEventListener('input',()=>{cell.value=value.value;changed();});
+          value.addEventListener('input',()=>{cell.value=value.value;changed({typing:true});});
           td.appendChild(value);
         }
 
@@ -1059,7 +1089,7 @@
             alt.type='text';
             alt.placeholder='Texte alternatif';
             alt.value=cell.alt||'';
-            alt.addEventListener('input',()=>{cell.alt=alt.value;changed();});
+            alt.addEventListener('input',()=>{cell.alt=alt.value;changed({typing:true});});
             td.appendChild(alt);
           }
         }
@@ -1068,18 +1098,18 @@
           const qid=document.createElement('input');
           qid.type='text';qid.placeholder='ID réponse';qid.value=cell.questionId||'';
           qid.title='ID stable de la réponse. Pour un choix unique en ligne, les cellules options peuvent partager le même ID.';
-          qid.addEventListener('input',()=>{cell.questionId=Core.cleanId(qid.value);changed();});
+          qid.addEventListener('input',()=>{cell.questionId=Core.cleanId(qid.value);changed({typing:true});});
           td.appendChild(qid);
 
           const expected=document.createElement('input');
           expected.type='text';expected.placeholder='Réponse attendue';expected.value=cell.acceptedAnswers||'';
-          expected.addEventListener('input',()=>{cell.acceptedAnswers=expected.value;changed();});
+          expected.addEventListener('input',()=>{cell.acceptedAnswers=expected.value;changed({typing:true});});
           td.appendChild(expected);
 
           if(cell.kind==='select'||cell.kind==='choice-option') {
             const options=document.createElement('input');
             options.type='text';options.placeholder='Choix séparés par ;';options.value=(cell.options||[]).join('; ');
-            options.addEventListener('input',()=>{cell.options=splitValues(options.value);changed();});
+            options.addEventListener('input',()=>{cell.options=splitValues(options.value);changed({typing:true});});
             td.appendChild(options);
           }
         }
@@ -1088,8 +1118,8 @@
         span.className='cell-span-editor';
         const rs=document.createElement('input');rs.type='number';rs.min='1';rs.value=cell.rowSpan||1;rs.title='Fusion verticale';
         const cs=document.createElement('input');cs.type='number';cs.min='1';cs.value=cell.colSpan||1;cs.title='Fusion horizontale';
-        rs.addEventListener('input',()=>{cell.rowSpan=Math.max(1,Number(rs.value)||1);changed();});
-        cs.addEventListener('input',()=>{cell.colSpan=Math.max(1,Number(cs.value)||1);changed();});
+        rs.addEventListener('input',()=>{cell.rowSpan=Math.max(1,Number(rs.value)||1);changed({typing:true});});
+        cs.addEventListener('input',()=>{cell.colSpan=Math.max(1,Number(cs.value)||1);changed({typing:true});});
         span.append('Fusion ',rs,' × ',cs);
         td.appendChild(span);
         tr.appendChild(td);
@@ -1133,15 +1163,23 @@
     const t=block.tableDefinition||(block.tableDefinition={id:uid('tabledef'),title:'',headers:['Colonne 1','Colonne 2'],questionIds:[]});
     const row=document.createElement('div');
     row.className='field-row cols-3';
+    const legacy=Boolean(state.sourceDefinition?.presentation?.tables);
+    const locked={readOnly:true,title:'Tableau historique : structure protégée pour conserver les identifiants de questions et le barème.'};
     row.append(
-      inputField('ID du tableau',t.id||'',value=>{t.id=Core.cleanId(value);changed();}),
+      inputField('ID du tableau',t.id||'',value=>{t.id=Core.cleanId(value);changed();},legacy?locked:{}),
       inputField('Titre',t.title||'',value=>{t.title=value;changed();}),
-      inputField('En-têtes', (t.headers||[]).join('; '),value=>{t.headers=splitValues(value);changed();})
+      inputField('En-têtes', (t.headers||[]).join('; '),value=>{t.headers=splitValues(value);changed();},legacy?locked:{})
     );
     body.appendChild(row);
     body.appendChild(inputField('Questions utilisées — IDs séparés par ;',(t.questionIds||[]).join('; '),value=>{
       t.questionIds=splitValues(value);changed();
-    },{placeholder:'question_1; question_2'}));
+    },legacy?{...locked,placeholder:'Identifiants conservés'}:{placeholder:'question_1; question_2'}));
+    if(legacy){
+      const notice=document.createElement('small');
+      notice.className='question-help';
+      notice.textContent='Structure d’origine protégée : vous pouvez modifier le titre et le style. Les IDs et les en-têtes restent fixes pour garantir les questions et leur correction.';
+      body.appendChild(notice);
+    }
   }
 
   function normalizedSearch(value) {
@@ -1473,7 +1511,7 @@
     const name=document.createElement('div');
     name.className='file-preview-name';
     name.textContent=block.mediaData
-      ?'Image sélectionnée : '+(block.mediaName||'Image intégrée')
+      ?kindLabel.charAt(0).toUpperCase()+kindLabel.slice(1)+' sélectionné'+(block.type==='image'?'e':'')+' : '+(block.mediaName||kindLabel+' intégré')
       :(block.mediaPlaceholder||'Aucun fichier sélectionné');
     body.appendChild(name);
 
@@ -3240,27 +3278,20 @@
       'block1-width-chars','block2-width-chars','last-block-remainder',
       'page-background-type','page-background-color'
     ].forEach(id=>{
-      $(id).addEventListener('input',()=>{
-        if(id==='test-layout') {
-          $('custom-sizing-row').hidden=$('test-layout').value!=='chars-rest';
+      const field=$(id);
+      // Un seul événement par action : input pour le texte, change pour
+      // les sélecteurs et cases. Une seule transaction d'historique.
+      const eventName=field.matches('select,input[type="checkbox"]')?'change':'input';
+      field.addEventListener(eventName,()=>{
+        if(id==='test-layout'){
+          $('custom-sizing-row').hidden=field.value!=='chars-rest';
           renderBlocks();
-        } else {
-          if(id==='test-category') syncPracticalCategory();
-          if(['calculator-compatible','chrono-enabled','admin-intervention','external-material'].includes(id)) syncCapabilityOptions();
-          if(id==='page-background-type') syncPageBackgroundOptions();
-          changed();
+        }else{
+          if(id==='test-category')syncPracticalCategory();
+          if(['calculator-compatible','chrono-enabled','admin-intervention','external-material'].includes(id))syncCapabilityOptions();
+          if(id==='page-background-type')syncPageBackgroundOptions();
         }
-      });
-      $(id).addEventListener('change',()=>{
-        if(id==='test-layout') {
-          $('custom-sizing-row').hidden=$('test-layout').value!=='chars-rest';
-          renderBlocks();
-        } else {
-          if(id==='test-category') syncPracticalCategory();
-          if(['calculator-compatible','chrono-enabled','admin-intervention','external-material'].includes(id)) syncCapabilityOptions();
-          if(id==='page-background-type') syncPageBackgroundOptions();
-          changed();
-        }
+        changed();
       });
     });
 
@@ -3305,6 +3336,9 @@
     document.addEventListener('keydown',event=>{
       if(!(event.ctrlKey||event.metaKey)||event.altKey)return;
       const key=String(event.key||'').toLowerCase();
+      // Dans un champ actif, conserver l'annulation native du texte
+      // (y compris le curseur et la sélection), pas l'historique du test.
+      if(event.target?.closest?.('input,textarea,[contenteditable="true"]'))return;
       if(key==='z'&&!event.shiftKey){
         event.preventDefault();
         undoChange();
