@@ -142,3 +142,10 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Correction générale : libérer le worker dans un bloc `finally` après capture ou erreur, effacer sa définition et prévenir la suppression de la référence d'un worker plus récent par un événement `closed` tardif. La capture déjà affichée est conservée.
 - Contrôle du vrai handler IPC avec quatre tests fictifs : succès, page non prête, erreur de capture puis nouveau succès, plus contrôle de file sérialisée et refus d'appel non autorisé.
 - L'origine exacte de l'activité périodique Windows n'est pas encore établie. Aucun fichier V1, image, barème ni CSS changé. Aucune nouvelle Release ni Setup pour cette étape.
+
+## Rafales de saisie et demandes de capture périmées (13 octobre 2026)
+
+- Pour tous les tests présents et futurs, les demandes de capture Electron sont maintenant identifiées par une génération. Avant d'ouvrir un moteur caché, la file abandonne les demandes remplacées par une édition plus récente.
+- Même lorsqu'une capture a commencé, les étapes coûteuses suivantes sont évitées si une nouvelle édition est arrivée ; le `finally` ferme toujours le processus.
+- Au début d'un travail sorti de la file, l'accès administrateur et l'absence d'un candidat actif sont recontrôlés : un aperçu devenu inautorisé ne peut pas démarrer plus tard.
+- Régression fictive étendue à quatre demandes en rafale : seule la dernière capture en attente démarre ; les moteurs obsolètes ne sont pas créés et tous ceux démarrés sont détruits. Aucun changement de CSS, des images, du catalogue, des V1 ou des barèmes.

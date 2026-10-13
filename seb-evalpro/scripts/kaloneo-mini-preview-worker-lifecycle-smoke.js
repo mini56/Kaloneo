@@ -12,6 +12,7 @@ const handlerSource=main.slice(start,stop);
 const harness=[
   'let adminSessionUnlocked=true;',
   'let kaloneoMiniPreviewJob=Promise.resolve();',
+  'let kaloneoMiniPreviewRequestSerial=0;',
   'let kaloneoMiniPreviewWorker=null;',
   'let kaloneoMiniPreviewDefinition=null;',
   'const registry=new Map();',
@@ -69,7 +70,9 @@ const engine=build(path,path.join(__dirname,'..','src'),makeWorker);
   const fixtures=[0,1,2,3].map(i=>({
     id:'future-test-'+i,title:'Test inédit '+i,presentation:{layout:'50-50'}
   }));
-  const results=await Promise.all(fixtures.map(def=>engine.invoke(def)));
+  // Vérifier d'abord chaque issue de manière déterministe, sans coalescence.
+  const results=[];
+  for(const definition of fixtures)results.push(await engine.invoke(definition));
   assert.equal(results.length,4);
   assert.equal(results[0].ok,true,'Premier rendu incorrect');
   assert.equal(results[1].ok,false,'Le résultat non prêt doit être refusé');
@@ -81,8 +84,32 @@ const engine=build(path,path.join(__dirname,'..','src'),makeWorker);
   assert.equal(working,0,'Processus caché encore actif');
   assert.equal(engine.getCurrentWorker(),null,'Référence cachée conservée');
   assert.equal(engine.getCurrentDefinition(),null,'Définition de test conservée après capture');
+
+  // Rafale de demandes : un seul ancien rendu peut être actif et seule la
+  // dernière demande en attente est autorisée à créer un nouveau moteur.
+  const burst=[4,5,6,7].map(i=>({
+    id:'future-burst-'+i,title:'Modification inédite '+i,
+    presentation:{layout:'60-40'}
+  }));
+  const alreadyRunning=engine.invoke(burst[0]);
+  await new Promise(resolve=>setTimeout(resolve,2));
+  const staleOne=engine.invoke(burst[1]);
+  const staleTwo=engine.invoke(burst[2]);
+  const latest=engine.invoke(burst[3]);
+  const concurrent=await Promise.all([alreadyRunning,staleOne,staleTwo,latest]);
+  assert.equal(concurrent[1].ok,false,'Ancienne capture en attente pas abandonnée');
+  assert.equal(concurrent[2].ok,false,'Nouvelle capture obsolète pas abandonnée');
+  assert.match(concurrent[1].error,/remplacée/);
+  assert.match(concurrent[2].error,/remplacée/);
+  assert.equal(concurrent[3].ok,true,'Dernier test créé non photographié');
+  assert.equal(workers.length,6,'Deux captures obsolètes ont créé un Electron caché');
+  assert(workers.every(worker=>worker.isDestroyed()));
+  assert.equal(working,0);
+  assert.equal(maximum,1);
+  assert.equal(engine.getCurrentDefinition(),null);
+
   const rejected=await engine.invoke(fixtures[0],{});
   assert.equal(rejected.ok,false,'Un expéditeur externe ne doit pas produire de capture');
-  assert.equal(workers.length,4,'Une capture non autorisée a créé un worker');
+  assert.equal(workers.length,6,'Une capture non autorisée a créé un worker');
   console.log('KALONEO_GENERIC_MINI_PREVIEW_WORKER_LIFECYCLE=OK');
 })().catch(error=>{console.error(error);process.exitCode=1;});

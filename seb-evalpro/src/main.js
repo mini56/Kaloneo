@@ -45,6 +45,8 @@ let kaloneoBuilderPreviewFullscreenActive = false;
 let kaloneoMiniPreviewWorker = null;
 let kaloneoMiniPreviewDefinition = null;
 let kaloneoMiniPreviewJob = Promise.resolve();
+// Chaque nouvelle demande rend obsolètes les captures encore en attente.
+let kaloneoMiniPreviewRequestSerial = 0;
 let kaloneoMaskPreviewDefinition = null;
 let adminExportCandidateDir = null;
 let adminCandidateResultsMode = false;
@@ -1567,9 +1569,16 @@ ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition) => {
     return {ok:false,error:'Définition du test absente.'};
   }
   const submitted=JSON.parse(JSON.stringify(definition));
+  const requestSerial=++kaloneoMiniPreviewRequestSerial;
   // Sérialiser les captures pour éviter qu'un nouveau modèle ne remplace celui
   // d'une image encore en cours de génération.
   const job=kaloneoMiniPreviewJob.catch(()=>{}).then(async()=>{
+    // Ne plus créer un Electron caché pour une édition déjà remplacée.
+    if(requestSerial!==kaloneoMiniPreviewRequestSerial)
+      return {ok:false,error:'Capture remplacée par une modification plus récente.'};
+    if(!adminSessionUnlocked||!mainWindow||mainWindow.isDestroyed()||
+       event.sender!==mainWindow.webContents||getCandidateStore().getActiveCandidate())
+      return {ok:false,error:'La session Builder a changé pendant l’attente.'};
     const worker=getKaloneoMiniPreviewWorker();
     try {
     const source=path.join(__dirname,'..','app','web','kaltest-pilot2.html');
@@ -1583,6 +1592,8 @@ ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition) => {
     worker.webContents.setZoomFactor(factor);
     worker.setContentSize(Math.round(1366*factor),Math.round(768*factor));
     await worker.loadFile(source,{query:{kaloneoPreview:'1'}});
+    if(requestSerial!==kaloneoMiniPreviewRequestSerial)
+      return {ok:false,error:'Capture remplacée par une modification plus récente.'};
     // Chromium peut réinitialiser le zoom d'un nouvel URL file://.
     worker.webContents.setZoomFactor(factor);
     const report=await worker.webContents.executeJavaScript(`(async()=>{
@@ -1613,6 +1624,8 @@ ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition) => {
     if(Math.abs(report.width-1366)>2||Math.abs(report.height-768)>2) {
       return {ok:false,error:'Viewport différent du candidat : '+report.width+' × '+report.height};
     }
+    if(requestSerial!==kaloneoMiniPreviewRequestSerial)
+      return {ok:false,error:'Capture remplacée par une modification plus récente.'};
     const screenshot=await worker.webContents.capturePage();
     if(screenshot.isEmpty())return {ok:false,error:'Capture candidat vide.'};
     const size=screenshot.getSize();
