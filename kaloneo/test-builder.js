@@ -2230,13 +2230,9 @@
     if(block.type==='text') {
       renderRichContext(wrap,block.text||'Bloc texte vide');
     } else if(block.type==='html'||block.type==='html-js') {
-      const frame=document.createElement('iframe');
-      frame.className='preview-html-frame';frame.sandbox='allow-scripts';
-      frame.srcdoc='<!doctype html><html><body style="font-family:Calibri,Arial,sans-serif;margin:10px">'+
-        (block.html||'<em>Bloc HTML vide</em>')+
-        (block.type==='html-js'&&block.js?'<script>'+block.js.replace(/<\/script/gi,'<\\/script')+'</script>':'')+
-        '</body></html>';
-      wrap.appendChild(frame);
+      wrap.appendChild(window.KaloneoSharedPresentation.renderHtmlFrame({
+        doc:document,block,className:'preview-html-frame'
+      }));
     } else if(['image','audio','video'].includes(block.type)) {
       // Le Builder et le candidat partagent aussi le même rendu de média.
       node=window.KaloneoSharedPresentation.renderMedia({
