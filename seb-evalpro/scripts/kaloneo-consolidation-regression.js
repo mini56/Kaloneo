@@ -179,6 +179,22 @@ const answerEmpty=sharedPresentation.renderResponseTable({
 assert.strictEqual(answerEmpty.children[0].children[1].children.length,1);
 assert(preview.includes('KaloneoSharedPresentation.renderResponseTable('),
   'Aperçu Electron : tableau de réponses non partagé');
+// Une ressource nouvelle utilise le même constructeur sur les trois écrans.
+assert(preview.includes('KaloneoSharedPresentation.renderMedia('),
+  'Aperçu Electron : anciens médias dupliqués');
+const mediaDoc={
+  createElement(tag){return {tagName:tag,children:[],style:{},className:'',
+    appendChild(child){this.children.push(child);return child;}};}
+};
+const futureImage=sharedPresentation.renderMedia({
+  doc:mediaDoc,type:'image',resource:{data:'imageqcm/new-example.png',alt:'Image fictive'},
+  style:{imageScale:65,imageAlign:'right'},
+  resolveSource:path=>path.startsWith('imageqcm/')?'../'+path:path,
+  className:'kb-block kb-media-block',imageClass:'kb-media'
+});
+assert.strictEqual(futureImage.children[0].src,'../imageqcm/new-example.png');
+assert.strictEqual(futureImage.children[0].style.width,'65%');
+assert.strictEqual(futureImage.style.justifyContent,'flex-end');
 assert(common.includes('function equalAutomaticColumns('),'R48.10 function missing in shared presentation engine');
 assert(preview.includes('KaloneoSharedPresentation.renderGridTable('),
   'Aperçu Electron autonome sans grille partagée');

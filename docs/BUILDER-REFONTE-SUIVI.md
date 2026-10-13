@@ -93,3 +93,9 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - L'aperçu Electron autonome utilise maintenant `renderResponseTable`, déjà appelé par le Builder et le candidat.
 - Préservation de la ligne vide « Aucune question définie », du libellé, de l'unité et des champs de réponse propres à l'aperçu.
 - Aucun changement des barèmes, des réponses ni des V1. Contrôles structurels ajoutés avec une question inexistante dans le catalogue.
+
+## Médias de l'aperçu Electron autonome (13 octobre 2026)
+
+- Les médias image/audio/vidéo du dernier aperçu autonome délèguent à `renderMedia` comme le Builder et le candidat.
+- Conserve les chemins d'images `imageqcm/`, la taille et l'alignement, les classes CSS `kb-media`/`kb-audio`, les commandes des lecteurs et le bloc vide.
+- Contrôle générique d'une image fictive, avec taille 65 % et alignement à droite ; aucune ressource du catalogue n'a été modifiée.

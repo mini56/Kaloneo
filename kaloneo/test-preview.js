@@ -187,21 +187,22 @@ function renderTextEditor(block){
 }
 
 function renderMedia(block){
-  const wrap=el('section','kb-block kb-media-block');
-  const data=String(block.mediaData||'');
-  if(!data){wrap.append(el('div','kb-empty',block.mediaPlaceholder||'Aucun média sélectionné'));return wrap;}
-  if(block.type==='image'){
-    const img=el('img','kb-media');img.src=String(data).startsWith('imageqcm/')?'../'+data:data;img.alt=block.mediaAlt||block.mediaName||'Image';
-    const scale=Number(block.imageScale);if(scale>=10&&scale<100){img.style.width=scale+'%';img.style.height='auto';img.style.maxHeight='100%';}
-    if(['left','right'].includes(block.imageAlign)){
-      wrap.style.justifyContent=block.imageAlign==='left'?'flex-start':'flex-end';
-      img.style.margin='auto 0';
-    }
-    wrap.append(img);
-  }else if(block.type==='audio'){
-    const audio=el('audio','kb-audio');audio.controls=true;audio.src=data;wrap.append(audio);
-  }else{
-    const video=el('video','kb-media');video.controls=true;video.src=data;wrap.append(video);
+  // La même construction de média est utilisée dans les trois vues.
+  // Seuls les chemins et classes de l'aperçu autonome lui appartiennent.
+  const source=String(block.mediaData||'');
+  const wrap=window.KaloneoSharedPresentation.renderMedia({
+    doc:document,type:block.type,
+    resource:{data:source,alt:block.mediaAlt||block.mediaName||'Image'},
+    style:{imageScale:block.imageScale,imageAlign:block.imageAlign},
+    className:'kb-block kb-media-block',imageClass:'kb-media',
+    videoClassName:'kb-media',videoClass:'kb-media',
+    emptyText:'',
+    resolveSource:value=>value.startsWith('imageqcm/')?'../'+value:value
+  });
+  if(!source)wrap.appendChild(el('div','kb-empty',block.mediaPlaceholder||'Aucun média sélectionné'));
+  if(block.type==='audio'){
+    const audio=wrap.querySelector('audio');
+    if(audio)audio.className='kb-audio';
   }
   return wrap;
 }
