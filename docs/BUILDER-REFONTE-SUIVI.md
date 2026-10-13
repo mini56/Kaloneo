@@ -168,3 +168,9 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Nouveau garde-fou CI `kaloneo-catalog-roundtrip-score-guard.js` : découvre automatiquement tous les `test.json` du catalogue, y compris les futurs, sans condition par ID.
 - Il vérifie la présence, l'ordre et l'unicité des questions, leurs réponses/barèmes/types, les sorties et contributions Bilan, ainsi que les contenus image/audio/vidéo embarqués ; aucun fichier de test n'est modifié.
 - Ce contrôle vérifie l'intégrité des données, **pas** l'équivalence visuelle de tous les écrans ; les captures réelles validées par l'utilisateur restent la référence.
+
+## Préparation de la livraison R94 (13 octobre 2026)
+
+- Dernier code de référence : `e07cd5752059997aeacabfdc96e29ca3ef330e64`, run `38445356377` (SUCCESS).
+- L'utilisateur a déjà validé dans la R93 le rendu photographié du vrai candidat pour Gratte-ciel, Rangement du stock et Tri de chevilles. La R94 ne modifie aucun des styles et rendus candidat : elle ajoute le nettoyage des processus, la gestion des captures obsolètes, la correction générique des IDs de questions et les gardes des barèmes/ressources.
+- Préparer une Release R94 / Build #99 / 0.0.123 distincte ; conserver les Releases R93 et R91. Ne jamais compiler deux fois avec le même numéro. L'autorisation finale des interfaces appartient à l'utilisateur après test local.
