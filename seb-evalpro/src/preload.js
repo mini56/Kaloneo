@@ -1950,6 +1950,9 @@ try {
     const resultsWorkspace = ipcRenderer.sendSync('candidate-catalog:results-workspace-load-sync');
     if (resultsWorkspace && resultsWorkspace.ok) {
       adminCandidateResultsWorkspace = resultsWorkspace;
+      // Vue administrateur indépendante de tout écran ou navigation candidat.
+      // Défini dès le préchargement, avant la création de la barre de navigation.
+      document.documentElement?.classList.add('seb-admin-results-workspace');
       restoredState = resultsWorkspace.state || {};
       // Au chargement, ne jamais montrer un instant la page 0 historique.
       if(document.documentElement){
@@ -1974,29 +1977,39 @@ function showReadOnlyCandidateResults() {
   if (!adminCandidateResultsWorkspace) return;
   const page = document.getElementById('pageFinale');
   if (!page) return;
-  let notice = document.getElementById('seb-admin-results-readonly');
-  if (!notice) {
-    notice = document.createElement('div');
-    notice.id = 'seb-admin-results-readonly';
-    notice.textContent = 'Résultats enregistrés — lecture seule';
-    notice.style.cssText = 'margin:8px 0 14px;padding:8px 12px;border:1px solid #9cc2e5;border-radius:6px;background:#f7fbff;color:#1f4e79;font:700 14px Arial,sans-serif;';
-    const heading = page.querySelector('h2');
-    if (heading) heading.insertAdjacentElement('afterend', notice);
-    else page.prepend(notice);
+  document.documentElement?.classList.add('seb-admin-results-workspace');
+  // En consultation administrateur, aucun pied de page candidat n'est utile.
+  document.body?.classList.remove('seb-kaloneo-nav-active');
+  const bar = document.getElementById('kaloneo-common-navigation');
+  if (bar) bar.hidden = true;
+
+  // Le titre et les actions doivent occuper la même ligne.
+  let header = document.getElementById('seb-admin-results-header');
+  if (!header) {
+    header = document.createElement('div');
+    header.id = 'seb-admin-results-header';
+    const heading = page.querySelector(':scope > h2');
+    if (heading) {
+      page.insertBefore(header, heading);
+      header.appendChild(heading);
+    } else {
+      header.appendChild(Object.assign(document.createElement('h2'), { textContent:'Résultats du test' }));
+      page.prepend(header);
+    }
   }
-  const runner = document.createElement('script');
-  runner.textContent = "(function(){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('visible');});var page=document.getElementById('pageFinale');if(page)page.classList.add('visible');if(typeof afficherResultat==='function')afficherResultat();window.scrollTo(0,0);})();";
-  (document.documentElement || document.body).appendChild(runner);
-  runner.remove();
-  page.querySelectorAll('input,select,textarea,button').forEach((control) => { control.disabled = true; });
+  let actions = document.getElementById('seb-admin-results-actions');
+  if (!actions) {
+    actions = document.createElement('div');
+    actions.id = 'seb-admin-results-actions';
+    header.appendChild(actions);
+  }
 
   let closeResults = document.getElementById('seb-admin-results-close');
   if (!closeResults) {
     closeResults = document.createElement('button');
     closeResults.id = 'seb-admin-results-close';
     closeResults.type = 'button';
-    closeResults.textContent = 'Fermer les résultats';
-    closeResults.style.cssText = 'display:block;margin:0 0 14px auto;padding:8px 14px;border:2px solid #0070c0;border-radius:6px;background:#fff;color:#0070c0;font:700 14px Arial,sans-serif;cursor:pointer;';
+    closeResults.textContent = '✕ Fermer les résultats';
     closeResults.addEventListener('click', async () => {
       closeResults.disabled = true;
       await ipcRenderer.invoke('ai:cancel-current').catch(() => false);
@@ -2006,8 +2019,39 @@ function showReadOnlyCandidateResults() {
       adminCandidateResultsWorkspace = null;
       await ipcRenderer.invoke('admin:return-candidate-browser', candidateId).catch(() => false);
     });
-    notice.insertAdjacentElement('afterend', closeResults);
   }
+  actions.appendChild(closeResults);
+
+  let home = document.getElementById('seb-admin-results-home');
+  if (!home) {
+    home = document.createElement('button');
+    home.id = 'seb-admin-results-home';
+    home.type = 'button';
+    home.textContent = '⌂ Afficher l’écran d’accueil';
+    home.addEventListener('click', () => {
+      window.dispatchEvent(new Event('seb-evalpro-show-privacy'));
+    });
+  }
+  actions.insertBefore(home, closeResults);
+
+  let notice = document.getElementById('seb-admin-results-readonly');
+  if (!notice) {
+    notice = document.createElement('div');
+    notice.id = 'seb-admin-results-readonly';
+    notice.textContent = 'Résultats enregistrés — lecture seule';
+    header.insertAdjacentElement('afterend', notice);
+  }
+  const runner = document.createElement('script');
+  runner.textContent = "(function(){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('visible');});var page=document.getElementById('pageFinale');if(page)page.classList.add('visible');if(typeof afficherResultat==='function')afficherResultat();window.scrollTo(0,0);})();";
+  (document.documentElement || document.body).appendChild(runner);
+  runner.remove();
+  // Ne jamais rendre les réponses modifiables depuis un dossier clôturé.
+  // Les boutons Fermer et Accueil appartiennent à l'Admin, pas aux réponses.
+  const results = document.getElementById('resultat');
+  results?.querySelectorAll('input,select,textarea,button,[contenteditable]').forEach(control => {
+    if ('disabled' in control) control.disabled = true;
+    control.removeAttribute('contenteditable');
+  });
 }
 
 async function completeCandidateFromFinalPage() {
