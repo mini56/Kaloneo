@@ -2285,7 +2285,10 @@
       const status=$('candidate-preview-status');
       const image=$('candidate-preview-snapshot');
       const warning=$('candidate-preview-warning');
-      if(!bridge?.kaloneoRenderMiniPreview||!image)return;
+      if(!bridge?.kaloneoRenderMiniPreview||!image){
+        $('candidate-preview-viewport')?.removeAttribute('data-preview-loading');
+        return;
+      }
       miniPreviewRunning=true;
       try {
         const result=await bridge.kaloneoRenderMiniPreview(Core.modelToDefinition(currentModel()));
@@ -2301,6 +2304,10 @@
         }
         if(revision!==miniPreviewRevision)return;
         image.hidden=false;
+        // La première vue d'un test ouvert est désormais toujours celle du
+        // moteur candidat : pas d'aperçu simplifié montrant ses réponses puis
+        // modifiant silencieusement sa disposition.
+        $('candidate-preview-viewport')?.removeAttribute('data-preview-loading');
         const warnings=[];
         if(result.report?.overflowZones)warnings.push('débordement de bloc');
         if(result.report?.tableHorizontalOverflow)warnings.push('tableau trop large');
@@ -2315,6 +2322,10 @@
         }
       }finally{
         miniPreviewRunning=false;
+        // Si le moteur candidat n'est pas disponible, on rétablit le rendu
+        // direct au lieu de laisser un panneau de chargement bloqué.
+        if(revision===miniPreviewRevision)
+          $('candidate-preview-viewport')?.removeAttribute('data-preview-loading');
         // Les captures obsolètes ne sont pas mises en file d’attente.
         if(miniPreviewDeferredRevision===miniPreviewRevision) {
           miniPreviewDeferredRevision=null;
@@ -2689,6 +2700,9 @@
     state.sourceDefinition=model.sourceDefinition;
     state.sourceProtectedVersion=options.protectedVersion===true;
     state.blocks=model.blocks;
+    // L'ouverture d'un test attend sa première image candidate fidèle.
+    // Le rendu de frappe reste instantané une fois ce premier affichage fait.
+    $('candidate-preview-viewport')?.setAttribute('data-preview-loading','true');
     collapsedBlockUids.clear();
     state.blocks.forEach(block=>{if(block?.uid)collapsedBlockUids.add(block.uid);});
     // Les sections de conception sont fermées par défaut à chaque ouverture.
