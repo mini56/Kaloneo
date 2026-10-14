@@ -104,6 +104,27 @@ html.seb-results-report-mode #resultat {
 }
 #resultat .seb-report-table tr:nth-child(even) td {background:#f8fafc;}
 #resultat .seb-report-details .seb-report-table {margin:0;}
+#resultat .seb-report-criteria [data-criterion-status="valid"] {
+  color:#16653e; font-weight:700;
+}
+#resultat .seb-report-criteria [data-criterion-status="invalid"] {
+  color:#a83b34; font-weight:700;
+}
+#resultat .seb-report-selection-counts td:last-child,
+#resultat .seb-report-stock-details td:last-child {
+  font-weight:650;
+}
+#resultat .seb-report-selection-counts td:first-child {
+  width:48%;
+}
+#resultat .seb-report-stock-details td:nth-child(2) {
+  min-width:230px;
+}
+#resultat .seb-report-selection-counts,
+#resultat .seb-report-criteria {
+  margin:6px 0 16px;
+}
+
 #resultat .seb-report-footer {
   font-size:13px; color:#4f6676; line-height:1.5; margin:0 2px 8px;
 }
