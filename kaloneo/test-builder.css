@@ -1395,10 +1395,15 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
    Aucune translation au survol (celle du relief reste verticale). */
 .builder-editor .icon-library-panel.is-collapsed > .section-title-row .section-fold-btn,
 .builder-editor .page-style-panel.is-collapsed > .section-title-row .section-fold-btn,
-.builder-editor .validation-box.is-collapsed > .section-title-row .section-fold-btn,
-.builder-editor .exercise-block.is-collapsed > .block-header .toggle-block{
+.builder-editor .validation-box.is-collapsed > .section-title-row .section-fold-btn{
   position:relative;
   left:12px;
+}
+/* Pour les blocs, étendre la ligne de 12px dans le padding droit du cadre.
+   Un décalage relatif du bouton augmente scrollWidth et fait échouer
+   l'alignement des autres commandes dans un bloc long. */
+.builder-editor .exercise-block.is-collapsed > .block-header{
+  width:calc(100% + 12px);
 }
 /* La fermeture de Style de la page masque en une fois les champs de contexte,
    les capacités communes et tous leurs paramètres sans toucher aux valeurs. */
