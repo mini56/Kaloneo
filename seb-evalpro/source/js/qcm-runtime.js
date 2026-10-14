@@ -491,6 +491,11 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
 
   for(const [id,detail] of Object.entries(details)){
     if(!detail||typeof detail!=='object'||used.has(id))continue;
+    // La saisie du corps d'un courriel peut répondre à deux critères de
+    // notation (signature et téléphone). Elle reste UN seul texte candidat.
+    if((id==='mail_signature'||id==='mail_phone')&&!mailForm){
+      continue;
+    }
     used.add(id);
     const value=detail.value??detail.answer??detail.user??answers[id]??'';
     const prompt=questions.get(String(id))?.prompt||String(id);

@@ -38,6 +38,7 @@ jobs:
           node --check scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
           node --check scripts/kaloneo-catalog-roundtrip-score-guard.js
           node --check scripts/kaloneo-results-strict-isolation-electron-smoke-main.js
+          node --check scripts/kaloneo-results-readable-formats-electron-smoke-main.js
           node --check scripts/kaloneo-new-test-preview-electron-smoke-main.js
           node --check scripts/kaloneo-shared-html-candidate-electron-smoke-main.js
           node --check scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
@@ -79,6 +80,8 @@ jobs:
         run: npx electron --no-sandbox scripts/nwtexte-functional-smoke-main.js
       - name: Check e-mail exercise in real Electron
         run: npx electron --no-sandbox scripts/nvmail-functional-smoke-main.js
+      - name: Display meaningful text, comments, times and errors in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-results-readable-formats-electron-smoke-main.js
       - name: Reject mixed Mail and other results in real Electron
         run: npx electron --no-sandbox scripts/kaloneo-results-strict-isolation-electron-smoke-main.js
       - name: Check dynamic evaluation results and Bilan in real Electron

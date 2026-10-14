@@ -209,3 +209,10 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Traduction des choix et des intitulés au moyen de la définition correspondant **exactement à l'ID et à la version du manifeste**, chargée en lecture seule ; sans définition, laisser le code enregistré plutôt que fabriquer un mauvais libellé. Règle applicable à tous les nouveaux tests et aux V1, sans exception basée sur le nom du test.
 - Le chemin administratif des résultats masque l'ancienne page pendant l'initialisation, puis rétablit la visibilité après installation des éléments de lecture seule.
 - Aucune modification de résultat ni barème candidat, V1, images, scores ou présentation du Builder. Contrôle Electron renforcé encore nécessaire avant Setup.
+
+## Contrôle Electron réaliste de la page Résultats (14 octobre 2026)
+
+- Nouveau parcours entièrement synthétique, cinq tests inconnus du catalogue : rédaction, autoévaluation avec phrase et commentaire, manipulation avec chrono/erreurs, tri avec trois essais et moyennes, et courriel complet.
+- Test sous le vrai Electron en lecture seule avec définition obtenue par IPC. Vérifie les libellés et commentaires exacts, le texte sans code HTML, les durées et erreurs, l'absence de doublon du courriel, la séparation stricte des tests et l'ouverture directement sur la page Résultats.
+- Corrige le double affichage du corps de courriel lorsque sa saisie répond à plusieurs critères de notation : un champ de texte partagé n'est présenté qu'une fois.
+- Aucun changement du modèle de notation ni des données sauvegardées.
