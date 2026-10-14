@@ -1071,6 +1071,23 @@ body{
   pointer-events:none;z-index:4;
 }
 .candidate-preview-snapshot[hidden]{display:none!important;}
+/* À l'ouverture d'un test, ne pas montrer un schéma simplifié différent
+   avant la capture fidèle du moteur candidat. Aucune dimension ne change. */
+.candidate-preview-viewport[data-preview-loading="true"]>.candidate-preview{
+  visibility:hidden!important;
+}
+.candidate-preview-viewport[data-preview-loading="true"]::after{
+  content:"Chargement de l’aperçu candidat…";
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  color:#48667a;
+  font:600 13px Calibri,"Segoe UI",Arial,sans-serif;
+  background:#f7f9fb;
+  z-index:3;
+}
+
 /* Aucun panneau coloré intermédiaire n'efface le rendu en cours de saisie. */
 .candidate-preview-status{display:none!important;}
 .candidate-preview-viewport>.candidate-preview{visibility:visible!important;}
