@@ -216,3 +216,9 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Test sous le vrai Electron en lecture seule avec définition obtenue par IPC. Vérifie les libellés et commentaires exacts, le texte sans code HTML, les durées et erreurs, l'absence de doublon du courriel, la séparation stricte des tests et l'ouverture directement sur la page Résultats.
 - Corrige le double affichage du corps de courriel lorsque sa saisie répond à plusieurs critères de notation : un champ de texte partagé n'est présenté qu'une fois.
 - Aucun changement du modèle de notation ni des données sauvegardées.
+
+## Complément d'affichage des stations pratiques (14 octobre 2026)
+
+- Pour les stations pratiques et toute future autoévaluation, les textes des choix cochés proviennent de `presentation.triStation.autoStatements`, `presentation.bricksStation.autoStatements` ou `presentation.autoevaluationForm.statements` selon le type de données, jamais d'un ID de test codé en dur.
+- Les questions internes de validation (`*_ready`, `*_complete`) sont masquées dans la page Résultats : elles ne doivent pas être présentées comme une question fausse du candidat.
+- Le nouveau smoke Electron vérifie les phrases complètes pour les deux activités pratiques et l'absence de l'indicateur interne, en plus des temps, erreurs et commentaires.

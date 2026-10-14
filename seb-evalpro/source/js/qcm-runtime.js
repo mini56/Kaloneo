@@ -386,7 +386,11 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
   };
   const readable=value=>Array.isArray(value)?value.map(String).join(', '):String(value??'');
   const selectionLabel=value=>{
-    const statement=(autoForm?.statements||[]).find(s=>String(s.value)===String(value));
+    // Les stations pratiques et toutes les nouvelles autoévaluations utilisent
+    // la même structure de choix {value,label}, et non un dictionnaire d'IDs.
+    const statements=autoForm?.statements||presentation.triStation?.autoStatements||
+      presentation.bricksStation?.autoStatements||[];
+    const statement=statements.find(s=>String(s.value)===String(value));
     if(!statement)return String(value);
     const group=(autoForm.groups||[]).find(g=>(g.values||[]).some(v=>String(v)===String(value)));
     return (group?.title?group.title+' — ':'')+String(statement.label||value);
@@ -491,6 +495,9 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
 
   for(const [id,detail] of Object.entries(details)){
     if(!detail||typeof detail!=='object'||used.has(id))continue;
+    // Un champ de validation interne (« prêt », « terminé ») n'est pas
+    // une réponse évaluée et ne doit surtout pas devenir « Q1 : 1 ✗ ».
+    if(/(?:_ready|_complete|_validated|_seen)$/.test(id))continue;
     // La saisie du corps d'un courriel peut répondre à deux critères de
     // notation (signature et téléphone). Elle reste UN seul texte candidat.
     if((id==='mail_signature'||id==='mail_phone')&&!mailForm){

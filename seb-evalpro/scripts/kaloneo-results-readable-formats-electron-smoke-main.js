@@ -19,6 +19,12 @@ const definitions={
    statements:[{value:'progress_code_2060',label:'Le candidat se sent plus à l’aise dans les tâches proposées.'}],
    groups:[{title:'Ressenti personnel',values:['progress_code_2060']}]
  }},questions:[{id:formId,prompt:'Ressenti du candidat'}]},
+ future_brix_2060:{presentation:{bricksStation:{autoStatements:[
+   {value:'future_bricks_feedback',label:'J’ai terminé l’assemblage avec difficulté.'}
+ ]}}},
+ future_sort_2060:{presentation:{triStation:{autoStatements:[
+   {value:'future_sort_feedback',label:'Je me suis amélioré pendant mes tris.'}
+ ]}}},
  future_message_2060:{presentation:{mailComposer:{fields:{
    to:'to_code',cc:'cc_code',subject:'subject_code',signature:'body_code',
    phone:'phone_code',file:'attachment_code'
@@ -49,18 +55,18 @@ const snapshot={
    },
    future_brix_2060:{
     status:'COMPLETED',answers:{brique_ready:'1'},
-    brique:{chronoSeconds:140,errors:3,autoSelections:[],
+    brique:{chronoSeconds:140,errors:3,autoSelections:['future_bricks_feedback'],
       commentaire:'COMMENTAIRE_BRIQUES_VISIBLE'},
     result:{score:0,scoreMax:0,details:{},
       bricks:{temps:140,erreurs:3,autoevaluation:{
-        selections:[],commentaire:'COMMENTAIRE_BRIQUES_VISIBLE'
+        selections:['future_bricks_feedback'],commentaire:'COMMENTAIRE_BRIQUES_VISIBLE'
       }}}
    },
    future_sort_2060:{
-    status:'COMPLETED',tri:{rows:[{seconds:65,errors:2},
-      {seconds:92,errors:1},{seconds:130,errors:0}],autoSelections:[],
+    status:'COMPLETED',answers:{future_ready:'1'},tri:{rows:[{seconds:65,errors:2},
+      {seconds:92,errors:1},{seconds:130,errors:0}],autoSelections:['future_sort_feedback'],
       commentaire:'COMMENTAIRE_TRI_VISIBLE'},
-    result:{score:0,scoreMax:0,details:{},
+    result:{score:0,scoreMax:0,details:{future_ready:{value:'1',correct:false,points:0}},
       tri:{completedCount:3,temps_moyen:96,erreurs_total:3,moyenne_erreurs:1,
         temps_essais:[65,92,130]}}
    },
@@ -131,6 +137,7 @@ app.whenReady().then(async()=>{
   const b=read.byId.future_brix_2060;
   assert(b.includes('02:20')&&b.includes('Nombre d’erreurs : 3'));
   assert(b.includes('COMMENTAIRE_BRIQUES_VISIBLE'));
+  assert(b.includes('J’ai terminé l’assemblage avec difficulté.'));
   assert(!b.includes('brique_ready'));
   const tri=read.byId.future_sort_2060;
   assert(tri.includes('01:05')&&tri.includes('01:32')&&tri.includes('02:10'));
@@ -138,6 +145,8 @@ app.whenReady().then(async()=>{
   assert(tri.includes('Total des erreurs : 3'));
   assert(tri.includes('Moyenne des erreurs par tri : 1'));
   assert(tri.includes('COMMENTAIRE_TRI_VISIBLE'));
+  assert(tri.includes('Je me suis amélioré pendant mes tris.'));
+  assert(!tri.includes('tri_ready'),'État technique affiché au candidat');
   const mail=read.byId.future_message_2060;
   assert(mail.includes('OBJET_MESSAGE_VISIBLE')&&mail.includes('BONJOUR_MESSAGE_COMPLET'));
   assert.equal(mail.split('BONJOUR_MESSAGE_COMPLET').length-1,1,'Message en double');
