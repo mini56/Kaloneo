@@ -66,7 +66,7 @@ const snapshot={
   seb_kaltest_pilot2_state_v1:JSON.stringify({tests:{
    future_text_2060:{
     status:'COMPLETED',
-    answers:{text_editor_html:'<p><strong>HTML_RAW_NEVER_SHOW</strong></p>',
+    answers:{text_editor_html:'<p><strong><span style="font-family:Arial;font-size:16pt" onclick="window.__malicious=true">MON_TEXTE_VISIBLE</span></strong></p><p>Deuxième ligne du candidat</p>',
       text_editor_text:'MON_TEXTE_VISIBLE\nDeuxième ligne du candidat'},
     result:{score:3,scoreMax:8,percentage:37.5,details:{},textEditor:{analyse:{score:{
       titre_present:1,titre_gras:0,titre_police:0,titre_taille:0,
@@ -170,8 +170,19 @@ app.whenReady().then(async()=>{
     byId,count:cards.length,heading:document.querySelector('.visible h2')?.textContent,
     currentlyVisible:document.querySelector('.page.visible')?.id,
     hiddenBody:html.style.visibility==='hidden',
-    htmlRaw:body.textContent.includes('HTML_RAW_NEVER_SHOW'),
-    realHtmlElement:[...cards].some(c=>c.querySelector('strong')?.textContent==='HTML_RAW_NEVER_SHOW'),
+    htmlRaw:body.textContent.includes('<strong>')||
+      body.textContent.includes('text_editor_html'),
+    realHtmlElement:[...cards].some(c=>
+      c.querySelector('.seb-report-rich-editor strong')?.textContent==='MON_TEXTE_VISIBLE'),
+    editorFormatting:(()=>{
+      const el=document.querySelector('article[data-test-id="future_text_2060"] .seb-report-rich-editor strong span');
+      return {
+        size:el?.style.fontSize,
+        font:el?.style.fontFamily,
+        hasUnsafeEvent:el?.hasAttribute('onclick'),
+        html:document.querySelector('article[data-test-id="future_text_2060"] .seb-report-rich-editor')?.innerHTML
+      };
+    })(),
     workNote:document.getElementById('seb-admin-results-readonly')?.textContent,
     beforePage:document.getElementById('page0')?.classList.contains('visible'),
     criteria:[...document.querySelectorAll('article[data-test-id="future_text_2060"] [data-criterion-status]')]
@@ -232,6 +243,10 @@ app.whenReady().then(async()=>{
   const text=read.byId.future_text_2060;
   assert(text.includes('MON_TEXTE_VISIBLE')&&text.includes('Deuxième ligne'));
   assert(!text.includes('text_editor_html')&&!read.htmlRaw,'Le HTML brut a été affiché');
+  assert(read.realHtmlElement,'Le gras original du document NWTEXT a disparu.');
+  assert.equal(read.editorFormatting.size,'16pt','La taille 16pt du texte n’est pas restituée.');
+  assert.equal(read.editorFormatting.font,'Arial','La police Arial du texte n’est pas restituée.');
+  assert.equal(read.editorFormatting.hasUnsafeEvent,false,'Le HTML original injecte un gestionnaire actif.');
   assert(text.includes('Détail des critères de notation'),'Critères NWTEXT absents');
   assert.equal(read.criteria.length,8,'Il manque des critères NWTEXT');
   assert.equal(read.criteria.filter(n=>n.value==='valid').length,3,'La notation NWTEXT a été altérée');
@@ -293,10 +308,43 @@ app.whenReady().then(async()=>{
    if(id!=='future_message_2060')assert(!value.includes('BONJOUR_MESSAGE_COMPLET'),
      'Mail contaminant '+id);
   }
+  // Parcours inédit à UN SEUL test : ancien manifeste contenant 500 tests
+  // parasites (y compris des tests du catalogue). L’état candidat exécuté
+  // doit prévaloir ; aucune fiche sans réalisation ne peut apparaître.
+  const single=await win.webContents.executeJavaScript(`(function(){
+    const key='seb_kaloneo_results_manifest';
+    const original=JSON.parse(sessionStorage.getItem(key));
+    original.tests.push(...Array.from({length:500},(_,index)=>({
+      id:'new_catalog_test_'+index,version:'9.0.0',
+      title:'Exercice catalogue parasite '+index,category:'math',scored:true
+    })));
+    sessionStorage.setItem(key,JSON.stringify(original));
+    const stateKey='seb_kaltest_pilot2_state_v1';
+    const prior=JSON.parse(sessionStorage.getItem(stateKey));
+    const only=prior.tests.future_text_2060;
+    sessionStorage.setItem(stateKey,JSON.stringify({tests:{
+      future_text_2060:only,
+      future_reflection_2060:{status:'PENDING',answers:{},result:null}
+    }}));
+    afficherResultat();
+    const visible=[...document.querySelectorAll('article[data-test-id]')];
+    return {
+      count:visible.length,
+      ids:visible.map(v=>v.dataset.testId),
+      all:document.getElementById('resultat').textContent,
+      expectedScore:visible[0]?.textContent.includes('Score : 3/8')
+    };
+  })()`,true);
+  assert.equal(single.count,1,'Le parcours avec un seul test affiche des résultats étrangers : '+single.ids.join(','));
+  assert.deepEqual(single.ids,['future_text_2060']);
+  assert(single.expectedScore,'Le résultat NWTEXT du parcours a disparu.');
+  assert(!single.all.includes('Exercice catalogue parasite'));
+  assert(single.all.includes('Exercices du parcours 1'),'Le résumé ne reflète pas le parcours réellement exécuté.');
   console.log('KALONEO_RESULTS_READABLE_FORMATS_ELECTRON: OK',JSON.stringify({
     cases:read.count,triTimes:true,bricks:true,autoLabels:true,mailBody:true,
     editorWithoutHtml:true,showResultsOnly:true,stockDetailsOptional:true,
-    fractionCounts:true,nwtexteEightCriteria:true,missingResponses:true,adminFullSize:true
+    fractionCounts:true,nwtexteEightCriteria:true,missingResponses:true,
+    nwtexteOriginalFormatting:true,singleExecutedTestVs500Catalog:true,adminFullSize:true
   }));
   clearTimeout(timer);win.destroy();app.quit();
  }catch(e){fail(e);}
