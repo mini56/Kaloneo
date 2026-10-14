@@ -347,6 +347,42 @@ function sebReadCanonicalKaltestState() {
 
 // Les libellés proviennent de la définition/version KALTEST du test affiché.
 // Ne pas associer une question, un chronomètre ou un courriel à un autre test.
+// Une fiche conserve en permanence ses indicateurs de synthèse.
+// Toutes les réponses détaillées sont ensuite consultables dans un volet.
+// Même règle de présentation pour toute définition KALTEST, présente ou future.
+function sebFoldResultDetails(root){
+  if(!root||!root.children)return root;
+  const extra=Array.from(root.children).filter(el=>
+    !el.classList.contains('seb-results-metrics'));
+  if(!extra.length)return root;
+  // Une fiche déjà composée d'un volet de réponses doit conserver son
+  // bouton unique, sans créer de sous-volet peu lisible.
+  if(extra.length===1&&extra[0].tagName==='DETAILS')return root;
+  // Les messages de sécurité et d'indisponibilité restent immédiatement
+  // visibles : on ne doit jamais cacher l'absence de données sous un clic.
+  if(extra.every(el=>el.classList.contains('seb-report-note')))return root;
+  const box=document.createElement('details');
+  box.className='seb-report-details seb-report-all-details';
+  const summary=document.createElement('summary');
+  summary.textContent='Consulter les détails';
+  box.appendChild(summary);
+  for(const el of extra){
+    if(el.tagName==='DETAILS'&&el.classList.contains('seb-report-details')){
+      const original=el.querySelector('summary');
+      if(original){
+        const heading=document.createElement('h4');
+        heading.className='seb-report-subheading';
+        heading.textContent=original.textContent;
+        box.appendChild(heading);
+        original.remove();
+      }
+      while(el.firstChild)box.appendChild(el.firstChild);
+    }else box.appendChild(el);
+  }
+  root.appendChild(box);
+  return root;
+}
+
 function sebDescribeCanonicalResult(test,testState,definition=null){
   const root=document.createElement('div');
   root.className='seb-canonical-result-summary';
@@ -416,7 +452,7 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
   };
   if(!testState||typeof testState!=='object'){
     appendNote('Aucune donnée enregistrée pour cet exercice. Aucune autre fiche n’est utilisée.');
-    return root;
+    return sebFoldResultDetails(root);
   }
   if(String(testState.status||'').toUpperCase().startsWith('ABANDON')){
     appendNote('Exercice abandonné : le Bilan administrateur conserve les règles d’abandon.');
@@ -490,12 +526,12 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
         box.appendChild(table);root.appendChild(box);
       }
     }
-    return root;
+    return sebFoldResultDetails(root);
   }
   const practical=sebNormalizeResultText(test?.category)==='activite pratique';
   if(practical&&!result){
     appendNote('Activité pratique : observations et niveau à renseigner dans le Bilan administrateur.');
-    return root;
+    return sebFoldResultDetails(root);
   }
   const tri=result?.tri||testState.tri;
   const bricks=result?.bricks||testState.brique;
@@ -540,7 +576,7 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
     }
     selections('Autoévaluation',testState.tri?.autoSelections||[]);
     field('Commentaire du candidat',testState.tri?.commentaire,true);
-    return root;
+    return sebFoldResultDetails(root);
   }
   if(bricks){
     const time=result?.bricks?.temps??testState.brique?.chronoSeconds;
@@ -550,7 +586,7 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
     root.appendChild(metricGroup);
     selections('Autoévaluation',result?.bricks?.autoevaluation?.selections||testState.brique?.autoSelections||[]);
     field('Commentaire du candidat',result?.bricks?.autoevaluation?.commentaire??testState.brique?.commentaire,true);
-    return root;
+    return sebFoldResultDetails(root);
   }
   if(hasScore){
     metric('Score',formatNumber(numericScore)+'/'+formatNumber(numericMax));
@@ -740,7 +776,7 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
         ?'Commentaire du candidat':'Observation du candidat',comment,true);
     }
   }
-  return root;
+  return sebFoldResultDetails(root);
 }
 
 // Pour toute V1 et tout test futur, rechercher la définition EXACTE
