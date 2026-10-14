@@ -172,7 +172,7 @@ app.whenReady().then(async()=>{
       const metrics=root?.querySelector(':scope > .seb-results-metrics');
       return {id:card.dataset.testId,hasFold:!!fold,open:fold?.open,
         label:fold?.querySelector(':scope > summary')?.textContent,
-        metricsOutside:!!metrics&&(!fold||!fold.contains(metrics))};
+        metricsOutside:!metrics||(!fold||!fold.contains(metrics))};
     })
    };
   };
