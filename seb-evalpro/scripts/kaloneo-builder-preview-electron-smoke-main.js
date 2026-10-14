@@ -731,10 +731,19 @@ app.whenReady().then(async()=>{
         validationButton?.getAttribute('aria-expanded')==='false';
       const noDuplicateIconButton=!document.getElementById('jump-to-icon-picker');
       const noV1Status=!document.getElementById('developer-mode-status');
-      const cleanDevLabel=document.getElementById('developer-unlock')?.textContent.trim()==='Mode Développeur';
+      const developer=document.getElementById('developer-unlock');
+      const cleanDevLabel=developer?.textContent.trim()==='Mode Développeur';
+      const modelSelect=document.getElementById('test-template');
+      const devInline=!!developer&&!!modelSelect&&
+        Math.abs(developer.getBoundingClientRect().top-modelSelect.getBoundingClientRect().top)<14;
+      const scenario=document.getElementById('test-scenario');
+      const instruction=document.getElementById('test-instruction');
+      const scenarioHiddenWhenFolded=scenario.getClientRects().length===0&&instruction.getClientRects().length===0;
       pageStyleButton.click();
-      const pageStyleOpens=!pageStyleBody.hidden&&pageStyleButton.getAttribute('aria-expanded')==='true';
+      const pageStyleOpens=!pageStyleBody.hidden&&pageStyleButton.getAttribute('aria-expanded')==='true'&&
+        scenario.getClientRects().length>0&&instruction.getClientRects().length>0;
       pageStyleButton.click();
+      const scenarioHiddenAgain=scenario.getClientRects().length===0&&instruction.getClientRects().length===0;
       validationButton.click();
       const validationOpens=!validationBody.hidden&&validationButton.getAttribute('aria-expanded')==='true';
       validationButton.click();
@@ -742,8 +751,6 @@ app.whenReady().then(async()=>{
       // deviennent verts qu'après remplissage de tous les champs requis.
       const initialRed=validationBox.dataset.validationStatus==='error';
       const title=document.getElementById('test-title');
-      const scenario=document.getElementById('test-scenario');
-      const instruction=document.getElementById('test-instruction');
       const savedTitle=title.value;
       title.value='Contrôle Builder valide';title.dispatchEvent(new Event('input',{bubbles:true}));
       scenario.value='Contexte de travail';scenario.dispatchEvent(new Event('input',{bubbles:true}));
@@ -784,8 +791,27 @@ app.whenReady().then(async()=>{
       const rects=[...header?.children||[]].map(n=>n.getBoundingClientRect());
       const order=rects.every((r,i)=>r.width>0&&(i===0||r.left>=rects[i-1].right-1));
       const widthFits=header.scrollWidth<=header.clientWidth+2;
+      const controls=[iconButton,contractButton,pageStyleButton,validationButton,
+        document.querySelector('.exercise-block .toggle-block')];
+      const foldMeasurements=controls.map(button=>({
+        text:button.textContent.trim(),
+        width:Math.round(button.getBoundingClientRect().width),
+        height:Math.round(button.getBoundingClientRect().height),
+        bg:getComputedStyle(button).backgroundColor,
+        fg:getComputedStyle(button).color
+      }));
+      const orangeUniform=foldMeasurements.every(item=>
+        item.width===34&&item.height===34&&
+        item.bg==='rgb(237, 134, 11)'&&item.fg==='rgb(255, 255, 255)');
+      const blockToggle=document.querySelector('.exercise-block .toggle-block');
+      const plusWhenClosed=blockToggle?.textContent.trim()==='+';
+      blockToggle?.click();
+      const minusWhenOpened=blockToggle?.textContent.trim()==='−';
+      blockToggle?.click();
       const values={ok:true,folded,stillPresent,jumpedOpen,outputOpened,outputAdded,
-        allExpanded,pageStyleOpens,validationOpens,noDuplicateIconButton,
+        allExpanded,pageStyleOpens,scenarioHiddenWhenFolded,scenarioHiddenAgain,
+        devInline,orangeUniform,foldMeasurements,plusWhenClosed,minusWhenOpened,
+        validationOpens,noDuplicateIconButton,
         noV1Status,cleanDevLabel,initialRed,green,titleIsGreen,red,titleIsRed,titleColorGreen,titleColorRed,
         widthFits,order,kindWidth:size(typeField),zoneWidth:size(zone),deleteWidth:size(remove),
         kindFont:font(typeField),zoneFont:font(zone),deleteFont:font(remove),
@@ -795,7 +821,11 @@ app.whenReady().then(async()=>{
     })()`,true);
     if(!sectionCompact.ok||!sectionCompact.folded||!sectionCompact.stillPresent||
        !sectionCompact.jumpedOpen||!sectionCompact.outputOpened||!sectionCompact.outputAdded||
-       !sectionCompact.allExpanded||!sectionCompact.pageStyleOpens||!sectionCompact.validationOpens||
+       !sectionCompact.allExpanded||!sectionCompact.pageStyleOpens||
+       !sectionCompact.scenarioHiddenWhenFolded||!sectionCompact.scenarioHiddenAgain||
+       !sectionCompact.devInline||!sectionCompact.orangeUniform||
+       !sectionCompact.plusWhenClosed||!sectionCompact.minusWhenOpened||
+       !sectionCompact.validationOpens||
        !sectionCompact.noDuplicateIconButton||!sectionCompact.noV1Status||!sectionCompact.cleanDevLabel||
        !sectionCompact.initialRed||!sectionCompact.green||!sectionCompact.titleIsGreen||
        !sectionCompact.red||!sectionCompact.titleIsRed||
@@ -1127,12 +1157,14 @@ app.whenReady().then(async()=>{
       for(let i=0;i<15&&dialog.open;i++)await new Promise(resolve=>setTimeout(resolve,70));
       const preview=document.querySelector('.preview-media');
       const title=document.querySelector('.exercise-block .file-preview-name')?.textContent||'';
-      const imageStatus=document.querySelector('.exercise-block .block-media-status')?.textContent||'';
-      return {ok:true,opened,closed:!dialog.open,src:preview?.getAttribute('src')||'',title,imageStatus};
+      const imageStatusCount=document.querySelectorAll('.exercise-block .block-media-status').length;
+      const headerChildren=document.querySelector('.exercise-block .block-header')?.children.length;
+      return {ok:true,opened,closed:!dialog.open,src:preview?.getAttribute('src')||'',
+        title,imageStatusCount,headerChildren};
     })()`,true);
     if(!importedFromPc.ok||!importedFromPc.opened||!importedFromPc.closed||
        !importedFromPc.src.startsWith('data:image/svg+xml;base64,')||!importedFromPc.title.includes('image-du-pc.svg')||
-       !importedFromPc.imageStatus.includes('image-du-pc.svg')||
+       importedFromPc.imageStatusCount!==0||importedFromPc.headerChildren!==7||
        importedImages.size!==1||savedImageCalls!==1){
       return fail('Import depuis le PC vers la bibliothèque et le bloc incorrect',importedFromPc);
     }
