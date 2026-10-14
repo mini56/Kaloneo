@@ -75,7 +75,9 @@
       blocks:state.blocks.map((b,i)=>({index:i,type:b.type,collapsed:collapsedBlockUids.has(b.uid)})),
       sections:{
         bilan: $('toggle-contract-section')?.getAttribute('aria-expanded')==='true',
-        icones: $('toggle-icon-library')?.getAttribute('aria-expanded')==='true'
+        icones: $('toggle-icon-library')?.getAttribute('aria-expanded')==='true',
+        style: $('toggle-page-style')?.getAttribute('aria-expanded')==='true',
+        controle: $('toggle-validation-section')?.getAttribute('aria-expanded')==='true'
       }
     };
     try{sessionStorage.setItem(PREVIEW_FOLD_KEY,JSON.stringify(snapshot));}catch(_){}
@@ -97,6 +99,10 @@
       setSectionExpanded('toggle-contract-section',snapshot.sections.bilan);
     if(typeof snapshot.sections?.icones==='boolean')
       setSectionExpanded('toggle-icon-library',snapshot.sections.icones);
+    if(typeof snapshot.sections?.style==='boolean')
+      setSectionExpanded('toggle-page-style',snapshot.sections.style);
+    if(typeof snapshot.sections?.controle==='boolean')
+      setSectionExpanded('toggle-validation-section',snapshot.sections.controle);
     return true;
   }
 
@@ -112,12 +118,18 @@
     const button=$(buttonId);
     const content=$(button?.getAttribute('aria-controls'));
     if(!button||!content)return;
-    const section=button.closest('.icon-library-panel,.builder-contract-section');
+    const section=button.closest('.icon-library-panel,.builder-contract-section,.page-style-panel,.validation-box');
     content.hidden=!expanded;
     section?.classList.toggle('is-collapsed',!expanded);
     button.textContent=expanded?'▴':'▾';
     button.setAttribute('aria-expanded',String(expanded));
-    const name=buttonId==='toggle-icon-library'?'la bibliothèque d’icônes':'Sorties et Bilan';
+    const sectionNames={
+      'toggle-icon-library':'la bibliothèque d’icônes',
+      'toggle-contract-section':'Sorties et Bilan',
+      'toggle-page-style':'Style de la page',
+      'toggle-validation-section':'Contrôle avant génération'
+    };
+    const name=sectionNames[buttonId]||'la section';
     button.title=(expanded?'Réduire ':'Déployer ')+name;
     button.setAttribute('aria-label',button.title);
   }
@@ -736,6 +748,8 @@
       state.sourceDefinition=data.sourceDefinition||null;
       state.sourceProtectedVersion=data.sourceProtectedVersion===true;
       state.blocks=Array.isArray(data.blocks)?data.blocks:[];
+      collapsedBlockUids.clear();
+      state.blocks.forEach(block=>{if(block?.uid)collapsedBlockUids.add(block.uid);});
       applyMeta(data.meta);
       syncProtectedVersionUi();
       return true;
@@ -2502,6 +2516,14 @@
     add(analysis.ok,'Contrat KALTEST compatible avec SEB EvalPro');
     analysis.errors.forEach(error=>add(false,error));
 
+    const passed=items.every(item=>item.ok);
+    const box=$('validation-list')?.closest('.validation-box');
+    if(box){
+      box.dataset.validationStatus=passed?'ok':'error';
+      const heading=$('validation-heading');
+      if(heading)heading.setAttribute('aria-label',
+        'Contrôle avant génération — '+(passed?'tout est conforme':'des erreurs sont à corriger'));
+    }
     const ul=$('validation-list');
     ul.innerHTML='';
     items.forEach(item=>{
@@ -2510,7 +2532,7 @@
       li.textContent=(item.ok?'OK — ':'À corriger — ')+item.text;
       ul.appendChild(li);
     });
-    return items.every(item=>item.ok);
+    return passed;
   }
 
   function applyTemplate(name) {
@@ -2618,9 +2640,7 @@
     const protectedSource=state.sourceProtectedVersion===true;
     const developerEditing=protectedSource;
     const exportV1=$('developer-export-v1');
-    const stateText=$('developer-mode-status');
     if(exportV1)exportV1.hidden=!(developerEditing&&developerUnlocked);
-    if(stateText)stateText.textContent='V1 modifiables et enregistrables en session Administrateur';
     if(version){
       // Le numéro de V1 reste 1.0.0 même en mode Développeur.
       version.readOnly=protectedSource;
@@ -2669,7 +2689,11 @@
     state.sourceDefinition=model.sourceDefinition;
     state.sourceProtectedVersion=options.protectedVersion===true;
     state.blocks=model.blocks;
-    collapsedBlockUids.clear(); // chaque nouveau test s'ouvre déployé
+    collapsedBlockUids.clear();
+    state.blocks.forEach(block=>{if(block?.uid)collapsedBlockUids.add(block.uid);});
+    // Les sections de conception sont fermées par défaut à chaque ouverture.
+    ['toggle-icon-library','toggle-contract-section','toggle-page-style',
+      'toggle-validation-section'].forEach(id=>setSectionExpanded(id,false));
     applyMeta(model.meta);
     syncProtectedVersionUi();
     renderIconPicker();
@@ -3042,6 +3066,9 @@
     state.sourceProtectedVersion=false;
     state.blocks=[baseBlock('text')];
     collapsedBlockUids.clear();
+    state.blocks.forEach(block=>{if(block?.uid)collapsedBlockUids.add(block.uid);});
+    ['toggle-icon-library','toggle-contract-section','toggle-page-style',
+      'toggle-validation-section'].forEach(id=>setSectionExpanded(id,false));
     applyMeta(defaultMeta());
     syncProtectedVersionUi();
     renderIconPicker();
@@ -3113,11 +3140,14 @@
     renderIconPicker();
     initSectionFold('toggle-icon-library');
     initSectionFold('toggle-contract-section');
-    $('jump-to-icon-picker')?.addEventListener('click',()=>{
-      setSectionExpanded('toggle-icon-library',true);
-      $('icon-picker')?.closest('.icon-library-panel')?.scrollIntoView({block:'start',behavior:'smooth'});
-      $('icon-search')?.focus({preventScroll:true});
-    });
+    initSectionFold('toggle-page-style');
+    initSectionFold('toggle-validation-section');
+    if(!resumeFromPreview){
+      ['toggle-icon-library','toggle-contract-section','toggle-page-style',
+        'toggle-validation-section'].forEach(id=>setSectionExpanded(id,false));
+      collapsedBlockUids.clear();
+      state.blocks.forEach(block=>{if(block?.uid)collapsedBlockUids.add(block.uid);});
+    }
     $('icon-search').addEventListener('input',renderIconPicker);
     $('clear-icon').addEventListener('click',()=>{
       $('selected-icon-id').value='';
