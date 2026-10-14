@@ -1310,9 +1310,9 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 .validation-box.is-collapsed .collapsible-section-content,
 .page-style-panel.is-collapsed .collapsible-section-content{display:none!important}
 
-/* Boutons de repli Builder : une seule identité visuelle, sur tous les
-   blocs existants et futurs. 34 × 34, orange, + fermé / − ouvert.
-   Les flèches de déplacement conservent leur couleur bleue. */
+/* Boutons de repli Builder : bleu de la barre candidat (#004E70)
+   sur tous les blocs existants et futurs. 34 × 34, + fermé / − ouvert.
+   Les flèches de déplacement et les autres actions restent inchangées. */
 .builder-editor .section-fold-btn,
 .builder-editor .block-header .toggle-block{
   display:inline-flex!important;
@@ -1328,32 +1328,32 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
   max-height:34px!important;
   margin:0!important;
   padding:0!important;
-  border:1px solid #C56500!important;
+  border:1px solid #003B57!important;
   border-radius:8px!important;
-  background:#ED860B!important;
-  background-image:linear-gradient(180deg,#F69B24 0%,#E77900 100%)!important;
+  background:#004E70!important;
+  background-image:linear-gradient(180deg,#356787 0%,#004E70 100%)!important;
   color:#fff!important;
   font:700 22px/1 Arial,"Segoe UI",sans-serif!important;
   text-align:center!important;
-  box-shadow:0 2px 0 #A45100,0 3px 6px rgba(120,57,0,.2)!important;
+  box-shadow:0 2px 0 #002B42,0 3px 6px rgba(0,48,71,.25)!important;
   transition:background .14s,border-color .14s,box-shadow .14s,transform .14s!important;
   cursor:pointer;
 }
 .builder-editor .section-fold-btn:not(:disabled):hover,
 .builder-editor .block-header .toggle-block:not(:disabled):hover{
-  border-color:#AB5000!important;
-  background:#D87500!important;
-  background-image:linear-gradient(180deg,#EC8809 0%,#C96600 100%)!important;
+  border-color:#002D46!important;
+  background:#003B57!important;
+  background-image:linear-gradient(180deg,#276081 0%,#003B57 100%)!important;
   color:#fff!important;
-  box-shadow:0 3px 0 #A45100,0 5px 9px rgba(120,57,0,.28)!important;
+  box-shadow:0 3px 0 #002B42,0 5px 9px rgba(0,48,71,.3)!important;
   transform:translateY(-1px)!important;
   filter:none!important;
 }
 .builder-editor .section-fold-btn:not(:disabled):active,
 .builder-editor .block-header .toggle-block:not(:disabled):active{
-  background:#B95D00!important;
+  background:#002D46!important;
   background-image:none!important;
-  box-shadow:inset 0 2px 3px rgba(80,35,0,.32)!important;
+  box-shadow:inset 0 2px 3px rgba(0,30,48,.32)!important;
   transform:translateY(1px)!important;
 }
 .builder-editor .section-fold-btn:focus-visible,
@@ -1387,4 +1387,22 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 }
 .builder-editor .page-style-panel .collapsible-section-content>.form-grid.cols-2{
   margin-bottom:4px;
+}
+
+/* Les commandes de repli ferment leurs éléments sur le même axe vertical,
+   celui de « Sorties et Bilan ». Les cadres Icône, Style, Contrôle et Bloc
+   possèdent chacun 12 px de padding ; ne compenser QUE lorsqu'ils sont fermés.
+   Aucune translation au survol (celle du relief reste verticale). */
+.builder-editor .icon-library-panel.is-collapsed > .section-title-row .section-fold-btn,
+.builder-editor .page-style-panel.is-collapsed > .section-title-row .section-fold-btn,
+.builder-editor .validation-box.is-collapsed > .section-title-row .section-fold-btn,
+.builder-editor .exercise-block.is-collapsed > .block-header .toggle-block{
+  position:relative;
+  left:12px;
+}
+/* La fermeture de Style de la page masque en une fois les champs de contexte,
+   les capacités communes et tous leurs paramètres sans toucher aux valeurs. */
+.builder-editor .page-style-panel.is-collapsed #page-style-content,
+.builder-editor #page-style-content[hidden]{
+  display:none!important;
 }
