@@ -828,7 +828,8 @@ app.whenReady().then(async()=>{
         foldedButtonsAligned,plusWhenClosed,minusWhenOpened,
         validationOpens,noDuplicateIconButton,
         noV1Status,cleanDevLabel,initialRed,green,titleIsGreen,red,titleIsRed,titleColorGreen,titleColorRed,
-        widthFits,order,kindWidth:size(typeField),zoneWidth:size(zone),deleteWidth:size(remove),
+        viewportWidth:window.innerWidth,widthFits,order,
+        kindWidth:size(typeField),zoneWidth:size(zone),deleteWidth:size(remove),
         kindFont:font(typeField),zoneFont:font(zone),deleteFont:font(remove),
         deleteText:remove?.textContent.trim(),collapsedBlocks:document.querySelectorAll('.exercise-block.is-collapsed').length};
       document.getElementById('new-test').click();
@@ -849,7 +850,10 @@ app.whenReady().then(async()=>{
        !sectionCompact.initialRed||!sectionCompact.green||!sectionCompact.titleIsGreen||
        !sectionCompact.red||!sectionCompact.titleIsRed||
        !sectionCompact.widthFits||!sectionCompact.order||
-       sectionCompact.kindWidth>182||sectionCompact.zoneWidth<100||sectionCompact.deleteWidth>85||
+       sectionCompact.kindWidth>182||sectionCompact.deleteWidth>85||
+       (sectionCompact.viewportWidth<=1060
+         ? sectionCompact.kindWidth<90||sectionCompact.zoneWidth<65
+         : sectionCompact.zoneWidth<100)||
        sectionCompact.kindFont<13||sectionCompact.zoneFont<13||sectionCompact.deleteFont<13||
        sectionCompact.deleteText!=='Supprimer'){
       return fail('Sections Icônes / Sorties-Bilan ou largeur des boutons incorrectes',sectionCompact);
