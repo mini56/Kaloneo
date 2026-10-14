@@ -104,6 +104,19 @@ html.seb-results-report-mode #resultat {
 }
 #resultat .seb-report-table tr:nth-child(even) td {background:#f8fafc;}
 #resultat .seb-report-details .seb-report-table {margin:0;}
+#resultat .seb-report-all-details .seb-report-details-content {
+  padding:12px 15px 16px;
+}
+#resultat .seb-report-all-details .seb-report-details-content > :first-child {
+  margin-top:0;
+}
+#resultat .seb-report-all-details .seb-report-details-content .seb-report-table {
+  margin:8px 0 12px;
+}
+#resultat .seb-report-all-details > summary {
+  border-left:3px solid #8db9d6;
+}
+
 #resultat .seb-report-criteria [data-criterion-status="valid"] {
   color:#16653e; font-weight:700;
 }
