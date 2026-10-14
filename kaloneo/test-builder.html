@@ -87,11 +87,10 @@
             <option value="gratte-ciel-6x6">Gratte-ciel 6 × 6</option>
           </select>
         </label>
-      </div>
-
-      <div class="developer-v1-panel" aria-label="Gestion des versions originales">
-        <button type="button" id="developer-unlock" class="mini-btn" title="Accès protégé à l’export des versions originales">Mode Développeur</button>
-        <button type="button" id="developer-export-v1" class="mini-btn" hidden>Exporter cette V1 vers TESTS_V1</button>
+        <div class="developer-v1-panel builder-developer-inline" aria-label="Gestion des versions originales">
+          <button type="button" id="developer-unlock" class="mini-btn" title="Accès protégé à l’export des versions originales">Mode Développeur</button>
+          <button type="button" id="developer-export-v1" class="mini-btn" hidden>Exporter cette V1 vers TESTS_V1</button>
+        </div>
       </div>
 
       <div class="icon-library-panel">
@@ -104,7 +103,7 @@
             <button id="clear-icon" class="mini-btn" type="button">Aucune icône</button>
             <button id="toggle-icon-library" class="section-fold-btn mini-btn" type="button"
               aria-controls="icon-library-content" aria-expanded="false"
-              aria-label="Déployer la bibliothèque d’icônes" title="Déployer la bibliothèque d’icônes">▾</button>
+              aria-label="Déployer la bibliothèque d’icônes" title="Déployer la bibliothèque d’icônes">+</button>
           </div>
         </div>
         <div id="icon-library-content" class="collapsible-section-content" hidden>
@@ -136,7 +135,7 @@
           </div>
           <button id="toggle-page-style" class="section-fold-btn mini-btn" type="button"
             aria-controls="page-style-content" aria-expanded="false"
-            aria-label="Déployer Style de la page" title="Déployer Style de la page">▾</button>
+            aria-label="Déployer Style de la page" title="Déployer Style de la page">+</button>
         </div>
         <div id="page-style-content" class="collapsible-section-content" hidden>
         <div class="form-grid cols-3">
@@ -167,10 +166,8 @@
             </div>
           </div>
         </div>
-        </div>
-      </div>
 
-      <div class="form-grid cols-2">
+        <div class="form-grid cols-2">
         <label class="context-rich-field"><span class="context-field-heading">Scénario <span class="required">*</span></span>
           <span class="context-format-toolbar" aria-label="Mise en forme du scénario">
             <button type="button" class="context-format-btn" data-target="test-scenario" data-format="b" title="Gras"><strong>G</strong></button>
@@ -191,6 +188,8 @@
           <textarea id="test-instruction" rows="4" placeholder="Ce que le candidat doit réaliser"></textarea>
           <small class="muted">Entrée ou \n = nouvelle ligne. Sélectionnez du texte puis utilisez G, I, U ou A🎨.</small>
         </label>
+        </div>
+        </div>
       </div>
 
       <div class="option-row">
@@ -255,7 +254,7 @@
             <button id="add-output" class="mini-btn" type="button">+ Sortie</button>
             <button id="toggle-contract-section" class="section-fold-btn mini-btn" type="button"
               aria-controls="contract-section-content" aria-expanded="false"
-              aria-label="Déployer Sorties et Bilan" title="Déployer Sorties et Bilan">▾</button>
+              aria-label="Déployer Sorties et Bilan" title="Déployer Sorties et Bilan">+</button>
           </div>
         </div>
         <div id="contract-section-content" class="collapsible-section-content" hidden>
@@ -288,7 +287,7 @@
           <strong id="validation-heading">Contrôle avant génération</strong>
           <button id="toggle-validation-section" class="section-fold-btn mini-btn" type="button"
             aria-controls="validation-content" aria-expanded="false"
-            aria-label="Déployer Contrôle avant génération" title="Déployer Contrôle avant génération">▾</button>
+            aria-label="Déployer Contrôle avant génération" title="Déployer Contrôle avant génération">+</button>
         </div>
         <div id="validation-content" class="collapsible-section-content" hidden>
           <ul id="validation-list"></ul>
@@ -362,7 +361,7 @@
         <button class="move-up mini-btn" type="button">↑</button>
         <button class="move-down mini-btn" type="button">↓</button>
         <button class="remove-block mini-btn danger" type="button">Supprimer</button>
-        <button class="toggle-block mini-btn" type="button" aria-expanded="true" title="Réduire ce bloc" aria-label="Réduire ce bloc">▴</button>
+        <button class="toggle-block mini-btn" type="button" aria-expanded="false" title="Déployer ce bloc" aria-label="Déployer ce bloc">+</button>
       </div>
       <div class="block-body"></div>
     </article>
