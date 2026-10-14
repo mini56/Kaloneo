@@ -3,7 +3,11 @@
 
   const EDITOR_ID = 'editor';
   const FONT_VALUES = ['Arial', 'Calibri', 'Times New Roman', 'Courier New', 'Georgia'];
+  // Le sélecteur actuel travaille exclusivement en points typographiques.
+  // Les anciens fichiers en px conservent leurs valeurs d'origine : jamais
+  // transformer un nombre de pixels en un nombre de points identique.
   const SIZE_VALUES = ['10pt', '12pt', '14pt', '16pt', '18pt', '24pt', '32pt', '48pt'];
+  const LEGACY_SIZE_VALUES = ['10px', '12px', '14px', '16px', '18px', '24px', '32px', '48px'];
   const TITLE_QUESTIONS = [
     'Quelle est mon activité préférée et pourquoi ?',
     'Quelle est mon expérience professionnelle préférée et pourquoi ?',
@@ -34,29 +38,6 @@
   let activeTypingFont = 'Calibri';
   let activeTypingSize = '14pt';
 
-  function normalizeLegacySizeValue(value) {
-    const raw = String(value || '').trim().toLowerCase();
-    const match = raw.match(/^(10|12|14|16|18|24|32|48)px$/);
-    return match ? match[1] + 'pt' : value;
-  }
-
-  function normalizeLegacyDelta(delta) {
-    if (!delta || !Array.isArray(delta.ops)) return delta;
-    return {
-      ...delta,
-      ops: delta.ops.map((op) => {
-        if (!op || !op.attributes || !op.attributes.size) return op;
-        return {
-          ...op,
-          attributes: {
-            ...op.attributes,
-            size: normalizeLegacySizeValue(op.attributes.size)
-          }
-        };
-      })
-    };
-  }
-
   function normalizeQuestion(value) {
     return String(value || '')
       .normalize('NFD')
@@ -76,7 +57,9 @@
     Quill.register(FontStyle, true);
 
     const SizeStyle = Quill.import('attributors/style/size');
-    SizeStyle.whitelist = SIZE_VALUES.slice();
+    // Whitelist pour lecture fidèle des archives : "16px" reste "16px".
+    // Seules les options de l'éditeur permettent d'écrire "16pt".
+    SizeStyle.whitelist = SIZE_VALUES.concat(LEGACY_SIZE_VALUES);
     Quill.register(SizeStyle, true);
 
     const AlignStyle = Quill.import('attributors/style/align');
@@ -328,9 +311,8 @@
   }
 
   function cleanLegacyHtml(html) {
-    return String(html || '')
-      .replace(/[\u200B-\u200D\uFEFF]/g, '')
-      .replace(/font-size\s*:\s*(10|12|14|16|18|24|32|48)px\b/gi, (_m, size) => 'font-size:' + size + 'pt');
+    // Ne modifier ni la valeur ni l'unité d'une archive existante.
+    return String(html || '').replace(/[\u200B-\u200D\uFEFF]/g, '');
   }
 
   function restoreSavedContent() {
@@ -339,7 +321,7 @@
     try {
       const deltaRaw = sessionStorage.getItem(scopedKey('autosave_editor_delta'));
       if (deltaRaw) {
-        quill.setContents(normalizeLegacyDelta(JSON.parse(deltaRaw)), 'silent');
+        quill.setContents(JSON.parse(deltaRaw), 'silent');
         restored = true;
       }
     } catch (_) {}
@@ -348,7 +330,7 @@
       try {
         const responses = JSON.parse(sessionStorage.getItem('reponses_data') || '{}');
         if (responses.page7_delta) {
-          quill.setContents(normalizeLegacyDelta(responses.page7_delta), 'silent');
+          quill.setContents(responses.page7_delta, 'silent');
           restored = true;
         } else if (responses.page7_contenu_html) {
           quill.clipboard.dangerouslyPasteHTML(cleanLegacyHtml(responses.page7_contenu_html), 'silent');
@@ -398,9 +380,25 @@
     return lines;
   }
 
-  function exactCommonFormat(line) {
-    if (!line || !line.length) return {};
-    return quill.getFormat(line.index, line.length);
+  function titleCharacterFormats(line) {
+    // Quill.getFormat(index,length) ne rend que les attributs communs.
+    // Une espace sans attribut fait donc parfois disparaître 'bold', 'font'
+    // et 'size' pour tout le titre. Examiner les véritables caractères
+    // visibles du texte plutôt que le format commun de toute la ligne.
+    const tally = { characters:0, bold:0, arial:0, size16pt:0 };
+    if (!quill || !line || !line.length) return tally;
+    const delta = quill.getContents(line.index, line.length);
+    for (const op of delta?.ops || []) {
+      if (typeof op?.insert !== 'string') continue;
+      const visible = op.insert.replace(/[\u200B-\u200D\uFEFF\s]/g, '');
+      const count = [...visible].length;
+      if (!count) continue;
+      tally.characters += count;
+      if (op.attributes?.bold === true) tally.bold += count;
+      if (isExactFont(op.attributes?.font, 'Arial')) tally.arial += count;
+      if (isExactSize(op.attributes?.size, '16pt')) tally.size16pt += count;
+    }
+    return tally;
   }
 
   function isExactFont(value, expected) {
@@ -471,7 +469,11 @@
     const nonEmpty = allLines.filter((line) => line.clean.length > 0);
     const titleLine = nonEmpty[0] || null;
     const bodyLines = nonEmpty.slice(1);
-    const titleFormat = exactCommonFormat(titleLine);
+    const titleStyles = titleCharacterFormats(titleLine);
+    const hasTitle = titleStyles.characters > 0;
+    const titleBold = hasTitle && titleStyles.bold === titleStyles.characters;
+    const titleArial = hasTitle && titleStyles.arial === titleStyles.characters;
+    const titleSize16 = hasTitle && titleStyles.size16pt === titleStyles.characters;
     const titleValid = !!titleLine && NORMALIZED_QUESTIONS.includes(normalizeQuestion(titleLine.clean));
     const bodyStart = titleLine ? titleLine.index + titleLine.length + 1 : 0;
     const bodyLength = Math.max(0, quill.getLength() - 1 - bodyStart);
@@ -483,9 +485,9 @@
 
     const score = {
       titre_present: titleValid ? 1 : 0,
-      titre_gras: titleValid && titleFormat.bold === true ? 1 : 0,
-      titre_police: titleValid && isExactFont(titleFormat.font, 'Arial') ? 1 : 0,
-      titre_taille: titleValid && isExactSize(titleFormat.size, '16pt') ? 1 : 0,
+      titre_gras: titleValid && titleBold ? 1 : 0,
+      titre_police: titleValid && titleArial ? 1 : 0,
+      titre_taille: titleValid && titleSize16 ? 1 : 0,
       texte_lignes: visualLines >= 10 ? 1 : 0,
       texte_police: bodyArial ? 1 : 0,
       texte_taille: bodySize12 ? 1 : 0,
@@ -502,9 +504,15 @@
       titre: {
         present: titleValid,
         texte: titleLine ? titleLine.clean : '',
-        gras: titleFormat.bold === true,
-        police: typeof titleFormat.font === 'string' ? titleFormat.font : '',
-        taille: typeof titleFormat.size === 'string' ? titleFormat.size : '',
+        gras: titleBold,
+        police: titleArial ? 'Arial' : '',
+        taille: titleSize16 ? '16pt' : '',
+        // Traçabilité des véritables caractères mis en forme, sans modifier
+        // le barème ni les autres résultats des anciens candidats.
+        caracteres: titleStyles.characters,
+        caracteresGras: titleStyles.bold,
+        caracteresArial: titleStyles.arial,
+        caracteresTaille16pt: titleStyles.size16pt,
         conforme: score.titre_present === 1 && score.titre_gras === 1 && score.titre_police === 1 && score.titre_taille === 1
       },
       texte: {
