@@ -1951,6 +1951,11 @@ try {
     if (resultsWorkspace && resultsWorkspace.ok) {
       adminCandidateResultsWorkspace = resultsWorkspace;
       restoredState = resultsWorkspace.state || {};
+      // Au chargement, ne jamais montrer un instant la page 0 historique.
+      if(document.documentElement){
+        document.documentElement.dataset.sebResultsLoading='1';
+        document.documentElement.style.visibility='hidden';
+      }
       try { window.sessionStorage.clear(); } catch (_) {}
       try { window.localStorage.clear(); } catch (_) {}
     }
@@ -2072,6 +2077,15 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
   if (adminCandidateResultsWorkspace) {
     showReadOnlyCandidateResults();
+    // Le premier rendu des anciens gestionnaires DOMContentLoaded doit finir
+    // avant de rendre la fenêtre visible.
+    requestAnimationFrame(()=>{
+      const root=document.documentElement;
+      if(root?.dataset.sebResultsLoading==='1'){
+        delete root.dataset.sebResultsLoading;
+        root.style.visibility='';
+      }
+    });
   } else {
     if (!isAdminBilanPage() && !isTestsParcoursWorkspacePage()) {
       document.addEventListener('input', scheduleSave, true);

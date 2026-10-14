@@ -345,132 +345,213 @@ function sebReadCanonicalKaltestState() {
   return null;
 }
 
-function sebDescribeCanonicalResult(test, testState) {
-  const practicalActivity = sebNormalizeResultText(test?.category || '') === 'activite pratique';
-  if ((!testState || typeof testState !== 'object') && !practicalActivity) return null;
-
-  const status = String(testState?.status || 'PENDING').toUpperCase();
-  const result = testState?.result && typeof testState.result === 'object' ? testState.result : null;
-
-  const wrap = document.createElement('div');
-  wrap.className = 'seb-canonical-result-summary';
-
-  if (practicalActivity) {
-    const p = document.createElement('p');
-    p.className = 'commentaire';
-    p.textContent = 'Activité pratique — grille d’évaluation à compléter dans le Bilan administrateur.';
+// Les libellés proviennent de la définition/version KALTEST du test affiché.
+// Ne pas associer une question, un chronomètre ou un courriel à un autre test.
+function sebDescribeCanonicalResult(test,testState,definition=null){
+  const wrap=document.createElement('div');
+  wrap.className='seb-canonical-result-summary';
+  const append=(label,value,{block=false,subtle=false}={})=>{
+    const p=document.createElement(block?'pre':'p');
+    p.className=subtle?'commentaire':'ligne';
+    if(label){
+      const strong=document.createElement('strong');
+      strong.textContent=label+(value===undefined?'': ' : ');
+      p.appendChild(strong);
+    }
+    if(value!==undefined)p.appendChild(document.createTextNode(String(value)));
+    if(block){
+      p.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;'+
+        'line-height:1.5;padding:10px;border:1px solid #dee7f0;border-radius:5px;'+
+        'background:#f9fbfe;max-height:480px;overflow:auto';
+    }else p.style.overflowWrap='anywhere';
     wrap.appendChild(p);
+    return p;
+  };
+  if(sebNormalizeResultText(test?.category)==='activite pratique'){
+    append('', 'Activité pratique — évaluation à compléter dans le Bilan administrateur.',{subtle:true});
     return wrap;
   }
-
-  if (!result) {
-    const p = document.createElement('p');
-    p.className = 'commentaire';
-    p.textContent = status.startsWith('ABANDONED')
-      ? 'Exercice abandonné.'
-      : status === 'COMPLETED'
-        ? 'Exercice terminé — aucun score chiffré.'
-        : 'Aucun résultat enregistré pour ce test.';
-    wrap.appendChild(p);
-    return wrap;
-  }
-
-  const score = Number(result.score);
-  const scoreMax = Number(result.scoreMax);
-  const pct = Number(result.percentage);
-
-  // Certains exercices sont évalués sur des indicateurs métier et non sur
-  // une note chiffrée. Ils ne doivent pas être présentés comme "non notés".
-  if (result.tri && typeof result.tri === 'object') {
-    const p = document.createElement('p');
-    p.className = 'commentaire';
-    p.textContent = 'Évaluation par temps et nombre d’erreurs.';
-    wrap.appendChild(p);
-  } else if (result.bricks && typeof result.bricks === 'object') {
-    const p = document.createElement('p');
-    p.className = 'commentaire';
-    p.textContent = 'Évaluation technique par temps et nombre d’erreurs.';
-    wrap.appendChild(p);
-  } else if (Number.isFinite(score) && Number.isFinite(scoreMax) && scoreMax > 0) {
-    const p = document.createElement('p');
-    const strong = document.createElement('strong');
-    strong.textContent = 'Score : ';
-    p.appendChild(strong);
-    p.appendChild(document.createTextNode(String(score) + '/' + String(scoreMax)));
-    if (Number.isFinite(pct)) {
-      p.appendChild(document.createTextNode(' — ' + String(Math.round(pct * 100) / 100) + ' %'));
+  if(!testState||typeof testState!=='object')return null;
+  const result=testState.result&&typeof testState.result==='object'?testState.result:null;
+  const answers=testState.answers&&typeof testState.answers==='object'?testState.answers:{};
+  const details=result?.details&&typeof result.details==='object'?result.details:{};
+  const questions=new Map((definition?.questions||[]).map(q=>[String(q.id),q]));
+  const presentation=definition?.presentation||{};
+  const autoForm=presentation.autoevaluationForm;
+  const mailForm=presentation.mailComposer;
+  const used=new Set();
+  const duration=value=>{
+    const s=Math.max(0,Math.floor(Number(value)||0));
+    return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  };
+  const readable=value=>Array.isArray(value)?value.map(String).join(', '):String(value??'');
+  const selectionLabel=value=>{
+    const statement=(autoForm?.statements||[]).find(s=>String(s.value)===String(value));
+    if(!statement)return String(value);
+    const group=(autoForm.groups||[]).find(g=>(g.values||[]).some(v=>String(v)===String(value)));
+    return (group?.title?group.title+' — ':'')+String(statement.label||value);
+  };
+  const selections=(label,values)=>{
+    if(!Array.isArray(values)||!values.length)return;
+    append(label);
+    const ul=document.createElement('ul');
+    ul.style.cssText='margin:5px 0 12px 24px;padding:0';
+    for(const value of values){
+      const li=document.createElement('li');
+      li.textContent=selectionLabel(value);
+      ul.appendChild(li);
     }
-    if (status.startsWith('ABANDONED')) p.appendChild(document.createTextNode(' — Exercice abandonné'));
-    wrap.appendChild(p);
-  } else {
-    const p = document.createElement('p');
-    p.className = 'commentaire';
-    p.textContent = status.startsWith('ABANDONED')
-      ? 'Exercice abandonné.'
-      : 'Exercice terminé — étape non notée.';
-    wrap.appendChild(p);
-  }
-
-  const details = result.details && typeof result.details === 'object' ? result.details : null;
-  if (details) {
-    const entries = Object.entries(details).filter(([, value]) => value && typeof value === 'object');
-    if (entries.length) {
-      const line = document.createElement('p');
-      line.className = 'ligne';
-      let shown = 0;
-      for (const [, value] of entries) {
-        // Afficher toutes les questions réellement enregistrées.
-        const span = document.createElement('span');
-        const correct = value.correct === true;
-        const answered = value.answer !== undefined || value.user !== undefined || value.value !== undefined;
-        span.className = correct ? 'correct' : (answered ? 'incorrect' : 'commentaire');
-        const raw = value.answer ?? value.user ?? value.value ?? '';
-        const display = String(raw == null ? '' : raw).replace(/\s+/g, ' ').trim();
-        span.textContent = 'Q' + String(shown + 1) + (display ? ' : ' + display : '') + (correct ? ' ✓' : ' ✗');
-        line.appendChild(span);
-        shown += 1;
+    wrap.appendChild(ul);
+  };
+  if(!result)append('',String(testState.status||'').startsWith('ABANDONED')
+    ?'Exercice abandonné.':'Aucun résultat calculé pour cet exercice.',{subtle:true});
+  else if(result.tri||testState.tri){
+    append('Évaluation','Temps et erreurs de tri');
+    const rows=Array.isArray(testState.tri?.rows)?testState.tri.rows.filter(r=>
+      r&&r.seconds!==null&&r.seconds!==undefined&&Number.isFinite(Number(r.seconds))&&
+      r.errors!==null&&r.errors!==undefined&&Number.isFinite(Number(r.errors))):[];
+    if(rows.length){
+      const table=document.createElement('table');
+      table.style.cssText='border-collapse:collapse;margin:8px 0 12px;max-width:550px;width:100%';
+      const head=document.createElement('tr');
+      for(const label of ['Tri','Temps','Erreurs']){
+        const th=document.createElement('th');th.textContent=label;
+        th.style.cssText='border:1px solid #ccdbe9;padding:7px;text-align:left;background:#e8f1f9';
+        head.appendChild(th);
       }
-      if (shown) wrap.appendChild(line);
+      table.appendChild(head);
+      rows.forEach((row,i)=>{
+        const tr=document.createElement('tr');
+        for(const value of [i+1,duration(row.seconds),Math.max(0,Number(row.errors))]){
+          const td=document.createElement('td');td.textContent=String(value);
+          td.style.cssText='border:1px solid #ccdbe9;padding:7px';
+          tr.appendChild(td);
+        }
+        table.appendChild(tr);
+      });
+      wrap.appendChild(table);
+    }else if(Array.isArray(result?.tri?.temps_essais)){
+      result.tri.temps_essais.forEach((sec,i)=>append('Tri '+(i+1)+' — temps',duration(sec)));
     }
-  }
-  const recorded=testState?.answers&&typeof testState.answers==='object'
-    ?testState.answers:{};
-  const known=new Set(Object.keys(details||{}));
-  const extra=Object.entries(recorded).filter(([key,value])=>
-    !known.has(key)&&value!==undefined&&value!==null&&
-    String(value).trim()!=='');
-  if(extra.length){
-    const heading=document.createElement('p');
-    heading.textContent='Autres réponses enregistrées dans ce test :';
-    wrap.appendChild(heading);
-    for(const [key,value] of extra){
-      const p=document.createElement('p');
-      p.className='ligne';
-      const readable=Array.isArray(value)?value.join(' ; '):String(value);
-      // Pas d'innerHTML : les réponses (courriel et texte compris) ne
-      // peuvent pas fabriquer des titres de tests ou du HTML arbitraire.
-      p.textContent=String(key)+' : '+readable;
-      p.style.whiteSpace='pre-wrap';
-      p.style.overflowWrap='anywhere';
-      wrap.appendChild(p);
-    }
-  }
-  const supplemental=testState?.supplemental;
-  if(supplemental&&typeof supplemental==='object'){
-    for(const [questionId,fields] of Object.entries(supplemental)){
-      if(!fields||typeof fields!=='object')continue;
-      for(const [fieldId,value] of Object.entries(fields)){
-        if(value===undefined||value===null||String(value).trim()==='')continue;
-        const p=document.createElement('p');
-        p.className='ligne';
-        p.textContent=questionId+' / '+fieldId+' : '+String(value);
-        p.style.whiteSpace='pre-wrap';
-        wrap.appendChild(p);
-      }
-    }
-  }
+    const tri=result?.tri||{};
+    const validCount=rows.length||Number(tri.completedCount)||0;
+    if(validCount)append('Nombre de tris réalisés',validCount);
+    const avgSeconds=Number.isFinite(Number(tri.temps_moyen))&&tri.temps_moyen!==undefined
+      ?tri.temps_moyen:(rows.length?Math.round(rows.reduce((s,r)=>s+Number(r.seconds),0)/rows.length):null);
+    if(avgSeconds!==null)append('Temps moyen',duration(avgSeconds));
+    const totalErrors=tri.erreurs_total!==undefined?Number(tri.erreurs_total):
+      rows.length?rows.reduce((s,r)=>s+Number(r.errors),0):null;
+    if(totalErrors!==null)append('Total des erreurs',totalErrors);
+    const meanErrors=tri.moyenne_erreurs!==undefined?Number(tri.moyenne_erreurs):
+      rows.length?totalErrors/rows.length:null;
+    if(meanErrors!==null)append('Moyenne des erreurs par tri',Math.round(meanErrors*100)/100);
+    selections('Autoévaluation',testState.tri?.autoSelections||[]);
+    if(testState.tri?.commentaire)append('Commentaire du candidat',testState.tri.commentaire,{block:true});
+  }else if(result.bricks||testState.brique){
+    append('Évaluation','Réalisation pratique');
+    const brick=result?.bricks||{};
+    const second=brick.temps??testState.brique?.chronoSeconds;
+    const errors=brick.erreurs??testState.brique?.errors;
+    if(second!==undefined&&second!==null)append('Temps réalisé',duration(second));
+    if(errors!==undefined&&errors!==null)append('Nombre d’erreurs',errors);
+    selections('Autoévaluation',brick.autoevaluation?.selections||testState.brique?.autoSelections||[]);
+    const comment=brick.autoevaluation?.commentaire??testState.brique?.commentaire;
+    if(comment)append('Commentaire du candidat',comment,{block:true});
+  }else if(result&&Number.isFinite(Number(result.score))&&
+      Number.isFinite(Number(result.scoreMax))&&Number(result.scoreMax)>0){
+    let text=String(result.score)+'/'+String(result.scoreMax);
+    if(Number.isFinite(Number(result.percentage)))text+=' — '+(Math.round(Number(result.percentage)*100)/100)+' %';
+    append('Score',text);
+  }else append('',String(testState.status||'').startsWith('ABANDONED')
+    ?'Exercice abandonné.':'Exercice terminé — étape non notée.',{subtle:true});
 
+  if(mailForm?.fields){
+    const fields=mailForm.fields;
+    const parts=[
+      ['Destinataire',fields.to],['Copie',fields.cc],
+      ['Objet',fields.subject],['Pièce jointe',fields.file]
+    ];
+    for(const [label,id] of parts){
+      if(!id)continue;
+      used.add(String(id));
+      if(answers[id]!==undefined&&String(answers[id]).trim())append(label,answers[id]);
+    }
+    const signature=String(fields.signature||''),phone=String(fields.phone||'');
+    if(signature)used.add(signature);
+    if(phone)used.add(phone);
+    const body=answers[signature]??answers[phone];
+    if(body!==undefined&&String(body).trim())append('Message rédigé par le candidat',body,{block:true});
+  }
+  const textEditor=String(answers.text_editor_text||'');
+  if(textEditor.trim())append('Texte rédigé par le candidat',textEditor,{block:true});
+  else if(answers.text_editor_html)append('Texte de l’éditeur',
+    'Contenu formaté enregistré, mais version texte indisponible.',{subtle:true});
+  used.add('text_editor_text');
+  used.add('text_editor_html');
+
+  for(const [id,detail] of Object.entries(details)){
+    if(!detail||typeof detail!=='object'||used.has(id))continue;
+    used.add(id);
+    const value=detail.value??detail.answer??detail.user??answers[id]??'';
+    const prompt=questions.get(String(id))?.prompt||String(id);
+    const isSelection=Array.isArray(value);
+    if(isSelection){
+      selections(autoForm?'Choix du candidat':prompt,value);
+      continue;
+    }
+    // Les questions non notées ne sont pas signalées à tort comme fausses.
+    if(String(value).trim()){
+      const scored=test.scored!==false&&Number(detail.points)>0&&
+        typeof detail.correct==='boolean';
+      append(prompt,readable(value)+(scored?(detail.correct?' ✓':' ✗'):''));
+    }
+  }
+  for(const [id,value] of Object.entries(answers)){
+    if(used.has(id)||value===undefined||value===null||String(value).trim()==='')continue;
+    // Les champs internes ne sont ni une réponse, ni un commentaire évalué.
+    if(/(?:_ready|_complete|_validated|_seen)$/.test(id))continue;
+    if(mailForm?.fields&&Object.values(mailForm.fields).includes(id))continue;
+    if(Array.isArray(value))selections('Choix du candidat',value);
+    else if(/^mail_/.test(id)){
+      if(id==='mail_signature'||id==='mail_phone'){
+        used.add('mail_signature');used.add('mail_phone');
+        append('Message rédigé par le candidat',value,{block:true});
+      }else append(({mail_to:'Destinataire',mail_cc:'Copie',mail_subject:'Objet',
+        mail_file:'Pièce jointe'})[id]||id,value);
+    }else append(questions.get(id)?.prompt||id,value,
+      {block:/\n/.test(String(value))});
+    used.add(id);
+  }
+  for(const [questionId,fields] of Object.entries(testState.supplemental||{})){
+    if(!fields||typeof fields!=='object')continue;
+    for(const [fieldId,value] of Object.entries(fields)){
+      if(value===undefined||value===null||!String(value).trim())continue;
+      const caption=fieldId===String(autoForm?.commentFieldId||'commentaire')
+        ?'Commentaire du candidat'
+        :(questions.get(questionId)?.prompt||questionId)+' — '+fieldId;
+      append(caption,value,{block:true});
+    }
+  }
   return wrap;
+}
+
+// Pour toute V1 et tout test futur, rechercher la définition EXACTE
+// (identifiant ET version) afin de traduire les réponses en phrases complètes.
+// Une version différente ne doit jamais inventer les libellés d'une ancienne.
+function sebEnrichResultsFromDefinition(test,manifestItem,card,ownState){
+  const getter=window.sebEvalPro?.kaloneoGetTest;
+  if(typeof getter!=='function'||!manifestItem?.version)return;
+  Promise.resolve().then(()=>getter(String(test.id),String(manifestItem.version)))
+    .then(payload=>{
+      const definition=payload?.definition||payload?.test||
+        (payload?.id?payload:null);
+      if(!definition||String(definition.id)!==String(test.id)||
+        String(definition.version)!==String(manifestItem.version))return;
+      if(!card.isConnected)return;
+      const old=card.querySelector('.seb-canonical-result-summary');
+      const updated=sebDescribeCanonicalResult(test,ownState,definition);
+      if(old&&updated)old.replaceWith(updated);
+    }).catch(()=>{/* pas de traduction sans définition d'origine */});
 }
 
 // Les résultats des parcours KALTEST proviennent EXCLUSIVEMENT de la
@@ -528,6 +609,7 @@ function sebApplyDynamicResultsLayout() {
     return true;
   }
 
+  const itemById=new Map(manifest.tests.map(item=>[String(item.id),item]));
   const groups=new Map();
   const seen=new Set();
   for (const item of manifest.tests) {
@@ -573,6 +655,7 @@ function sebApplyDynamicResultsLayout() {
       else card.appendChild(create('p',
         'Résultat propre à ce test indisponible — aucune autre donnée utilisée.',
         'commentaire'));
+      sebEnrichResultsFromDefinition(test,itemById.get(test.id),card,ownState);
       section.appendChild(card);
     }
     documentRoot.appendChild(section);

@@ -201,3 +201,11 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Préparation d'une Release de test R95 / Build #100 / 0.0.124, isolée des anciens Setups R94 et R93, avec compilation conditionnée aux essais Electron de contamination et à toutes les régressions existantes.
 - Les visuels du Builder, les fichiers KALTEST, les barèmes, la navigation et les images ne sont pas modifiés dans cette livraison.
 - Les résultats de la R94 doivent être considérés comme provisoires jusqu'à comparaison des résultats après ouverture du même dossier candidat dans la R95.
+
+## Résultats R95 — présentation des vraies réponses (14 octobre 2026)
+
+- Retour sur parcours réel R95 : NWTEXT exposait `text_editor_html` brut ; autoévaluations affichaient des codes `progress` et des croix erronées ; Tri et Briques perdaient temps/erreurs ; courriel n'affichait pas son corps ; à l'ouverture, la page 0 historique apparaissait brièvement.
+- Correction générale du rendu par structure des données de `state.tests[id]` : `result.tri` + `state.tri.rows` avec temps, erreurs et moyennes ; `result.bricks` avec temps et erreurs ; tableaux, messages, sélections et commentaires ; texte NWTEXT sans HTML ; réponses notées séparées des réponses non notées (pas de faux X).
+- Traduction des choix et des intitulés au moyen de la définition correspondant **exactement à l'ID et à la version du manifeste**, chargée en lecture seule ; sans définition, laisser le code enregistré plutôt que fabriquer un mauvais libellé. Règle applicable à tous les nouveaux tests et aux V1, sans exception basée sur le nom du test.
+- Le chemin administratif des résultats masque l'ancienne page pendant l'initialisation, puis rétablit la visibilité après installation des éléments de lecture seule.
+- Aucune modification de résultat ni barème candidat, V1, images, scores ou présentation du Builder. Contrôle Electron renforcé encore nécessaire avant Setup.
