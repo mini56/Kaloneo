@@ -3064,6 +3064,12 @@
       title.readOnly=false;
       title.removeAttribute('aria-disabled');
       if(request!==titleFocusRequest||sequence!==focusSequence)return;
+      // Electron peut retarder un requestAnimationFrame pendant l'aperçu.
+      // Ne jamais reprendre le focus si l'utilisateur a déjà commencé à
+      // modifier un bloc : l'ancien comportement volait alors son curseur.
+      const focused=document.activeElement;
+      if(focused&&focused!==document.body&&focused!==title&&
+         focused!==$('new-test')&&!focused.closest?.('.builder-topbar'))return;
       try{
         title.focus({preventScroll:true});
         title.setSelectionRange(0,title.value.length);
