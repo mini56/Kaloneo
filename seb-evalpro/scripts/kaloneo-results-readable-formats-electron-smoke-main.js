@@ -165,11 +165,26 @@ app.whenReady().then(async()=>{
     criteria:[...document.querySelectorAll('article[data-test-id="future_text_2060"] [data-criterion-status]')]
       .map(n=>({name:n.previousElementSibling?.textContent,value:n.dataset.criterionStatus})),
     stockDetailsOpen:document.querySelector('article[data-test-id="future_placements_2060"] .seb-report-stock-details')?.open,
-    stockDetailsRows:document.querySelectorAll('article[data-test-id="future_placements_2060"] .seb-report-stock-details tr').length
+    stockDetailsRows:document.querySelectorAll('article[data-test-id="future_placements_2060"] .seb-report-stock-details tr').length,
+    folds:cards.map(card=>{
+      const root=card.querySelector('.seb-canonical-result-summary');
+      const fold=root?.querySelector(':scope > details');
+      const metrics=root?.querySelector(':scope > .seb-results-metrics');
+      return {id:card.dataset.testId,hasFold:!!fold,open:fold?.open,
+        label:fold?.querySelector(':scope > summary')?.textContent,
+        metricsOutside:!!metrics&&(!fold||!fold.contains(metrics))};
+    })
    };
   };
   const read=await win.webContents.executeJavaScript('('+inspect.toString()+')()',true);
   assert.equal(read.count,7,JSON.stringify(read));
+  assert.equal(read.folds.length,7);
+  for(const fold of read.folds){
+    assert(fold.hasFold,'Détail non repliable pour '+fold.id);
+    assert.equal(fold.open,false,'Détail déjà déplié pour '+fold.id);
+    assert(fold.label?.startsWith('Consulter'),'Volet sans titre pour '+fold.id);
+    assert(fold.metricsOutside,'Le score est masqué dans le volet de '+fold.id);
+  }
   assert.equal(read.hiddenBody,false,'Page bloquée invisible');
   assert.equal(read.currentlyVisible,'pageFinale','Ancienne page affichée');
   assert.equal(read.beforePage,false,'Ancienne page 0 active');
