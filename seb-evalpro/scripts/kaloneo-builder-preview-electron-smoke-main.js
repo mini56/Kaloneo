@@ -715,21 +715,51 @@ app.whenReady().then(async()=>{
       if(!iconButton||!contractButton||!iconBody||!contractBody)return {ok:false,error:'Boutons de repli des sections absents'};
       const iconCount=document.querySelectorAll('#icon-picker .icon-choice').length;
       const outputsBefore=document.querySelectorAll('#outputs-editor .contract-item').length;
-      iconButton.click();contractButton.click();
-      const folded=iconBody.hidden&&contractBody.hidden&&
+      const pageStyleButton=document.getElementById('toggle-page-style');
+      const pageStyleBody=document.getElementById('page-style-content');
+      const validationButton=document.getElementById('toggle-validation-section');
+      const validationBody=document.getElementById('validation-content');
+      const validationBox=document.querySelector('.validation-box');
+      const folded=iconBody.hidden&&contractBody.hidden&&pageStyleBody?.hidden&&validationBody?.hidden&&
         iconButton.getAttribute('aria-expanded')==='false'&&
-        contractButton.getAttribute('aria-expanded')==='false';
+        contractButton.getAttribute('aria-expanded')==='false'&&
+        pageStyleButton?.getAttribute('aria-expanded')==='false'&&
+        validationButton?.getAttribute('aria-expanded')==='false';
+      const noDuplicateIconButton=!document.getElementById('jump-to-icon-picker');
+      const noV1Status=!document.getElementById('developer-mode-status');
+      const cleanDevLabel=document.getElementById('developer-unlock')?.textContent.trim()==='Mode Développeur';
+      pageStyleButton.click();
+      const pageStyleOpens=!pageStyleBody.hidden&&pageStyleButton.getAttribute('aria-expanded')==='true';
+      pageStyleButton.click();
+      validationButton.click();
+      const validationOpens=!validationBody.hidden&&validationButton.getAttribute('aria-expanded')==='true';
+      validationButton.click();
+      // La couleur du titre signale le statut même section fermée.
+      const green=validationBox.dataset.validationStatus==='ok';
+      const titleColorGreen=getComputedStyle(document.getElementById('validation-heading')).color;
+      const titleIsGreen=/25,\s*135,\s*84/.test(titleColorGreen);
+      // Forcer une erreur de saisie temporaire sans conserver la modification.
+      const title=document.getElementById('test-title');
+      const savedTitle=title.value;
+      title.value='';
+      title.dispatchEvent(new Event('input',{bubbles:true}));
+      const red=validationBox.dataset.validationStatus==='error';
+      const titleColorRed=getComputedStyle(document.getElementById('validation-heading')).color;
+      const titleIsRed=/198,\s*40,\s*40/.test(titleColorRed);
+      title.value=savedTitle;
+      title.dispatchEvent(new Event('input',{bubbles:true}));
       const stillPresent=iconCount===document.querySelectorAll('#icon-picker .icon-choice').length&&
         outputsBefore===document.querySelectorAll('#outputs-editor .contract-item').length;
-      // Le bouton Icône existant doit ré-ouvrir la section repliée.
-      document.getElementById('jump-to-icon-picker').click();
+      // La bibliothèque d’icônes est accessible directement dans sa section.
+      iconButton.click();
       const jumpedOpen=!iconBody.hidden&&iconButton.getAttribute('aria-expanded')==='true';
       // L'ajout d'une sortie ouvre Sorties et Bilan sans perdre les précédentes.
       document.getElementById('add-output').click();
       const outputOpened=!contractBody.hidden&&contractButton.getAttribute('aria-expanded')==='true';
       const outputAdded=document.querySelectorAll('#outputs-editor .contract-item').length===outputsBefore+1;
       document.getElementById('new-test').click();
-      const allExpanded=!iconBody.hidden&&!contractBody.hidden;
+      const allExpanded=iconBody.hidden&&contractBody.hidden&&
+        pageStyleBody.hidden&&validationBody.hidden;
       const first=document.querySelector('.exercise-block');
       const type=first?.querySelector('.block-type');
       if(type){type.value='multiple-tables';type.dispatchEvent(new Event('change',{bubbles:true}));}
@@ -743,7 +773,9 @@ app.whenReady().then(async()=>{
       const order=rects.every((r,i)=>r.width>0&&(i===0||r.left>=rects[i-1].right-1));
       const widthFits=header.scrollWidth<=header.clientWidth+2;
       const values={ok:true,folded,stillPresent,jumpedOpen,outputOpened,outputAdded,
-        allExpanded,widthFits,order,kindWidth:size(typeField),zoneWidth:size(zone),deleteWidth:size(remove),
+        allExpanded,pageStyleOpens,validationOpens,noDuplicateIconButton,
+        noV1Status,cleanDevLabel,green,titleIsGreen,red,titleIsRed,
+        widthFits,order,kindWidth:size(typeField),zoneWidth:size(zone),deleteWidth:size(remove),
         kindFont:font(typeField),zoneFont:font(zone),deleteFont:font(remove),
         deleteText:remove?.textContent.trim(),collapsedBlocks:document.querySelectorAll('.exercise-block.is-collapsed').length};
       document.getElementById('new-test').click();
@@ -751,7 +783,11 @@ app.whenReady().then(async()=>{
     })()`,true);
     if(!sectionCompact.ok||!sectionCompact.folded||!sectionCompact.stillPresent||
        !sectionCompact.jumpedOpen||!sectionCompact.outputOpened||!sectionCompact.outputAdded||
-       !sectionCompact.allExpanded||!sectionCompact.widthFits||!sectionCompact.order||
+       !sectionCompact.allExpanded||!sectionCompact.pageStyleOpens||!sectionCompact.validationOpens||
+       !sectionCompact.noDuplicateIconButton||!sectionCompact.noV1Status||!sectionCompact.cleanDevLabel||
+       !sectionCompact.green||!sectionCompact.titleIsGreen||
+       !sectionCompact.red||!sectionCompact.titleIsRed||
+       !sectionCompact.widthFits||!sectionCompact.order||
        sectionCompact.kindWidth>182||sectionCompact.zoneWidth<100||sectionCompact.deleteWidth>85||
        sectionCompact.kindFont<13||sectionCompact.zoneFont<13||sectionCompact.deleteFont<13||
        sectionCompact.deleteText!=='Supprimer'){
@@ -1095,7 +1131,9 @@ app.whenReady().then(async()=>{
     const foldsBeforePreview=await win.webContents.executeJavaScript(`(()=>{
       const blocks=[...document.querySelectorAll('.exercise-block')];
       if(!blocks.length)return {count:0};
-      blocks.forEach(block=>block.querySelector('.toggle-block').click());
+      blocks.forEach(block=>{
+        if(!block.classList.contains('is-collapsed'))block.querySelector('.toggle-block').click();
+      });
       const contract=document.getElementById('toggle-contract-section');
       if(contract?.getAttribute('aria-expanded')==='true')contract.click();
       const contractCollapsed=contract?.getAttribute('aria-expanded')==='false'
