@@ -509,6 +509,10 @@ app.whenReady().then(async()=>{
     // Vérifier une frappe immédiatement visible, sans overlay ni capture Electron.
     const miniBeforeTyping=miniRenderCalls;
     const liveTyping=await win.webContents.executeJavaScript(`(async()=>{
+      const block=document.querySelector('.exercise-block');
+      if(block?.classList.contains('is-collapsed')){
+        block.querySelector('.toggle-block').click();
+      }
       const field=document.querySelector('.exercise-block .block-body textarea');
       if(!field)return {ok:false,reason:'Champ de texte initial absent'};
       field.focus();
@@ -707,7 +711,7 @@ app.whenReady().then(async()=>{
     }
     console.log('KALONEO_BLOCK_COLLAPSE_EXPAND_ELECTRON=OK',JSON.stringify(foldBehavior));
 
-    const sectionCompact=await win.webContents.executeJavaScript(`(()=>{
+    const sectionCompact=await win.webContents.executeJavaScript(`(async()=>{
       const iconButton=document.getElementById('toggle-icon-library');
       const iconBody=document.getElementById('icon-library-content');
       const contractButton=document.getElementById('toggle-contract-section');
@@ -743,11 +747,13 @@ app.whenReady().then(async()=>{
       const savedTitle=title.value;
       title.value='';
       title.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(resolve=>setTimeout(resolve,470));
       const red=validationBox.dataset.validationStatus==='error';
       const titleColorRed=getComputedStyle(document.getElementById('validation-heading')).color;
       const titleIsRed=/198,\s*40,\s*40/.test(titleColorRed);
       title.value=savedTitle;
       title.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(resolve=>setTimeout(resolve,470));
       const stillPresent=iconCount===document.querySelectorAll('#icon-picker .icon-choice').length&&
         outputsBefore===document.querySelectorAll('#outputs-editor .contract-item').length;
       // La bibliothèque d’icônes est accessible directement dans sa section.
