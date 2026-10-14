@@ -2081,12 +2081,19 @@ window.addEventListener('DOMContentLoaded', async () => {
     // avant de rendre la fenêtre visible.
     requestAnimationFrame(()=>{
       const root=document.documentElement;
+      // Aucune image intermédiaire de la page 0 avant la vraie page Résultats.
       if(root?.dataset.sebResultsLoading==='1'){
         delete root.dataset.sebResultsLoading;
         root.style.visibility='';
       }
+      root?.classList.add('seb-qcm-interface-ready');
     });
   } else {
+    // Même garde à l'ouverture d'un vrai parcours : le navigateur ne
+    // présente la page de départ qu'après l'initialisation des vues.
+    if(pageName().toLowerCase()==='qcmv1.0.html'){
+      requestAnimationFrame(()=>document.documentElement?.classList.add('seb-qcm-interface-ready'));
+    }
     if (!isAdminBilanPage() && !isTestsParcoursWorkspacePage()) {
       document.addEventListener('input', scheduleSave, true);
       document.addEventListener('change', scheduleSave, true);
