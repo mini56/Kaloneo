@@ -441,6 +441,55 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
       metric('Moyenne de réussite',formatNumber(percentage)+' %');
     }else appendNote('Nombre de placements corrects indisponible dans le résultat enregistré.');
     root.prepend(metricGroup);
+
+    // Tableau non ouvert par défaut : seul le nombre de bons placements
+    // est visible dans le compte rendu. Les réponses sont consultables
+    // avec les vrais libellés du plateau, jamais avec les codes "case:".
+    const board=presentation.stockBoard;
+    if(board&&Array.isArray(board.pots)){
+      const placements=[];
+      const humanLocation=raw=>{
+        const value=String(raw??'source');
+        if(value==='source'||!value)return 'Zone de départ — non placé';
+        if(value==='tri')return 'Zone de tri';
+        const match=/^case:([^:]+):([^:]+):([^:]+)$/.exec(value);
+        if(!match)return 'Emplacement enregistré non identifié';
+        const shelf=(board.shelves||[]).find(item=>String(item.id)===match[1]);
+        const level=(shelf?.levels||[]).find(item=>String(item.id)===match[2]);
+        const shelfLabel=shelf?.title ? String(shelf.title) : 'Casier '+match[1];
+        const levelLabel=level?.label ? String(level.label) : 'Niveau '+match[2];
+        return shelfLabel+' — '+levelLabel+' — emplacement '+match[3];
+      };
+      for(const pot of board.pots){
+        if(pot?.example===true||!pot?.questionId)continue;
+        const id=String(pot.questionId);
+        const entry=details[id]||{};
+        const raw=answers[id]??entry.value;
+        const name=[pot.code?String(pot.code):'',pot.percentage!==undefined?String(pot.percentage)+' %':''].filter(Boolean).join(' — ');
+        const title=questions.get(id)?.prompt||('Flacon '+name);
+        const evaluation=typeof entry.correct==='boolean'
+          ?(entry.correct?'Correct':'Incorrect'):'Non évalué';
+        placements.push([plain(title),humanLocation(raw),evaluation]);
+      }
+      if(placements.length){
+        const box=document.createElement('details');box.className='seb-report-details seb-report-stock-details';
+        const summary=document.createElement('summary');
+        summary.textContent='Consulter les réponses ('+placements.length+' placements)';
+        box.appendChild(summary);
+        const table=document.createElement('table');table.className='seb-report-table';
+        const heading=document.createElement('tr');
+        ['Flacon','Emplacement choisi','Évaluation'].forEach(label=>{
+          const th=document.createElement('th');th.textContent=label;heading.appendChild(th);
+        });
+        table.appendChild(heading);
+        for(const values of placements){
+          const row=document.createElement('tr');
+          values.forEach(value=>{const cell=document.createElement('td');cell.textContent=value;row.appendChild(cell);});
+          table.appendChild(row);
+        }
+        box.appendChild(table);root.appendChild(box);
+      }
+    }
     return root;
   }
   const practical=sebNormalizeResultText(test?.category)==='activite pratique';
@@ -532,6 +581,47 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
     (answers.text_editor_html?plain(answers.text_editor_html):'');
   if(editor.trim())field('Texte rédigé par le candidat',editor,true);
   used.add('text_editor_text');used.add('text_editor_html');
+
+  // Les indicateurs d'édition sont ceux enregistrés au moment de la
+  // correction Quill. Cette page ne réanalyse jamais le document et ne
+  // modifie pas le score (même pour une version future du test).
+  const analysis=result?.textEditor?.analyse;
+  const criteria=analysis?.score;
+  const criterionNames={
+    titre_present:'Titre demandé présent',
+    titre_gras:'Titre en gras',
+    titre_police:'Police du titre : Arial',
+    titre_taille:'Taille du titre : 16 pt',
+    texte_lignes:'Au moins 10 lignes de texte',
+    texte_police:'Police du texte : Arial',
+    texte_taille:'Taille du texte : 12 pt',
+    enregistrement:'Enregistrement conforme'
+  };
+  if(criteria&&typeof criteria==='object'){
+    const rows=Object.entries(criterionNames).filter(([key])=>
+      Object.prototype.hasOwnProperty.call(criteria,key));
+    if(rows.length){
+      subheading('Détail des critères de notation');
+      const table=document.createElement('table');table.className='seb-report-table seb-report-criteria';
+      const head=document.createElement('tr');
+      ['Critère','Résultat'].forEach(name=>{
+        const cell=document.createElement('th');cell.textContent=name;head.appendChild(cell);
+      });
+      table.appendChild(head);
+      rows.forEach(([key,label])=>{
+        const cellValue=Number(criteria[key])===1?'Validé':'Non validé';
+        const row=document.createElement('tr');
+        const name=document.createElement('td');name.textContent=label;
+        const status=document.createElement('td');
+        status.textContent=cellValue;status.dataset.criterionStatus=Number(criteria[key])===1?'valid':'invalid';
+        row.append(name,status);table.appendChild(row);
+      });
+      root.appendChild(table);
+    }
+  }else if(presentation.builderContent?.some(item=>item?.type==='text-editor')||
+      definition?.evaluation?.nwtexteRules===true){
+    appendNote('Détail des critères non conservé dans ce dossier candidat : score enregistré inchangé.');
+  }
   if(autoForm?.questionId){
     const id=String(autoForm.questionId);
     used.add(id);selections('Autoévaluation',Array.isArray(answers[id])?answers[id]:[]);
@@ -539,16 +629,35 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
   // Seuls les libellés de la même version KALTEST sont admis.
   // Aucune question inconnue ou clé technique n'est publiée à l'écran.
   const tableRows=[];
+  const countRows=[];
   if(definition){
     for(const [id,question] of questions){
       if(used.has(id))continue;
       const detail=details[id]||{};
       const value=answers[id]??detail.value??detail.answer;
-      if(value===undefined||value===null||String(value).trim()==='')continue;
+      const countQuestion=question.response?.type==='multiple-choice'&&
+        question.acceptedCount!==undefined&&question.acceptedCount!==null&&
+        Number.isInteger(Number(question.acceptedCount));
+      if(!countQuestion&&(value===undefined||value===null||String(value).trim()===''))continue;
       if(/(?:_ready|_complete|_validated|_seen)$/.test(id))continue;
       if(typeof value==='string'&&/^(?:source|tri|case:)/i.test(value))continue;
       const prompt=plain(question.prompt||question.title||question.label||'').trim();
       if(!prompt)continue;
+      if(countQuestion){
+        const selected=Array.isArray(value)?value.length:0;
+        const expected=Number(question.acceptedCount);
+        const group=(presentation.fractionSelection?.groups||[]).find(item=>
+          String(item.questionId)===id);
+        const possible=Number(group?.totalItems);
+        const qty=Number.isInteger(possible)&&possible>0
+          ?' sur '+possible+' objets':'';
+        const status=typeof detail.correct==='boolean'
+          ?(detail.correct?'Correct':'Incorrect'):'Non évalué';
+        countRows.push([prompt,selected+' objet'+(selected===1?'':'s')+qty,
+          expected+' objet'+(expected===1?'':'s'),status]);
+        used.add(id);
+        continue;
+      }
       if(Array.isArray(value)){
         used.add(id);selections(prompt,value);continue;
       }
@@ -560,6 +669,21 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
         (detail.correct?'Correct':'Incorrect'):'—';
       tableRows.push([prompt,answer,check]);used.add(id);
     }
+  }
+  if(countRows.length){
+    subheading('Objets sélectionnés pour chaque question');
+    const table=document.createElement('table');table.className='seb-report-table seb-report-selection-counts';
+    const head=document.createElement('tr');
+    ['Question','Sélectionnés','Attendus','Évaluation'].forEach(label=>{
+      const cell=document.createElement('th');cell.textContent=label;head.appendChild(cell);
+    });
+    table.appendChild(head);
+    for(const values of countRows){
+      const tr=document.createElement('tr');
+      values.forEach(value=>{const td=document.createElement('td');td.textContent=String(value);tr.appendChild(td);});
+      table.appendChild(tr);
+    }
+    root.appendChild(table);
   }
   if(tableRows.length){
     const detailsBox=document.createElement('details');detailsBox.className='seb-report-details';
