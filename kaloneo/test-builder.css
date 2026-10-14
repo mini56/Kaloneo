@@ -167,7 +167,7 @@ textarea {
 
 .block-header {
   display: grid;
-  grid-template-columns: 28px minmax(142px,170px) 110px 30px 30px 82px 30px;
+  grid-template-columns: 28px minmax(132px,170px) 110px 30px 30px 82px 34px;
   gap:7px;
   justify-content:space-between;
   align-items:center;
@@ -196,8 +196,7 @@ textarea {
   min-width:0;
 }
 .block-header .move-up,
-.block-header .move-down,
-.block-header .toggle-block{
+.block-header .move-down{
   width:30px;
   min-width:30px;
   height:30px;
@@ -205,9 +204,6 @@ textarea {
   padding:0!important;
   font-size:16px;
   line-height:1;
-}
-.block-header .toggle-block{
-  font-size:20px;
 }
 .exercise-block.is-collapsed>.block-body{
   display:none;
@@ -1208,12 +1204,6 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 }
 
 /* R87 : lisibilité de l'image choisie même avec le bloc replié. */
-.block-header .block-media-status{
-  font-size:11px;color:#005a32;background:#e6f5eb;border:1px solid #a7d9b9;
-  border-radius:5px;padding:3px 5px;white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis;max-width:140px;min-width:0;
-}
-.block-header:has(.block-media-status){grid-template-columns:28px minmax(130px,160px) 100px 30px 30px 82px minmax(70px,1fr) 30px;}
 .block-body .file-preview-name{color:#005a32;font-weight:700;}
 
 
@@ -1319,3 +1309,82 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 .page-style-panel>.section-title-row .section-fold-btn{flex:none}
 .validation-box.is-collapsed .collapsible-section-content,
 .page-style-panel.is-collapsed .collapsible-section-content{display:none!important}
+
+/* Boutons de repli Builder : une seule identité visuelle, sur tous les
+   blocs existants et futurs. 34 × 34, orange, + fermé / − ouvert.
+   Les flèches de déplacement conservent leur couleur bleue. */
+.builder-editor .section-fold-btn,
+.builder-editor .block-header .toggle-block{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 34px!important;
+  box-sizing:border-box!important;
+  width:34px!important;
+  min-width:34px!important;
+  max-width:34px!important;
+  height:34px!important;
+  min-height:34px!important;
+  max-height:34px!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid #C56500!important;
+  border-radius:8px!important;
+  background:#ED860B!important;
+  background-image:linear-gradient(180deg,#F69B24 0%,#E77900 100%)!important;
+  color:#fff!important;
+  font:700 22px/1 Arial,"Segoe UI",sans-serif!important;
+  text-align:center!important;
+  box-shadow:0 2px 0 #A45100,0 3px 6px rgba(120,57,0,.2)!important;
+  transition:background .14s,border-color .14s,box-shadow .14s,transform .14s!important;
+  cursor:pointer;
+}
+.builder-editor .section-fold-btn:not(:disabled):hover,
+.builder-editor .block-header .toggle-block:not(:disabled):hover{
+  border-color:#AB5000!important;
+  background:#D87500!important;
+  background-image:linear-gradient(180deg,#EC8809 0%,#C96600 100%)!important;
+  color:#fff!important;
+  box-shadow:0 3px 0 #A45100,0 5px 9px rgba(120,57,0,.28)!important;
+  transform:translateY(-1px)!important;
+  filter:none!important;
+}
+.builder-editor .section-fold-btn:not(:disabled):active,
+.builder-editor .block-header .toggle-block:not(:disabled):active{
+  background:#B95D00!important;
+  background-image:none!important;
+  box-shadow:inset 0 2px 3px rgba(80,35,0,.32)!important;
+  transform:translateY(1px)!important;
+}
+.builder-editor .section-fold-btn:focus-visible,
+.builder-editor .block-header .toggle-block:focus-visible{
+  outline:3px solid #004E70!important;
+  outline-offset:2px!important;
+}
+.builder-editor .section-fold-btn:disabled,
+.builder-editor .block-header .toggle-block:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+/* Modèle KALONÉO et Mode Développeur côte à côte, dans la même grille.
+   Conserver les boutons d'export protégé à l'ouverture du mode. */
+.builder-editor .builder-developer-inline{
+  display:flex;
+  align-items:flex-end;
+  align-self:end;
+  justify-content:flex-start;
+  flex-wrap:wrap;
+  gap:6px;
+  min-width:0;
+  min-height:34px;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+}
+.builder-editor .builder-developer-inline .mini-btn{
+  min-height:34px;
+  white-space:nowrap;
+}
+.builder-editor .page-style-panel .collapsible-section-content>.form-grid.cols-2{
+  margin-bottom:4px;
+}
