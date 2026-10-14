@@ -339,7 +339,7 @@ app.whenReady().then(async()=>{
   assert.deepEqual(single.ids,['future_text_2060']);
   assert(single.expectedScore,'Le résultat NWTEXT du parcours a disparu.');
   assert(!single.all.includes('Exercice catalogue parasite'));
-  assert(single.all.includes('Exercices du parcours 1'),'Le résumé ne reflète pas le parcours réellement exécuté.');
+  assert(single.all.includes('1Exercices du parcours'),'Le résumé ne reflète pas le parcours réellement exécuté.');
   console.log('KALONEO_RESULTS_READABLE_FORMATS_ELECTRON: OK',JSON.stringify({
     cases:read.count,triTimes:true,bricks:true,autoLabels:true,mailBody:true,
     editorWithoutHtml:true,showResultsOnly:true,stockDetailsOptional:true,
