@@ -10,7 +10,8 @@ const tests=[
   {id:'future_reflection_2060',version:'2.0.0',title:'Réflexion future',category:'autoevaluation',scored:false},
   {id:'future_brix_2060',version:'2.0.0',title:'Assemblage futur',category:'technique',scored:false},
   {id:'future_sort_2060',version:'2.0.0',title:'Tri futur',category:'technique',scored:false},
-  {id:'future_message_2060',version:'2.0.0',title:'Message futur',category:'communication',scored:true}
+  {id:'future_message_2060',version:'2.0.0',title:'Message futur',category:'communication',scored:true},
+  {id:'future_placements_2060',version:'2.0.0',title:'Rangement futur',category:'organisation',scored:true}
 ];
 const formId='question_of_future';
 const definitions={
@@ -25,6 +26,7 @@ const definitions={
  future_sort_2060:{presentation:{triStation:{autoStatements:[
    {value:'future_sort_feedback',label:'Je me suis amélioré pendant mes tris.'}
  ]}}},
+ future_placements_2060:{presentation:{stockBoard:{pots:[{id:'example'}],shelves:[]}},questions:[{id:'pot_future_1',prompt:'Un flacon fictif'}]},
  future_message_2060:{presentation:{mailComposer:{fields:{
    to:'to_code',cc:'cc_code',subject:'subject_code',signature:'body_code',
    phone:'phone_code',file:'attachment_code'
@@ -69,6 +71,16 @@ const snapshot={
     result:{score:0,scoreMax:0,details:{future_ready:{value:'1',correct:false,points:0}},
       tri:{completedCount:3,temps_moyen:96,erreurs_total:3,moyenne_erreurs:1,
         temps_essais:[65,92,130]}}
+   },
+   future_placements_2060:{
+    status:'COMPLETED',
+    answers:Object.fromEntries(Array.from({length:33},(_,i)=>[
+      'pot_future_'+(i+1), i===0?'case:1:2:1':'source'
+    ])),
+    result:{score:1,scoreMax:33,percentage:100/33,
+      details:Object.fromEntries(Array.from({length:33},(_,i)=>[
+        'pot_future_'+(i+1),{value:i===0?'case:1:2:1':'source',correct:i===0,points:i===0?1:0}
+      ]))}
    },
    future_message_2060:{
     status:'COMPLETED',answers:{
@@ -123,7 +135,7 @@ app.whenReady().then(async()=>{
    };
   };
   const read=await win.webContents.executeJavaScript('('+inspect.toString()+')()',true);
-  assert.equal(read.count,5,JSON.stringify(read));
+  assert.equal(read.count,6,JSON.stringify(read));
   assert.equal(read.hiddenBody,false,'Page bloquée invisible');
   assert.equal(read.currentlyVisible,'pageFinale','Ancienne page affichée');
   assert.equal(read.beforePage,false,'Ancienne page 0 active');
@@ -150,13 +162,21 @@ app.whenReady().then(async()=>{
   const mail=read.byId.future_message_2060;
   assert(mail.includes('OBJET_MESSAGE_VISIBLE')&&mail.includes('BONJOUR_MESSAGE_COMPLET'));
   assert.equal(mail.split('BONJOUR_MESSAGE_COMPLET').length-1,1,'Message en double');
+  const stock=read.byId.future_placements_2060;
+  assert(stock.includes('Placements corrects : 1 sur 33'),stock);
+  assert(stock.includes('Score : 1/33'),stock);
+  assert(stock.includes('Moyenne de réussite : 3,03 %'),stock);
+  assert(!stock.includes('case:')&&!stock.includes('source')&&!stock.includes('pot_future_'),
+    'Les déplacements internes du stock sont visibles : '+stock);
+  assert(!stock.includes('Consulter les réponses'),
+    'L’exercice de placement expose ses 33 mouvements : '+stock);
   for(const [id,value] of Object.entries(read.byId)){
    if(id!=='future_message_2060')assert(!value.includes('BONJOUR_MESSAGE_COMPLET'),
      'Mail contaminant '+id);
   }
   console.log('KALONEO_RESULTS_READABLE_FORMATS_ELECTRON: OK',JSON.stringify({
     cases:read.count,triTimes:true,bricks:true,autoLabels:true,mailBody:true,
-    editorWithoutHtml:true,showResultsOnly:true
+    editorWithoutHtml:true,showResultsOnly:true,stockSummaryWithout33Positions:true
   }));
   clearTimeout(timer);win.destroy();app.quit();
  }catch(e){fail(e);}
