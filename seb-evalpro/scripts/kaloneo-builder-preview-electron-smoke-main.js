@@ -738,22 +738,28 @@ app.whenReady().then(async()=>{
       validationButton.click();
       const validationOpens=!validationBody.hidden&&validationButton.getAttribute('aria-expanded')==='true';
       validationButton.click();
-      // La couleur du titre signale le statut même section fermée.
+      // Un test ouvert incomplet doit être rouge. Les contrôles ne
+      // deviennent verts qu'après remplissage de tous les champs requis.
+      const initialRed=validationBox.dataset.validationStatus==='error';
+      const title=document.getElementById('test-title');
+      const scenario=document.getElementById('test-scenario');
+      const instruction=document.getElementById('test-instruction');
+      const savedTitle=title.value;
+      title.value='Contrôle Builder valide';title.dispatchEvent(new Event('input',{bubbles:true}));
+      scenario.value='Contexte de travail';scenario.dispatchEvent(new Event('input',{bubbles:true}));
+      instruction.value='Effectuer une tâche';instruction.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(resolve=>setTimeout(resolve,520));
       const green=validationBox.dataset.validationStatus==='ok';
       const titleColorGreen=getComputedStyle(document.getElementById('validation-heading')).color;
-      const titleIsGreen=/25,\s*135,\s*84/.test(titleColorGreen);
-      // Forcer une erreur de saisie temporaire sans conserver la modification.
-      const title=document.getElementById('test-title');
-      const savedTitle=title.value;
-      title.value='';
-      title.dispatchEvent(new Event('input',{bubbles:true}));
-      await new Promise(resolve=>setTimeout(resolve,470));
+      const titleIsGreen=/25,[ ]*135,[ ]*84/.test(titleColorGreen);
+      // Supprimer le titre rend ce même test rouge.
+      title.value='';title.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(resolve=>setTimeout(resolve,520));
       const red=validationBox.dataset.validationStatus==='error';
       const titleColorRed=getComputedStyle(document.getElementById('validation-heading')).color;
-      const titleIsRed=/198,\s*40,\s*40/.test(titleColorRed);
-      title.value=savedTitle;
-      title.dispatchEvent(new Event('input',{bubbles:true}));
-      await new Promise(resolve=>setTimeout(resolve,470));
+      const titleIsRed=/198,[ ]*40,[ ]*40/.test(titleColorRed);
+      title.value=savedTitle;title.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(resolve=>setTimeout(resolve,520));
       const stillPresent=iconCount===document.querySelectorAll('#icon-picker .icon-choice').length&&
         outputsBefore===document.querySelectorAll('#outputs-editor .contract-item').length;
       // La bibliothèque d’icônes est accessible directement dans sa section.
@@ -780,7 +786,7 @@ app.whenReady().then(async()=>{
       const widthFits=header.scrollWidth<=header.clientWidth+2;
       const values={ok:true,folded,stillPresent,jumpedOpen,outputOpened,outputAdded,
         allExpanded,pageStyleOpens,validationOpens,noDuplicateIconButton,
-        noV1Status,cleanDevLabel,green,titleIsGreen,red,titleIsRed,
+        noV1Status,cleanDevLabel,initialRed,green,titleIsGreen,red,titleIsRed,titleColorGreen,titleColorRed,
         widthFits,order,kindWidth:size(typeField),zoneWidth:size(zone),deleteWidth:size(remove),
         kindFont:font(typeField),zoneFont:font(zone),deleteFont:font(remove),
         deleteText:remove?.textContent.trim(),collapsedBlocks:document.querySelectorAll('.exercise-block.is-collapsed').length};
@@ -791,7 +797,7 @@ app.whenReady().then(async()=>{
        !sectionCompact.jumpedOpen||!sectionCompact.outputOpened||!sectionCompact.outputAdded||
        !sectionCompact.allExpanded||!sectionCompact.pageStyleOpens||!sectionCompact.validationOpens||
        !sectionCompact.noDuplicateIconButton||!sectionCompact.noV1Status||!sectionCompact.cleanDevLabel||
-       !sectionCompact.green||!sectionCompact.titleIsGreen||
+       !sectionCompact.initialRed||!sectionCompact.green||!sectionCompact.titleIsGreen||
        !sectionCompact.red||!sectionCompact.titleIsRed||
        !sectionCompact.widthFits||!sectionCompact.order||
        sectionCompact.kindWidth>182||sectionCompact.zoneWidth<100||sectionCompact.deleteWidth>85||
