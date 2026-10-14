@@ -948,11 +948,25 @@ function sebApplyDynamicResultsLayout() {
     report.appendChild(warning);host.replaceChildren(report);return true;
   }
 
+  // Le manifeste décrit un parcours possible, pas nécessairement les
+  // exercices effectivement réalisés. Les résultats doivent provenir de
+  // l'état de CETTE évaluation, jamais de tous les KALTEST du catalogue.
+  const wasExecuted=own=>{
+    if(!own||typeof own!=='object')return false;
+    const status=String(own.status||'').toUpperCase();
+    return status==='COMPLETED'||status.startsWith('ABANDON')||
+      (own.result&&typeof own.result==='object')||
+      (status==='ACTIVE'&&Object.values(own.answers||{}).some(value=>
+        value!==null&&value!==undefined&&
+        (Array.isArray(value)?value.length>0:String(value).trim()!=='')
+      ));
+  };
   const groups=new Map(),seen=new Set();
   for(const item of manifest.tests){
     const id=String(item?.id||'');
     if(!id||seen.has(id))continue;
     seen.add(id);
+    if(!Object.prototype.hasOwnProperty.call(states,id)||!wasExecuted(states[id]))continue;
     const metadata=catalog.get(id)||{};
     // Le manifeste de ce candidat prime sur le catalogue modifié depuis.
     const category=String(item.category||metadata.category||'autres');
@@ -969,6 +983,14 @@ function sebApplyDynamicResultsLayout() {
     groups.get(label).push({test,manifestItem:item});
   }
   const list=[...groups.values()].flat();
+  if(!list.length){
+    report.appendChild(create('p',
+      'Aucun exercice réalisé dans ce parcours n’a de résultat enregistré. '+
+      'Les autres tests de la bibliothèque ne sont pas affichés.',
+      'seb-report-note'));
+    host.replaceChildren(report);
+    return true;
+  }
   const withScore=list.filter(({test})=>{
     const own=states[test.id],s=Number(own?.result?.scoreMax);
     return own&&own.result&&Number.isFinite(s)&&s>0;
