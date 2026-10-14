@@ -89,15 +89,9 @@
         </label>
       </div>
 
-      <div class="developer-v1-panel" aria-label="Accès aux icônes du test">
-        <button id="jump-to-icon-picker" type="button" class="mini-btn">Choisir une icône pour le test</button>
-        <span id="icon-selection-summary" class="muted">Aucune icône sélectionnée</span>
-      </div>
-
       <div class="developer-v1-panel" aria-label="Gestion des versions originales">
-        <button type="button" id="developer-unlock" class="mini-btn">Mode Développeur (export GitHub)</button>
+        <button type="button" id="developer-unlock" class="mini-btn" title="Accès protégé à l’export des versions originales">Mode Développeur</button>
         <button type="button" id="developer-export-v1" class="mini-btn" hidden>Exporter cette V1 vers TESTS_V1</button>
-        <span id="developer-mode-status" class="muted">V1 modifiables et enregistrables en Administrateur</span>
       </div>
 
       <div class="icon-library-panel">
@@ -109,11 +103,11 @@
           <div class="section-action-buttons">
             <button id="clear-icon" class="mini-btn" type="button">Aucune icône</button>
             <button id="toggle-icon-library" class="section-fold-btn mini-btn" type="button"
-              aria-controls="icon-library-content" aria-expanded="true"
-              aria-label="Réduire la bibliothèque d’icônes" title="Réduire la bibliothèque d’icônes">▴</button>
+              aria-controls="icon-library-content" aria-expanded="false"
+              aria-label="Déployer la bibliothèque d’icônes" title="Déployer la bibliothèque d’icônes">▾</button>
           </div>
         </div>
-        <div id="icon-library-content" class="collapsible-section-content">
+        <div id="icon-library-content" class="collapsible-section-content" hidden>
           <label>Rechercher une icône
             <input id="icon-search" type="text" placeholder="Ex. stock, calculs, sécurité…">
           </label>
@@ -134,13 +128,17 @@
         <label class="inline-checkbox"><input id="last-block-remainder" type="checkbox" checked> Dernier bloc = reste de la place</label>
       </div>
 
-      <div class="page-style-panel">
+      <div class="page-style-panel is-collapsed">
         <div class="section-title-row">
           <div>
             <h2>Style de la page</h2>
             <p class="muted">L’arrière-plan est visible autour des blocs de l’exercice. Les blocs peuvent garder leur propre couleur claire.</p>
           </div>
+          <button id="toggle-page-style" class="section-fold-btn mini-btn" type="button"
+            aria-controls="page-style-content" aria-expanded="false"
+            aria-label="Déployer Style de la page" title="Déployer Style de la page">▾</button>
         </div>
+        <div id="page-style-content" class="collapsible-section-content" hidden>
         <div class="form-grid cols-3">
           <label>Arrière-plan de la page
             <select id="page-background-type">
@@ -168,6 +166,7 @@
               <button id="clear-page-background-image" class="mini-btn danger" type="button">Retirer</button>
             </div>
           </div>
+        </div>
         </div>
       </div>
 
@@ -255,11 +254,11 @@
           <div class="section-action-buttons">
             <button id="add-output" class="mini-btn" type="button">+ Sortie</button>
             <button id="toggle-contract-section" class="section-fold-btn mini-btn" type="button"
-              aria-controls="contract-section-content" aria-expanded="true"
-              aria-label="Réduire Sorties et Bilan" title="Réduire Sorties et Bilan">▴</button>
+              aria-controls="contract-section-content" aria-expanded="false"
+              aria-label="Déployer Sorties et Bilan" title="Déployer Sorties et Bilan">▾</button>
           </div>
         </div>
-        <div id="contract-section-content" class="collapsible-section-content">
+        <div id="contract-section-content" class="collapsible-section-content" hidden>
           <div id="outputs-editor" class="contract-list"></div>
           <div class="section-title-row subsection">
             <div>
@@ -284,9 +283,16 @@
 
       <div id="blocks-editor" class="blocks-editor"></div>
 
-      <div class="validation-box">
-        <strong>Contrôle avant génération</strong>
-        <ul id="validation-list"></ul>
+      <div class="validation-box is-collapsed" data-validation-status="ok">
+        <div class="section-title-row">
+          <strong id="validation-heading">Contrôle avant génération</strong>
+          <button id="toggle-validation-section" class="section-fold-btn mini-btn" type="button"
+            aria-controls="validation-content" aria-expanded="false"
+            aria-label="Déployer Contrôle avant génération" title="Déployer Contrôle avant génération">▾</button>
+        </div>
+        <div id="validation-content" class="collapsible-section-content" hidden>
+          <ul id="validation-list"></ul>
+        </div>
       </div>
     </section>
 
