@@ -442,6 +442,65 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
     if(!text.trim())data.dataset.responseMissing='true';
     wrap.append(name,data);root.appendChild(wrap);
   };
+  // Restitution fidèle du document enregistré par Quill, jamais de HTML brut
+  // ou de HTML non filtré. Seuls les attributs de présentation utiles sont
+  // repris ; aucun script, événement, lien ni contenu actif n'est importé.
+  const richEditorField=(label,html,plainText)=>{
+    const source=String(html||'');
+    const text=String(plainText||'');
+    if(!source.trim()){
+      field(label,text,true,true);
+      return;
+    }
+    const template=document.createElement('template');
+    template.innerHTML=source;
+    const sourceText=(template.content.textContent||'').replace(/\s+/g,'');
+    const savedText=text.replace(/\s+/g,'');
+    // Une archive incohérente ne doit pas montrer la mise en forme d'un
+    // document différent de celui effectivement évalué.
+    if(!sourceText||savedText&&sourceText!==savedText){
+      field(label,text,true,true);
+      return;
+    }
+    const wrap=document.createElement('div');wrap.className='seb-report-field';
+    const name=document.createElement('div');name.className='seb-report-field-label';
+    name.textContent=label;
+    const content=document.createElement('div');
+    content.className='seb-report-original seb-report-rich-editor';
+    const allowed=new Set(['P','DIV','SPAN','STRONG','B','EM','I','U','S','BR',
+      'OL','UL','LI','BLOCKQUOTE','H1','H2','H3','H4','H5','H6','SUB','SUP']);
+    const blocked=new Set(['SCRIPT','STYLE','SVG','IFRAME','OBJECT','EMBED',
+      'LINK','META','FORM','INPUT','BUTTON','TEXTAREA','VIDEO','AUDIO']);
+    const appendFiltered=(from,parent)=>{
+      for(const node of Array.from(from.childNodes||[])){
+        if(node.nodeType===3){
+          parent.appendChild(document.createTextNode(node.nodeValue||''));
+          continue;
+        }
+        if(node.nodeType!==1||blocked.has(node.tagName))continue;
+        const safe=allowed.has(node.tagName)?document.createElement(node.tagName.toLowerCase()):parent;
+        if(safe!==parent){
+          const style=node.style;
+          if(style){
+            if(/^(Arial|Calibri|Times New Roman|Courier New|Georgia)$/i.test(style.fontFamily||'')){
+              safe.style.fontFamily=style.fontFamily;
+            }
+            if(/^(?:[5-9]|[1-6]\d|7[0-2])(?:\.\d+)?(?:pt|px)$/i.test(style.fontSize||'')){
+              safe.style.fontSize=style.fontSize;
+            }
+            if(['bold','700','600'].includes(style.fontWeight))safe.style.fontWeight='bold';
+            if(style.fontStyle==='italic')safe.style.fontStyle='italic';
+            if(style.textDecorationLine==='underline')safe.style.textDecoration='underline';
+            if(['left','right','center','justify'].includes(style.textAlign))safe.style.textAlign=style.textAlign;
+          }
+          parent.appendChild(safe);
+        }
+        appendFiltered(node,safe);
+      }
+    };
+    appendFiltered(template.content,content);
+    wrap.append(name,content);root.appendChild(wrap);
+  };
   const subheading=label=>{
     const h=document.createElement('h4');h.className='seb-report-subheading';
     h.textContent=label;root.appendChild(h);
@@ -636,8 +695,9 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
   }
   const editor=String(answers.text_editor_text??'').trim() ||
     (answers.text_editor_html?plain(answers.text_editor_html):'');
-  if(editor.trim())field('Texte rédigé par le candidat',editor,true);
-  else if(answers.text_editor_text!==undefined||answers.text_editor_html!==undefined||
+  if(editor.trim()){
+    richEditorField('Texte rédigé par le candidat',answers.text_editor_html,editor);
+  }else if(answers.text_editor_text!==undefined||answers.text_editor_html!==undefined||
     presentation.builderContent?.some(item=>item?.type==='text-editor')){
     field('Texte rédigé par le candidat',null,true,true);
   }
