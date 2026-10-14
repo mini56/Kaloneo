@@ -121,7 +121,7 @@
     const section=button.closest('.icon-library-panel,.builder-contract-section,.page-style-panel,.validation-box');
     content.hidden=!expanded;
     section?.classList.toggle('is-collapsed',!expanded);
-    button.textContent=expanded?'▴':'▾';
+    button.textContent=expanded?'−':'+';
     button.setAttribute('aria-expanded',String(expanded));
     const sectionNames={
       'toggle-icon-library':'la bibliothèque d’icônes',
@@ -2024,18 +2024,6 @@
       article.dataset.uid=block.uid;
       frag.querySelector('.block-index').textContent=String(index+1);
 
-      // Visible même lorsque le bloc est replié : une image choisie ne
-      // doit jamais paraître disparue de l'éditeur.
-      if(block.type==='image'||block.backgroundImage){
-        const badge=document.createElement('span');
-        badge.className='block-media-status';
-        badge.textContent=block.type==='image'
-          ?(block.mediaData?'✓ '+(block.mediaName||'Image sélectionnée'):'Aucune image')
-          :'✓ Image de fond';
-        badge.title=badge.textContent;
-        badge.setAttribute('aria-label',badge.textContent);
-        article.querySelector('.block-header').insertBefore(badge,article.querySelector('.toggle-block'));
-      }
       const type=frag.querySelector('.block-type');
       type.value=block.type;
       type.addEventListener('change',()=>{
@@ -2094,7 +2082,7 @@
         const collapsed=collapsedBlockUids.has(block.uid);
         article.classList.toggle('is-collapsed',collapsed);
         blockBody.hidden=collapsed;
-        foldButton.textContent=collapsed?'▾':'▴';
+        foldButton.textContent=collapsed?'+':'−';
         foldButton.setAttribute('aria-expanded',String(!collapsed));
         foldButton.title=collapsed?'Déployer ce bloc':'Réduire ce bloc';
         foldButton.setAttribute('aria-label',foldButton.title);
