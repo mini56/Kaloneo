@@ -366,6 +366,8 @@ function sebFoldResultDetails(root){
   const summary=document.createElement('summary');
   summary.textContent='Consulter les détails';
   box.appendChild(summary);
+  const content=document.createElement('div');
+  content.className='seb-report-details-content';
   for(const el of extra){
     if(el.tagName==='DETAILS'&&el.classList.contains('seb-report-details')){
       const original=el.querySelector('summary');
@@ -373,12 +375,13 @@ function sebFoldResultDetails(root){
         const heading=document.createElement('h4');
         heading.className='seb-report-subheading';
         heading.textContent=original.textContent;
-        box.appendChild(heading);
+        content.appendChild(heading);
         original.remove();
       }
-      while(el.firstChild)box.appendChild(el.firstChild);
-    }else box.appendChild(el);
+      while(el.firstChild)content.appendChild(el.firstChild);
+    }else content.appendChild(el);
   }
+  box.appendChild(content);
   root.appendChild(box);
   return root;
 }
