@@ -285,6 +285,20 @@ textarea {
 
 .validation-box li.ok { color: #198754; }
 .validation-box li.error { color: #C62828; font-weight: 700; }
+/* Le titre reste visible quand le contrôle est replié : vert si tous les
+   points passent, rouge dès qu'une erreur est détectée. */
+.validation-box .section-title-row{gap:8px;min-height:32px}
+.validation-box .section-title-row strong{color:#198754;font-size:15px}
+.validation-box[data-validation-status="error"]{
+  border-color:#C62828;background:#FFF8F8;
+}
+.validation-box[data-validation-status="error"] .section-title-row strong{color:#C62828}
+.validation-box[data-validation-status="ok"]{
+  border-color:#198754;background:#F7FCF9;
+}
+.validation-box.is-collapsed{padding-bottom:8px}
+.validation-box .section-fold-btn{margin-left:auto}
+.validation-box #validation-content[hidden]{display:none!important}
 
 .candidate-preview {
   height: calc(100vh - 160px);
@@ -605,9 +619,11 @@ textarea {
 }
 .collapsible-section-content[hidden]{display:none!important}
 .icon-library-panel.is-collapsed .section-title-row .muted,
-.builder-contract-section.is-collapsed>.section-title-row .muted{display:none}
+.builder-contract-section.is-collapsed>.section-title-row .muted,
+.page-style-panel.is-collapsed>.section-title-row .muted{display:none}
 .icon-library-panel.is-collapsed,
-.builder-contract-section.is-collapsed{padding-bottom:9px}
+.builder-contract-section.is-collapsed,
+.page-style-panel.is-collapsed{padding-bottom:9px}
 .icon-library-panel .section-title-row,
 .builder-contract-section>.section-title-row{gap:8px}
 .icon-library-panel .section-title-row>div:first-child,
@@ -1279,3 +1295,10 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
   font-size:12px;
 }
 .preview-zone>.preview-question.kaloneo-shared-question{flex:0 0 auto}
+
+/* Réglages de page : même commande compacte que Bilan et Icônes. */
+.page-style-panel>.section-title-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.page-style-panel>.section-title-row>div{min-width:0}
+.page-style-panel>.section-title-row .section-fold-btn{flex:none}
+.validation-box.is-collapsed .collapsible-section-content,
+.page-style-panel.is-collapsed .collapsible-section-content{display:none!important}
