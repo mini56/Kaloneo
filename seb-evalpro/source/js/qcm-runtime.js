@@ -397,6 +397,15 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
   const autoForm=presentation.autoevaluationForm;
   const mailForm=presentation.mailComposer;
   const used=new Set(),shownText=new Set();
+  // Signaler l'absence de saisie sans recalculer aucun score.
+  const hasAnswer=value=>{
+    if(value===null||value===undefined)return false;
+    if(Array.isArray(value))return value.some(hasAnswer);
+    if(typeof value==='string')return value.trim().length>0;
+    if(typeof value==='object')return Object.values(value).some(hasAnswer);
+    return true;
+  };
+  const missingResponse='Aucune réponse fournie';
   const formatNumber=v=>Number(v).toLocaleString('fr-FR',{maximumFractionDigits:2});
   const formatDuration=v=>{
     const sec=Math.max(0,Math.floor(Number(v)||0));
@@ -422,14 +431,16 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
     const data=document.createElement('strong');data.className='seb-results-metric-value';data.textContent=String(value);
     item.append(name,data);metricGroup.appendChild(item);
   };
-  const field=(label,value,block=false)=>{
+  const field=(label,value,block=false,showMissing=false)=>{
     const text=plain(value);
-    if(!text.trim())return;
+    if(!text.trim()&&!showMissing)return;
     const wrap=document.createElement('div');wrap.className='seb-report-field';
     const name=document.createElement('div');name.className='seb-report-field-label';name.textContent=label;
     const data=document.createElement(block?'pre':'div');
     data.className=block?'seb-report-original':'seb-report-field-value';
-    data.textContent=text;wrap.append(name,data);root.appendChild(wrap);
+    data.textContent=text.trim()?text:missingResponse;
+    if(!text.trim())data.dataset.responseMissing='true';
+    wrap.append(name,data);root.appendChild(wrap);
   };
   const subheading=label=>{
     const h=document.createElement('h4');h.className='seb-report-subheading';
@@ -444,7 +455,11 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
     return (group?.title?group.title+' — ':'')+String(item.label||'');
   };
   const selections=(label,values)=>{
-    if(!Array.isArray(values)||!values.length)return;
+    if(!Array.isArray(values)||!values.length){
+      subheading(label);
+      field('Réponse',null,false,true);
+      return;
+    }
     subheading(label);
     const ul=document.createElement('ul');ul.className='seb-report-list';
     for(const value of values){
@@ -489,7 +504,7 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
       const placements=[];
       const humanLocation=raw=>{
         const value=String(raw??'source');
-        if(value==='source'||!value)return 'Zone de départ — non placé';
+        if(value==='source'||!value)return 'Aucune réponse — Zone de départ — non placé';
         if(value==='tri')return 'Zone de tri';
         const match=/^case:([^:]+):([^:]+):([^:]+)$/.exec(value);
         if(!match)return 'Emplacement enregistré non identifié';
@@ -506,8 +521,9 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
         const raw=answers[id]??entry.value;
         const name=[pot.code?String(pot.code):'',pot.percentage!==undefined?String(pot.percentage)+' %':''].filter(Boolean).join(' — ');
         const title=questions.get(id)?.prompt||('Flacon '+name);
-        const evaluation=typeof entry.correct==='boolean'
-          ?(entry.correct?'Correct':'Incorrect'):'Non évalué';
+        const evaluation=raw===null||raw===undefined||raw===''||raw==='source'
+          ?'Non répondu':typeof entry.correct==='boolean'
+            ?(entry.correct?'Correct':'Incorrect'):'Non évalué';
         placements.push([plain(title),humanLocation(raw),evaluation]);
       }
       if(placements.length){
@@ -556,6 +572,7 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
       stats.moyenne_erreurs!==undefined&&Number.isFinite(Number(stats.moyenne_erreurs))
         ?Number(stats.moyenne_erreurs):null;
     if(count)metric('Tris effectués',count);
+    else appendNote('Aucun tri terminé ou enregistré.');
     if(avgSeconds!==null)metric('Temps moyen',formatDuration(avgSeconds));
     if(totalErrors!==null)metric('Total des erreurs',formatNumber(totalErrors));
     if(meanErrors!==null)metric('Moyenne des erreurs par tri',formatNumber(meanErrors));
@@ -585,6 +602,7 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
     const time=result?.bricks?.temps??testState.brique?.chronoSeconds;
     const errors=result?.bricks?.erreurs??testState.brique?.errors;
     if(time!==undefined&&time!==null)metric('Temps réalisé',formatDuration(time));
+    else appendNote('Aucune mesure de temps enregistrée.');
     if(errors!==undefined&&errors!==null)metric('Nombre d’erreurs',formatNumber(errors));
     root.appendChild(metricGroup);
     selections('Autoévaluation',result?.bricks?.autoevaluation?.selections||testState.brique?.autoSelections||[]);
@@ -605,20 +623,24 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
   if(mailForm?.fields){
     const f=mailForm.fields;
     [['Destinataire',f.to],['Copie',f.cc],['Objet',f.subject],['Pièce jointe',f.file]].forEach(([label,key])=>{
-      if(!key)return;used.add(String(key));field(label,answers[key]);
+      if(!key)return;used.add(String(key));field(label,answers[key],false,true);
     });
     [f.signature,f.phone].filter(Boolean).forEach(key=>used.add(String(key)));
     const body=answers[f.signature]??answers[f.phone];
-    if(body!==undefined)field('Courriel rédigé par le candidat',body,true);
+    field('Courriel rédigé par le candidat',body,true,true);
   }else if(!definition&&Object.keys(answers).some(k=>/^mail_(to|cc|subject|file|signature|phone)$/.test(k))){
     const parts={mail_to:'Destinataire',mail_cc:'Copie',mail_subject:'Objet',mail_file:'Pièce jointe'};
-    Object.entries(parts).forEach(([key,label])=>{used.add(key);field(label,answers[key]);});
+    Object.entries(parts).forEach(([key,label])=>{used.add(key);field(label,answers[key],false,true);});
     used.add('mail_signature');used.add('mail_phone');
-    field('Courriel rédigé par le candidat',answers.mail_signature??answers.mail_phone,true);
+    field('Courriel rédigé par le candidat',answers.mail_signature??answers.mail_phone,true,true);
   }
   const editor=String(answers.text_editor_text??'').trim() ||
     (answers.text_editor_html?plain(answers.text_editor_html):'');
   if(editor.trim())field('Texte rédigé par le candidat',editor,true);
+  else if(answers.text_editor_text!==undefined||answers.text_editor_html!==undefined||
+    presentation.builderContent?.some(item=>item?.type==='text-editor')){
+    field('Texte rédigé par le candidat',null,true,true);
+  }
   used.add('text_editor_text');used.add('text_editor_html');
 
   // Les indicateurs d'édition sont ceux enregistrés au moment de la
@@ -677,7 +699,7 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
       const countQuestion=question.response?.type==='multiple-choice'&&
         question.acceptedCount!==undefined&&question.acceptedCount!==null&&
         Number.isInteger(Number(question.acceptedCount));
-      if(!countQuestion&&(value===undefined||value===null||String(value).trim()===''))continue;
+      // Conserver aussi les questions restées sans réponse.
       if(/(?:_ready|_complete|_validated|_seen)$/.test(id))continue;
       if(typeof value==='string'&&/^(?:source|tri|case:)/i.test(value))continue;
       const prompt=plain(question.prompt||question.title||question.label||'').trim();
@@ -690,7 +712,7 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
         const possible=Number(group?.totalItems);
         const qty=Number.isInteger(possible)&&possible>0
           ?' sur '+possible+' objets':'';
-        const status=typeof detail.correct==='boolean'
+        const status=selected===0?'Non répondu':typeof detail.correct==='boolean'
           ?(detail.correct?'Correct':'Incorrect'):'Non évalué';
         countRows.push([prompt,selected+' objet'+(selected===1?'':'s')+qty,
           expected+' objet'+(expected===1?'':'s'),status]);
@@ -699,6 +721,10 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
       }
       if(Array.isArray(value)){
         used.add(id);selections(prompt,value);continue;
+      }
+      if(!hasAnswer(value)){
+        tableRows.push([prompt,missingResponse,'Non répondu']);
+        used.add(id);continue;
       }
       const options=question.options||question.choices||[];
       const item=Array.isArray(options)?options.find(o=>String(o?.value??o?.id??o)===String(value)):null;
@@ -768,6 +794,12 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
     if(!already.size&&!hasScore&&!editor&&!mailForm){
       appendNote('La définition du test est indisponible : aucun code technique n’est affiché.');
     }
+  }
+  if(definition&&questions.size===0&&!mailForm&&!editor&&
+     !presentation.bricksStation&&!presentation.triStation&&
+     !Object.values(answers).some(hasAnswer)&&
+     !root.querySelector('.seb-report-field,.seb-report-list,.seb-report-table')){
+    appendNote('Aucune réponse enregistrée pour cet exercice.');
   }
   for(const [questionId,fields] of Object.entries(testState.supplemental||{})){
     if(!fields||typeof fields!=='object')continue;
