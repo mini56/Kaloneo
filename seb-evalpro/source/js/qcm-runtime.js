@@ -573,8 +573,33 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
     });
     detailsBox.appendChild(table);root.appendChild(detailsBox);
   }
-  if(!definition&&!hasScore&&!editor&&!mailForm){
-    appendNote('Définition de cette version du test indisponible : aucun libellé technique affiché.');
+  if(!definition){
+    // Sans schéma de cette version, les données textuelles restent consultables
+    // en lecture seule. Les clés, codes d'options et positions de déplacement
+    // ne deviennent jamais de fausses questions.
+    const already=new Set();
+    const generic=(id,value)=>{
+      if(value===undefined||value===null||Array.isArray(value)||typeof value==='object')return;
+      if(/(?:_ready|_complete|_validated|_seen)$/.test(String(id)))return;
+      const raw=String(value).trim();
+      if(!raw||/^(?:source|tri|case:)/i.test(raw)||already.has(raw))return;
+      if(/^(?:true|false|undefined|null)$/i.test(raw))return;
+      already.add(raw);
+      field(/^mail_body$/.test(id)?'Courriel rédigé par le candidat':
+        /^mail_subject$/.test(id)?'Objet du courriel':'Réponse enregistrée',raw,
+        raw.includes('\n')||/<\/?[a-z][^>]*>/i.test(raw));
+    };
+    for(const [id,detail] of Object.entries(details)){
+      if(!detail||typeof detail!=='object'||used.has(id))continue;
+      generic(id,detail.value??detail.answer);
+    }
+    for(const [id,value] of Object.entries(answers)){
+      if(used.has(id))continue;
+      generic(id,value);
+    }
+    if(!already.size&&!hasScore&&!editor&&!mailForm){
+      appendNote('La définition du test est indisponible : aucun code technique n’est affiché.');
+    }
   }
   for(const [questionId,fields] of Object.entries(testState.supplemental||{})){
     if(!fields||typeof fields!=='object')continue;
