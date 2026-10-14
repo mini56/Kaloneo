@@ -823,6 +823,15 @@ app.whenReady().then(async()=>{
       const focusAfterInput=document.activeElement===header&&header.isConnected&&header.selectionStart===9;
       await new Promise(resolve=>setTimeout(resolve,410));
       const focusAfterPause=document.activeElement===header&&header.isConnected&&header.selectionStart===9;
+      const focusAfterPauseDiagnostic={
+        activeTag:document.activeElement?.tagName,activeId:document.activeElement?.id,
+        activeLabel:document.activeElement?.closest('label')?.textContent?.slice(0,70),
+        connected:header.isConnected,
+        selection:header.selectionStart,
+        headerValue:header.value,
+        renderedValue:[...document.querySelectorAll('.exercise-block label')].find(
+          l=>l.textContent?.includes('En-têtes du tableau'))?.querySelector('input')?.value
+      };
       header.dispatchEvent(new Event('change',{bubbles:true}));
       const updated=!!document.querySelector('.exercise-block')&&
         document.querySelectorAll('.exercise-block .column-editor-row').length===3;
@@ -851,7 +860,7 @@ app.whenReady().then(async()=>{
       await new Promise(resolve=>setTimeout(resolve,30));
       const nextKeepsFocus=document.activeElement===next&&next.isConnected;
       document.getElementById('new-test').click();
-      return {ok:true,focusAfterInput,focusAfterPause,updated,gridKeepsFocus,gridUpdated,nextKeepsFocus};
+      return {ok:true,focusAfterInput,focusAfterPause,focusAfterPauseDiagnostic,updated,gridKeepsFocus,gridUpdated,nextKeepsFocus};
     })()`,true);
     if(!typingFocus.ok||!typingFocus.focusAfterInput||!typingFocus.focusAfterPause||
        !typingFocus.updated||!typingFocus.gridKeepsFocus||!typingFocus.gridUpdated||
