@@ -813,6 +813,7 @@ app.whenReady().then(async()=>{
       let type=block.querySelector('.block-type');
       type.value='response-table';type.dispatchEvent(new Event('change',{bubbles:true}));
       block=document.querySelector('.exercise-block');
+      if(block.classList.contains('is-collapsed'))block.querySelector('.toggle-block').click();
       const header=[...block.querySelectorAll('label')].find(l=>l.textContent?.includes('En-têtes du tableau'))?.querySelector('input');
       if(!header)return {ok:false,reason:'En-têtes de tableau introuvables'};
       header.focus();
@@ -829,6 +830,8 @@ app.whenReady().then(async()=>{
       block=document.querySelector('.exercise-block');
       type=block.querySelector('.block-type');
       type.value='table-grid';type.dispatchEvent(new Event('change',{bubbles:true}));
+      block=document.querySelector('.exercise-block');
+      if(block.classList.contains('is-collapsed'))block.querySelector('.toggle-block').click();
       const size=[...document.querySelectorAll('.exercise-block label')].find(l=>l.textContent?.trim().startsWith('Lignes'))?.querySelector('input');
       if(!size)return {ok:false,reason:'Champ Lignes absent'};
       size.focus();
@@ -887,6 +890,8 @@ app.whenReady().then(async()=>{
       document.getElementById('chrono-enabled').checked=true;
       document.getElementById('chrono-enabled').dispatchEvent(new Event('change',{bubbles:true}));
 
+      const editorBlock=document.querySelector('.exercise-block');
+      if(editorBlock.classList.contains('is-collapsed'))editorBlock.querySelector('.toggle-block').click();
       const textArea=document.querySelector('.exercise-block .block-body textarea');
       textArea.value='Bloc couleur simple';
       textArea.dispatchEvent(new Event('input',{bubbles:true}));
