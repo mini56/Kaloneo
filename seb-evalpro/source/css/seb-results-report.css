@@ -84,6 +84,33 @@ html.seb-results-report-mode #resultat {
   border-radius:7px; max-height:520px; overflow:auto; margin:4px 0 12px;
 }
 #resultat .seb-report-list {margin:6px 0 12px 20px; padding:0; list-style:disc;}
+#resultat .seb-report-rich-editor{
+  font:inherit;
+  font-family:Arial,Calibri,"Segoe UI",sans-serif;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  line-height:1.4;
+}
+#resultat .seb-report-rich-editor p{
+  margin:0 0 .35em;
+}
+#resultat .seb-report-rich-editor p:last-child{
+  margin-bottom:0;
+}
+#resultat .seb-report-rich-editor strong,
+#resultat .seb-report-rich-editor b{
+  font-weight:700;
+}
+#resultat .seb-report-rich-editor ol,
+#resultat .seb-report-rich-editor ul{
+  padding-left:22px;
+  margin:6px 0;
+}
+#resultat .seb-report-rich-editor blockquote{
+  border-left:3px solid #b7cddd;
+  margin:8px 0;
+  padding-left:12px;
+}
 #resultat .seb-report-list li {margin:4px 0;}
 #resultat .seb-report-details {
   margin:14px 0 3px; border:1px solid #d8e5ee; border-radius:7px;
