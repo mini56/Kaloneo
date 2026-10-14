@@ -155,3 +155,137 @@ html.seb-results-report-mode #resultat {
   #resultat .seb-result-test-card,#resultat .seb-results-category {break-inside:avoid;}
   #resultat .seb-report-details:not([open]) .seb-report-table {display:table;}
 }
+/* Espace administrateur : le compte rendu occupe presque toute la fenêtre.
+   Le défilement appartient au rapport, et non à une sous-fenêtre de 950 × 470.
+   CSS strictement réservé à la consultation d'un dossier candidat. */
+html.seb-admin-results-workspace,
+html.seb-admin-results-workspace body{
+  width:100%!important;
+  height:100dvh!important;
+  max-height:100dvh!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+html.seb-admin-results-workspace #kaloneo-common-navigation,
+html.seb-admin-results-workspace #seb-evalpro-topbar,
+html.seb-admin-results-workspace #seb-evalpro-top-hotzone{
+  display:none!important;
+}
+html.seb-admin-results-workspace #pageFinale.visible{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  box-sizing:border-box!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  height:100dvh!important;
+  max-height:100dvh!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:12px 22px 14px!important;
+  overflow:hidden!important;
+  gap:9px;
+}
+html.seb-admin-results-workspace #seb-admin-results-header{
+  width:100%;
+  flex:0 0 auto;
+  min-height:43px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+html.seb-admin-results-workspace #seb-admin-results-header > h2{
+  margin:0!important;
+  padding:0!important;
+  color:#004e70!important;
+  text-align:left!important;
+  font-size:25px!important;
+  font-weight:700!important;
+  white-space:nowrap;
+}
+html.seb-admin-results-workspace #seb-admin-results-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:10px;
+}
+html.seb-admin-results-workspace #seb-admin-results-actions button{
+  position:static!important;
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  min-height:37px;
+  margin:0!important;
+  padding:8px 14px!important;
+  background:#fff!important;
+  border:1.5px solid #0070c0!important;
+  border-radius:7px!important;
+  color:#004e70!important;
+  font:700 14px Calibri,"Segoe UI",Arial,sans-serif!important;
+  white-space:nowrap;
+  box-shadow:0 1px 4px rgba(0,45,77,.11);
+  cursor:pointer;
+}
+html.seb-admin-results-workspace #seb-admin-results-close{
+  border-color:#b33d35!important;
+  color:#b33d35!important;
+}
+html.seb-admin-results-workspace #seb-admin-results-readonly{
+  box-sizing:border-box;
+  display:block!important;
+  flex:0 0 auto;
+  width:100%!important;
+  margin:0!important;
+  padding:7px 12px!important;
+  background:#f1f6fb!important;
+  border:1px solid #bad4e7!important;
+  border-radius:6px;
+  color:#215271;
+  font-size:13px;
+  font-weight:700;
+}
+html.seb-admin-results-workspace #pageFinale.visible #resultat{
+  display:block!important;
+  flex:1 1 auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  width:100%!important;
+  max-width:none!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:10px 13px 18px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  border:1px solid #cbdbe8!important;
+  border-radius:10px!important;
+  background:#f3f6fa!important;
+  box-shadow:0 2px 9px rgba(0,45,77,.08);
+  scrollbar-gutter:stable;
+}
+html.seb-admin-results-workspace #resultat .seb-results-report{
+  gap:13px;
+}
+html.seb-admin-results-workspace #resultat .seb-results-report-heading{
+  padding:14px 20px;
+}
+html.seb-admin-results-workspace #resultat .seb-result-test-card{
+  padding:13px 18px;
+}
+html.seb-admin-results-workspace #resultat .seb-result-card-heading{
+  margin-bottom:10px;
+}
+@media(max-width:720px){
+  html.seb-admin-results-workspace #pageFinale.visible{padding:8px!important;gap:7px;}
+  html.seb-admin-results-workspace #seb-admin-results-header{flex-wrap:wrap;}
+  html.seb-admin-results-workspace #seb-admin-results-actions{gap:5px;}
+  html.seb-admin-results-workspace #seb-admin-results-header>h2{font-size:20px!important;}
+  html.seb-admin-results-workspace #seb-admin-results-actions button{font-size:12px!important;padding:6px 8px!important;}
+  html.seb-admin-results-workspace #pageFinale.visible #resultat{padding:8px!important;}
+}
