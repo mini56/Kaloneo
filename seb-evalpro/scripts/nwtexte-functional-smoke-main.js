@@ -146,6 +146,46 @@ async function runFunctionalScenario(win) {
       }
       assert(analyse.lignes >= 10, 'Comptage des 10 lignes incorrect.');
 
+      // Le numéro 16 du sélecteur signifie 16pt. Une espace peut avoir
+      // un autre format de frappe sans retirer les points du titre visible.
+      const spaceIndex = title.indexOf(' ');
+      q.formatText(spaceIndex, 1, {bold:false,font:'Calibri',size:'14pt'}, 'silent');
+      const mixedSpace = window.sebNwtexteEditor.analyseDocument();
+      for (const key of ['titre_gras','titre_police','titre_taille']) {
+        assert(mixedSpace.score[key] === 1,
+          'Un simple espace non formaté ne doit pas invalider le titre : ' + key);
+      }
+      assert(mixedSpace.score.total === 8,'La mise en forme des espaces ne doit pas perdre de points.');
+      q.formatText(0,title.length,{bold:true,font:'Arial',size:'16pt'},'silent');
+
+      // À l'inverse, un caractère visible incorrect ne doit pas recevoir
+      // un point grâce aux autres caractères bien formatés.
+      q.formatText(0,1,'bold',false,'silent');
+      const partialTitle = window.sebNwtexteEditor.analyseDocument();
+      assert(partialTitle.score.titre_gras === 0,
+        'Un titre partiellement gras ne doit pas recevoir le point gras.');
+      assert(partialTitle.score.titre_police === 1 && partialTitle.score.titre_taille === 1,
+        'Un caractère non gras ne doit pas annuler la police ou la taille.');
+      q.formatText(0,1,'bold',true,'silent');
+
+      // Ne jamais assimiler 16px à 16pt : un ancien document en pixels
+      // doit rester en pixels, sans conversion numérique artificielle.
+      q.formatText(0,title.length,'size','16px','silent');
+      assert(q.getFormat(0,1).size === '16px','La valeur historique en px a été effacée.');
+      const pixels = window.sebNwtexteEditor.analyseDocument();
+      assert(pixels.score.titre_taille === 0,'16px a été confondu avec 16pt.');
+      assert(pixels.score.titre_gras === 1 && pixels.score.titre_police === 1,
+        'Une erreur de taille ne doit pas effacer les points de gras/Arial.');
+
+      // La sauvegarde/relecture des archives conserve les unités d'origine.
+      const pixelDelta = q.getContents();
+      q.setContents(pixelDelta,'silent');
+      assert(q.getFormat(0,1).size === '16px','Le document en pixels a été transformé au rechargement.');
+      q.formatText(0,title.length,'size','16pt','silent');
+      const restoredPt = window.sebNwtexteEditor.saveEvaluation();
+      assert(restoredPt.score.total === 8 &&
+        restoredPt.score.titre_taille === 1,'La taille 16pt n’est plus validée.');
+
       const responses = JSON.parse(sessionStorage.getItem('reponses_data') || '{}');
       const scores = JSON.parse(sessionStorage.getItem('scores_data') || '{}');
       assert(responses.page7_contenu_html, 'page7_contenu_html absent.');
