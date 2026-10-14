@@ -738,12 +738,20 @@ app.whenReady().then(async()=>{
         Math.abs(developer.getBoundingClientRect().top-modelSelect.getBoundingClientRect().top)<14;
       const scenario=document.getElementById('test-scenario');
       const instruction=document.getElementById('test-instruction');
+      const capIds=['calculator-compatible','chrono-enabled','admin-intervention',
+        'autoevaluation-enabled','external-material'];
+      const caps=capIds.map(id=>document.getElementById(id));
       const scenarioHiddenWhenFolded=scenario.getClientRects().length===0&&instruction.getClientRects().length===0;
+      const allCapabilitiesHiddenWhenFolded=caps.every(el=>el?.getClientRects().length===0);
+      const firstCapabilityState=caps.map(el=>el?.checked);
       pageStyleButton.click();
       const pageStyleOpens=!pageStyleBody.hidden&&pageStyleButton.getAttribute('aria-expanded')==='true'&&
         scenario.getClientRects().length>0&&instruction.getClientRects().length>0;
+      const allCapabilitiesVisibleOnOpen=caps.every(el=>el?.getClientRects().length>0);
       pageStyleButton.click();
       const scenarioHiddenAgain=scenario.getClientRects().length===0&&instruction.getClientRects().length===0;
+      const capabilitiesHiddenAgain=caps.every(el=>el?.getClientRects().length===0);
+      const capabilitiesValuesRetained=caps.every((el,i)=>el.checked===firstCapabilityState[i]);
       validationButton.click();
       const validationOpens=!validationBody.hidden&&validationButton.getAttribute('aria-expanded')==='true';
       validationButton.click();
@@ -800,9 +808,13 @@ app.whenReady().then(async()=>{
         bg:getComputedStyle(button).backgroundColor,
         fg:getComputedStyle(button).color
       }));
-      const orangeUniform=foldMeasurements.every(item=>
+      const blueUniform=foldMeasurements.every(item=>
         item.width===34&&item.height===34&&
-        item.bg==='rgb(237, 134, 11)'&&item.fg==='rgb(255, 255, 255)');
+        item.bg==='rgb(0, 78, 112)'&&item.fg==='rgb(255, 255, 255)');
+      const foldRightEdges=controls.map(button=>
+        Math.round(button.getBoundingClientRect().right));
+      const foldedButtonsAligned=foldRightEdges.every(value=>
+        Math.abs(value-foldRightEdges[1])<=2);
       const blockToggle=document.querySelector('.exercise-block .toggle-block');
       const plusWhenClosed=blockToggle?.textContent.trim()==='+';
       blockToggle?.click();
@@ -810,7 +822,10 @@ app.whenReady().then(async()=>{
       blockToggle?.click();
       const values={ok:true,folded,stillPresent,jumpedOpen,outputOpened,outputAdded,
         allExpanded,pageStyleOpens,scenarioHiddenWhenFolded,scenarioHiddenAgain,
-        devInline,orangeUniform,foldMeasurements,plusWhenClosed,minusWhenOpened,
+        allCapabilitiesHiddenWhenFolded,allCapabilitiesVisibleOnOpen,
+        capabilitiesHiddenAgain,capabilitiesValuesRetained,
+        devInline,blueUniform,foldMeasurements,foldRightEdges,
+        foldedButtonsAligned,plusWhenClosed,minusWhenOpened,
         validationOpens,noDuplicateIconButton,
         noV1Status,cleanDevLabel,initialRed,green,titleIsGreen,red,titleIsRed,titleColorGreen,titleColorRed,
         widthFits,order,kindWidth:size(typeField),zoneWidth:size(zone),deleteWidth:size(remove),
@@ -823,7 +838,11 @@ app.whenReady().then(async()=>{
        !sectionCompact.jumpedOpen||!sectionCompact.outputOpened||!sectionCompact.outputAdded||
        !sectionCompact.allExpanded||!sectionCompact.pageStyleOpens||
        !sectionCompact.scenarioHiddenWhenFolded||!sectionCompact.scenarioHiddenAgain||
-       !sectionCompact.devInline||!sectionCompact.orangeUniform||
+       !sectionCompact.allCapabilitiesHiddenWhenFolded||
+       !sectionCompact.allCapabilitiesVisibleOnOpen||
+       !sectionCompact.capabilitiesHiddenAgain||!sectionCompact.capabilitiesValuesRetained||
+       !sectionCompact.devInline||!sectionCompact.blueUniform||
+       !sectionCompact.foldedButtonsAligned||
        !sectionCompact.plusWhenClosed||!sectionCompact.minusWhenOpened||
        !sectionCompact.validationOpens||
        !sectionCompact.noDuplicateIconButton||!sectionCompact.noV1Status||!sectionCompact.cleanDevLabel||
