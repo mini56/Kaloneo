@@ -1635,6 +1635,10 @@ app.whenReady().then(async()=>{
       if(blocks.length!==2||blocks.some(x=>x.querySelector('.block-type')?.value!=='multiple-tables')){
         return {ok:false,reason:'Genre et nombre : tableaux historiques non conservés',blocks:blocks.length};
       }
+      if(blocks.some(x=>!x.classList.contains('is-collapsed')||!x.querySelector('.block-body')?.hidden)){
+        return {ok:false,reason:'Les blocs du test ouvert ne sont pas repliés par défaut'};
+      }
+      blocks.forEach(block=>block.querySelector('.toggle-block').click());
       const rendererLoaded=typeof window.KaloneoBuilderLegacyTablePreview?.render==='function';
       if(!rendererLoaded)return {ok:false,reason:'Module autonome des tableaux historiques non chargé'};
       const grammarTables=[...document.querySelectorAll('#preview-exercise .preview-grammar-table')];
