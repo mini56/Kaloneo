@@ -456,12 +456,17 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
       r.errors!==null&&r.errors!==undefined&&Number.isFinite(Number(r.errors))):[];
     const stats=result?.tri||{};
     const count=rows.length||Number(stats.completedCount)||0;
-    const totalErrors=Number.isFinite(Number(stats.erreurs_total))&&stats.erreurs_total!==undefined
-      ?Number(stats.erreurs_total):rows.length?rows.reduce((s,r)=>s+Number(r.errors),0):null;
-    const avgSeconds=Number.isFinite(Number(stats.temps_moyen))&&stats.temps_moyen!==undefined
-      ?Number(stats.temps_moyen):rows.length?Math.round(rows.reduce((s,r)=>s+Number(r.seconds),0)/rows.length):null;
-    const meanErrors=Number.isFinite(Number(stats.moyenne_erreurs))&&stats.moyenne_erreurs!==undefined
-      ?Number(stats.moyenne_erreurs):rows.length?totalErrors/rows.length:null;
+    // Même consolidation à partir des essais enregistrés que le Bilan.
+    // Aucun score ou niveau institutionnel n'est modifié.
+    const totalErrors=rows.length?rows.reduce((s,r)=>s+Number(r.errors),0):
+      stats.erreurs_total!==undefined&&Number.isFinite(Number(stats.erreurs_total))
+        ?Number(stats.erreurs_total):null;
+    const avgSeconds=rows.length?Math.round(rows.reduce((s,r)=>s+Number(r.seconds),0)/rows.length):
+      stats.temps_moyen!==undefined&&Number.isFinite(Number(stats.temps_moyen))
+        ?Number(stats.temps_moyen):null;
+    const meanErrors=rows.length?totalErrors/rows.length:
+      stats.moyenne_erreurs!==undefined&&Number.isFinite(Number(stats.moyenne_erreurs))
+        ?Number(stats.moyenne_erreurs):null;
     if(count)metric('Tris effectués',count);
     if(avgSeconds!==null)metric('Temps moyen',formatDuration(avgSeconds));
     if(totalErrors!==null)metric('Total des erreurs',formatNumber(totalErrors));
@@ -716,7 +721,7 @@ function sebApplyDynamicResultsLayout() {
   const stats=create('div',undefined,'seb-results-overview');
   [['Exercices du parcours',list.length],
     ['Exercices notés',withScore],
-    ['Activités non notées',Math.max(0,list.length-withScore)]].forEach(([label,value])=>{
+    ['Sans score disponible',Math.max(0,list.length-withScore)]].forEach(([label,value])=>{
     const item=create('div',undefined,'seb-results-overview-item');
     item.append(create('strong',value),create('span',label));stats.appendChild(item);
   });
