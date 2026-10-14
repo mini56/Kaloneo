@@ -392,7 +392,7 @@ function sebDescribeCanonicalResult(test,testState,definition=null){
       presentation.bricksStation?.autoStatements||[];
     const statement=statements.find(s=>String(s.value)===String(value));
     if(!statement)return String(value);
-    const group=(autoForm.groups||[]).find(g=>(g.values||[]).some(v=>String(v)===String(value)));
+    const group=(autoForm?.groups||[]).find(g=>(g.values||[]).some(v=>String(v)===String(value)));
     return (group?.title?group.title+' — ':'')+String(statement.label||value);
   };
   const selections=(label,values)=>{
