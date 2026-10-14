@@ -1405,6 +1405,16 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 .builder-editor .exercise-block.is-collapsed > .block-header{
   width:calc(100% + 12px);
 }
+/* Sur les écrans moins larges, réduire les colonnes souples au lieu de
+   laisser les tailles minimales déplacer le bouton + hors de son cadre.
+   Les boutons de déplacement et Supprimer conservent leurs dimensions. */
+@media (min-width:901px) and (max-width:1200px){
+  .builder-editor .exercise-block.is-collapsed > .block-header{
+    grid-template-columns:28px minmax(78px,1.6fr) minmax(65px,1fr) 30px 30px 82px 34px;
+    gap:4px;
+    justify-content:stretch;
+  }
+}
 /* La fermeture de Style de la page masque en une fois les champs de contexte,
    les capacités communes et tous leurs paramètres sans toucher aux valeurs. */
 .builder-editor .page-style-panel.is-collapsed #page-style-content,
