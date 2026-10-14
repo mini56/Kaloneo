@@ -1,13 +1,5 @@
 name: 'KALONÉO R96 - Setup de test visuel - Build 101'
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - '.github/workflows/build-r96-results-readable-test.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-v1-fixes-r96-results-readable-builder.yml'
   workflow_dispatch:
 
 concurrency:
