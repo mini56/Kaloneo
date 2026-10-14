@@ -612,111 +612,126 @@ function sebEnrichResultsFromDefinition(test,manifestItem,card,ownState){
 // définition exécutée et de state.tests[id]. Aucun bloc des pages historiques
 // n'est jamais rattaché à un test par son titre, sa position ou son contenu.
 function sebApplyDynamicResultsLayout() {
-  const result = document.getElementById('resultat');
-  if (!result) return false;
-  let manifest = null;
-  try {
-    manifest = JSON.parse(sessionStorage.getItem(SEB_KALONEO_RESULTS_MANIFEST_KEY) || 'null');
-  } catch (_) {}
-  if (!manifest || !Array.isArray(manifest.tests) || !manifest.tests.length) return false;
+  const host=document.getElementById('resultat');
+  if(!host)return false;
+  let manifest=null;
+  try{manifest=JSON.parse(sessionStorage.getItem(SEB_KALONEO_RESULTS_MANIFEST_KEY)||'null');}catch(_){}
+  if(!manifest||!Array.isArray(manifest.tests)||!manifest.tests.length)return false;
 
-  const state = sebReadCanonicalKaltestState();
-  const states = state && typeof state.tests === 'object' ? state.tests : null;
-  const catalog = sebReadCatalogMetadata();
-  const create = (tag,text,className) => {
-    const el = document.createElement(tag);
-    if (className) el.className = className;
-    if (text !== undefined) el.textContent = String(text);
+  // Le Bilan et ce compte rendu consultent les mêmes résultats canoniques,
+  // sans toucher aux barèmes, aux niveaux et aux réponses enregistrées.
+  document.documentElement.classList.add('seb-results-report-mode');
+  const state=sebReadCanonicalKaltestState();
+  const states=state&&typeof state.tests==='object'?state.tests:null;
+  const catalog=sebReadCatalogMetadata();
+  const create=(tag,text,className)=>{
+    const el=document.createElement(tag);
+    if(className)el.className=className;
+    if(text!==undefined)el.textContent=String(text);
     return el;
   };
-  const documentRoot = document.createDocumentFragment();
-  const heading = create('h2','Résultats des tests du parcours');
-  documentRoot.appendChild(heading);
-  if (manifest.parcoursTitle) {
-    const parcours = create('div','Parcours réalisé : '+String(manifest.parcoursTitle),
-      'seb-results-parcours-title');
-    parcours.style.cssText='margin:12px 0 18px;padding:10px 12px;border:1px solid #9cc2e5;border-radius:6px;background:#f7fbff;color:#1f4e79;font-weight:700;';
-    documentRoot.appendChild(parcours);
+  const report=create('div',undefined,'seb-results-report');
+  const intro=create('header',undefined,'seb-results-report-heading');
+  intro.appendChild(create('h2','Compte rendu des résultats'));
+  intro.appendChild(create('p',
+    'Résultats enregistrés, présentés par domaine de compétences. '+
+    'Les niveaux I, II et III ainsi que les observations de synthèse sont traités dans le Bilan administrateur.',
+    'seb-results-report-intro'));
+  if(manifest.parcoursTitle){
+    intro.appendChild(create('p','Parcours réalisé : '+String(manifest.parcoursTitle),
+      'seb-results-parcours-title'));
   }
-  // L'identité et le manifeste viennent du dossier candidat actuellement
-  // ouvert, jamais d'une ancienne page de résultats au contenu non typé.
-  try {
+  try{
     const candidate=JSON.parse(sessionStorage.getItem('candidat_data')||'{}')||{};
     const identity=[
       ['Nom',candidate.nom],['Prénom',candidate.prenom||candidate['prénom']],
       ['Groupe',candidate.groupe],['Lieu',candidate.lieu||candidate.ville],
       ['Date',candidate.date||candidate.dateEvaluation||candidate.dateTest]
     ].filter(([,value])=>value!==undefined&&value!==null&&String(value).trim());
-    if (identity.length) {
-      documentRoot.appendChild(create('p',identity.map(([key,value])=>key+' : '+value).join('   •   '),'seb-results-candidate'));
+    if(identity.length){
+      intro.appendChild(create('p',
+        identity.map(([key,value])=>key+' : '+String(value)).join('  •  '),
+        'seb-results-candidate'));
     }
-  } catch (_) {}
-
-  if (!states) {
+  }catch(_){}
+  report.appendChild(intro);
+  if(!states){
     const warning=create('p',
-      'Résultats indisponibles : les données originales par test sont absentes. '+
-      'Aucune note n’a été reconstituée à partir d’anciennes pages.',
-      'commentaire');
+      'Données originales du parcours indisponibles. Aucun score n’est reconstitué à partir des anciennes pages.',
+      'seb-report-note');
     warning.dataset.resultsIntegrity='missing-canonical-state';
-    documentRoot.appendChild(warning);
-    result.replaceChildren(documentRoot);
-    return true;
+    report.appendChild(warning);host.replaceChildren(report);return true;
   }
 
-  const itemById=new Map(manifest.tests.map(item=>[String(item.id),item]));
-  const groups=new Map();
-  const seen=new Set();
-  for (const item of manifest.tests) {
+  const groups=new Map(),seen=new Set();
+  for(const item of manifest.tests){
     const id=String(item?.id||'');
-    if (!id||seen.has(id)) continue;
+    if(!id||seen.has(id))continue;
     seen.add(id);
     const metadata=catalog.get(id)||{};
-    const category=sebNormalizeResultText(metadata.category||item.category||'autres');
-    if (id==='fin_parcours'||id==='transition_video_f1'||
-        ['transition','introduction','fin'].includes(category)) continue;
+    // Le manifeste de ce candidat prime sur le catalogue modifié depuis.
+    const category=String(item.category||metadata.category||'autres');
+    const normalized=sebNormalizeResultText(category);
+    if(['fin_parcours','transition_video_f1'].includes(id)||
+        ['transition','introduction','fin'].includes(normalized))continue;
     const test={
-      id,
-      title:String(metadata.title||item.title||id),
-      category:id==='planning_cantine'?'planification':String(metadata.category||item.category||'autres'),
-      scored:metadata.scored!==undefined?metadata.scored!==false:item.scored!==false
+      id,version:String(item.version||''),
+      title:String(item.title||metadata.title||id),
+      category,scored:item.scored!==false
     };
-    const label=sebResultCategoryLabel(test.category);
+    const label=sebResultCategoryLabel(category);
     if(!groups.has(label))groups.set(label,[]);
-    groups.get(label).push(test);
+    groups.get(label).push({test,manifestItem:item});
   }
+  const list=[...groups.values()].flat();
+  const withScore=list.filter(({test})=>{
+    const own=states[test.id],s=Number(own?.result?.scoreMax);
+    return own&&own.result&&Number.isFinite(s)&&s>0;
+  }).length;
+  const stats=create('div',undefined,'seb-results-overview');
+  [['Exercices du parcours',list.length],
+    ['Exercices notés',withScore],
+    ['Activités non notées',Math.max(0,list.length-withScore)]].forEach(([label,value])=>{
+    const item=create('div',undefined,'seb-results-overview-item');
+    item.append(create('strong',value),create('span',label));stats.appendChild(item);
+  });
+  intro.appendChild(stats);
 
-  for(const [category,tests] of groups){
+  for(const [category,entries] of groups){
     const section=create('section',undefined,'seb-results-category');
     section.dataset.category=category;
-    section.style.cssText='margin:18px 0 24px;';
-    const sectionTitle=create('h2',category);
-    sectionTitle.style.cssText='margin:0 0 10px;padding:8px 10px;background:#d9eaf7;color:#1f4e79;border-radius:5px;font-size:20px;';
-    section.appendChild(sectionTitle);
-    for(const test of tests){
+    section.appendChild(create('h2',category));
+    for(const {test,manifestItem} of entries){
       const card=create('article',undefined,'seb-result-test-card');
       card.dataset.testId=test.id;
-      card.style.cssText='margin:0 0 12px;padding:12px 14px;border:1px solid #d6dce6;border-radius:7px;background:#fff;';
-      const title=create('h3',test.title);
-      title.style.cssText='margin:0 0 8px;color:#0b567d;font-size:18px;';
-      card.appendChild(title);
-      // La clé de la fiche et celle des réponses DOIVENT être identiques.
-      // Ne jamais utiliser un résultat d'une autre fiche, même s'il reste
-      // en mémoire dans l'historique ou dans un ancien tableau de scores.
-      const ownState=Object.prototype.hasOwnProperty.call(states,test.id)
-        ? states[test.id] : null;
-      const ownSummary=sebDescribeCanonicalResult(test,ownState);
-      if(ownSummary)card.appendChild(ownSummary);
-      else card.appendChild(create('p',
-        'Résultat propre à ce test indisponible — aucune autre donnée utilisée.',
-        'commentaire'));
-      sebEnrichResultsFromDefinition(test,itemById.get(test.id),card,ownState);
+      const heading=create('div',undefined,'seb-result-card-heading');
+      heading.appendChild(create('h3',test.title));
+      const ownState=Object.prototype.hasOwnProperty.call(states,test.id)?states[test.id]:null;
+      const status=String(ownState?.status||'').toUpperCase();
+      const numericMax=Number(ownState?.result?.scoreMax);
+      let statusLabel='Non évalué',statusCode='missing';
+      if(status.startsWith('ABANDON')){statusLabel='Abandonné';statusCode='abandoned';}
+      else if(!ownState){statusLabel='Données absentes';statusCode='missing';}
+      else if(ownState.result&&Number.isFinite(numericMax)&&numericMax>0){
+        statusLabel='Noté';statusCode='scored';
+      }else if(ownState.result||status==='COMPLETED'){
+        statusLabel='Activité non notée';statusCode='unscored';
+      }
+      const badge=create('span',statusLabel,'seb-report-status');
+      badge.dataset.status=statusCode;heading.appendChild(badge);
+      card.appendChild(heading);
+      const summary=sebDescribeCanonicalResult(test,ownState);
+      if(summary)card.appendChild(summary);
+      sebEnrichResultsFromDefinition(test,manifestItem,card,ownState);
       section.appendChild(card);
     }
-    documentRoot.appendChild(section);
+    report.appendChild(section);
   }
-  // Ne conserver aucun enfant du rendu historique : c'était la cause du
-  // déplacement de résultats Mail/Planning/etc. sous d'autres titres.
-  result.replaceChildren(documentRoot);
+  report.appendChild(create('p',
+    'Compte rendu en lecture seule. Les scores et mesures proviennent du parcours enregistré ; '+
+    'la décision d’évaluation est portée dans le Bilan administrateur.',
+    'seb-report-footer'));
+  host.replaceChildren(report);
   return true;
 }
 
