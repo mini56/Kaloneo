@@ -1,3 +1,6 @@
+/* Ne peindre aucune ancienne page 0 avant le choix de l'écran réel.
+   Le préchargement Electron active la page quand son routage est terminé. */
+html:not(.seb-qcm-interface-ready) body { visibility:hidden !important; }
 /* KALONÉO — Compte rendu de résultats en lecture seule.
    Les données et barèmes appartiennent au moteur KALTEST et au Bilan. */
 html.seb-results-report-mode body { background:#f3f6fa !important; color:#21364a; }
