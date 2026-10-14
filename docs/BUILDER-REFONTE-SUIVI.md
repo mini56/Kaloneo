@@ -222,3 +222,10 @@ Chaque étape doit consigner **le commit, le run CI et le résultat d'une vérif
 - Pour les stations pratiques et toute future autoévaluation, les textes des choix cochés proviennent de `presentation.triStation.autoStatements`, `presentation.bricksStation.autoStatements` ou `presentation.autoevaluationForm.statements` selon le type de données, jamais d'un ID de test codé en dur.
 - Les questions internes de validation (`*_ready`, `*_complete`) sont masquées dans la page Résultats : elles ne doivent pas être présentées comme une question fausse du candidat.
 - Le nouveau smoke Electron vérifie les phrases complètes pour les deux activités pratiques et l'absence de l'indicateur interne, en plus des temps, erreurs et commentaires.
+
+## R96 de contrôle réel des Résultats (14 octobre 2026)
+
+- Run `38523480047` VERT (branche habituelle). Les tests Electron de restitution vérifient texte NWTEXT, réponses et commentaires autoévaluation, tri (temps + erreurs + moyennes), Briques et courriel intégral sur cinq tests synthétiques aux IDs inconnus, avec absence de faux statuts et écran d'accueil historique.
+- Préparation d'une seule Release R96, Build #101, version 0.0.125, distincte de la R95 Build #100.
+- Les fichiers de tests, images, présentations du candidat et barèmes ne sont pas modifiés ; les anciens dossiers candidats ne doivent pas être effacés ou recalculés.
+- La validation manuelle sur l'ancien dossier candidat reste indispensable avant tout usage institutionnel.
