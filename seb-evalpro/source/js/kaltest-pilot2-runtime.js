@@ -161,6 +161,31 @@
   const STATE_KEY = 'seb_kaltest_pilot2_state_v1' +
     ((SEGMENT_KEY === 'all' || SEGMENT_KEY === 'initial') ? '' : ':' + SEGMENT_KEY);
 
+  // Le parcours sélectionné fait foi : figer ses seuls tests au démarrage de
+  // l'évaluation réelle, avant la première sauvegarde candidat. Ne jamais
+  // remplacer ce manifeste lors d'un aperçu Builder.
+  if(CUSTOM_PARCOURS_MODE&&!BUILDER_PREVIEW_MODE){
+    try{
+      sessionStorage.setItem('seb_kaloneo_results_manifest',JSON.stringify({
+        schemaVersion:2,
+        source:'candidate-selected-runtime',
+        parcoursId:String(DATA.parcours?.id||''),
+        parcoursTitle:String(DATA.parcours?.title||''),
+        tests:ACTIVE_TESTS.filter(test=>test&&test.id&&
+          !test.presentation?.transitionVideo &&
+          !['introduction','transition','fin'].includes(String(test.category||'').toLowerCase()))
+          .map(test=>({
+            id:String(test.id),
+            version:String(test.version||''),
+            title:String(test.title||test.id),
+            category:String(test.category||'Autres'),
+            scored:test.scored!==false
+          })),
+        capturedAt:new Date().toISOString()
+      }));
+    }catch(_){}
+  }
+
   if (PILOT11_MODE) {
     try { sessionStorage.setItem('seb_kaltest_full_parcours', '1'); } catch (_) {}
   }
