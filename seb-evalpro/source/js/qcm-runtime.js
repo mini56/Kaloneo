@@ -348,203 +348,245 @@ function sebReadCanonicalKaltestState() {
 // Les libellés proviennent de la définition/version KALTEST du test affiché.
 // Ne pas associer une question, un chronomètre ou un courriel à un autre test.
 function sebDescribeCanonicalResult(test,testState,definition=null){
-  const wrap=document.createElement('div');
-  wrap.className='seb-canonical-result-summary';
-  const append=(label,value,{block=false,subtle=false}={})=>{
-    const p=document.createElement(block?'pre':'p');
-    p.className=subtle?'commentaire':'ligne';
-    if(label){
-      const strong=document.createElement('strong');
-      strong.textContent=label+(value===undefined?'': ' : ');
-      p.appendChild(strong);
-    }
-    if(value!==undefined)p.appendChild(document.createTextNode(String(value)));
-    if(block){
-      p.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;'+
-        'line-height:1.5;padding:10px;border:1px solid #dee7f0;border-radius:5px;'+
-        'background:#f9fbfe;max-height:480px;overflow:auto';
-    }else p.style.overflowWrap='anywhere';
-    wrap.appendChild(p);
-    return p;
-  };
-  if(sebNormalizeResultText(test?.category)==='activite pratique'){
-    append('', 'Activité pratique — évaluation à compléter dans le Bilan administrateur.',{subtle:true});
-    return wrap;
-  }
-  if(!testState||typeof testState!=='object')return null;
-  const result=testState.result&&typeof testState.result==='object'?testState.result:null;
-  const answers=testState.answers&&typeof testState.answers==='object'?testState.answers:{};
+  const root=document.createElement('div');
+  root.className='seb-canonical-result-summary';
+  const result=testState?.result&&typeof testState.result==='object'?testState.result:null;
+  const answers=testState?.answers&&typeof testState.answers==='object'?testState.answers:{};
   const details=result?.details&&typeof result.details==='object'?result.details:{};
-  const questions=new Map((definition?.questions||[]).map(q=>[String(q.id),q]));
   const presentation=definition?.presentation||{};
+  const questions=new Map((definition?.questions||[]).map(q=>[String(q.id),q]));
   const autoForm=presentation.autoevaluationForm;
   const mailForm=presentation.mailComposer;
-  const used=new Set();
-  const duration=value=>{
-    const s=Math.max(0,Math.floor(Number(value)||0));
-    return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  const used=new Set(),shownText=new Set();
+  const formatNumber=v=>Number(v).toLocaleString('fr-FR',{maximumFractionDigits:2});
+  const formatDuration=v=>{
+    const sec=Math.max(0,Math.floor(Number(v)||0));
+    return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
   };
-  const readable=value=>Array.isArray(value)?value.map(String).join(', '):String(value??'');
+  const plain=v=>{
+    const value=String(v??'');
+    if(!/<\/?[a-z][^>]*>/i.test(value))return value;
+    const template=document.createElement('template');
+    template.innerHTML=value;
+    return template.content.textContent||'';
+  };
+  const appendNote=text=>{
+    const p=document.createElement('p');
+    p.className='seb-report-note';p.textContent=text;root.appendChild(p);
+  };
+  const metricGroup=document.createElement('div');
+  metricGroup.className='seb-results-metrics';
+  const metric=(label,value)=>{
+    if(value===undefined||value===null)return;
+    const item=document.createElement('div');item.className='seb-results-metric';
+    const name=document.createElement('span');name.className='seb-results-metric-label';name.textContent=label+' : ';
+    const data=document.createElement('strong');data.className='seb-results-metric-value';data.textContent=String(value);
+    item.append(name,data);metricGroup.appendChild(item);
+  };
+  const field=(label,value,block=false)=>{
+    const text=plain(value);
+    if(!text.trim())return;
+    const wrap=document.createElement('div');wrap.className='seb-report-field';
+    const name=document.createElement('div');name.className='seb-report-field-label';name.textContent=label;
+    const data=document.createElement(block?'pre':'div');
+    data.className=block?'seb-report-original':'seb-report-field-value';
+    data.textContent=text;wrap.append(name,data);root.appendChild(wrap);
+  };
+  const subheading=label=>{
+    const h=document.createElement('h4');h.className='seb-report-subheading';
+    h.textContent=label;root.appendChild(h);
+  };
   const selectionLabel=value=>{
-    // Les stations pratiques et toutes les nouvelles autoévaluations utilisent
-    // la même structure de choix {value,label}, et non un dictionnaire d'IDs.
     const statements=autoForm?.statements||presentation.triStation?.autoStatements||
       presentation.bricksStation?.autoStatements||[];
-    const statement=statements.find(s=>String(s.value)===String(value));
-    if(!statement)return String(value);
+    const item=statements.find(s=>String(s.value)===String(value));
+    if(!item)return definition?'Choix enregistré (libellé non défini)':'Choix enregistré (définition à charger)';
     const group=(autoForm?.groups||[]).find(g=>(g.values||[]).some(v=>String(v)===String(value)));
-    return (group?.title?group.title+' — ':'')+String(statement.label||value);
+    return (group?.title?group.title+' — ':'')+String(item.label||'');
   };
   const selections=(label,values)=>{
     if(!Array.isArray(values)||!values.length)return;
-    append(label);
-    const ul=document.createElement('ul');
-    ul.style.cssText='margin:5px 0 12px 24px;padding:0';
+    subheading(label);
+    const ul=document.createElement('ul');ul.className='seb-report-list';
     for(const value of values){
-      const li=document.createElement('li');
-      li.textContent=selectionLabel(value);
+      const li=document.createElement('li');li.textContent=selectionLabel(value);
       ul.appendChild(li);
     }
-    wrap.appendChild(ul);
+    root.appendChild(ul);
   };
-  if(!result)append('',String(testState.status||'').startsWith('ABANDONED')
-    ?'Exercice abandonné.':'Aucun résultat calculé pour cet exercice.',{subtle:true});
-  else if(result.tri||testState.tri){
-    append('Évaluation','Temps et erreurs de tri');
+  if(!testState||typeof testState!=='object'){
+    appendNote('Aucune donnée enregistrée pour cet exercice. Aucune autre fiche n’est utilisée.');
+    return root;
+  }
+  if(String(testState.status||'').toUpperCase().startsWith('ABANDON')){
+    appendNote('Exercice abandonné : le Bilan administrateur conserve les règles d’abandon.');
+  }
+  const numericScore=Number(result?.score),numericMax=Number(result?.scoreMax);
+  const hasScore=result&&Number.isFinite(numericScore)&&Number.isFinite(numericMax)&&numericMax>0;
+  // La moyenne est le taux constaté, et NON une note recaculée à partir
+  // des positions. Le Bilan lit exactement result.score et result.scoreMax.
+  const percentage=hasScore?(Number.isFinite(Number(result?.percentage))?
+    Number(result.percentage):100*numericScore/numericMax):null;
+  // Un plateau de rangement est défini par son schéma stockBoard. Tant que
+  // celui-ci est en chargement, la structure source/tri/case empêche toute
+  // fuite des 33 déplacements dans la présentation.
+  const strings=Object.values(answers).filter(v=>typeof v==='string');
+  const locations=strings.filter(v=>/^(?:source|tri|case:)/i.test(v));
+  const placementBoard=!!presentation.stockBoard ||
+    (strings.length>=4&&locations.length>=Math.ceil(strings.length*0.7));
+  if(placementBoard){
+    if(hasScore){
+      metric('Placements corrects',formatNumber(numericScore)+' sur '+formatNumber(numericMax));
+      metric('Score',formatNumber(numericScore)+'/'+formatNumber(numericMax));
+      metric('Moyenne de réussite',formatNumber(percentage)+' %');
+    }else appendNote('Nombre de placements corrects indisponible dans le résultat enregistré.');
+    root.prepend(metricGroup);
+    return root;
+  }
+  const practical=sebNormalizeResultText(test?.category)==='activite pratique';
+  if(practical&&!result){
+    appendNote('Activité pratique : observations et niveau à renseigner dans le Bilan administrateur.');
+    return root;
+  }
+  const tri=result?.tri||testState.tri;
+  const bricks=result?.bricks||testState.brique;
+  if(tri){
     const rows=Array.isArray(testState.tri?.rows)?testState.tri.rows.filter(r=>
       r&&r.seconds!==null&&r.seconds!==undefined&&Number.isFinite(Number(r.seconds))&&
       r.errors!==null&&r.errors!==undefined&&Number.isFinite(Number(r.errors))):[];
-    if(rows.length){
-      const table=document.createElement('table');
-      table.style.cssText='border-collapse:collapse;margin:8px 0 12px;max-width:550px;width:100%';
+    const stats=result?.tri||{};
+    const count=rows.length||Number(stats.completedCount)||0;
+    const totalErrors=Number.isFinite(Number(stats.erreurs_total))&&stats.erreurs_total!==undefined
+      ?Number(stats.erreurs_total):rows.length?rows.reduce((s,r)=>s+Number(r.errors),0):null;
+    const avgSeconds=Number.isFinite(Number(stats.temps_moyen))&&stats.temps_moyen!==undefined
+      ?Number(stats.temps_moyen):rows.length?Math.round(rows.reduce((s,r)=>s+Number(r.seconds),0)/rows.length):null;
+    const meanErrors=Number.isFinite(Number(stats.moyenne_erreurs))&&stats.moyenne_erreurs!==undefined
+      ?Number(stats.moyenne_erreurs):rows.length?totalErrors/rows.length:null;
+    if(count)metric('Tris effectués',count);
+    if(avgSeconds!==null)metric('Temps moyen',formatDuration(avgSeconds));
+    if(totalErrors!==null)metric('Total des erreurs',formatNumber(totalErrors));
+    if(meanErrors!==null)metric('Moyenne des erreurs par tri',formatNumber(meanErrors));
+    root.appendChild(metricGroup);
+    const timings=rows.length?rows:(Array.isArray(stats.temps_essais)?
+      stats.temps_essais.map(v=>({seconds:v,errors:null})) : []);
+    if(timings.length){
+      subheading('Détail des essais');
+      const table=document.createElement('table');table.className='seb-report-table';
       const head=document.createElement('tr');
-      for(const label of ['Tri','Temps','Erreurs']){
-        const th=document.createElement('th');th.textContent=label;
-        th.style.cssText='border:1px solid #ccdbe9;padding:7px;text-align:left;background:#e8f1f9';
-        head.appendChild(th);
-      }
-      table.appendChild(head);
-      rows.forEach((row,i)=>{
+      ['Tri','Temps','Erreurs'].forEach(label=>{
+        const th=document.createElement('th');th.textContent=label;head.appendChild(th);
+      });table.appendChild(head);
+      timings.forEach((row,index)=>{
         const tr=document.createElement('tr');
-        for(const value of [i+1,duration(row.seconds),Math.max(0,Number(row.errors))]){
-          const td=document.createElement('td');td.textContent=String(value);
-          td.style.cssText='border:1px solid #ccdbe9;padding:7px';
-          tr.appendChild(td);
-        }
-        table.appendChild(tr);
+        [index+1,formatDuration(row.seconds),row.errors===null?'Non renseigné':formatNumber(row.errors)].forEach(value=>{
+          const td=document.createElement('td');td.textContent=String(value);tr.appendChild(td);
+        });table.appendChild(tr);
       });
-      wrap.appendChild(table);
-    }else if(Array.isArray(result?.tri?.temps_essais)){
-      result.tri.temps_essais.forEach((sec,i)=>append('Tri '+(i+1)+' — temps',duration(sec)));
+      root.appendChild(table);
     }
-    const tri=result?.tri||{};
-    const validCount=rows.length||Number(tri.completedCount)||0;
-    if(validCount)append('Nombre de tris réalisés',validCount);
-    const avgSeconds=Number.isFinite(Number(tri.temps_moyen))&&tri.temps_moyen!==undefined
-      ?tri.temps_moyen:(rows.length?Math.round(rows.reduce((s,r)=>s+Number(r.seconds),0)/rows.length):null);
-    if(avgSeconds!==null)append('Temps moyen',duration(avgSeconds));
-    const totalErrors=tri.erreurs_total!==undefined?Number(tri.erreurs_total):
-      rows.length?rows.reduce((s,r)=>s+Number(r.errors),0):null;
-    if(totalErrors!==null)append('Total des erreurs',totalErrors);
-    const meanErrors=tri.moyenne_erreurs!==undefined?Number(tri.moyenne_erreurs):
-      rows.length?totalErrors/rows.length:null;
-    if(meanErrors!==null)append('Moyenne des erreurs par tri',Math.round(meanErrors*100)/100);
     selections('Autoévaluation',testState.tri?.autoSelections||[]);
-    if(testState.tri?.commentaire)append('Commentaire du candidat',testState.tri.commentaire,{block:true});
-  }else if(result.bricks||testState.brique){
-    append('Évaluation','Réalisation pratique');
-    const brick=result?.bricks||{};
-    const second=brick.temps??testState.brique?.chronoSeconds;
-    const errors=brick.erreurs??testState.brique?.errors;
-    if(second!==undefined&&second!==null)append('Temps réalisé',duration(second));
-    if(errors!==undefined&&errors!==null)append('Nombre d’erreurs',errors);
-    selections('Autoévaluation',brick.autoevaluation?.selections||testState.brique?.autoSelections||[]);
-    const comment=brick.autoevaluation?.commentaire??testState.brique?.commentaire;
-    if(comment)append('Commentaire du candidat',comment,{block:true});
-  }else if(result&&Number.isFinite(Number(result.score))&&
-      Number.isFinite(Number(result.scoreMax))&&Number(result.scoreMax)>0){
-    let text=String(result.score)+'/'+String(result.scoreMax);
-    if(Number.isFinite(Number(result.percentage)))text+=' — '+(Math.round(Number(result.percentage)*100)/100)+' %';
-    append('Score',text);
-  }else append('',String(testState.status||'').startsWith('ABANDONED')
-    ?'Exercice abandonné.':'Exercice terminé — étape non notée.',{subtle:true});
+    field('Commentaire du candidat',testState.tri?.commentaire,true);
+    return root;
+  }
+  if(bricks){
+    const time=result?.bricks?.temps??testState.brique?.chronoSeconds;
+    const errors=result?.bricks?.erreurs??testState.brique?.errors;
+    if(time!==undefined&&time!==null)metric('Temps réalisé',formatDuration(time));
+    if(errors!==undefined&&errors!==null)metric('Nombre d’erreurs',formatNumber(errors));
+    root.appendChild(metricGroup);
+    selections('Autoévaluation',result?.bricks?.autoevaluation?.selections||testState.brique?.autoSelections||[]);
+    field('Commentaire du candidat',result?.bricks?.autoevaluation?.commentaire??testState.brique?.commentaire,true);
+    return root;
+  }
+  if(hasScore){
+    metric('Score',formatNumber(numericScore)+'/'+formatNumber(numericMax));
+    metric('Réussite',formatNumber(percentage)+' %');
+  }
+  if(metricGroup.childElementCount)root.appendChild(metricGroup);
+  if(!result)appendNote('Aucun résultat calculé pour cet exercice.');
+  if(result&&!hasScore&&!practical&&test.scored!==false)appendNote('Résultat enregistré — aucune note chiffrée disponible.');
+  if(practical)appendNote('Observations et niveau à compléter dans le Bilan administrateur.');
 
+  // Écrits, autoévaluations et courriels sont des contenus de candidat,
+  // pas des lignes de correction technique.
   if(mailForm?.fields){
-    const fields=mailForm.fields;
-    const parts=[
-      ['Destinataire',fields.to],['Copie',fields.cc],
-      ['Objet',fields.subject],['Pièce jointe',fields.file]
-    ];
-    for(const [label,id] of parts){
-      if(!id)continue;
-      used.add(String(id));
-      if(answers[id]!==undefined&&String(answers[id]).trim())append(label,answers[id]);
-    }
-    const signature=String(fields.signature||''),phone=String(fields.phone||'');
-    if(signature)used.add(signature);
-    if(phone)used.add(phone);
-    const body=answers[signature]??answers[phone];
-    if(body!==undefined&&String(body).trim())append('Message rédigé par le candidat',body,{block:true});
+    const f=mailForm.fields;
+    [['Destinataire',f.to],['Copie',f.cc],['Objet',f.subject],['Pièce jointe',f.file]].forEach(([label,key])=>{
+      if(!key)return;used.add(String(key));field(label,answers[key]);
+    });
+    [f.signature,f.phone].filter(Boolean).forEach(key=>used.add(String(key)));
+    const body=answers[f.signature]??answers[f.phone];
+    if(body!==undefined)field('Courriel rédigé par le candidat',body,true);
+  }else if(!definition&&Object.keys(answers).some(k=>/^mail_(to|cc|subject|file|signature|phone)$/.test(k))){
+    const parts={mail_to:'Destinataire',mail_cc:'Copie',mail_subject:'Objet',mail_file:'Pièce jointe'};
+    Object.entries(parts).forEach(([key,label])=>{used.add(key);field(label,answers[key]);});
+    used.add('mail_signature');used.add('mail_phone');
+    field('Courriel rédigé par le candidat',answers.mail_signature??answers.mail_phone,true);
   }
-  const textEditor=String(answers.text_editor_text||'');
-  if(textEditor.trim())append('Texte rédigé par le candidat',textEditor,{block:true});
-  else if(answers.text_editor_html)append('Texte de l’éditeur',
-    'Contenu formaté enregistré, mais version texte indisponible.',{subtle:true});
-  used.add('text_editor_text');
-  used.add('text_editor_html');
-
-  for(const [id,detail] of Object.entries(details)){
-    if(!detail||typeof detail!=='object'||used.has(id))continue;
-    // Un champ de validation interne (« prêt », « terminé ») n'est pas
-    // une réponse évaluée et ne doit surtout pas devenir « Q1 : 1 ✗ ».
-    if(/(?:_ready|_complete|_validated|_seen)$/.test(id))continue;
-    // La saisie du corps d'un courriel peut répondre à deux critères de
-    // notation (signature et téléphone). Elle reste UN seul texte candidat.
-    if((id==='mail_signature'||id==='mail_phone')&&!mailForm){
-      continue;
-    }
-    used.add(id);
-    const value=detail.value??detail.answer??detail.user??answers[id]??'';
-    const prompt=questions.get(String(id))?.prompt||String(id);
-    const isSelection=Array.isArray(value);
-    if(isSelection){
-      selections(autoForm?'Choix du candidat':prompt,value);
-      continue;
-    }
-    // Les questions non notées ne sont pas signalées à tort comme fausses.
-    if(String(value).trim()){
-      const scored=test.scored!==false&&Number(detail.points)>0&&
-        typeof detail.correct==='boolean';
-      append(prompt,readable(value)+(scored?(detail.correct?' ✓':' ✗'):''));
+  const editor=String(answers.text_editor_text??'').trim() ||
+    (answers.text_editor_html?plain(answers.text_editor_html):'');
+  if(editor.trim())field('Texte rédigé par le candidat',editor,true);
+  used.add('text_editor_text');used.add('text_editor_html');
+  if(autoForm?.questionId){
+    const id=String(autoForm.questionId);
+    used.add(id);selections('Autoévaluation',Array.isArray(answers[id])?answers[id]:[]);
+  }
+  // Seuls les libellés de la même version KALTEST sont admis.
+  // Aucune question inconnue ou clé technique n'est publiée à l'écran.
+  const tableRows=[];
+  if(definition){
+    for(const [id,question] of questions){
+      if(used.has(id))continue;
+      const detail=details[id]||{};
+      const value=answers[id]??detail.value??detail.answer;
+      if(value===undefined||value===null||String(value).trim()==='')continue;
+      if(/(?:_ready|_complete|_validated|_seen)$/.test(id))continue;
+      if(typeof value==='string'&&/^(?:source|tri|case:)/i.test(value))continue;
+      const prompt=plain(question.prompt||question.title||question.label||'').trim();
+      if(!prompt)continue;
+      if(Array.isArray(value)){
+        used.add(id);selections(prompt,value);continue;
+      }
+      const options=question.options||question.choices||[];
+      const item=Array.isArray(options)?options.find(o=>String(o?.value??o?.id??o)===String(value)):null;
+      let answer=item&&typeof item==='object'?plain(item.label??item.text??item.title??value):plain(value);
+      if(/<\/?[a-z][^>]*>/i.test(String(value)))answer=plain(value);
+      const check=typeof detail.correct==='boolean'&&test.scored!==false?
+        (detail.correct?'Correct':'Incorrect'):'—';
+      tableRows.push([prompt,answer,check]);used.add(id);
     }
   }
-  for(const [id,value] of Object.entries(answers)){
-    if(used.has(id)||value===undefined||value===null||String(value).trim()==='')continue;
-    // Les champs internes ne sont ni une réponse, ni un commentaire évalué.
-    if(/(?:_ready|_complete|_validated|_seen)$/.test(id))continue;
-    if(mailForm?.fields&&Object.values(mailForm.fields).includes(id))continue;
-    if(Array.isArray(value))selections('Choix du candidat',value);
-    else if(/^mail_/.test(id)){
-      if(id==='mail_signature'||id==='mail_phone'){
-        used.add('mail_signature');used.add('mail_phone');
-        append('Message rédigé par le candidat',value,{block:true});
-      }else append(({mail_to:'Destinataire',mail_cc:'Copie',mail_subject:'Objet',
-        mail_file:'Pièce jointe'})[id]||id,value);
-    }else append(questions.get(id)?.prompt||id,value,
-      {block:/\n/.test(String(value))});
-    used.add(id);
+  if(tableRows.length){
+    const detailsBox=document.createElement('details');detailsBox.className='seb-report-details';
+    const summary=document.createElement('summary');
+    summary.textContent='Consulter les réponses ('+tableRows.length+')';
+    detailsBox.appendChild(summary);
+    const table=document.createElement('table');table.className='seb-report-table';
+    const head=document.createElement('tr');
+    ['Question','Réponse donnée','Évaluation'].forEach(label=>{
+      const th=document.createElement('th');th.textContent=label;head.appendChild(th);
+    });table.appendChild(head);
+    tableRows.forEach(values=>{
+      const row=document.createElement('tr');
+      values.forEach(value=>{const td=document.createElement('td');td.textContent=String(value);row.appendChild(td);});
+      table.appendChild(row);
+    });
+    detailsBox.appendChild(table);root.appendChild(detailsBox);
+  }
+  if(!definition&&!hasScore&&!editor&&!mailForm){
+    appendNote('Définition de cette version du test indisponible : aucun libellé technique affiché.');
   }
   for(const [questionId,fields] of Object.entries(testState.supplemental||{})){
     if(!fields||typeof fields!=='object')continue;
-    for(const [fieldId,value] of Object.entries(fields)){
-      if(value===undefined||value===null||!String(value).trim())continue;
-      const caption=fieldId===String(autoForm?.commentFieldId||'commentaire')
-        ?'Commentaire du candidat'
-        :(questions.get(questionId)?.prompt||questionId)+' — '+fieldId;
-      append(caption,value,{block:true});
+    for(const [key,value] of Object.entries(fields)){
+      const comment=plain(value).trim();
+      if(!comment||shownText.has(comment))continue;
+      shownText.add(comment);
+      field(key===String(autoForm?.commentFieldId||'commentaire')
+        ?'Commentaire du candidat':'Observation du candidat',comment,true);
     }
   }
-  return wrap;
+  return root;
 }
 
 // Pour toute V1 et tout test futur, rechercher la définition EXACTE
