@@ -1444,7 +1444,8 @@
     refreshScheduled=false;
     ensureStyle();
     const bar=ensureBar();
-    const eligible=isEligible();
+    // Ne jamais injecter de navigation candidat dans une fiche Résultats ouverte par l'Admin.
+    const eligible=isEligible()&&!document.documentElement.classList.contains('seb-admin-results-workspace');
     document.body.classList.toggle('seb-kaloneo-nav-active',eligible);
     document.body.classList.toggle('seb-kaloneo-bullet-scope',eligible);
     bar.hidden=!eligible;
