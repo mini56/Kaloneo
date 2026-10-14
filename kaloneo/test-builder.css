@@ -1399,6 +1399,11 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
   position:relative;
   left:12px;
 }
+/* Le cadre de validation possède un retrait interne supérieur de 3px :
+   le bouton fermé doit pourtant finir sur l'axe Sorties et Bilan. */
+.builder-editor .validation-box.is-collapsed > .section-title-row .section-fold-btn{
+  left:15px;
+}
 /* Pour les blocs, étendre la ligne de 12px dans le padding droit du cadre.
    Un décalage relatif du bouton augmente scrollWidth et fait échouer
    l'alignement des autres commandes dans un bloc long. */
