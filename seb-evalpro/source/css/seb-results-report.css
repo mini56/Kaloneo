@@ -1,0 +1,120 @@
+/* KALONÉO — Compte rendu de résultats en lecture seule.
+   Les données et barèmes appartiennent au moteur KALTEST et au Bilan. */
+html.seb-results-report-mode body { background:#f3f6fa !important; color:#21364a; }
+html.seb-results-report-mode #pageFinale {
+  display:block; box-sizing:border-box; width:100%; max-width:1220px;
+  margin:0 auto; padding:18px 22px 36px; text-align:left; align-items:initial;
+}
+html.seb-results-report-mode #pageFinale > h2 {
+  color:#004e70; font-size:25px; line-height:1.25;
+  text-align:left; font-weight:700; margin:0 0 6px;
+}
+html.seb-results-report-mode #resultat {
+  box-sizing:border-box; display:block; width:100%; max-width:none;
+  margin:16px 0 30px; padding:0; border:0; background:transparent;
+  white-space:normal; font:15px/1.5 Calibri, "Segoe UI", Arial, sans-serif;
+}
+#resultat .seb-results-report { display:grid; gap:18px; }
+#resultat .seb-results-report-heading {
+  background:#fff; border:1px solid #cfdae5; border-left:5px solid #004e70;
+  border-radius:10px; padding:19px 23px; box-shadow:0 2px 9px #163b5410;
+}
+#resultat .seb-results-report-heading h2 {
+  color:#004e70; font-size:22px; margin:0 0 6px; font-weight:700;
+}
+#resultat .seb-results-report-intro {margin:0 0 12px; color:#486477;}
+#resultat .seb-results-parcours-title {font-weight:700; color:#1b4b69; margin:0 0 7px;}
+#resultat .seb-results-candidate {margin:0; font-size:14px; color:#40566a;}
+#resultat .seb-results-overview {
+  display:flex; gap:12px; flex-wrap:wrap; margin-top:16px;
+}
+#resultat .seb-results-overview-item {
+  flex:1 1 155px; background:#f1f6fb; padding:11px 15px;
+  border:1px solid #d5e4f0; border-radius:8px;
+}
+#resultat .seb-results-overview-item strong {display:block; color:#004e70; font-size:23px; line-height:1.2;}
+#resultat .seb-results-overview-item span {display:block; font-size:13px; color:#425b70;}
+#resultat .seb-results-category {margin:0; display:grid; gap:12px;}
+#resultat .seb-results-category > h2 {
+  margin:3px 0 1px; padding:10px 15px; border-left:4px solid #004e70;
+  border-radius:6px; background:#dcebf5; color:#004e70;
+  font-size:18px; font-weight:700;
+}
+#resultat .seb-result-test-card {
+  padding:16px 20px 17px; background:#fff; border:1px solid #d6e0e9;
+  border-radius:10px; box-shadow:0 2px 7px #173b520b;
+  min-width:0;
+}
+#resultat .seb-result-card-heading {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  flex-wrap:wrap; margin-bottom:14px;
+}
+#resultat .seb-result-card-heading h3 {
+  color:#004e70; font-size:17px; line-height:1.3; font-weight:700; margin:0;
+}
+#resultat .seb-report-status {
+  color:#1b4b69; background:#e9f2f9; border:1px solid #c5ddea;
+  font-size:12px; font-weight:700; border-radius:20px; padding:4px 10px;
+}
+#resultat .seb-report-status[data-status="abandoned"] {
+  color:#8a4100; border-color:#edd7b5; background:#fff5e8;
+}
+#resultat .seb-results-metrics {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(148px,1fr));
+  gap:10px; margin:0 0 9px;
+}
+#resultat .seb-results-metric {
+  min-width:0; border:1px solid #dae7ef; border-radius:8px; background:#f8fbfd;
+  padding:11px 14px;
+}
+#resultat .seb-results-metric-label {display:block; font-size:12px; color:#4c6678; font-weight:700;}
+#resultat .seb-results-metric-value {display:block; margin-top:3px; font-size:21px; color:#004e70; font-weight:700; overflow-wrap:anywhere;}
+#resultat .seb-canonical-result-summary {min-width:0;}
+#resultat .seb-report-subheading {font-size:14px; color:#244d68; font-weight:700; margin:17px 0 8px;}
+#resultat .seb-report-note {margin:7px 0; color:#516879; font-size:14px;}
+#resultat .seb-report-field {margin:7px 0; display:grid; gap:3px;}
+#resultat .seb-report-field-label {font-weight:700; color:#214961; font-size:13px;}
+#resultat .seb-report-field-value {white-space:pre-wrap; overflow-wrap:anywhere;}
+#resultat .seb-report-original {
+  white-space:pre-wrap; overflow-wrap:anywhere; padding:13px 15px;
+  font:inherit; color:#243748; background:#f8fafc; border:1px solid #d5e1eb;
+  border-radius:7px; max-height:520px; overflow:auto; margin:4px 0 12px;
+}
+#resultat .seb-report-list {margin:6px 0 12px 20px; padding:0; list-style:disc;}
+#resultat .seb-report-list li {margin:4px 0;}
+#resultat .seb-report-details {
+  margin:14px 0 3px; border:1px solid #d8e5ee; border-radius:7px;
+  overflow:hidden; background:#fff;
+}
+#resultat .seb-report-details > summary {
+  cursor:pointer; padding:10px 13px; color:#004e70; font-weight:700;
+  background:#eff6fa; user-select:none;
+}
+#resultat .seb-report-table {
+  width:100%; border-collapse:collapse; font-size:14px; table-layout:auto;
+  margin:4px 0 12px;
+}
+#resultat .seb-report-table th {background:#e8f2f8; color:#214961; text-align:left; font-weight:700;}
+#resultat .seb-report-table td,#resultat .seb-report-table th {
+  padding:8px 10px; border:1px solid #d8e3ed; vertical-align:top;
+  overflow-wrap:anywhere;
+}
+#resultat .seb-report-table tr:nth-child(even) td {background:#f8fafc;}
+#resultat .seb-report-details .seb-report-table {margin:0;}
+#resultat .seb-report-footer {
+  font-size:13px; color:#4f6676; line-height:1.5; margin:0 2px 8px;
+}
+#seb-admin-results-readonly {display:inline-flex !important;}
+#seb-admin-results-close {border-color:#a93c36 !important;color:#a93c36 !important;}
+@media (max-width:700px) {
+  html.seb-results-report-mode #pageFinale {padding:12px 10px 24px;}
+  #resultat .seb-results-report-heading,#resultat .seb-result-test-card {padding:13px;}
+  #resultat .seb-results-metrics {grid-template-columns:repeat(2,minmax(0,1fr));}
+  #resultat .seb-results-metric-value {font-size:18px;}
+}
+@media print {
+  html.seb-results-report-mode body {background:#fff!important;}
+  #seb-admin-results-close,#seb-admin-results-readonly {display:none!important;}
+  #resultat .seb-result-test-card,#resultat .seb-results-category {break-inside:avoid;}
+  #resultat .seb-report-details:not([open]) .seb-report-table {display:table;}
+}
