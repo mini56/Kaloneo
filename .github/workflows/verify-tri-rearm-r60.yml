@@ -51,6 +51,10 @@ jobs:
         run: |
           node --check scripts/kaloneo-answer-layout-roundtrip-smoke.js
           node scripts/kaloneo-answer-layout-roundtrip-smoke.js
+      - name: Verify unit scoring independent of numeric answer on future KALTEST
+        run: |
+          node --check scripts/kaloneo-units-score-audit-smoke.js
+          node scripts/kaloneo-units-score-audit-smoke.js
       - name: Audit every current and future catalog KALTEST without modifying files
         run: node scripts/kaloneo-catalog-roundtrip-score-guard.js
       - name: Verify gallery contains test illustrations only, without deleting images
