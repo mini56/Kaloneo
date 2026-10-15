@@ -173,6 +173,7 @@ if(!transferHtml.includes('KALONÉO — Import / Export')||
    !transferHtml.includes('Importer un test')||
    !transferHtml.includes('Exporter le parcours')||
    !transferHtml.includes('Importer un parcours')||
+   !transferHtml.includes('Exporter des images')||
    !transferHtml.includes('Importer des images')||
    !transferHtml.includes('Importer un ZIP par thèmes')||
    !transferHtml.includes('>Fermer</button>')||
@@ -180,7 +181,8 @@ if(!transferHtml.includes('KALONÉO — Import / Export')||
    transferHtml.includes('class="note"')||
    !transferJs.includes('kaloneoExportTest')||
    !transferJs.includes('kaloneoImportParcours')||
-   transferJs.includes('kaloneoExportImage')||
+   transferJs.includes('kaloneoExportImage:')||
+   !transferJs.includes('kaloneoExportImageZip')||
    !transferJs.includes('kaloneoSaveImage')||
    !transferJs.includes('kaloneoImportImageZip')){
   fail('page Import / Export KALONÉO R33 incomplète');
@@ -195,7 +197,11 @@ if(main.includes('kaloneo-transfer:export-image')) fail('IPC export image R33 do
 for(const token of ['kaloneoExportTest','kaloneoImportTest','kaloneoExportParcours','kaloneoImportParcours']){
   if(!preload.includes(token)) fail('Preload Import / Export R33 absent: '+token);
 }
-if(preload.includes('kaloneoExportImage')) fail('Bridge export image R33 doit être supprimé');
+// L'ancien export d'une seule image reste interdit. Le nouveau transfert
+// demandé est un ZIP de toutes les images personnelles, indépendant des tests.
+if(preload.includes('kaloneoExportImage:')) fail('Ancien export image unique interdit');
+if(!preload.includes('kaloneoExportImageZip')) fail('Bridge export ZIP images absent');
+if(!main.includes('kaloneo-library:export-image-zip')) fail('IPC export ZIP images absent');
 if(!main.includes("query:{ resume:'preview' }")) {
   fail('Retour aperçu R3 sans reprise explicite du brouillon');
 }
