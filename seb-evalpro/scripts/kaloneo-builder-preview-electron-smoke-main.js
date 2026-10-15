@@ -1861,6 +1861,66 @@ app.whenReady().then(async()=>{
     }
     console.log('KALONEO_IMAGE_THEME_AFTER_REMOVAL_ELECTRON=OK',JSON.stringify(postRemovalTheme));
 
+    const answerLayoutCheck=await win.webContents.executeJavaScript(`(()=>{
+      const block=document.querySelector('.exercise-block');
+      const type=block?.querySelector('.block-type');
+      if(!type)return {ok:false,reason:'bloc non disponible'};
+      type.value='question';
+      type.dispatchEvent(new Event('change',{bubbles:true}));
+      const current=document.querySelector('.exercise-block');
+      const label=[...current.querySelectorAll('label')]
+        .find(x=>x.firstChild?.textContent?.trim()==='Position de la réponse');
+      const field=label?.querySelector('select');
+      const width=[...current.querySelectorAll('label')]
+        .find(x=>x.firstChild?.textContent?.trim()==='Largeur de la réponse (caractères)')
+        ?.querySelector('input');
+      if(!field||!width)return {ok:false,reason:'réglages du bloc Question absents'};
+      const choices=[...field.options].map(o=>o.value);
+      field.value='inline';
+      field.dispatchEvent(new Event('change',{bubbles:true}));
+      width.value='11';
+      width.dispatchEvent(new Event('input',{bubbles:true}));
+      const mini=document.querySelector('.preview-question.kaloneo-shared-question');
+      const changedImmediately=mini?.dataset.kaloneoAnswerLayout==='inline'&&
+        mini?.style.getPropertyValue('--kaloneo-answer-width')==='11ch';
+      const shared=window.KaloneoSharedPresentation;
+      const host=document.createElement('div');
+      host.style.cssText='position:fixed;left:-1300px;top:0;width:640px;padding:0;z-index:-1';
+      document.body.appendChild(host);
+      const row=(name,mode,w)=>{
+        const question={prompt:name,answerLayout:mode,answerWidthChars:w};
+        const node=shared.renderQuestion({doc:document,question,className:'preview-question',
+          makeAnswer:()=>{const input=document.createElement('input');input.type='text';return input;}});
+        host.appendChild(node);return node;
+      };
+      const colA=row('8 + 2 =','column',16);
+      const colB=row('Combien valent 200 - 190 =','column',16);
+      const after=row('5 + 5 =','inline',9);
+      const below=row('42 - 32 =','below',12);
+      const legacy=row('9 + 1 =','',null);
+      const columnAligned=Math.abs(colA.querySelector('input').getBoundingClientRect().left-
+        colB.querySelector('input').getBoundingClientRect().left)<2;
+      const inlinePrompt=after.querySelector('span').getBoundingClientRect();
+      const inlineInput=after.querySelector('input').getBoundingClientRect();
+      const inlineAdjacent=inlineInput.left>=inlinePrompt.right&&
+        inlineInput.left-inlinePrompt.right<35&&
+        inlineInput.top<inlinePrompt.bottom;
+      const belowPrompt=below.querySelector('span').getBoundingClientRect();
+      const belowInput=below.querySelector('input').getBoundingClientRect();
+      const belowPlaced=belowInput.top>=belowPrompt.bottom;
+      const legacyPreserved=!legacy.dataset.kaloneoAnswerLayout;
+      host.remove();
+      return {ok:true,choices,changedImmediately,columnAligned,inlineAdjacent,
+        belowPlaced,legacyPreserved,answerWidth:width.value};
+    })()`,true);
+    if(!answerLayoutCheck.ok||answerLayoutCheck.choices.join(',')!=='column,inline,below'||
+       !answerLayoutCheck.changedImmediately||!answerLayoutCheck.columnAligned||
+       !answerLayoutCheck.inlineAdjacent||!answerLayoutCheck.belowPlaced||
+       !answerLayoutCheck.legacyPreserved||answerLayoutCheck.answerWidth!=='11'){
+      return fail('Trois positions de réponses incohérentes en Electron',answerLayoutCheck);
+    }
+    console.log('KALONEO_ANSWER_LAYOUT_ELECTRON=OK',JSON.stringify(answerLayoutCheck));
+
         console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
     console.log('KALONEO_BUILDER_PREVIEW_ELECTRON=OK');
