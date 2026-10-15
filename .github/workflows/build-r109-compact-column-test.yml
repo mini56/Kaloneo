@@ -71,8 +71,8 @@ jobs:
         run: node scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
       - name: Validate answer layouts, widths and V1 compatibility
         run: |
-          node --check scripts/kaloneo-compact-column-roundtrip-smoke.js
-          node scripts/kaloneo-compact-column-roundtrip-smoke.js
+          node --check scripts/kaloneo-answer-layout-roundtrip-smoke.js
+          node scripts/kaloneo-answer-layout-roundtrip-smoke.js
       - name: Check all 12 block types in new tests and canonical question scores
         run: node scripts/kaloneo-builder-future-roundtrip-smoke.js
       - name: Audit all catalog KALTESTs, scoring, outputs and embedded media
