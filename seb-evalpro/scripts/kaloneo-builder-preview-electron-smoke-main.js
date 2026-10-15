@@ -2080,6 +2080,10 @@ app.whenReady().then(async()=>{
           cell.append(select);
         }
       });
+      // getComputedStyle sur un nœud détaché renvoie des propriétés vides
+      // dans Electron. Le placer temporairement hors écran avant la mesure.
+      built.style.cssText='position:fixed;left:-1800px;top:0;';
+      document.body.appendChild(built);
       const select=built.querySelector('select');
       const cell=built.querySelector('td');
       const options=[...select.options].map(o=>o.value);
@@ -2087,6 +2091,7 @@ app.whenReady().then(async()=>{
       const bg=select.style.backgroundColor;
       const displayColor=getComputedStyle(select).color;
       const displayBg=getComputedStyle(select).backgroundColor;
+      built.remove();
       return {ok:core.analyzeDefinition(def).ok,
         type:q.response.type,options,score:q.points,accepted:q.acceptedAnswers,
         value:select.value,textColor,bg,displayColor,displayBg,
