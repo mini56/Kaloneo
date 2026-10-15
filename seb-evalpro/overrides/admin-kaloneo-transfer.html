@@ -19,6 +19,11 @@
     .primary{border-color:#198754;color:#198754}
     .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
     .card{padding:22px;border:1px solid #d3dce4;border-radius:12px;background:#fff;box-shadow:0 5px 18px rgba(0,0,0,.08)}
+    .card{display:flex;flex-direction:column}
+    .card .status{margin-top:auto}
+    .card .actions{flex-direction:column}
+    .card .actions button{flex:0 0 auto;width:100%}
+    .image-export-note{font-size:13px;color:#586b77;margin:0 0 2px;min-height:22px}
     .card h2{margin:0 0 7px;color:#004E70;font-size:23px}
     .card p{margin:0 0 18px;color:#5d6b75;line-height:1.35}
     label{display:flex;flex-direction:column;gap:6px;color:#004E70;font-weight:700}
@@ -69,8 +74,10 @@
       </article>
       <article class="card">
         <h2>Images</h2>
-        <p>Ajouter des images à la bibliothèque KALONÉO, individuellement ou par archive ZIP organisée par thèmes.</p>
+        <p>Transférer vos images personnelles entre deux PC ou ajouter des images à la bibliothèque KALONÉO.</p>
+        <div class="image-export-note">Export ZIP par thèmes, sans les images déjà fournies avec le programme.</div>
         <div class="actions">
+          <button id="export-images" class="primary" type="button">Exporter des images</button>
           <button id="import-images" type="button">Importer des images</button>
           <button id="import-image-zip" type="button">Importer un ZIP par thèmes</button>
         </div>
