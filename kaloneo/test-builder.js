@@ -1414,6 +1414,39 @@
     info.className='question-help';
     info.textContent='Deux retours à la ligne créent la ligne vide validée entre les phrases.';
     body.appendChild(info);
+    const complete=document.createElement('button');
+    complete.type='button';complete.className='mini-btn';
+    complete.textContent='Créer les questions manquantes';
+    complete.title='Ajouter un bloc Question pour chaque [[identifiant]] absent du test';
+    complete.addEventListener('click',()=>{
+      const existing=new Set(state.blocks.filter(b=>b.type==='question')
+        .map(b=>String(b.question?.id||'')));
+      for(const b of state.blocks.filter(b=>b.type==='table-grid')){
+        for(const row of b.table?.cells||[])for(const cell of row||[]){
+          if(cell?.questionId)existing.add(String(cell.questionId));
+        }
+      }
+      const created=[];
+      for(const part of block.flow||[]){
+        const id=String(part?.questionId||'');
+        if(part.type!=='question'||!id||existing.has(id))continue;
+        const questionBlock=baseBlock('question');
+        questionBlock.question.id=id;
+        questionBlock.question.prompt=id.replace(/_/g,' ');
+        questionBlock.zone=block.zone||'left';
+        created.push(questionBlock);
+        existing.add(id);
+      }
+      if(!created.length){
+        const notice=document.createElement('small');
+        notice.textContent='Toutes les questions de ce texte sont déjà reliées.';
+        body.appendChild(notice);return;
+      }
+      const at=state.blocks.indexOf(block);
+      state.blocks.splice(at+1,0,...created);
+      changed();renderBlocks();
+    });
+    body.appendChild(complete);
   }
 
   function renderMultipleTableEditor(block,body) {
