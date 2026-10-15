@@ -923,7 +923,8 @@
     answerDisplay.className='field-row cols-2';
     answerDisplay.append(
       selectField('Position de la réponse',q.answerLayout||'column',[
-        ['column','Aligner les réponses en colonne'],
+        ['column','Aligner à droite de la zone (actuel)'],
+        ['compact-column','Colonne compacte (après la question la plus longue)'],
         ['inline','Réponse juste après la question'],
         ['below','Réponse sous la question']
       ],value=>{q.answerLayout=value;changed();}),

@@ -61,7 +61,7 @@
         prompt:String(q.prompt||''),
         responseType:String(q.response?.type||'text'),
         // Anciennes V1 sans ce champ : aucun changement de présentation.
-        answerLayout:['column','inline','below'].includes(q.answerLayout)?q.answerLayout:'',
+        answerLayout:['column','compact-column','inline','below'].includes(q.answerLayout)?q.answerLayout:'',
         answerWidthChars:Number(q.answerWidthChars)>=6&&Number(q.answerWidthChars)<=30
           ?Number(q.answerWidthChars):'',
         manualEvaluation:Boolean(q.manualEvaluation)||String(q.response?.type||'')==='free-text',
@@ -419,7 +419,7 @@
       example:Boolean(q.example)
     };
     // Paramètres purement visuels : aucun effet sur la notation.
-    if(['column','inline','below'].includes(q.answerLayout))out.answerLayout=q.answerLayout;
+    if(['column','compact-column','inline','below'].includes(q.answerLayout))out.answerLayout=q.answerLayout;
     const answerWidth=Number(q.answerWidthChars);
     if(q.answerWidthChars!==''&&q.answerWidthChars!=null&&
        Number.isInteger(answerWidth)&&answerWidth>=6&&answerWidth<=30){

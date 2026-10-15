@@ -1490,3 +1490,22 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 .preview-question.kaloneo-shared-question[data-kaloneo-answer-layout="below"]>textarea{
   width:var(--kaloneo-answer-width,100%);
 }
+
+
+/* Colonne compacte : position commune après le plus long énoncé de la zone. */
+.kaloneo-shared-question[data-kaloneo-answer-layout="compact-column"]{
+  display:grid;
+  grid-template-columns:minmax(0,var(--kaloneo-compact-caption-width,max-content))
+                        minmax(0,var(--kaloneo-answer-width,14ch));
+  justify-content:start;
+  align-items:center;
+  column-gap:9px;
+}
+.kaloneo-shared-question[data-kaloneo-answer-layout="compact-column"]>span{
+  min-width:0;overflow-wrap:anywhere;
+}
+.kaloneo-shared-question[data-kaloneo-answer-layout="compact-column"]>input,
+.kaloneo-shared-question[data-kaloneo-answer-layout="compact-column"]>select,
+.kaloneo-shared-question[data-kaloneo-answer-layout="compact-column"]>textarea{
+  width:100%;min-width:0;max-width:100%;
+}

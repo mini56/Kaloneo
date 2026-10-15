@@ -40,7 +40,56 @@
     }
     host.appendChild(left);
     if(!single)host.appendChild(right);
+    watchCompactQuestionColumns(host);
     return {left,right};
+  }
+
+
+  // Un groupe par zone ; la réponse démarre après l'intitulé le plus long.
+  function alignCompactQuestionColumns(host){
+    if(!host?.children)return;
+    const win=host.ownerDocument?.defaultView;
+    for(const zone of host.children){
+      const rows=[...zone.querySelectorAll?.('.kaloneo-shared-question[data-kaloneo-answer-layout="compact-column"]')||[]]
+        .filter(row=>row.children.length>=2);
+      if(!rows.length)continue;
+      let longest=0,free=Infinity;
+      for(const row of rows){
+        const label=row.firstElementChild,answer=row.children[1];
+        if(!label||!answer)continue;
+        const initial=label.style.cssText;
+        label.style.position='absolute';
+        label.style.width='max-content';
+        label.style.maxWidth='none';
+        label.style.whiteSpace='nowrap';
+        longest=Math.max(longest,Math.ceil(label.scrollWidth||label.offsetWidth||0));
+        label.style.cssText=initial;
+        const css=win?.getComputedStyle?.(row);
+        const padding=(parseFloat(css?.paddingLeft)||0)+(parseFloat(css?.paddingRight)||0);
+        const gap=parseFloat(css?.columnGap)||9;
+        if(row.clientWidth>0)free=Math.min(free,row.clientWidth-padding-(answer.offsetWidth||0)-gap-2);
+      }
+      if(!Number.isFinite(free)||longest<=0)continue;
+      const width=Math.max(20,Math.min(longest+2,Math.max(20,free)));
+      for(const row of rows)row.style.setProperty('--kaloneo-compact-caption-width',width+'px');
+    }
+  }
+
+  // Un observateur de redimensionnement par hôte ; aucun polling.
+  const compactObservers=new WeakMap();
+  function watchCompactQuestionColumns(host){
+    compactObservers.get(host)?.disconnect();
+    compactObservers.delete(host);
+    if(!host?.querySelector?.('[data-kaloneo-answer-layout="compact-column"]'))return;
+    const win=host.ownerDocument?.defaultView;
+    const apply=()=>{if(host.isConnected)alignCompactQuestionColumns(host);};
+    if(typeof win?.ResizeObserver==='function'){
+      const observer=new win.ResizeObserver(apply);
+      observer.observe(host);
+      compactObservers.set(host,observer);
+    }
+    if(typeof win?.requestAnimationFrame==='function')win.requestAnimationFrame(apply);
+    else apply();
   }
 
   // Interprétation canonique du balisage de contexte KALTEST.
@@ -91,7 +140,7 @@
     // La disposition est portée par la définition KALTEST et non par le nom
     // d'un test. Si elle est absente (V1), le CSS historique reste inchangé.
     const layout=String(question?.answerLayout||'');
-    if(['column','inline','below'].includes(layout)){
+    if(['column','compact-column','inline','below'].includes(layout)){
       row.dataset.kaloneoAnswerLayout=layout;
     }
     const width=Number(question?.answerWidthChars);
@@ -404,5 +453,5 @@
     table.appendChild(group);
   }
 
-  return Object.freeze({columns,renderZones,renderRichContext,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderQuestionTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup});
+  return Object.freeze({columns,renderZones,alignCompactQuestionColumns,renderRichContext,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderQuestionTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup});
 });
