@@ -454,7 +454,12 @@
         const id=String(cell.questionId||('id'+(startIndex+out.length+1)+'_grille'));
         if(seen.has(id)) continue;
         seen.add(id);
-        const response={type:cell.responseType||((cell.kind==='select'||cell.kind==='choice-option')?'single-choice':'text')};
+        // La nature de la cellule prévaut sur un ancien responseType='text'.
+        // Un changement de type dans le Builder ne doit jamais transformer
+        // une liste déroulante en champ libre lors de la compilation KALTEST.
+        const type=cell.kind==='select'?'select':
+          (cell.responseType||((cell.kind==='choice-option')?'single-choice':'text'));
+        const response={type};
         if(Array.isArray(cell.options)&&cell.options.length) response.options=clone(cell.options);
         out.push({
           id,

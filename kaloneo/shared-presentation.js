@@ -375,6 +375,21 @@
     return own||row||column||'';
   }
 
+  // Un choix dans une grille est une liste déroulante, même si la
+  // question enregistrée avait historiquement le type générique 'text'.
+  // L'identifiant, la réponse et les points de la question sont conservés.
+  function gridSelectQuestion(question,cellDefinition){
+    const original=question||{};
+    const source=original.response||{};
+    const options=Array.isArray(cellDefinition?.options)
+      ?cellDefinition.options
+      :(Array.isArray(source.options)?source.options:[]);
+    return {...original,
+      id:String(original.id||cellDefinition?.questionId||''),
+      response:{...source,type:'select',options:options.slice()}
+    };
+  }
+
   // Rendu de la structure d'un tableau libre, identique dans l'éditeur
   // et dans le candidat. Le contrôle de réponse reste au client appelant.
   function renderGridTable({doc,definition={},renderCell,className='',wrapperClassName='',compactClassName='',equalClassName='',titleTag='h3',titleClassName='',skipHiddenCells=false}) {
@@ -443,6 +458,22 @@
         if(textColor&&typeof td.querySelectorAll==='function'){
           td.querySelectorAll('input, select, textarea').forEach(control=>{
             control.style.color=textColor;
+            // Sous Windows un <select> conserve autrement un fond blanc :
+            // « Choisir… » semble disparaître si la police choisie est blanche.
+            // Le champ prend le fond de sa cellule lorsqu'il est personnalisé.
+            // Sans fond de cellule, fournir un fond lisible aux polices claires.
+            const channels=textColor.match(/[0-9a-f]{2}/gi)||[];
+            const isLight=channels.length===3&&
+              ((parseInt(channels[0],16)*299+parseInt(channels[1],16)*587+
+                parseInt(channels[2],16)*114)/1000)>=175;
+            const controlBackground=background||(isLight?'#263442':'#ffffff');
+            control.style.backgroundColor=controlBackground;
+            if(control.tagName==='SELECT'){
+              for(const option of control.options){
+                option.style.color=textColor;
+                option.style.backgroundColor=controlBackground;
+              }
+            }
           });
         }
         tr.appendChild(td);
@@ -492,5 +523,5 @@
   }
 
   return Object.freeze({columns,renderZones,alignCompactQuestionColumns,renderRichContext,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderQuestionTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup,
-    normalizeGridColor,gridCellBackground,gridCellTextColor});
+    normalizeGridColor,gridCellBackground,gridCellTextColor,gridSelectQuestion});
 });

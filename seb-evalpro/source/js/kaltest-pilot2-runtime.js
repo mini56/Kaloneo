@@ -1273,7 +1273,10 @@
                    cellDefinition.kind === 'unit') {
           const question = questionById(test, cellDefinition.questionId);
           if (question) {
-            const input = makeInput(test, question, { compact:true });
+            const effectiveQuestion=cellDefinition.kind==='select'
+              ?window.KaloneoSharedPresentation.gridSelectQuestion(question,cellDefinition)
+              :question;
+            const input = makeInput(test, effectiveQuestion, { compact:true });
             if (testState.status === 'COMPLETED') {
               input.disabled = true;
               if (showCorrectionDuringParcours(test)) {

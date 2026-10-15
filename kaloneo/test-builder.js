@@ -1234,7 +1234,10 @@
         ].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;kind.appendChild(o);});
         kind.value=cell.kind||'empty';
         kind.addEventListener('change',()=>{
+          const oldKind=cell.kind;
           cell.kind=kind.value;
+          if(cell.kind==='select')cell.responseType='select';
+          else if(oldKind==='select'&&cell.responseType==='select')cell.responseType='text';
           if(['candidate-answer','select','choice-option','unit'].includes(cell.kind)&&!cell.questionId) {
             cell.questionId=nextQuestionId();
           }
@@ -1305,7 +1308,11 @@
 
           if(cell.kind==='select'||cell.kind==='choice-option') {
             const options=document.createElement('input');
-            options.type='text';options.placeholder='Choix séparés par ;';options.value=(cell.options||[]).join('; ');
+            options.type='text';
+            options.placeholder='Choix proposés : 8; 10; 12';
+            options.title='Saisir chaque choix séparé par un point-virgule (;)';
+            options.setAttribute('aria-label','Choix proposés dans la liste déroulante');
+            options.value=(cell.options||[]).join('; ');
             options.addEventListener('input',()=>{cell.options=splitValues(options.value);changed({typing:true});});
             td.appendChild(options);
           }

@@ -152,5 +152,27 @@ assert.equal(legacyTable.rowTextColors,undefined,'Couleur de texte ajoutée à u
 assert.equal(legacyTable.columns?.[0]?.textColor,undefined,'Colonne V1 modifiée');
 assert.equal(legacyTable.cells[0][0].backgroundColor,undefined,'Cellule V1 modifiée');
 assert.equal(legacyTable.cells[0][0].textColor,undefined,'Police V1 modifiée');
+// Nouvelle grille issue du Builder : l'ancien type de cellule 'text'
+ // ne doit plus masquer une liste déroulante en parcours candidat.
+const selectModel={meta:{title:'Sélection inventée',id:'select_invented',version:'1.0.0',
+  category:'mathematiques',scored:true,layout:'single'},blocks:[Core.createGridBlock(1,1)]};
+const selectCell=selectModel.blocks[0].table.cells[0][0];
+Object.assign(selectCell,{kind:'select',questionId:'select_001',responseType:'text',
+  acceptedAnswers:'12',options:['8','10','12'],points:2,
+  backgroundColor:'#203040',textColor:'#ffffff'});
+const selectTest=Core.modelToDefinition(selectModel);
+assert(Core.analyzeDefinition(selectTest).ok,JSON.stringify(Core.analyzeDefinition(selectTest).errors));
+assert.equal(selectTest.questions[0].response.type,'select');
+assert.deepEqual(selectTest.questions[0].response.options,['8','10','12']);
+assert.deepEqual(selectTest.questions[0].acceptedAnswers,['12']);
+assert.equal(selectTest.questions[0].points,2);
+const selectSavedAgain=Core.modelToDefinition(Core.definitionToModel(selectTest));
+assert.equal(selectSavedAgain.questions[0].response.type,'select');
+assert.deepEqual(selectSavedAgain.questions[0].response.options,['8','10','12']);
+assert.equal(selectSavedAgain.questions[0].points,2);
+const savedSelectCell=selectSavedAgain.presentation.builderContent[0].table.cells[0][0];
+assert.equal(savedSelectCell.textColor,'#ffffff');
+assert.equal(savedSelectCell.backgroundColor,'#203040');
+console.log('KALONEO_GRID_SELECT_ROUNDTRIP=OK — vrai menu, trois choix, police, fond, note');
 console.log('KALONEO_GRID_COLORS_ROUNDTRIP=OK — fond + texte, cellule, ligne, colonne, export et barèmes intacts');
 console.log('KALONEO_FUTURE_BLOCKS_ROUNDTRIP_UNIQUE_QUESTION=OK');

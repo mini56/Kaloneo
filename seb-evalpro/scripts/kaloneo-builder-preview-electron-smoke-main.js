@@ -2057,6 +2057,52 @@ app.whenReady().then(async()=>{
     }
     console.log('KALONEO_GRID_COLORS_ELECTRON=OK',JSON.stringify(colorsCheck));
 
+    const listCheck=await win.webContents.executeJavaScript(`(()=>{
+      const core=window.KaloneoBuilderCore;
+      const shared=window.KaloneoSharedPresentation;
+      const model={meta:{title:'Liste inventée',id:'liste_test_inventee',
+        version:'1.0.0',category:'mathematiques',scored:true,layout:'single'},
+        blocks:[core.createGridBlock(1,1)]};
+      const item=model.blocks[0].table.cells[0][0];
+      Object.assign(item,{kind:'select',questionId:'liste_001',responseType:'text',
+        acceptedAnswers:'12',options:['8','10','12'],points:2,
+        backgroundColor:'#203040',textColor:'#ffffff'});
+      const def=core.modelToDefinition(model);
+      const q=def.questions[0];
+      const effective=shared.gridSelectQuestion(q,item);
+      const built=shared.renderGridTable({
+        doc:document,definition:model.blocks[0].table,
+        renderCell:({cell,cellDefinition})=>{
+          const select=document.createElement('select');
+          select.append(new Option('Choisir…',''));
+          const result=shared.gridSelectQuestion(q,cellDefinition);
+          for(const opt of result.response.options)select.append(new Option(opt,opt));
+          cell.append(select);
+        }
+      });
+      const select=built.querySelector('select');
+      const cell=built.querySelector('td');
+      const options=[...select.options].map(o=>o.value);
+      const textColor=select.style.color;
+      const bg=select.style.backgroundColor;
+      const displayColor=getComputedStyle(select).color;
+      const displayBg=getComputedStyle(select).backgroundColor;
+      return {ok:core.analyzeDefinition(def).ok,
+        type:q.response.type,options,score:q.points,accepted:q.acceptedAnswers,
+        value:select.value,textColor,bg,displayColor,displayBg,
+        effectiveType:effective.response.type};
+    })()`,true);
+    if(!listCheck.ok||listCheck.type!=='select'||listCheck.effectiveType!=='select'||
+       listCheck.options.join(',')!==',8,10,12'||listCheck.score!==2||
+       listCheck.accepted.join(',')!=='12'||listCheck.value!==''||
+       listCheck.textColor!=='rgb(255, 255, 255)'||
+       listCheck.bg!=='rgb(32, 48, 64)'||
+       listCheck.displayColor!=='rgb(255, 255, 255)'||
+       listCheck.displayBg!=='rgb(32, 48, 64)'){
+      return fail('Liste déroulante ou contraste de police incorrect après rafraîchissement',listCheck);
+    }
+    console.log('KALONEO_GRID_SELECT_AND_TEXT_COLOR_ELECTRON=OK',JSON.stringify(listCheck));
+
         console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
     console.log('KALONEO_BUILDER_PREVIEW_ELECTRON=OK');

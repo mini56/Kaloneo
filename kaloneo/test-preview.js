@@ -129,7 +129,12 @@ function renderGrid(block){
           input.name='choice_'+String(question.id);
           label.append(input,document.createTextNode(String(cellDefinition.value||'')));
           td.append(label);
-        }else td.append(makeAnswerControl(question));
+        }else{
+          const effective=kind==='select'
+            ?window.KaloneoSharedPresentation.gridSelectQuestion(question,cellDefinition)
+            :question;
+          td.append(makeAnswerControl(effective));
+        }
       }else if(cellDefinition.value)td.textContent=String(cellDefinition.value);
     }
   });
