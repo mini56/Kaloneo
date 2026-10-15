@@ -1804,7 +1804,6 @@ app.whenReady().then(async()=>{
     const postRemovalTheme=await win.webContents.executeJavaScript(`(async()=>{
       window.confirm=()=>true;
       document.getElementById('new-test').click();
-      document.getElementById('add-block').click();
       const block=document.querySelector('.exercise-block');
       if(!block)return {ok:false,reason:'bloc neuf introuvable'};
       const type=block.querySelector('.block-type');
@@ -1813,9 +1812,14 @@ app.whenReady().then(async()=>{
         const btn=document.querySelector('.exercise-block .choose-library-image');
         if(!btn)throw new Error('Choisir une image absent');
         btn.click();
-        for(let i=0;i<20&&!document.getElementById('image-library-dialog')?.querySelector('.image-library-card');i++)
-          await new Promise(resolve=>setTimeout(resolve,35));
-        return document.getElementById('image-library-dialog');
+        const dialog=document.getElementById('image-library-dialog');
+        for(let i=0;i<30;i++){
+          if(dialog?.open&&dialog.querySelector('.image-library-card')&&
+             !String(document.getElementById('image-library-status')?.textContent||'')
+              .includes('Chargement de la bibliothèque'))return dialog;
+          await new Promise(resolve=>setTimeout(resolve,40));
+        }
+        throw new Error('Chargement de la bibliothèque non terminé');
       };
       let dialog=await open();
       const theme=document.getElementById('image-library-theme');
