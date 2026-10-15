@@ -99,11 +99,14 @@ ipcMain.handle('kaloneo-library:save-test',(_e,payload)=>{
 ipcMain.handle('kaloneo-library:list-images',()=>({ok:true,images:[
   {id:'img-smoke-library',name:'bibliotheque-kaloneo.svg',mime:'image/svg+xml',size:123,category:'Mes images KALONÉO',systemProvided:false,sourceName:''},
   {id:'img-smoke-alternative',name:'bibliotheque-changement.svg',mime:'image/svg+xml',size:124,category:'Mes images KALONÉO',systemProvided:false,sourceName:''},
+  {id:'img-v1-posture',name:'qcm_posture.png',mime:'image/png',size:125,category:'Images exercices SEB EvalPro',systemProvided:true,sourceName:'qcm_posture.png'},
+  {id:'img-tech-flacon',name:'flacon_bleu.png',mime:'image/png',size:126,category:'Images Stock',systemProvided:true,sourceName:'flacon_bleu.png'},
   ...[...importedImages.values()].map(({data,...metadata})=>metadata)
 ]}));
 ipcMain.handle('kaloneo-library:get-image',(_e,id)=>{
   if(id==='img-smoke-library')return {ok:true,image:{id,name:'bibliotheque-kaloneo.svg',mime:'image/svg+xml',size:123,category:'Mes images KALONÉO',systemProvided:false,data:imageLibraryData}};
   if(id==='img-smoke-alternative')return {ok:true,image:{id,name:'bibliotheque-changement.svg',mime:'image/svg+xml',size:124,category:'Mes images KALONÉO',systemProvided:false,data:imageLibraryAlternativeData}};
+  if(id==='img-v1-posture')return {ok:true,image:{id,name:'qcm_posture.png',mime:'image/png',size:125,category:'Images exercices SEB EvalPro',systemProvided:true,data:imageLibraryAlternativeData}};
   const image=importedImages.get(id);
   return image?{ok:true,image}:{ok:false,error:'absent'};
 });
@@ -1793,6 +1796,66 @@ app.whenReady().then(async()=>{
     }
     console.log('KALONEO_GENRE_NOMBRE_FONT_ELECTRON=OK');
     console.log('KALONEO_BUILDER_LEGACY_TABLE_TITLE_SAVED_P0=OK');
+
+    // Régression R107 : un bloc Image neuf doit retrouver un thème fonctionnel
+    // après remplacement puis suppression, sans modifier le catalogue V1.
+    await win.loadFile(builder);
+    await wait(650);
+    const postRemovalTheme=await win.webContents.executeJavaScript(`(async()=>{
+      window.confirm=()=>true;
+      document.getElementById('new-test').click();
+      document.getElementById('add-block').click();
+      const block=document.querySelector('.exercise-block');
+      if(!block)return {ok:false,reason:'bloc neuf introuvable'};
+      const type=block.querySelector('.block-type');
+      type.value='image';type.dispatchEvent(new Event('change',{bubbles:true}));
+      const open=async()=>{
+        const btn=document.querySelector('.exercise-block .choose-library-image');
+        if(!btn)throw new Error('Choisir une image absent');
+        btn.click();
+        for(let i=0;i<20&&!document.getElementById('image-library-dialog')?.querySelector('.image-library-card');i++)
+          await new Promise(resolve=>setTimeout(resolve,35));
+        return document.getElementById('image-library-dialog');
+      };
+      let dialog=await open();
+      const theme=document.getElementById('image-library-theme');
+      if(!dialog?.open)return {ok:false,reason:'fenêtre image absente'};
+      const initialTheme=theme.value;
+      const v1HiddenInitially=![...dialog.querySelectorAll('.image-library-card strong')]
+        .some(x=>x.textContent==='qcm_posture.png');
+      theme.value='Images V1';theme.dispatchEvent(new Event('change',{bubbles:true}));
+      const stable=theme.isConnected&&theme.value==='Images V1';
+      const v1Card=[...dialog.querySelectorAll('.image-library-card')]
+        .find(x=>x.querySelector('strong')?.textContent==='qcm_posture.png');
+      const technicalHidden=![...dialog.querySelectorAll('.image-library-card strong')]
+        .some(x=>x.textContent==='flacon_bleu.png');
+      if(!v1Card)return {ok:false,reason:'qcm_posture non disponible dans Images V1',initialTheme,stable};
+      v1Card.querySelector('.image-library-use').click();
+      for(let i=0;i<20&&dialog.open;i++)await new Promise(resolve=>setTimeout(resolve,35));
+      const inserted=document.querySelector('.exercise-block .file-preview-name')?.textContent||'';
+      const remove=document.querySelector('.exercise-block .remove-media');
+      remove?.click();
+      const emptied=document.querySelector('.exercise-block .file-preview-name')?.textContent||'';
+      dialog=await open();
+      const reopenedTheme=theme.value;
+      const v1HiddenAfterRemoval=![...dialog.querySelectorAll('.image-library-card strong')]
+        .some(x=>x.textContent==='qcm_posture.png');
+      theme.value='Images V1';theme.dispatchEvent(new Event('change',{bubbles:true}));
+      const v1VisibleAgain=[...dialog.querySelectorAll('.image-library-card strong')]
+        .some(x=>x.textContent==='qcm_posture.png');
+      dialog.querySelector('#close-image-library')?.click();
+      return {ok:true,initialTheme,reopenedTheme,stable,technicalHidden,
+        v1HiddenInitially,v1HiddenAfterRemoval,v1VisibleAgain,inserted,emptied};
+    })()`,true);
+    if(!postRemovalTheme.ok||postRemovalTheme.initialTheme!=='__current__'||
+       postRemovalTheme.reopenedTheme!=='__current__'||!postRemovalTheme.stable||
+       !postRemovalTheme.technicalHidden||!postRemovalTheme.v1HiddenInitially||
+       !postRemovalTheme.v1HiddenAfterRemoval||!postRemovalTheme.v1VisibleAgain||
+       !postRemovalTheme.inserted.includes('qcm_posture.png')||
+       postRemovalTheme.emptied.includes('qcm_posture.png')){
+      return fail('R107 : thème inopérant après suppression d’une image',postRemovalTheme);
+    }
+    console.log('KALONEO_IMAGE_THEME_AFTER_REMOVAL_ELECTRON=OK',JSON.stringify(postRemovalTheme));
 
         console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');

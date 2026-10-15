@@ -1477,6 +1477,16 @@
     state.imageLibraryTargetUid=targetUid||null;
     imageLibraryFilterKey='';
     imageLibraryLimit=72;
+    // Chaque ouverture, y compris après « Retirer l’image », commence
+    // avec les images courantes. Les anciennes recherches et orientations
+    // ne doivent pas faire croire que le menu Thème ne répond plus.
+    const themeSelect=$('image-library-theme');
+    if(themeSelect)themeSelect.value='__current__';
+    const orientationSelect=$('image-library-orientation');
+    if(orientationSelect)orientationSelect.value='';
+    const searchInput=$('image-library-search');
+    if(searchInput)searchInput.value='';
+    if(imageSearchTimer){clearTimeout(imageSearchTimer);imageSearchTimer=null;}
     try{
       // Montrer d'abord la fenêtre ; les métadonnées/images arrivent ensuite.
       dialog.showModal();
