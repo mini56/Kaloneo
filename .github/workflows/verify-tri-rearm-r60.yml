@@ -54,12 +54,22 @@ jobs:
           node --check ../kaloneo/image-library-gallery.js
           node --check ../kaloneo/test-builder.js
           node scripts/kaloneo-image-gallery-visibility-smoke.js
+      - name: Verify image library ZIP export/import between two PCs and UI wiring
+        run: |
+          node --check src/kaloneo-image-export.js
+          node --check source/js/admin-kaloneo-transfer.js
+          node --check scripts/kaloneo-image-export-ui-smoke.js
+          node scripts/kaloneo-image-export-ui-smoke.js
+          node scripts/kaloneo-image-library-smoke.js
+          node scripts/kaloneo-ergonomics-library-smoke.js
       - name: Verify Genre et nombre font persistence without changing original V1
         run: node scripts/kaloneo-genre-nombre-font-smoke.js
       - name: Generate historical KALTEST pilot data
         run: node scripts/build-kaltest-pilot2-data.js
       - name: Prepare authentic KALTEST candidate application
         run: npm run prepare:web
+      - name: Verify portable test exports carry their images intact
+        run: node scripts/kaloneo-export-restaurant-r69-smoke.js
       - name: Verify Admin V1 save backups and persistence across app upgrades
         run: node scripts/kaloneo-testsv1-developer-smoke.js
       - name: Verify original V1 and V2 coexist without delete regression
