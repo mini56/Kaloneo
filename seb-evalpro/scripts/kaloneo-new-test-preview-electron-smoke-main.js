@@ -4,6 +4,7 @@ const {app,BrowserWindow,ipcMain}=require('electron');
 const assert=require('node:assert/strict');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..');
+const Core=require('../../kaloneo/builder-core.js');
 const image='data:image/svg+xml;base64,'+Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="90"><rect width="120" height="90" fill="#267695"/></svg>').toString('base64');
 const definition={
  id:'synthetic_future_builder_test',version:'1.0.0',title:'Tableaux d’un test inédit',
@@ -23,13 +24,14 @@ const definition={
  ]}
 };
 let saves=0;
+let activePreviewDefinition=definition;
 ipcMain.on('app:edition-sync',event=>event.returnValue={edition:'unified',canBilan:true,canAi:true,canImport:true,canExport:true});
 ipcMain.on('state:load-sync',event=>event.returnValue={version:1,sessionStorage:{},localStorage:{}});
 ipcMain.on('state:save-sync',event=>{saves++;event.returnValue={ok:true};});
 ipcMain.on('candidate-catalog:workspace-load-sync',event=>event.returnValue={ok:false});
 ipcMain.on('candidate-catalog:workspace-save-sync',event=>event.returnValue={ok:true});
 ipcMain.on('candidate-catalog:results-workspace-load-sync',event=>event.returnValue={ok:false});
-ipcMain.handle('kaloneo-builder:get-preview',()=>({ok:true,definition}));
+ipcMain.handle('kaloneo-builder:get-preview',()=>({ok:true,definition:activePreviewDefinition}));
 ipcMain.handle('kaloneo-builder:close-preview',()=>true);
 ipcMain.handle('state:save',()=>{saves++;return {ok:true};});
 
@@ -160,6 +162,167 @@ app.whenReady().then(async()=>{
   assert.ok(!candidateScreenshot.isEmpty(),'Capture candidat vide');
   assert.equal(saves,0,'L’aperçu candidat a modifié le stockage');
   assert.equal(saves,0,'aperçu enregistre des données candidat');
+
+  // Contrôle strict d'un nouveau test créé par le Builder, sans catalogue
+  // ni ID historique. Toute saisie passe par les vrais contrôles Electron.
+  const grid=Core.createGridBlock(3,3);
+  grid.table.title='Test autonome complet';
+  grid.table.headers=['Indication','Saisie','Unité'];
+  Object.assign(grid.table.cells[0][0],{kind:'fixed-text',value:'Poids de la livraison'});
+  Object.assign(grid.table.cells[0][1],{
+    kind:'candidate-answer',questionId:'poids_2027',responseType:'number',
+    acceptedAnswers:'12',points:2
+  });
+  Object.assign(grid.table.cells[0][2],{
+    kind:'unit',questionId:'poids_2027',acceptedUnits:'kg; KG; kilo; kilogramme',
+    unitScored:true
+  });
+  Object.assign(grid.table.cells[1][0],{kind:'fixed-text',value:'Combien de colis ?'});
+  Object.assign(grid.table.cells[1][1],{
+    kind:'select',questionId:'colis_2027',responseType:'select',
+    acceptedAnswers:'10',options:['8','10','12'],points:1,
+    backgroundColor:'#203040',textColor:'#ffffff'
+  });
+  Object.assign(grid.table.cells[2][0],{
+    kind:'image',value:image,mediaName:'illustration-libre.svg',alt:'Forme libre'
+  });
+  const extra={
+    uid:'extra_future',type:'response-table',zone:'left',
+    responseTable:{headers:['Numéro','Réponse','Unités','Opérations effectuées'],
+      columns:[{id:'number'},{id:'answer'},{id:'unit'},{id:'extra'}]}
+  };
+  const tableDefinition={
+    uid:'table_future',type:'multiple-tables',zone:'left',
+    tableDefinition:{title:'Réponses du test futur',
+      headers:['Question','Réponse'],questionIds:['poids_2027']}
+  };
+  const flow={
+    uid:'gap_future',type:'inline-flow',zone:'left',wordBank:['10'],
+    flow:[{type:'text',text:'Répondre à nouveau : '},
+      {type:'question',questionId:'colis_2027'}]
+  };
+  const m={
+    meta:{id:'audit_candidat_2027',version:'1.0.0',
+      title:'Test totalement nouveau',category:'mathematiques',
+      scored:true,layout:'single',scenario:'Exercice',instruction:'Répondre'},
+    blocks:[grid,extra,tableDefinition,flow]
+  };
+  const newDefinition=Core.modelToDefinition(m);
+  assert(Core.analyzeDefinition(newDefinition).ok,
+    JSON.stringify(Core.analyzeDefinition(newDefinition).errors));
+  assert.equal(newDefinition.questions.length,2);
+  assert.equal(newDefinition.questions[0].points,2);
+  assert.equal(newDefinition.questions[0].unitScored,true);
+  assert.equal(newDefinition.questions[0].unitInput,true);
+  assert.deepEqual(newDefinition.questions[0].acceptedUnits,
+    ['kg','KG','kilo','kilogramme']);
+  assert.equal(newDefinition.questions[1].response.type,'select');
+  assert.deepEqual(newDefinition.questions[1].response.options,['8','10','12']);
+  assert.deepEqual(newDefinition.questions[0].supplementalFields,
+    [{id:'operations_effectuees',label:'Opérations effectuées'}]);
+  // Export -> import -> enregistrement : structure et barème stables.
+  const reimported=Core.modelToDefinition(Core.definitionToModel(newDefinition));
+  assert(Core.analyzeDefinition(reimported).ok);
+  assert.deepEqual(reimported.questions,newDefinition.questions);
+  assert.deepEqual(reimported.presentation.builderContent,
+    newDefinition.presentation.builderContent);
+  activePreviewDefinition=reimported;
+  runtime.runtime.tests=[reimported];
+  await win.loadFile(path.join(root,'app','web','kaloneo-builder','test-preview.html'));
+  await new Promise(resolve=>setTimeout(resolve,450));
+  const secondPreview=await win.webContents.executeJavaScript(`(()=>{
+    const tables=[...document.querySelectorAll('table.kb-table')];
+    const grid=tables.find(t=>t.textContent.includes('Poids de la livraison'));
+    const headers=tables.map(t=>[...t.querySelectorAll('thead th')]
+      .map(x=>x.textContent));
+    const rows=grid?.querySelectorAll('tbody tr');
+    const firstInputs=rows?.[0]?.querySelectorAll('input').length||0;
+    const select=rows?.[1]?.querySelector('select');
+    const image=rows?.[2]?.querySelector('img');
+    return {error:document.querySelector('.kb-error')?.textContent||'',
+      tableCount:tables.length,headers,firstInputs,
+      options:[...(select?.options||[])].map(o=>o.value),
+      imageReady:!!(image?.complete&&image?.naturalWidth>0),
+      imageAlt:image?.alt||'',unitPlaceholder:
+        rows?.[0]?.children?.[2]?.querySelector('input')?.placeholder||''};
+  })()`);
+  assert.equal(secondPreview.error,'',JSON.stringify(secondPreview));
+  assert.equal(secondPreview.tableCount,3);
+  assert.equal(secondPreview.firstInputs,2,'La valeur et l unité ne sont pas deux champs');
+  assert.deepEqual(secondPreview.options,['','8','10','12']);
+  assert.equal(secondPreview.unitPlaceholder,'Unité');
+  assert.equal(secondPreview.imageReady,true);
+  assert.equal(secondPreview.imageAlt,'Forme libre');
+  assert.ok(secondPreview.headers.some(h=>h.includes('Opérations effectuées')));
+  await win.loadFile(path.join(root,'app','web','kaltest-pilot2.html'),{
+    query:{kaloneoPreview:'1'}
+  });
+  await new Promise(resolve=>setTimeout(resolve,950));
+  const interacted=await win.webContents.executeJavaScript(`(()=>{
+    const api=window.sebKaltestPilot2;
+    const test=api?.currentTest?.();
+    const grid=document.querySelector('.kaltest-builder-grid');
+    const rows=[...(grid?.querySelectorAll('tbody tr')||[])];
+    const numeric=rows[0]?.children[1]?.querySelector('input');
+    const unit=rows[0]?.children[2]?.querySelector('input');
+    const select=rows[1]?.children[1]?.querySelector('select');
+    const img=rows[2]?.children[0]?.querySelector('img');
+    const extra=[...document.querySelectorAll('table.kaltest-table')]
+      .find(t=>[...t.querySelectorAll('thead th')]
+        .some(x=>x.textContent==='Opérations effectuées'));
+    const supplemental=extra?.querySelector('tbody tr:first-child td:nth-child(4) input');
+    const table=[...document.querySelectorAll('table.kaltest-table')]
+      .find(t=>[...t.querySelectorAll('thead th')]
+        .some(x=>x.textContent==='Question'));
+    if(!numeric||!unit||!select||!supplemental||!table||!img||!api||!test)
+      return {ok:false,numeric:!!numeric,unit:!!unit,select:!!select,
+        supplemental:!!supplemental,table:!!table,image:!!img,api:!!api};
+    const set=(el,v)=>{el.value=v;el.dispatchEvent(
+      new Event(el.tagName==='SELECT'?'change':'input',{bubbles:true}));};
+    const evaluate=()=>{
+      const state=api.state.tests[test.id];
+      return api.evaluateTest(test,state);
+    };
+    set(numeric,'11');set(unit,'KILO');
+    const wrongValue=evaluate();
+    set(numeric,'12');set(unit,'m');set(select,'10');
+    const wrongUnit=evaluate();
+    set(unit,'kg');set(supplemental,'Vérification manuelle');
+    const correct=evaluate();
+    const saved=api.state.tests[test.id];
+    const options=[...select.options].map(o=>o.value);
+    return {ok:true,wrongValue:{score:wrongValue.score,max:wrongValue.scoreMax,
+      unit:wrongValue.details.poids_2027.unitCorrect},
+      wrongUnit:{score:wrongUnit.score,max:wrongUnit.scoreMax,
+      unit:wrongUnit.details.poids_2027.unitCorrect},
+      correct:{score:correct.score,max:correct.scoreMax,
+      unit:correct.details.poids_2027.unitCorrect},
+      savedAnswer:saved.answers.poids_2027,savedUnit:saved.units.poids_2027,
+      savedSelect:saved.answers.colis_2027,
+      savedExtra:saved.supplemental.poids_2027?.operations_effectuees,
+      options,gridRows:rows.length,tableColumns:
+        table.querySelectorAll('thead th').length,
+      imageReady:!!(img.complete&&img.naturalWidth>0),
+      testId:document.body.dataset.sebKaltestId};
+  })()`,true);
+  assert.equal(interacted.ok,true,JSON.stringify(interacted));
+  assert.deepEqual(interacted.options,['','8','10','12']);
+  assert.deepEqual(interacted.wrongValue,{score:1,max:4,unit:true},
+    'L unité correcte doit rapporter 1 point, même si la valeur est fausse');
+  assert.deepEqual(interacted.wrongUnit,{score:3,max:4,unit:false});
+  assert.deepEqual(interacted.correct,{score:4,max:4,unit:true});
+  assert.equal(interacted.savedAnswer,'12');
+  assert.equal(interacted.savedUnit,'kg');
+  assert.equal(interacted.savedSelect,'10');
+  assert.equal(interacted.savedExtra,'Vérification manuelle');
+  assert.equal(interacted.gridRows,3);
+  assert.equal(interacted.tableColumns,2);
+  assert.equal(interacted.imageReady,true);
+  assert.equal(interacted.testId,reimported.id);
+  console.log('KALONEO_AUDIT_FULL_CANDIDATE_ELECTRON=OK',
+    JSON.stringify({preview:secondPreview,interactive:interacted,
+      questions:reimported.questions.map(q=>({id:q.id,points:q.points,
+        unitScored:q.unitScored||false,units:q.acceptedUnits||[]}))}));
   console.log('FRESH_KALTEST_PREVIEW: OK',JSON.stringify({
     columns:observed.zoneCount,tableCount:observed.tableCount,
     rowCounts:observed.rowCounts,imageReady:observed.imageReady,
