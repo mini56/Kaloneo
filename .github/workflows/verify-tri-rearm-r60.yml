@@ -62,6 +62,13 @@ jobs:
           node scripts/kaloneo-image-export-ui-smoke.js
           node scripts/kaloneo-image-library-smoke.js
           node scripts/kaloneo-ergonomics-library-smoke.js
+      - name: Verify unified image library, icon theme and future custom tests
+        run: |
+          node --check ../kaloneo/image-library-gallery.js
+          node --check ../kaloneo/test-builder.js
+          node --check scripts/kaloneo-library-unified-future-smoke.js
+          node scripts/kaloneo-image-gallery-visibility-smoke.js
+          node scripts/kaloneo-library-unified-future-smoke.js
       - name: Verify Genre et nombre font persistence without changing original V1
         run: node scripts/kaloneo-genre-nombre-font-smoke.js
       - name: Generate historical KALTEST pilot data
