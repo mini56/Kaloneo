@@ -848,6 +848,42 @@
       else questionIds.add(q.id);
     }
 
+    // Strict validation belongs to newly generated Builder definitions.
+    // Historical KALTESTs retain their original schema and barèmes.
+    const modern=def?.builderVersion==='2.0.0' &&
+      def?.presentation?.legacyFullPage!==true;
+    if(modern){
+      const gridChoices=new Map();
+      for(const item of def?.presentation?.builderContent||[]){
+        if(item?.type!=='table-grid')continue;
+        for(const row of item.table?.cells||[])for(const cell of row||[]){
+          if(cell?.kind!=='choice-option'||!cell.questionId||!cell.value)continue;
+          const id=String(cell.questionId);
+          if(!gridChoices.has(id))gridChoices.set(id,new Set());
+          gridChoices.get(id).add(String(cell.value));
+        }
+      }
+      for(const q of questions){
+        const type=q?.response?.type||'text';
+        if(['select','single-choice','multiple-choice'].includes(type)){
+          const offered=(q.response?.options||[]).map(String).filter(Boolean);
+          const available=new Set([...offered,...(gridChoices.get(String(q.id))||[])]
+            .map(x=>String(x).trim().toLocaleLowerCase('fr-FR')));
+          if(!available.size)errors.push('question '+q.id+': liste des choix vide');
+          const raw=type==='multiple-choice'&&Array.isArray(q.acceptedAnswers?.[0])
+            ?q.acceptedAnswers[0]:(q.acceptedAnswers||[]);
+          for(const answer of raw){
+            if(!available.has(String(answer).trim().toLocaleLowerCase('fr-FR')))
+              errors.push('question '+q.id+': réponse attendue absente des choix ('+answer+')');
+          }
+        }
+        if(q?.unitScored===true){
+          if(q.unitInput!==true)errors.push('question '+q.id+': champ unité non activé');
+          if(!Array.isArray(q.acceptedUnits)||!q.acceptedUnits.length)
+            errors.push('question '+q.id+': unité notée sans valeurs acceptées');
+        }
+      }
+    }
     const presentation=def?.presentation||{};
     if(typeof presentation.layout==='string'&&!LAYOUTS.has(presentation.layout)&&!LEGACY_LAYOUTS.has(presentation.layout)) {
       errors.push('layout Builder non supporté: '+presentation.layout);
@@ -875,6 +911,12 @@
         }
         if(type==='question'&&!questionIds.has(item.questionId)) {
           errors.push('bloc Question sans questionId valide: '+String(item.questionId||''));
+        }
+        if(modern&&type==='inline-flow'){
+          for(const part of item.flow||[]){
+            if(part?.type==='question'&&!questionIds.has(String(part.questionId||'')))
+              errors.push('texte à trous : question manquante '+String(part.questionId||''));
+          }
         }
         if(['image','audio','video'].includes(type)){
           const resource=item.resource||{};
