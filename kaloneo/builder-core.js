@@ -469,15 +469,24 @@
       if(cell.kind==='choice-option'&&cell.value){
         response.options=[...new Set([...(response.options||[]),String(cell.value)])];
       }
+      const manual=type==='free-text';
       const q={id,prompt:cell.prompt||('Réponse '+id),response,
         acceptedAnswers:splitValues(cell.acceptedAnswers),
-        points:Math.max(0,Number(cell.points==null?1:cell.points)||0)};
+        points:manual?0:Math.max(0,Number(cell.points==null?1:cell.points)||0)};
+      if(type==='duration'){
+        q.acceptedMinutes=Math.max(0,Number(cell.acceptedAnswers)||0);
+        delete q.acceptedAnswers;
+      }
+      if(manual){q.manualEvaluation=true;delete q.acceptedAnswers;}
       if(previousIndex===undefined){positions.set(id,out.length);out.push(q);}
       else if(cell.kind==='choice-option'){
         const old=out[previousIndex];
         if(old.response.type==='single-choice'){
           const opts=new Set([...(old.response.options||[]),...(response.options||[])]);
           old.response.options=[...opts];
+          for(const answer of q.acceptedAnswers||[]){
+            if(!old.acceptedAnswers.includes(answer))old.acceptedAnswers.push(answer);
+          }
         }
       }else{
         const old=out[previousIndex];
@@ -769,8 +778,23 @@
     }
 
     const questions=collectBuilderQuestions(model.blocks);
+    // Chaque colonne supplémentaire d'un nouveau tableau de réponses a un
+    // identifiant stable, même si elle n'a pas été créée manuellement dans
+    // l'éditeur Question. Les données saisies par le candidat sont sauvegardées.
+    const responseTable=(model.blocks||[]).find(block=>block.type==='response-table');
+    const extraHeaders=responseTable?.responseTable?.headers?.slice(3)||[];
+    if(extraHeaders.length)for(const q of questions){
+      const configured=Array.isArray(q.supplementalFields)?q.supplementalFields:[];
+      const fields=extraHeaders.map((header,index)=>{
+        const field=configured[index]||{};
+        return {id:cleanId(field.id||header||('champ_'+(index+1)))||('champ_'+(index+1)),
+          label:String(header||('Champ '+(index+1)))};
+      });
+      q.supplementalFields=fields;
+    }
     const features=['runtime.basic'];
     if(questions.length) features.push('questionnaire.basic');
+    if(questions.some(q=>q.supplementalFields?.length))features.push('questionnaire.supplemental-fields');
     if(questions.some(q=>q.response?.type==='free-text'||q.manualEvaluation===true)) features.push('questionnaire.free-text-manual');
     if((model.blocks||[]).some(b=>['table-grid','response-table','multiple-tables'].includes(b.type))) features.push('questionnaire.table');
     if((model.blocks||[]).some(b=>b.type==='table-grid')) features.push('questionnaire.grid');
