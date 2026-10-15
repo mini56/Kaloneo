@@ -122,6 +122,27 @@
     );
   }
 
+  async function exportImages(){
+    const button=byId('export-images');
+    if(button?.disabled)return;
+    if(button)button.disabled=true;
+    setStatus('image-status','Préparation de l’archive ZIP des images personnelles…');
+    try{
+      const result=await window.sebEvalPro?.kaloneoExportImageZip?.();
+      if(result?.canceled){
+        setStatus('image-status','Export annulé.');
+      }else if(!result?.ok){
+        setStatus('image-status','Export impossible : '+String(result?.error||'erreur inconnue'),'error');
+      }else{
+        const n=Number(result.count)||0;
+        setStatus('image-status',n+' image'+(n>1?'s':'')+
+          ' exportée'+(n>1?'s':'')+' en ZIP.','ok');
+      }
+    }finally{
+      if(button)button.disabled=false;
+    }
+  }
+
   async function importImageZip(){
     setStatus('image-status','Import de l’archive ZIP…');
     const result=await window.sebEvalPro?.kaloneoImportImageZip?.();
@@ -142,6 +163,8 @@
     byId('import-test').addEventListener('click',()=>importTest().catch(error=>setStatus('test-status','Import impossible : '+String(error?.message||error),'error')));
     byId('export-parcours').addEventListener('click',()=>exportParcours().catch(error=>setStatus('parcours-status','Export impossible : '+String(error?.message||error),'error')));
     byId('import-parcours').addEventListener('click',()=>importParcours().catch(error=>setStatus('parcours-status','Import impossible : '+String(error?.message||error),'error')));
+    byId('export-images').addEventListener('click',()=>exportImages().catch(error=>
+      setStatus('image-status','Export impossible : '+String(error?.message||error),'error')));
     byId('import-images').addEventListener('click',()=>byId('image-files').click());
     byId('image-files').addEventListener('change',async()=>{
       try{await importImages(byId('image-files').files);}
