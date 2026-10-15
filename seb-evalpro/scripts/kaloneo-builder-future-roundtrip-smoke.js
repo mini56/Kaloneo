@@ -175,4 +175,93 @@ assert.equal(savedSelectCell.textColor,'#ffffff');
 assert.equal(savedSelectCell.backgroundColor,'#203040');
 console.log('KALONEO_GRID_SELECT_ROUNDTRIP=OK — vrai menu, trois choix, police, fond, note');
 console.log('KALONEO_GRID_COLORS_ROUNDTRIP=OK — fond + texte, cellule, ligne, colonne, export et barèmes intacts');
+// Couverture exhaustive des créations modernes, sans toucher à la V1.
+const makeFuture=(id,blocks)=>({
+  meta:{id,title:id,version:'1.0.0',category:'mathematiques',
+    scored:true,layout:'single'},blocks
+});
+function modernGrid(rows,cols){return Core.createGridBlock(rows,cols)}
+const unitGrid=modernGrid(1,2);
+Object.assign(unitGrid.table.cells[0][0],{
+  kind:'candidate-answer',questionId:'parcel_weight',
+  responseType:'number',acceptedAnswers:'12',points:2
+});
+Object.assign(unitGrid.table.cells[0][1],{
+  kind:'unit',questionId:'parcel_weight',acceptedUnits:'kg; KG; kilo; kilogramme',unitScored:true
+});
+const weighted=Core.modelToDefinition(makeFuture('Poid_colis_futur',[unitGrid]));
+assert(Core.analyzeDefinition(weighted).ok,JSON.stringify(Core.analyzeDefinition(weighted).errors));
+assert.equal(weighted.questions.length,1,'Double question valeur/unité');
+assert.equal(weighted.questions[0].points,2);
+assert.equal(weighted.questions[0].unitInput,true);
+assert.equal(weighted.questions[0].unitScored,true);
+assert.deepEqual(weighted.questions[0].acceptedUnits,['kg','KG','kilo','kilogramme']);
+const twice=Core.modelToDefinition(Core.definitionToModel(weighted));
+assert.equal(twice.questions.length,1);
+assert.equal(twice.questions[0].unitScored,true);
+assert.deepEqual(twice.questions[0].acceptedUnits,weighted.questions[0].acceptedUnits);
+const swapped=Core.clone(unitGrid);
+swapped.table.cells[0].reverse();
+const swappedDef=Core.modelToDefinition(makeFuture('Unite_avant_valeur',[swapped]));
+assert.equal(swappedDef.questions.length,1);
+assert.equal(swappedDef.questions[0].points,2);
+assert.equal(swappedDef.questions[0].unitScored,true);
+const unscored=Core.clone(unitGrid);
+unscored.table.cells[0][1].unitScored=false;
+const unscoredDef=Core.modelToDefinition(makeFuture('Unite_non_notee',[unscored]));
+assert.equal(unscoredDef.questions[0].unitScored,undefined,'Unité non notée changée');
+assert.equal(unscoredDef.questions[0].unitInput,true,'Unité non notée masquée');
+const invalidUnit=Core.clone(unitGrid);
+invalidUnit.table.cells[0][1].acceptedUnits='';
+assert(!Core.analyzeDefinition(Core.modelToDefinition(makeFuture('Unite_sans_reponse',[invalidUnit]))).ok,
+  'L’unité notée sans valeurs acceptées ne doit pas être validée');
+const newChoice=modernGrid(1,1);
+Object.assign(newChoice.table.cells[0][0],{
+  kind:'select',questionId:'choice_futur',acceptedAnswers:'12',
+  responseType:'select',options:['8','10','12'],points:3
+});
+const choiceOK=Core.modelToDefinition(makeFuture('Choix_futur_valide',[newChoice]));
+assert(Core.analyzeDefinition(choiceOK).ok);
+const badChoice=Core.clone(newChoice);
+badChoice.table.cells[0][0].options=['8','10'];
+assert(!Core.analyzeDefinition(Core.modelToDefinition(makeFuture('Choix_futur_invalide',[badChoice]))).ok,
+  'La réponse attendue absente des choix a été acceptée');
+const emptyChoice=Core.clone(newChoice);
+emptyChoice.table.cells[0][0].options=[];
+assert(!Core.analyzeDefinition(Core.modelToDefinition(makeFuture('Choix_futur_vide',[emptyChoice]))).ok,
+  'Une liste déroulante vide a été acceptée');
+const orphanFlow={uid:'orphan_flow',type:'inline-flow',zone:'left',
+  wordBank:['mot'],flow:[{type:'text',text:'Répondre '},{type:'question',questionId:'id_trou'}]};
+assert(!Core.analyzeDefinition(Core.modelToDefinition(makeFuture('Trou_orphelin',[orphanFlow]))).ok,
+  'Texte à trous orphelin accepté');
+const linkedQuestion={uid:'trou_q',type:'question',zone:'left',
+  question:{id:'id_trou',prompt:'Choisissez',responseType:'text',
+    acceptedAnswers:'mot',points:1}};
+const flowOK=Core.modelToDefinition(makeFuture('Trou_valide',[orphanFlow,linkedQuestion]));
+assert(Core.analyzeDefinition(flowOK).ok);
+const tableQuestion={uid:'response_q',type:'question',zone:'left',
+  question:{id:'qa_1',prompt:'Mesurez',responseType:'number',
+    acceptedAnswers:'15',points:2}};
+const resp={uid:'resp_1',type:'response-table',zone:'right',
+  responseTable:{headers:['N°','Réponse','Unités','Opérations effectuées','Remarques'],
+    columns:[]}};
+const withExtra=Core.modelToDefinition(makeFuture('Champs_complementaires',[tableQuestion,resp]));
+assert(Core.analyzeDefinition(withExtra).ok);
+assert.deepEqual(withExtra.questions[0].supplementalFields.map(v=>v.id),
+  ['operations_effectuees','remarques']);
+const withExtraAgain=Core.modelToDefinition(Core.definitionToModel(withExtra));
+assert.deepEqual(withExtraAgain.questions[0].supplementalFields,
+  withExtra.questions[0].supplementalFields);
+const manualGrid=modernGrid(1,1);
+Object.assign(manualGrid.table.cells[0][0],{kind:'candidate-answer',
+  questionId:'manual_answer',responseType:'free-text',points:5});
+const manualDef=Core.modelToDefinition(makeFuture('Libre_non_note',[manualGrid]));
+assert.equal(manualDef.questions[0].points,0);
+assert.equal(manualDef.questions[0].manualEvaluation,true);
+const durationGrid=modernGrid(1,1);
+Object.assign(durationGrid.table.cells[0][0],{kind:'candidate-answer',
+  questionId:'time_1',responseType:'duration',acceptedAnswers:'75',points:1});
+const durationDef=Core.modelToDefinition(makeFuture('Duree_configurable',[durationGrid]));
+assert.equal(durationDef.questions[0].acceptedMinutes,75);
+console.log('KALONEO_BUILDER_AUDIT_NEW_TESTS=OK — unité, 1 point, listes, trous, types, colonnes et points');
 console.log('KALONEO_FUTURE_BLOCKS_ROUNDTRIP_UNIQUE_QUESTION=OK');
