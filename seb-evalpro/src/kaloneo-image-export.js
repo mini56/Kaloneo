@@ -24,7 +24,7 @@ function crc32(buffer){
 }
 function segment(value,fallback){
   const clean=String(value||'').normalize('NFC')
-    .replace(/[<>:"/\\|?*\x00-\x1F]/g,'-')
+    .replace(/[<>:"|?*\x00-\x1F]/g,'-').replaceAll('/','-').replaceAll('\\','-')
     .replace(/\s+/g,' ').replace(/^\.+|\.+$/g,'').trim()
     .slice(0,85).trim();
   return clean&&clean!=='.'&&clean!=='..'?clean:fallback;
