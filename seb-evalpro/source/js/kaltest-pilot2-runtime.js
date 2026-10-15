@@ -3404,6 +3404,26 @@
     if (item.type === 'table-grid') return applyBuilderItemStyle(renderBuilderGrid(test, item), item);
     if (item.type === 'table-definition') {
       const definition = item.definition || {};
+      if(test.builderVersion==='2.0.0'&&test.presentation?.legacyFullPage!==true){
+        return applyBuilderItemStyle(window.KaloneoSharedPresentation.renderQuestionTable({
+          doc:document,definition,
+          wrapperClassName:'kaltest-table-wrap',tableClassName:'kaltest-table',
+          questionById:id=>questionById(test,id),
+          renderCells:({doc,question,headers})=>{
+            if(!question)return [];
+            const prompt=doc.createElement('td');prompt.textContent=question.prompt||question.id;
+            const answer=doc.createElement('td');
+            answer.append(makeInput(test,question,{compact:true}));
+            const extras=(headers||[]).slice(2).map((header,index)=>{
+              const cell=doc.createElement('td');
+              const field=question.supplementalFields?.[index];
+              if(field)cell.append(makeSupplementalInput(test,question,field));
+              return cell;
+            });
+            return [prompt,answer,...extras];
+          }
+        }),item);
+      }
       const title = document.createElement('h3');
       title.textContent = definition.title || '';
       wrap.appendChild(title);
