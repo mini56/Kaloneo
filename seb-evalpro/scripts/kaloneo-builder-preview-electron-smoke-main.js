@@ -2122,7 +2122,7 @@ app.whenReady().then(async()=>{
       if(!type)return {ok:false,reason:'Liste types absente'};
       type.value='table-grid';type.dispatchEvent(new Event('change',{bubbles:true}));
       const visibleCell=()=>document.querySelector(
-        '.grid-editor-scroll tbody tr:first-child td:not([hidden])');
+        '.grid-editor-scroll .cell-grid-editor tr:first-child td:not([hidden])');
       const picker=()=>document.querySelector('.grid-column-picker');
       const first=visibleCell();
       const setKind=(kind)=>{
