@@ -129,6 +129,10 @@ function renderGrid(block){
           input.name='choice_'+String(question.id);
           label.append(input,document.createTextNode(String(cellDefinition.value||'')));
           td.append(label);
+        }else if(kind==='unit'){
+          const unit=el('input','kb-input');unit.type='text';
+          unit.placeholder='Unité';
+          td.append(unit);
         }else{
           const effective=kind==='select'
             ?window.KaloneoSharedPresentation.gridSelectQuestion(question,cellDefinition)
