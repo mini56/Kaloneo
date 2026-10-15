@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Checkout isolated Tri correction
         uses: actions/checkout@v4
-      - name: Garantir un Build 112 neuf sans modifier la R91
+      - name: Garantir Build #112 inédit et R106 en secours
         shell: pwsh
         run: |
           $p=Get-Content -Raw -Encoding UTF8 package.json | ConvertFrom-Json
@@ -31,7 +31,7 @@ jobs:
           $nsis=Get-Content -Raw -Encoding UTF8 build/installer.nsh
           if ([int]$p.sebBuildNumber -ne 112) { throw 'Build #112 requis.' }
           if ($nsis -notmatch '!define SEB_BUILD_NUMBER "112"') { throw 'Numéro NSIS incoherent.' }
-          if ($cfg -notmatch 'version: 0\.0\.135' -or $cfg -notmatch 'PILOTE-22-R107-0\.0\.135-Windows-Setup') { throw 'Version R107 incoherente.' }
+          if ($cfg -notmatch 'version: 0\.0\.136' -or $cfg -notmatch 'PILOTE-22-R107-0\.0\.136-Windows-Setup') { throw 'Version R107 incoherente.' }
           git fetch --depth=1 origin tag seb-kaloneo-r106-unified-images-test
           if ($LASTEXITCODE -ne 0) { throw 'Tag de la version test R106 absent.' }
           $oldJson=(git show 'seb-kaloneo-r106-unified-images-test:seb-evalpro/package.json') -join [Environment]::NewLine
@@ -163,7 +163,7 @@ jobs:
           path: seb-evalpro/dist/SEB-EvalPro-Kaloneo-PILOTE-22-R107-0.0.136-Windows-Setup.exe
           if-no-files-found: error
 
-      - name: Publier une Release de test R107 sans remplacer R91
+      - name: Publier une Release de test R107 sans remplacer R106
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
