@@ -186,7 +186,7 @@ function renderMultipleTable(block){
     doc:document,definition,wrapperClassName:'kb-block kb-table-wrap',
     tableClassName:'kb-table',titleTag:'div',titleClassName:'kb-question-label',
     questionById:id=>questions.get(String(id)),
-    renderCells:({doc,id,question})=>{
+    renderCells:({doc,id,question,headers})=>{
       const q=question||{id,prompt:String(id),response:{type:'text'}};
       const left=doc.createElement('td');left.className='left';
       left.textContent=q.prompt||String(id);
