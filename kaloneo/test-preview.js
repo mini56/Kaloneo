@@ -54,7 +54,11 @@ function renderQuestion(block){
   const q=block.question||{};
   const wrap=el('section','kb-block');
   wrap.append(window.KaloneoSharedPresentation.renderQuestion({
-    doc:document,question:{id:q.id,prompt:q.prompt||'Question'},
+    doc:document,question:{
+      id:q.id,prompt:q.prompt||'Question',
+      answerLayout:q.answerLayout||'',
+      answerWidthChars:q.answerWidthChars??''
+    },
     // Un bloc multi-choix ne doit pas être contenu dans une étiquette <label>.
     rowTag:'div',captionClassName:'kb-question-label',
     makeAnswer:()=>makeAnswerControl({

@@ -184,3 +184,33 @@ body{font-family:Calibri,"Segoe UI",Arial,sans-serif;background:linear-gradient(
 .kb-grid-equal-auto td>select,.kb-grid-equal-auto td>input{
  box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;
 }
+
+/* Le grand aperçu Electron utilise les mêmes trois positions que le candidat.
+   Les définitions historiques sans answerLayout restent inchangées. */
+.kaloneo-shared-question[data-kaloneo-answer-layout="column"]{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(12ch,22ch);
+  align-items:center;
+  gap:10px;
+}
+.kaloneo-shared-question[data-kaloneo-answer-layout="column"][data-kaloneo-answer-width="custom"]{
+  grid-template-columns:minmax(0,1fr) minmax(0,var(--kaloneo-answer-width));
+}
+.kaloneo-shared-question[data-kaloneo-answer-layout="inline"]{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:7px 9px;
+}
+.kaloneo-shared-question[data-kaloneo-answer-layout="below"]{
+  display:flex;flex-direction:column;align-items:flex-start;gap:7px;
+}
+.kaloneo-shared-question[data-kaloneo-answer-layout]>.kb-question-label{margin:0;min-width:0}
+.kaloneo-shared-question[data-kaloneo-answer-layout="column"]>.kb-input,
+.kaloneo-shared-question[data-kaloneo-answer-layout="column"]>.kb-select{min-width:0;width:100%}
+.kaloneo-shared-question[data-kaloneo-answer-layout="inline"]>.kb-input,
+.kaloneo-shared-question[data-kaloneo-answer-layout="inline"]>.kb-select,
+.kaloneo-shared-question[data-kaloneo-answer-layout="below"]>.kb-input,
+.kaloneo-shared-question[data-kaloneo-answer-layout="below"]>.kb-select{
+  flex:0 1 auto;width:var(--kaloneo-answer-width,14ch);max-width:100%;
+}
+.kaloneo-shared-question[data-kaloneo-answer-layout="below"]>textarea{
+  width:var(--kaloneo-answer-width,100%);
+}

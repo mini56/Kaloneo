@@ -1450,3 +1450,42 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
   color:#004e70;
   font-weight:700;
 }
+
+/* Disposition des réponses KALTEST : locale à chaque question, cohérente
+   entre les lignes d'une même colonne, sans toucher au style des V1. */
+.preview-question.kaloneo-shared-question[data-kaloneo-answer-layout="inline"]{
+  display:flex;
+  justify-content:flex-start;
+  align-items:center;
+  flex-wrap:wrap;
+  column-gap:9px;
+  row-gap:5px;
+}
+.preview-question.kaloneo-shared-question[data-kaloneo-answer-layout="below"]{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:flex-start;
+  gap:7px;
+}
+.preview-question.kaloneo-shared-question[data-kaloneo-answer-layout="inline"]>span,
+.preview-question.kaloneo-shared-question[data-kaloneo-answer-layout="below"]>span{
+  flex:0 1 auto;
+  width:auto;
+}
+.preview-question.kaloneo-shared-question[data-kaloneo-answer-layout="inline"]>input,
+.preview-question.kaloneo-shared-question[data-kaloneo-answer-layout="inline"]>select,
+.preview-question.kaloneo-shared-question[data-kaloneo-answer-layout="inline"]>textarea,
+.preview-question.kaloneo-shared-question[data-kaloneo-answer-layout="below"]>input,
+.preview-question.kaloneo-shared-question[data-kaloneo-answer-layout="below"]>select,
+.preview-question.kaloneo-shared-question[data-kaloneo-answer-layout="below"]>textarea{
+  flex:0 1 auto;
+  width:var(--kaloneo-answer-width,14ch);
+  max-width:100%;
+}
+.preview-question.kaloneo-shared-question[data-kaloneo-answer-layout="column"][data-kaloneo-answer-width="custom"]{
+  grid-template-columns:minmax(0,1fr) minmax(0,var(--kaloneo-answer-width));
+}
+.preview-question.kaloneo-shared-question[data-kaloneo-answer-layout="below"]>textarea{
+  width:var(--kaloneo-answer-width,100%);
+}

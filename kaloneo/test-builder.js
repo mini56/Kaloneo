@@ -152,6 +152,8 @@
       id: '',
       prompt: '',
       responseType: 'text',
+      answerLayout: 'column',
+      answerWidthChars: '',
       manualEvaluation: false,
       normalizer: '',
       acceptedAnswers: '',
@@ -913,6 +915,28 @@
       inputField('Points',(q.example||q.responseType==='free-text')?0:q.points,value=>{if(!q.example&&q.responseType!=='free-text')q.points=Math.max(0,Number(value)||0);changed();},{type:'number',min:0,readOnly:Boolean(q.example||q.responseType==='free-text'),title:q.responseType==='free-text'?'La réponse libre est évaluée manuellement dans le Bilan.':'Nombre de points attribués. Une question d’exemple reste automatiquement à 0.'})
     );
     body.appendChild(row2);
+
+    // Présentation identique dans le Builder et dans le vrai moteur candidat.
+    // La colonne de droite partage un bord vertical avec les autres questions
+    // de la même zone. La largeur est optionnelle, sans changer les V1.
+    const answerDisplay=document.createElement('div');
+    answerDisplay.className='field-row cols-2';
+    answerDisplay.append(
+      selectField('Position de la réponse',q.answerLayout||'column',[
+        ['column','Aligner les réponses en colonne'],
+        ['inline','Réponse juste après la question'],
+        ['below','Réponse sous la question']
+      ],value=>{q.answerLayout=value;changed();}),
+      inputField('Largeur de la réponse (caractères)',q.answerWidthChars||'',value=>{
+        if(value===''){q.answerWidthChars='';changed();return;}
+        const n=Number(value);
+        // Une valeur incomplète n'est pas appliquée pendant la saisie.
+        if(!Number.isInteger(n)||n<6||n>30)return;
+        q.answerWidthChars=n;changed();
+      },{type:'number',min:6,max:30,placeholder:'Auto (largeur par défaut)',
+        title:'Entre 6 et 30 caractères. Laisser vide pour la largeur automatique.'})
+    );
+    body.appendChild(answerDisplay);
 
     const row3=document.createElement('div');
     row3.className='field-row cols-3';

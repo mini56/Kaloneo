@@ -88,6 +88,18 @@
     if(!doc||typeof makeAnswer!=='function')throw new TypeError('Question sans moteur de réponse.');
     const row=doc.createElement(rowTag);
     row.className='kaloneo-shared-question'+(className?' '+className:'');
+    // La disposition est portée par la définition KALTEST et non par le nom
+    // d'un test. Si elle est absente (V1), le CSS historique reste inchangé.
+    const layout=String(question?.answerLayout||'');
+    if(['column','inline','below'].includes(layout)){
+      row.dataset.kaloneoAnswerLayout=layout;
+    }
+    const width=Number(question?.answerWidthChars);
+    if(question?.answerWidthChars!==''&&question?.answerWidthChars!=null&&
+       Number.isInteger(width)&&width>=6&&width<=30){
+      row.dataset.kaloneoAnswerWidth='custom';
+      row.style.setProperty('--kaloneo-answer-width',width+'ch');
+    }
     const caption=doc.createElement('span');
     caption.className=captionClassName;
     caption.textContent=String(question?.prompt||'');

@@ -60,6 +60,10 @@
         id:String(q.id||''),
         prompt:String(q.prompt||''),
         responseType:String(q.response?.type||'text'),
+        // Anciennes V1 sans ce champ : aucun changement de présentation.
+        answerLayout:['column','inline','below'].includes(q.answerLayout)?q.answerLayout:'',
+        answerWidthChars:Number(q.answerWidthChars)>=6&&Number(q.answerWidthChars)<=30
+          ?Number(q.answerWidthChars):'',
         manualEvaluation:Boolean(q.manualEvaluation)||String(q.response?.type||'')==='free-text',
         normalizer:q.response?.normalizer||'',
         acceptedAnswers:q.response?.type==='multiple-choice'
@@ -414,6 +418,13 @@
       points:(q.example||manual)?0:Math.max(0,Number(q.points)||0),
       example:Boolean(q.example)
     };
+    // Paramètres purement visuels : aucun effet sur la notation.
+    if(['column','inline','below'].includes(q.answerLayout))out.answerLayout=q.answerLayout;
+    const answerWidth=Number(q.answerWidthChars);
+    if(q.answerWidthChars!==''&&q.answerWidthChars!=null&&
+       Number.isInteger(answerWidth)&&answerWidth>=6&&answerWidth<=30){
+      out.answerWidthChars=answerWidth;
+    }
     if(manual) {
       out.manualEvaluation=true;
       out.manualLevels=['NE','I','II','III'];
