@@ -1509,3 +1509,48 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 .kaloneo-shared-question[data-kaloneo-answer-layout="compact-column"]>textarea{
   width:100%;min-width:0;max-width:100%;
 }
+
+
+/* R110 : palettes locales aux colonnes, aux lignes et aux cellules.
+   Les commandes restent accessibles sans agrandir les panneaux du Builder. */
+.column-editor-row.grid-color-column-row{
+  display:flex;align-items:center;gap:7px;min-width:0;flex-wrap:nowrap;
+}
+.grid-color-column-row>strong{flex:1 1 100px;min-width:76px}
+.grid-color-column-row>input[type=number]{flex:0 1 105px;min-width:55px}
+.grid-color-column-row>select{flex:0 1 100px;min-width:70px}
+.grid-color-column-row>.muted{flex:0 1 auto;font-size:11px}
+.grid-color-control{
+  display:inline-flex!important;flex-direction:row!important;
+  align-items:center;gap:4px;white-space:nowrap;min-width:0;
+  font-size:12px;font-weight:600;color:#004e70;
+}
+.grid-color-control>span{font-size:11px;white-space:nowrap}
+.grid-color-input{
+  width:35px!important;min-width:35px;height:29px!important;
+  box-sizing:border-box;padding:2px!important;margin:0!important;
+  cursor:pointer;border:1px solid #93a8bd;border-radius:6px;
+  background:#fff;
+}
+.grid-color-input.is-inherited{outline:1px dashed #7b8ca0;outline-offset:1px}
+.grid-color-reset{
+  width:25px;height:29px;min-width:25px;padding:0!important;
+  border:1px solid #b5c6d5;border-radius:6px;background:#fff;color:#bc2c2c;
+  cursor:pointer;font-size:17px;line-height:1;
+}
+.grid-color-reset:disabled{opacity:.35;cursor:default}
+.grid-row-color-toolbar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:8px 10px;margin:7px 0;border:1px solid #d8dee8;
+  border-radius:8px;background:#f6f9fc;
+}
+.grid-row-color-picker{flex:0 1 170px;min-width:110px}
+.grid-cell-color-toolbar{display:flex;gap:7px;align-items:center;min-width:0}
+.grid-cell-color-toolbar>select{flex:1 1 auto;min-width:0;width:0}
+.grid-cell-color-toolbar>.grid-color-control{flex:0 0 auto}
+.grid-cell-color-toolbar .grid-color-control>span{font-size:11px}
+@media(max-width:1150px){
+  .grid-color-column-row>.muted{display:none}
+  .grid-color-column-row>.grid-color-control>span{display:none}
+  .grid-cell-color-toolbar .grid-color-control>span{display:none}
+}

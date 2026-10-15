@@ -352,6 +352,20 @@
     return wrap;
   }
 
+
+  // Définitions purement visuelles. La priorité est :
+  // cellule > ligne > colonne > style global du bloc / CSS historique.
+  function normalizeGridColor(value){
+    const raw=String(value||'').trim();
+    return /^#[0-9a-f]{6}$/i.test(raw)?raw.toLowerCase():'';
+  }
+  function gridCellBackground(definition,rowIndex,colIndex,cellDefinition){
+    const own=normalizeGridColor(cellDefinition?.backgroundColor);
+    const row=normalizeGridColor(definition?.rowColors?.[rowIndex]);
+    const column=normalizeGridColor(definition?.columns?.[colIndex]?.backgroundColor);
+    return own||row||column||'';
+  }
+
   // Rendu de la structure d'un tableau libre, identique dans l'éditeur
   // et dans le candidat. Le contrôle de réponse reste au client appelant.
   function renderGridTable({doc,definition={},renderCell,className='',wrapperClassName='',compactClassName='',equalClassName='',titleTag='h3',titleClassName='',skipHiddenCells=false}) {
@@ -384,6 +398,8 @@
         const th=doc.createElement('th');
         th.textContent=String(value||'');
         applyColumn(th,definition.columns?.[index]);
+        const headerBackground=normalizeGridColor(definition.columns?.[index]?.backgroundColor);
+        if(headerBackground)th.style.backgroundColor=headerBackground;
         tr.appendChild(th);
       });
       thead.appendChild(tr);
@@ -401,6 +417,8 @@
           td.style.border='0';
           td.style.background='transparent';
         }
+        const background=gridCellBackground(definition,rowIndex,colIndex,cellDefinition);
+        if(background)td.style.backgroundColor=background;
         const rowSpan=Math.max(1,Number(cellDefinition.rowSpan)||1);
         const colSpan=Math.max(1,Number(cellDefinition.colSpan)||1);
         if(rowSpan>1)td.rowSpan=rowSpan;
@@ -453,5 +471,6 @@
     table.appendChild(group);
   }
 
-  return Object.freeze({columns,renderZones,alignCompactQuestionColumns,renderRichContext,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderQuestionTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup});
+  return Object.freeze({columns,renderZones,alignCompactQuestionColumns,renderRichContext,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderQuestionTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup,
+    normalizeGridColor,gridCellBackground});
 });

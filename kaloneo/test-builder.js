@@ -1030,6 +1030,7 @@
     table.rows=newRows;
     table.cols=newCols;
     table.cells=cells;
+    if(Array.isArray(table.rowColors))table.rowColors.length=newRows;
     table.columns=Array.isArray(table.columns)?table.columns:[];
     while(table.columns.length<newCols) {
       const i=table.columns.length;
@@ -1041,6 +1042,44 @@
 
   // R48.10 validé : colonnes égales si toutes automatiques,
   // sauf tableau de mise en page, cellules fusionnées ou largeur manuelle.
+
+  function gridColorControl(label,getColor,setColor){
+    const item=document.createElement('label');
+    item.className='grid-color-control';
+    const name=document.createElement('span');
+    name.textContent=label;
+    const color=document.createElement('input');
+    color.type='color';
+    color.className='grid-color-input';
+    color.title='Choisir la couleur '+label.toLowerCase();
+    color.setAttribute('aria-label','Choisir la couleur '+label.toLowerCase());
+    const reset=document.createElement('button');
+    reset.type='button';reset.className='grid-color-reset';
+    reset.textContent='×';
+    reset.title='Supprimer la couleur : revenir à la couleur héritée';
+    reset.setAttribute('aria-label','Effacer '+label.toLowerCase());
+    function refresh(){
+      const value=window.KaloneoSharedPresentation.normalizeGridColor(getColor());
+      color.value=value||'#ffffff';
+      color.classList.toggle('is-inherited',!value);
+      item.title=value?'Couleur personnalisée '+value:'Automatique — couleur héritée';
+      reset.disabled=!value;
+    }
+    color.addEventListener('input',()=>{
+      setColor(color.value);
+      refresh();
+      changed();
+    });
+    reset.addEventListener('click',()=>{
+      setColor('');
+      refresh();
+      changed();
+    });
+    item.append(name,color,reset);
+    refresh();
+    return {element:item,refresh};
+  }
+
   function renderGridEditor(block,body) {
     const table=block.table||(block.table=Core.createGridBlock(3,3).table);
     resizeGrid(table,table.rows||3,table.cols||3);
@@ -1086,7 +1125,12 @@
       const rest=document.createElement('span');
       rest.className='muted';
       rest.textContent=index===table.columns.length-1&&!col.widthChars?'Reste disponible':'';
-      row.append(label,width,align,rest);
+      const coloring=gridColorControl('Couleur',()=>col.backgroundColor||'',value=>{
+        if(value)col.backgroundColor=value;
+        else delete col.backgroundColor;
+      });
+      row.classList.add('grid-color-column-row');
+      row.append(label,width,align,coloring.element,rest);
       columns.appendChild(row);
     });
     body.appendChild(columns);
@@ -1102,6 +1146,34 @@
     columns.querySelectorAll('input[type="number"]').forEach(input=>
       input.addEventListener('input',updateWidthExplanation));
     body.appendChild(widthExplanation);
+
+    // Une seule barre compacte permet de colorer n'importe quelle ligne.
+    // Le réglage est partagé par ses cellules, quelle que soit la colonne active.
+    const rowTools=document.createElement('div');
+    rowTools.className='grid-row-color-toolbar';
+    const rowSelector=document.createElement('select');
+    rowSelector.className='grid-row-color-picker';
+    rowSelector.setAttribute('aria-label','Ligne à colorer');
+    for(let i=0;i<table.rows;i++){
+      const option=document.createElement('option');
+      option.value=String(i);option.textContent='Ligne '+(i+1);
+      rowSelector.appendChild(option);
+    }
+    const rowColors=gridColorControl('Couleur de la ligne',
+      ()=>table.rowColors?.[Number(rowSelector.value)]||'',
+      value=>{
+        const row=Number(rowSelector.value);
+        if(value){
+          if(!Array.isArray(table.rowColors))table.rowColors=[];
+          table.rowColors[row]=value;
+        }else if(Array.isArray(table.rowColors)){
+          delete table.rowColors[row];
+          if(!table.rowColors.some(Boolean))delete table.rowColors;
+        }
+      });
+    rowSelector.addEventListener('change',rowColors.refresh);
+    rowTools.append(rowSelector,rowColors.element);
+    body.appendChild(rowTools);
 
     const columnNavigation=document.createElement('div');
     columnNavigation.className='grid-column-navigation';
@@ -1148,7 +1220,14 @@
           }
           changed();renderBlocks();
         });
-        td.appendChild(kind);
+        const cellToolbar=document.createElement('div');
+        cellToolbar.className='grid-cell-color-toolbar';
+        const cellColors=gridColorControl('Couleur',()=>cell.backgroundColor||'',value=>{
+          if(value)cell.backgroundColor=value;
+          else delete cell.backgroundColor;
+        });
+        cellToolbar.append(kind,cellColors.element);
+        td.appendChild(cellToolbar);
 
         if(cell.kind==='fixed-text'||cell.kind==='choice-option') {
           const value=document.createElement('input');
