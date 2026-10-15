@@ -27,6 +27,13 @@ assert.deepEqual(shown.images.map(x=>x.id),[icon.id,image.id]);
 assert.equal(shown.hiddenTechnical,2);
 assert.equal(gallery.theme(icon),'Icônes');
 assert.equal(gallery.theme(image),'Mes images');
+const posture={id:'posture-v1',name:'qcm_posture.png',
+  category:'Images exercices SEB EvalPro',systemProvided:true};
+assert.equal(gallery.theme(posture),'Images V1');
+assert.equal(gallery.matchesTheme(posture,'__current__'),false);
+assert.equal(gallery.matchesTheme(posture,'Images V1'),true);
+assert.equal(gallery.matchesTheme(posture,''),true);
+assert.equal(gallery.matchesTheme(image,'Images V1'),false);
 for(const marker of [
   "iconLibrary().filter(icon=>", "id:'kaloneo-icon:'+icon.id",
   "const icon=String(imageId||'').startsWith('kaloneo-icon:')",
@@ -38,6 +45,11 @@ for(const marker of [
   assert.ok(builder.includes(marker),'Contrat de l’éditeur non trouvé : '+marker);
 }
 assert.ok(html.includes('id="image-library-theme"'));
+assert.ok(html.includes('value="__current__">Images courantes'));
+assert.ok(builder.includes("const needsThemeOptionsUpdate="),
+  'Le sélecteur natif doit rester stable lors d’un changement de filtre');
+assert.ok(builder.includes("galleryApi.matchesTheme(item,themeFilter)"),
+  'La même règle de filtrage doit s’appliquer aux thèmes du Builder');
 assert.ok(css.includes('object-fit:contain!important'));
 assert.ok(css.includes('.image-library-more'));
 assert.ok(shared.includes("img.style.width=scale+'%'"));

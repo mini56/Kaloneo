@@ -64,9 +64,21 @@
   }
   function theme(item){
     if(item?.kind==='icon')return 'Icônes';
-    if(item?.systemProvided===true)return 'Illustrations';
+    // Toutes les images livrées avec les exercices V1 sont regroupées
+    // dans un thème séparé. Ni leurs fichiers ni leurs identifiants ne changent.
+    if(item?.systemProvided===true){
+      return normalized(item.category)==='images exercices seb evalpro'
+        ?'Images V1':'Illustrations';
+    }
     const source=String(item?.theme||item?.category||'').trim();
     return !source||normalized(source)==='mes images kaloneo'?'Mes images':source;
   }
-  return Object.freeze({prepare,isTechnical,duplicateKey,theme});
+  function matchesTheme(item, selectedTheme){
+    const selected=String(selectedTheme??'__current__');
+    // L'accueil de la bibliothèque ne mélange pas les V1 aux images courantes.
+    // « Tous les thèmes » et « Images V1 » permettent toutefois de les retrouver.
+    if(selected==='__current__')return theme(item)!=='Images V1';
+    return !selected||theme(item)===selected;
+  }
+  return Object.freeze({prepare,isTechnical,duplicateKey,theme,matchesTheme});
 });

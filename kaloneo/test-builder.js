@@ -1344,24 +1344,33 @@
     const visibleImages=gallery.images;
     const getTheme=galleryApi.theme;
     const themeSelect=$('image-library-theme');
-    const selectedTheme=String(themeSelect?.value||'');
     const themes=[...new Set(visibleImages.map(getTheme).filter(Boolean))]
       .sort((a,b)=>{
-        const order=['Illustrations','Icônes','Mes images'];
+        const order=['Illustrations','Icônes','Mes images','Images V1'];
         const ai=order.indexOf(a),bi=order.indexOf(b);
         return ai>=0&&bi>=0?ai-bi:ai>=0?-1:bi>=0?1:a.localeCompare(b,'fr');
       });
     if(themeSelect){
-      const previous=selectedTheme;
-      themeSelect.replaceChildren(new Option('Tous les thèmes',''));
-      themes.forEach(theme=>themeSelect.append(new Option(theme,theme)));
-      themeSelect.value=themes.includes(previous)?previous:'';
+      const definitions=[
+        ['__current__','Images courantes'],
+        ['','Tous les thèmes'],
+        ...themes.map(theme=>[theme,theme])
+      ];
+      // Ne pas reconstruire le <select> lors du changement de thème :
+      // Electron peut fermer son menu natif et annuler la sélection en cours.
+      const current=[...themeSelect.options].map(option=>[option.value,option.text]);
+      const needsThemeOptionsUpdate=definitions.length!==current.length||
+        definitions.some(([value,label],i)=>current[i]?.[0]!==value||current[i]?.[1]!==label);
+      if(needsThemeOptionsUpdate){
+        const previous=themeSelect.value;
+        themeSelect.replaceChildren(...definitions.map(([value,label])=>new Option(label,value)));
+        themeSelect.value=definitions.some(([value])=>value===previous)?previous:'__current__';
+      }
     }
-    const themeFilter=String(themeSelect?.value||'');
+    const themeFilter=String(themeSelect?.value??'__current__');
     const orientationFilter=String($('image-library-orientation')?.value||'');
     const items=visibleImages.filter(item=>{
-      const itemTheme=getTheme(item);
-      if(themeFilter&&itemTheme!==themeFilter)return false;
+      if(!galleryApi.matchesTheme(item,themeFilter))return false;
       if(orientationFilter&&String(item.orientation||'')!==orientationFilter)return false;
       const haystack=normalizedSearch([item.name,item.category,item.theme,getTheme(item),
         item.orientation,item.sourceName].filter(Boolean).join(' '));
