@@ -68,6 +68,8 @@
   let imageThumbGeneration=0;
   let activeImageThumbs=0;
   const imageThumbQueue=[];
+  let imageLibraryLimit=72;
+  let imageLibraryFilterKey='';
 
   function savePreviewFoldState() {
     const snapshot={
@@ -1261,7 +1263,16 @@
     if(imageSelectionBusy)return false;
     imageSelectionBusy=true;
     try {
-    const result=await window.sebEvalPro?.kaloneoGetImage?.(imageId);
+    // Icônes et illustrations utilisent la même fenêtre et les mêmes
+    // destinations. Les icônes déjà livrées sont réutilisées en mémoire :
+    // aucun doublon dans la bibliothèque stockée ni nouvel accès disque.
+    const icon=String(imageId||'').startsWith('kaloneo-icon:')
+      ?iconLibrary().find(x=>x.id===String(imageId).slice('kaloneo-icon:'.length))
+      :null;
+    const result=icon?{ok:true,image:{
+      name:icon.label,mime:icon.data?.match(/^data:([^;,]+)/)?.[1]||'image/png',
+      data:icon.data
+    }}:await window.sebEvalPro?.kaloneoGetImage?.(imageId);
     if(!result || result.ok!==true || !result.image?.data) throw new Error(result?.error||'Image introuvable');
 
     if(state.imageLibraryTargetUid==='__page_background__'){
@@ -1322,12 +1333,24 @@
     const search=normalizedSearch($('image-library-search')?.value||'');
     // Galerie de conception : exclure les ressources techniques et regrouper les copies.
     // Ne jamais modifier state.imageLibraryItems, les fichiers stockés ni les IDs utilisés par les tests.
-    const gallery=window.KaloneoImageGallery.prepare(state.imageLibraryItems||[]);
+    const galleryApi=window.KaloneoImageGallery;
+    const systemIcons=iconLibrary().filter(icon=>/^data:image\//i.test(icon.data||''))
+      .map(icon=>({
+        id:'kaloneo-icon:'+icon.id,name:icon.label,
+        data:icon.data,kind:'icon',category:'Icônes',theme:'Icônes',
+        systemProvided:true,orientation:'',sourceName:icon.id
+      }));
+    const gallery=galleryApi.prepare([...(state.imageLibraryItems||[]),...systemIcons]);
     const visibleImages=gallery.images;
+    const getTheme=galleryApi.theme;
     const themeSelect=$('image-library-theme');
     const selectedTheme=String(themeSelect?.value||'');
-    const themes=[...new Set(visibleImages.map(item=>String(item.theme||item.category||'')).filter(Boolean))]
-      .sort((a,b)=>a.localeCompare(b,'fr'));
+    const themes=[...new Set(visibleImages.map(getTheme).filter(Boolean))]
+      .sort((a,b)=>{
+        const order=['Illustrations','Icônes','Mes images'];
+        const ai=order.indexOf(a),bi=order.indexOf(b);
+        return ai>=0&&bi>=0?ai-bi:ai>=0?-1:bi>=0?1:a.localeCompare(b,'fr');
+      });
     if(themeSelect){
       const previous=selectedTheme;
       themeSelect.replaceChildren(new Option('Tous les thèmes',''));
@@ -1337,19 +1360,25 @@
     const themeFilter=String(themeSelect?.value||'');
     const orientationFilter=String($('image-library-orientation')?.value||'');
     const items=visibleImages.filter(item=>{
-      const itemTheme=String(item.theme||item.category||'');
+      const itemTheme=getTheme(item);
       if(themeFilter&&itemTheme!==themeFilter)return false;
       if(orientationFilter&&String(item.orientation||'')!==orientationFilter)return false;
-      const haystack=normalizedSearch([item.name,item.category,item.theme,item.orientation,item.sourceName].filter(Boolean).join(' '));
+      const haystack=normalizedSearch([item.name,item.category,item.theme,getTheme(item),
+        item.orientation,item.sourceName].filter(Boolean).join(' '));
       return !search||haystack.includes(search);
     });
+    const filterKey=JSON.stringify([search,themeFilter,orientationFilter]);
+    if(filterKey!==imageLibraryFilterKey){
+      imageLibraryFilterKey=filterKey;
+      imageLibraryLimit=72;
+    }
     if(imageThumbObserver)imageThumbObserver.disconnect();
     imageThumbGeneration++;
     imageThumbQueue.length=0;
     root.replaceChildren();
     const status=$('image-library-status');
     if(status){
-      const shown=Math.min(items.length,250);
+      const shown=Math.min(items.length,imageLibraryLimit);
       status.textContent=shown+' image'+(shown>1?'s':'')+' affichée'+(shown>1?'s':'')+
         (items.length>shown?' sur '+items.length+' disponibles':'')+
         (gallery.hiddenTechnical?', '+gallery.hiddenTechnical+' image'+(gallery.hiddenTechnical>1?'s':'')+' du programme masquée'+(gallery.hiddenTechnical>1?'s':''):'')+
@@ -1367,7 +1396,7 @@
           if(img)queueImageThumb(entry.target.dataset.imageId,img,thumbGeneration);
         }
       },{root,rootMargin:'140px'}):null;
-    items.slice(0,250).forEach((item,index)=>{
+    items.slice(0,imageLibraryLimit).forEach((item,index)=>{
       const card=document.createElement('article');
       card.className='image-library-card';
       const preview=document.createElement('div');
@@ -1381,7 +1410,8 @@
       info.className='image-library-info';
       const title=document.createElement('strong');title.textContent=item.name||item.id;
       const meta=document.createElement('span');
-      meta.textContent=[item.theme||item.category||'Images',item.orientation,item.systemProvided?'système':'personnelle'].filter(Boolean).join(' • ');
+      meta.textContent=[getTheme(item),item.orientation,
+        item.kind==='icon'?'icône':item.systemProvided?'fournie':'personnelle'].filter(Boolean).join(' • ');
       info.append(title,meta);
       card.append(preview,info);
 
@@ -1402,12 +1432,23 @@
       }
 
       root.appendChild(card);
-      // Quelques vignettes immédiates, les autres seulement lorsqu'elles
-      // deviennent visibles. Jamais 250 lectures d'images simultanées.
-      if(index<8||!imageThumbObserver){
-        if(index<12)queueImageThumb(item.id,img,thumbGeneration);
+      if(item.kind==='icon'){
+        // L'icône est déjà en mémoire grâce à icon-library.js.
+        img.src=item.data;
+      }else if(index<8||!imageThumbObserver){
+        queueImageThumb(item.id,img,thumbGeneration);
       }else imageThumbObserver.observe(preview);
     });
+    if(items.length>imageLibraryLimit){
+      const more=document.createElement('button');
+      more.type='button';more.className='mini-btn image-library-more';
+      more.textContent='Afficher davantage ('+(items.length-imageLibraryLimit)+' restantes)';
+      more.addEventListener('click',()=>{
+        imageLibraryLimit+=72;
+        renderImageLibrary();
+      });
+      root.appendChild(more);
+    }
     if(!items.length){
       const empty=document.createElement('p');empty.className='muted';empty.textContent='Aucune image trouvée.';root.appendChild(empty);
     }
@@ -1425,6 +1466,8 @@
     if(imageLibraryOpening||dialog?.open)return;
     imageLibraryOpening=true;
     state.imageLibraryTargetUid=targetUid||null;
+    imageLibraryFilterKey='';
+    imageLibraryLimit=72;
     try{
       // Montrer d'abord la fenêtre ; les métadonnées/images arrivent ensuite.
       dialog.showModal();
@@ -1708,7 +1751,7 @@
       },{type:'number',min:0,max:100});
       const options=document.createElement('div');options.className='field-row cols-3';
       options.append(position,fit,opacity);more.appendChild(options);
-      if(block.type==='text')appendImageScaleControls(more,block,'backgroundScale','Taille de l’image de fond');
+      appendImageScaleControls(more,block,'backgroundScale','Taille de l’image de fond');
       panel.appendChild(more);
     }
     body.appendChild(panel);
