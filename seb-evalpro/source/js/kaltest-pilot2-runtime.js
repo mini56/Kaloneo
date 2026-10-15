@@ -487,13 +487,20 @@
       const points = manual ? 0 : (Number(question.points) || 0);
       const value = testState.answers[question.id];
       const correct = manual ? null : evaluateQuestion(question, value);
-      if (!manual && question.example !== true && test.scored !== false) scoreMax += points;
-      details[question.id] = {
-        value:value ?? '',
-        correct,
-        points,
-        manual,
-        manualLevel:manual ? null : undefined
+      const unitEnabled=!manual && question.example!==true && test.scored!==false &&
+        question.unitInput===true && question.unitScored===true;
+      const unitValue=String(testState.units?.[question.id]??'');
+      const unitCorrect=unitEnabled && unitValue.trim()!=='' &&
+        (question.acceptedUnits||[]).some(expected=>
+          normalizeText(unitValue)===normalizeText(expected));
+      if(!manual && question.example!==true && test.scored!==false)
+        scoreMax += points+(unitEnabled?1:0);
+      details[question.id]={
+        value:value??'',correct,points,manual,
+        unitValue,unitScored:unitEnabled,
+        unitCorrect:unitEnabled?unitCorrect:null,
+        unitPoints:unitEnabled?1:0,
+        manualLevel:manual?null:undefined
       };
     }
 
@@ -642,6 +649,7 @@
       for (const question of test.questions || []) {
         if (question.example === true) continue;
         if (details[question.id]?.correct) score += Number(question.points) || 0;
+        if (details[question.id]?.unitCorrect===true) score += 1;
       }
     }
 
@@ -1276,7 +1284,9 @@
             const effectiveQuestion=cellDefinition.kind==='select'
               ?window.KaloneoSharedPresentation.gridSelectQuestion(question,cellDefinition)
               :question;
-            const input = makeInput(test, effectiveQuestion, { compact:true });
+            const input = cellDefinition.kind==='unit'
+              ?makeUnitInput(test,{...question,unitInput:true})
+              :makeInput(test,effectiveQuestion,{compact:true});
             if (testState.status === 'COMPLETED') {
               input.disabled = true;
               if (showCorrectionDuringParcours(test)) {
@@ -3460,7 +3470,8 @@
         scores[scorePrefix + index] = detail.correct ? 1 : 0;
         if (includeUnits) {
           responses[responsePrefix.replace(/_q$/, '_unite') + index] = String(testState.units?.[question.id] ?? '');
-          scores[scorePrefix.replace(/_q$/, '_unite') + index] = 0;
+          scores[scorePrefix.replace(/_q$/, '_unite') + index] =
+            question.unitScored===true && result.details?.[question.id]?.unitCorrect===true ? 1 : 0;
         }
         if (includeSupplemental) {
           const supplemental = testState.supplemental?.[question.id] || {};
