@@ -947,6 +947,14 @@
       checkboxField('Unité notée',q.unitScored,value=>{q.unitScored=value;changed();})
     );
     body.appendChild(row3);
+    const extra=inputField('Champs supplémentaires du tableau — IDs séparés par ;',
+      (q.supplementalFields||[]).map(field=>field.id).join('; '),
+      value=>{
+        q.supplementalFields=splitValues(value).map(id=>({id:Core.cleanId(id)})).filter(x=>x.id);
+        changed();
+      },{placeholder:'operation; commentaire',
+        title:'Un identifiant par colonne supplémentaire du tableau. Les valeurs saisies seront conservées dans le résultat.'});
+    body.appendChild(extra);
 
     if (['single-choice','multiple-choice','select'].includes(q.responseType)) {
       body.appendChild(inputField('Choix proposés',q.options,value=>{q.options=value;changed();},{placeholder:'Choix 1; Choix 2; Choix 3'}));
@@ -1238,7 +1246,14 @@
           cell.kind=kind.value;
           if(cell.kind==='select')cell.responseType='select';
           else if(oldKind==='select'&&cell.responseType==='select')cell.responseType='text';
-          if(['candidate-answer','select','choice-option','unit'].includes(cell.kind)&&!cell.questionId) {
+          if(cell.kind==='unit'&&!cell.questionId){
+            // Une unité située après sa valeur dans la même ligne réutilise
+            // automatiquement l'ID de cette question pour éviter un doublon.
+            const linked=rowCells.slice(0,colIndex).reverse().find(entry=>
+              entry&&['candidate-answer','select'].includes(entry.kind)&&entry.questionId);
+            if(linked)cell.questionId=linked.questionId;
+          }
+          if(['candidate-answer','select','choice-option','unit'].includes(cell.kind)&&!cell.questionId){
             cell.questionId=nextQuestionId();
           }
           changed();renderBlocks();
@@ -1302,9 +1317,47 @@
           td.appendChild(qid);
 
           const expected=document.createElement('input');
-          expected.type='text';expected.placeholder='Réponse attendue';expected.value=cell.acceptedAnswers||'';
-          expected.addEventListener('input',()=>{cell.acceptedAnswers=expected.value;changed({typing:true});});
+          expected.type='text';
+          expected.placeholder=cell.kind==='unit'?'Unités acceptées : kg; kilo; kilogramme':'Réponse attendue';
+          expected.title=cell.kind==='unit'?'Écritures acceptées, séparées par un point-virgule':'Réponse(s) attendue(s)';
+          expected.value=cell.kind==='unit'?(cell.acceptedUnits||cell.acceptedAnswers||''):(cell.acceptedAnswers||'');
+          expected.addEventListener('input',()=>{
+            if(cell.kind==='unit')cell.acceptedUnits=expected.value;
+            else cell.acceptedAnswers=expected.value;
+            changed({typing:true});
+          });
           td.appendChild(expected);
+          if(cell.kind==='unit'){
+            td.appendChild(checkboxField('Unité notée : 1 point',cell.unitScored===true,value=>{
+              cell.unitScored=value;changed();
+            }));
+            const help=document.createElement('small');
+            help.className='question-help';
+            help.textContent='Même ID que la réponse numérique : l’unité sera évaluée séparément.';
+            td.appendChild(help);
+          }else{
+            if(cell.kind==='candidate-answer'){
+              td.appendChild(selectField('Type de réponse',cell.responseType||'text',[
+                ['text','Texte'],['number','Nombre'],['number-unit','Nombre + unité'],
+                ['duration','Durée / horaire'],['boolean','Vrai / Faux'],
+                ['free-text','Réponse libre']
+              ],value=>{cell.responseType=value;changed();}));
+            }
+            const points=document.createElement('input');
+            points.type='number';points.min='0';points.step='1';
+            points.className='grid-points-input';points.title='Points attribués à la réponse';
+            points.setAttribute('aria-label','Points de la réponse');
+            points.value=String(cell.points==null?1:cell.points);
+            points.addEventListener('input',()=>{
+              if(points.value==='')return;
+              cell.points=Math.max(0,Number(points.value)||0);
+              changed({typing:true});
+            });
+            const pointsLabel=document.createElement('label');
+            pointsLabel.className='grid-points-field';
+            pointsLabel.append('Points',points);
+            td.appendChild(pointsLabel);
+          }
 
           if(cell.kind==='select'||cell.kind==='choice-option') {
             const options=document.createElement('input');
