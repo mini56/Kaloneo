@@ -86,6 +86,10 @@ function renderResponseTable(block){
       else if(colIndex===1)cell.appendChild(makeAnswerControl(question));
       else if(colIndex===2&&question.unitInput){
         const unit=el('input','kb-input');unit.placeholder='Unité';cell.appendChild(unit);
+      }else if(colIndex>=3&&question.supplementalFields?.[colIndex-3]){
+        const extra=el('input','kb-input');
+        extra.placeholder=question.supplementalFields[colIndex-3].label||headers[colIndex]||'';
+        cell.appendChild(extra);
       }
     },
     renderEmptyRow:({doc,headers})=>{
@@ -110,13 +114,25 @@ function renderGrid(block){
       td.classList.add(column?.align==='left'?'left':'center');
       const kind=String(cellDefinition.kind||'empty');
       if(kind==='fixed-text') td.textContent=String(cellDefinition.value||'');
-      else if(kind==='image'&&String(cellDefinition.value||'').startsWith('data:')){
-        const img=el('img','kb-cell-media');img.src=cellDefinition.value;
-        img.alt=cellDefinition.alt||'';td.append(img);
-      }else if(kind==='audio'&&String(cellDefinition.value||'').startsWith('data:')){
-        const audio=el('audio','kb-audio');audio.controls=true;audio.src=cellDefinition.value;td.append(audio);
-      }else if(kind==='video'&&String(cellDefinition.value||'').startsWith('data:')){
-        const video=el('video','kb-cell-media');video.controls=true;video.src=cellDefinition.value;td.append(video);
+      else if(['image','audio','video'].includes(kind)){
+        const source=String(cellDefinition.value||'');
+        const accepted=(kind==='image'&&/^data:image\//i.test(source))||
+          (kind==='audio'&&/^data:audio\//i.test(source))||
+          (kind==='video'&&/^data:video\//i.test(source));
+        // Ne jamais montrer le contenu encodé ou un chemin technique comme
+        // du texte de la cellule. L'aperçu candidat rend la même ressource.
+        if(accepted){
+          const node=el(kind==='image'?'img':kind,'kb-cell-media');
+          if(kind!=='image')node.controls=true;
+          node.src=source;
+          if(kind==='image')node.alt=cellDefinition.alt||'';
+          td.append(node);
+        }else{
+          const placeholder=el('span','kb-empty');
+          placeholder.textContent=cellDefinition.mediaName
+            ?'Média : '+String(cellDefinition.mediaName):'Média à importer';
+          td.append(placeholder);
+        }
       }else if(['candidate-answer','select','unit','choice-option'].includes(kind)){
         const question=questions.get(String(cellDefinition.questionId||''))||{
           id:cellDefinition.questionId||('cell_'+rowIndex+'_'+colIndex),
@@ -175,7 +191,16 @@ function renderMultipleTable(block){
       const left=doc.createElement('td');left.className='left';
       left.textContent=q.prompt||String(id);
       const right=doc.createElement('td');right.appendChild(makeAnswerControl(q));
-      return [left,right];
+      const extra=(headers||[]).slice(2).map((header,index)=>{
+        const cell=doc.createElement('td');
+        if(q.supplementalFields?.[index]){
+          const input=el('input','kb-input');
+          input.placeholder=String(header||'');
+          cell.append(input);
+        }
+        return cell;
+      });
+      return [left,right,...extra];
     },
     renderEmptyRow:({doc,headers})=>{
       const cell=doc.createElement('td');
