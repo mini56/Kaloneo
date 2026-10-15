@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const zlib = require('zlib');
+const { exportImageRecords } = require('./kaloneo-image-export');
 
 const BASE_TEST_ORDER = Object.freeze([
   'calculs_commandes_atelier',
@@ -263,6 +264,15 @@ function createKaloneoLibrary(options = {}) {
       if (entries.length >= 1000) break;
     }
     return entries;
+  }
+
+  function exportImageZip(zipFile) {
+    ensureSeed();
+    // Les images d'origine du programme sont livrées sur chaque PC.
+    // N'exporter que les ajouts de l'utilisateur, sans toucher à la bibliothèque.
+    const originals=scanImageRecords()
+      .filter(record=>record.value.systemProvided!==true);
+    return exportImageRecords(originals,zipFile);
   }
 
   function importImageZip(zipFile) {
@@ -1398,6 +1408,7 @@ function createKaloneoLibrary(options = {}) {
     getImage,
     saveImage,
     importImageZip,
+    exportImageZip,
     getTest,
     saveTest,
     deleteTest,
