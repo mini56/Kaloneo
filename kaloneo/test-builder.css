@@ -1426,3 +1426,27 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 .builder-editor #page-style-content[hidden]{
   display:none!important;
 }
+
+/* Bibliothèque KALONÉO unique : illustrations, images personnelles et icônes.
+   Chaque miniature reste entièrement visible, y compris les formats portrait. */
+#image-library-dialog .image-library-preview{
+  aspect-ratio:4/3;
+  height:126px;
+  box-sizing:border-box;
+  padding:6px;
+  background:#fff;
+}
+#image-library-dialog .image-library-preview img{
+  width:100%;
+  height:100%;
+  object-fit:contain!important;
+  object-position:center center!important;
+}
+#image-library-dialog .image-library-more{
+  grid-column:1/-1;
+  width:100%;
+  min-height:38px;
+  background:#eef5fb;
+  color:#004e70;
+  font-weight:700;
+}
