@@ -1,5 +1,5 @@
 'use strict';
-// Contrôle générique : trois modes de réponse, largeur, V1 non modifiées,
+// Contrôle générique : quatre modes de réponse, largeur, V1 non modifiées,
 // aller-retour KALTEST et moteur commun Builder/candidat.
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -16,7 +16,8 @@ const q=(id,prompt,mode,width)=>({
 const questions=[
   q('futur_a','3 + 7 =','inline',9),
   q('futur_b','La question longue 25 - 15 =','column',16),
-  q('futur_c','45 - 35 =','below',22)
+  q('futur_c','45 - 35 =','below',22),
+  q('futur_d','Longue question 100 - 90 =','compact-column',14)
 ];
 const def={
   kaltestFormat:1,id:'nouveau_test_2028_layout',version:'1.0.0',
@@ -29,16 +30,16 @@ const def={
 };
 const serialized=JSON.stringify(def);
 let model=Core.definitionToModel(def);
-assert.deepEqual(model.blocks.map(b=>b.question.answerLayout),['inline','column','below']);
-assert.deepEqual(model.blocks.map(b=>b.question.answerWidthChars),[9,16,22]);
+assert.deepEqual(model.blocks.map(b=>b.question.answerLayout),['inline','column','below','compact-column']);
+assert.deepEqual(model.blocks.map(b=>b.question.answerWidthChars),[9,16,22,14]);
 for(let i=0;i<3;i++){
   const result=Core.modelToDefinition(model);
   assert.equal(JSON.stringify(def),serialized,'La définition originale a été mutée');
   assert(Core.analyzeDefinition(result).ok,'Définition KALTEST rejetée');
-  assert.deepEqual(result.questions.map(x=>x.answerLayout),['inline','column','below']);
-  assert.deepEqual(result.questions.map(x=>x.answerWidthChars),[9,16,22]);
-  assert.deepEqual(result.questions.map(x=>x.acceptedAnswers),[['10'],['10'],['10']]);
-  assert.deepEqual(result.questions.map(x=>x.points),[1,1,1]);
+  assert.deepEqual(result.questions.map(x=>x.answerLayout),['inline','column','below','compact-column']);
+  assert.deepEqual(result.questions.map(x=>x.answerWidthChars),[9,16,22,14]);
+  assert.deepEqual(result.questions.map(x=>x.acceptedAnswers),[['10'],['10'],['10'],['10']]);
+  assert.deepEqual(result.questions.map(x=>x.points),[1,1,1,1]);
   model=Core.definitionToModel(result);
 }
 const legacy=JSON.parse(serialized);
@@ -65,9 +66,9 @@ const rows=def.questions.map(question=>Shared.renderQuestion({
   makeAnswer:()=>fakeDoc.createElement('input')
 }));
 assert.deepEqual(rows.map(row=>row.dataset.kaloneoAnswerLayout),
-  ['inline','column','below']);
+  ['inline','column','below','compact-column']);
 assert.deepEqual(rows.map(row=>row.style.values['--kaloneo-answer-width']),
-  ['9ch','16ch','22ch']);
+  ['9ch','16ch','22ch','14ch']);
 const without=Shared.renderQuestion({doc:fakeDoc,question:legacy.questions[0],
   makeAnswer:()=>fakeDoc.createElement('input')});
 assert.equal(without.dataset.kaloneoAnswerLayout,undefined);
@@ -87,15 +88,17 @@ const cssPreview=read('../kaloneo/test-preview.css');
 for(const marker of [
   "'Position de la réponse'","'Largeur de la réponse (caractères)'",
   "['inline','Réponse juste après la question']",
-  "['below','Réponse sous la question']"
+  "['below','Réponse sous la question']",
+  "['compact-column','Colonne compacte (après la question la plus longue)']"
 ])assert(builder.includes(marker),'Option Builder absente : '+marker);
 assert(preview.includes('answerLayout:q.answerLayout'),'Grand aperçu non connecté');
 assert(candidate.includes('window.KaloneoSharedPresentation.renderQuestion'),
   'Moteur candidat non partagé');
 for(const [name,sheet] of [['Builder',cssBuilder],['Candidat',cssCandidate],['Aperçu',cssPreview]]){
-  for(const mode of ['inline','column','below']){
+  for(const mode of ['inline','column','below','compact-column']){
     assert(sheet.includes('data-kaloneo-answer-layout="'+mode+'"'),
       name+' : mode '+mode+' absent');
   }
 }
-console.log('KALONEO_ANSWER_LAYOUT_ROUNDTRIP=OK — 3 modes, tailles, moteur commun et V1 conservées');
+assert.equal(typeof Shared.alignCompactQuestionColumns,'function','Mesure commune absente');
+console.log('KALONEO_ANSWER_LAYOUT_ROUNDTRIP=OK — 4 modes, tailles, moteur commun et V1 conservées');

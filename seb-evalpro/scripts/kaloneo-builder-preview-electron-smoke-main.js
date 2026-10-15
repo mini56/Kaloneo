@@ -1890,17 +1890,31 @@ app.whenReady().then(async()=>{
       const host=document.createElement('div');
       host.style.cssText='position:fixed;left:-1300px;top:0;width:640px;padding:0;z-index:-1';
       document.body.appendChild(host);
+      const zone=document.createElement('section');
+      zone.className='preview-zone';
+      zone.style.width='640px';
+      host.appendChild(zone);
       const row=(name,mode,w)=>{
         const question={prompt:name,answerLayout:mode,answerWidthChars:w};
         const node=shared.renderQuestion({doc:document,question,className:'preview-question',
           makeAnswer:()=>{const input=document.createElement('input');input.type='text';return input;}});
-        host.appendChild(node);return node;
+        zone.appendChild(node);return node;
       };
       const colA=row('8 + 2 =','column',16);
       const colB=row('Combien valent 200 - 190 =','column',16);
       const after=row('5 + 5 =','inline',9);
       const below=row('42 - 32 =','below',12);
       const legacy=row('9 + 1 =','',null);
+      const compactA=row('Court : 1 + 9 =','compact-column',13);
+      const compactB=row('La question la plus longue : 12 - 2 =','compact-column',13);
+      shared.alignCompactQuestionColumns(host);
+      const compactInputA=compactA.querySelector('input').getBoundingClientRect();
+      const compactInputB=compactB.querySelector('input').getBoundingClientRect();
+      const compactLongest=compactB.querySelector('span').getBoundingClientRect();
+      const compactAligned=Math.abs(compactInputA.left-compactInputB.left)<2;
+      const compactClose=compactInputB.left-compactLongest.right>=0&&
+        compactInputB.left-compactLongest.right<24;
+      const compactNotFarRight=compactInputA.left<host.getBoundingClientRect().right-220;
       const columnAligned=Math.abs(colA.querySelector('input').getBoundingClientRect().left-
         colB.querySelector('input').getBoundingClientRect().left)<2;
       const inlinePrompt=after.querySelector('span').getBoundingClientRect();
@@ -1914,17 +1928,21 @@ app.whenReady().then(async()=>{
       const legacyPreserved=!legacy.dataset.kaloneoAnswerLayout;
       host.remove();
       return {ok:true,choices,changedImmediately,columnAligned,inlineAdjacent,
-        belowPlaced,legacyPreserved,answerWidth:width.value,
+        belowPlaced,legacyPreserved,compactAligned,compactClose,compactNotFarRight,
+        compactStart:compactInputA.left,compactEnd:compactLongest.right,
+        answerWidth:width.value,
         miniLayout:mini?.dataset.kaloneoAnswerLayout||'',
         miniWidth:mini?.style.getPropertyValue('--kaloneo-answer-width')||'',
         inlineGeometry:{captionX:inlinePrompt.left,captionRight:inlinePrompt.right,
           answerX:inlineInput.left,answerTop:inlineInput.top,captionBottom:inlinePrompt.bottom}};
     })()`,true);
-    if(!answerLayoutCheck.ok||answerLayoutCheck.choices.join(',')!=='column,inline,below'||
+    if(!answerLayoutCheck.ok||answerLayoutCheck.choices.join(',')!=='column,compact-column,inline,below'||
        !answerLayoutCheck.changedImmediately||!answerLayoutCheck.columnAligned||
        !answerLayoutCheck.inlineAdjacent||!answerLayoutCheck.belowPlaced||
+       !answerLayoutCheck.compactAligned||!answerLayoutCheck.compactClose||
+       !answerLayoutCheck.compactNotFarRight||
        !answerLayoutCheck.legacyPreserved||answerLayoutCheck.answerWidth!=='11'){
-      return fail('Trois positions de réponses incohérentes en Electron',answerLayoutCheck);
+      return fail('Quatre positions de réponses incohérentes en Electron',answerLayoutCheck);
     }
     console.log('KALONEO_ANSWER_LAYOUT_ELECTRON=OK',JSON.stringify(answerLayoutCheck));
 
