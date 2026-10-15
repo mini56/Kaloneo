@@ -153,6 +153,63 @@ try {
     fail('anti-doublon ZIP incorrect', importedAgain);
   }
 
+  // Transfert complet d'une bibliothèque personnelle, compatible avec
+  // l'import ZIP existant. Les images livrées avec KALONÉO sont exclues.
+  const exportPath=path.join(tempRoot,'KALONEO-EXPORT-IMAGES.zip');
+  const exported=library.exportImageZip(exportPath);
+  if(!exported?.ok||exported.count!==3||!fs.existsSync(exportPath)){
+    fail('export ZIP des images personnelles impossible',exported);
+  }
+  const archive=fs.readFileSync(exportPath);
+  if(archive.readUInt32LE(0)!==0x04034b50||!archive.includes(Buffer.from('Mes images KALONÉO/'))||
+      archive.includes(Buffer.from('Images exercices SEB EvalPro/'))){
+    fail('structure ZIP ou sélection système/personnelle incorrecte');
+  }
+  // Contrôle CRC32 indépendant sur la première entrée ZIP.
+  const firstNameLength=archive.readUInt16LE(26);
+  const firstExtraLength=archive.readUInt16LE(28);
+  const firstSize=archive.readUInt32LE(18);
+  const bytes=archive.subarray(30+firstNameLength+firstExtraLength,
+    30+firstNameLength+firstExtraLength+firstSize);
+  let checksum=0xFFFFFFFF;
+  for(const byte of bytes){
+    checksum^=byte;
+    for(let n=0;n<8;n++) checksum=checksum&1 ? (checksum>>>1)^0xEDB88320 : checksum>>>1;
+  }
+  checksum=(checksum^0xFFFFFFFF)>>>0;
+  if(checksum!==archive.readUInt32LE(14)){
+    fail('CRC du ZIP incorrect',{expected:checksum,actual:archive.readUInt32LE(14)});
+  }
+
+  const otherRoot=fs.mkdtempSync(path.join(os.tmpdir(),'kaloneo-image-transfer-'));
+  try{
+    const remote=createKaloneoLibrary({
+      dataRoot:otherRoot,
+      seedTestsRoot:path.join(root,'source','kaltest','tests'),
+      seedImageRoots:[{root:path.join(root,'source','imageqcm'),category:'Images exercices SEB EvalPro'}]
+    });
+    const restored=remote.importImageZip(exportPath);
+    if(!restored?.ok||restored.added!==3||restored.failed!==0){
+      fail('réimportation ZIP sur le second PC simulé incorrecte',restored);
+    }
+    const localCustom=library.getImage(first.image.id);
+    const remoteCustom=remote.getImage(first.image.id);
+    if(!remoteCustom?.ok||remoteCustom.image.data!==localCustom.image.data){
+      fail('les octets de l’image ont changé pendant le transfert');
+    }
+    const moved=remote.listImages().filter(image=>!image.systemProvided);
+    if(moved.length!==3||!moved.some(item=>item.theme==='Batiment Travaux')||
+       !moved.some(item=>item.orientation==='Portrait')){
+      fail('thèmes ou orientations du ZIP perdus au transfert',moved);
+    }
+    const already=remote.importImageZip(exportPath);
+    if(already?.added!==0||already?.duplicates!==3){
+      fail('anti-doublon après transfert ZIP incorrect',already);
+    }
+  }finally{
+    try{fs.rmSync(otherRoot,{recursive:true,force:true});}catch(_){}
+  }
+
   console.log('KALONEO_IMAGE_LIBRARY=OK');
   console.log(JSON.stringify({
     systemImages:after.filter(item=>item.systemProvided).length,
