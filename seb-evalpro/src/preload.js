@@ -2218,6 +2218,7 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
   kaloneoGetImage: (id) => ipcRenderer.invoke('kaloneo-library:get-image', id),
   kaloneoSaveImage: (payload) => ipcRenderer.invoke('kaloneo-library:save-image', payload || {}),
   kaloneoImportImageZip: () => ipcRenderer.invoke('kaloneo-library:import-image-zip'),
+  kaloneoExportImageZip: () => ipcRenderer.invoke('kaloneo-library:export-image-zip'),
   kaloneoListMaskScreens: () => ipcRenderer.invoke('kaloneo-library:list-mask-screens'),
   kaloneoGetMaskScreen: (ref) => ipcRenderer.invoke('kaloneo-library:get-mask-screen', ref || null),
   kaloneoSaveMaskScreen: (maskScreen, overwrite) => ipcRenderer.invoke('kaloneo-library:save-mask-screen', { maskScreen, overwrite:overwrite === true }),
