@@ -113,4 +113,35 @@ scoreCell.acceptedAnswers='nouvelle réponse';
 const rewritten=Core.modelToDefinition(changedPoints);
 assert.deepEqual(rewritten.questions[0].acceptedAnswers,['nouvelle réponse']);
 assert.equal(rewritten.questions[0].points,4);
+// Une grille créée dans un futur KALTEST conserve tous les niveaux de couleur
+// sans modifier la réponse, la notation ou les anciens tests.
+const colored=Core.definitionToModel(definition);
+const gridColored=colored.blocks.find(b=>b.type==='table-grid');
+gridColored.table.columns=[
+  {id:'c1',align:'left',backgroundColor:'#ddf2ff'},
+  {id:'c2',align:'center',backgroundColor:'#fff8cf'}
+];
+gridColored.table.rowColors=['#f4ffde','#e9e9e9'];
+gridColored.table.cells[0][0].backgroundColor='#fbe1ec';
+const colorsBefore=JSON.stringify(gridColored.table);
+const coloredSave=Core.modelToDefinition(colored);
+assert(Core.analyzeDefinition(coloredSave).ok,'Couleurs : KALTEST invalide');
+assert.equal(coloredSave.questions[0].points,2,'Couleur du tableau modifie les points');
+assert.deepEqual(coloredSave.questions[0].acceptedAnswers,question.acceptedAnswers,
+  'Couleur du tableau modifie la réponse attendue');
+const coloredTable=coloredSave.presentation.builderContent.find(item=>item.type==='table-grid').table;
+assert.equal(coloredTable.columns[0].backgroundColor,'#ddf2ff');
+assert.equal(coloredTable.columns[1].backgroundColor,'#fff8cf');
+assert.deepEqual(coloredTable.rowColors,['#f4ffde','#e9e9e9']);
+assert.equal(coloredTable.cells[0][0].backgroundColor,'#fbe1ec');
+assert.equal(JSON.stringify(gridColored.table),colorsBefore,'Source modifiée à la sauvegarde');
+const roundTrip=Core.modelToDefinition(Core.definitionToModel(coloredSave));
+const roundTripTable=roundTrip.presentation.builderContent.find(item=>item.type==='table-grid').table;
+assert.deepEqual(roundTripTable,coloredTable,'Couleurs perdues après export / import');
+assert.equal(roundTrip.questions[0].points,2);
+const legacyColors=Core.modelToDefinition(Core.definitionToModel(definition));
+const legacyTable=legacyColors.presentation.builderContent.find(item=>item.type==='table-grid').table;
+assert.equal(legacyTable.rowColors,undefined,'Lignes ajoutées sans demande à une V1');
+assert.equal(legacyTable.cells[0][0].backgroundColor,undefined,'Cellule V1 modifiée');
+console.log('KALONEO_GRID_COLORS_ROUNDTRIP=OK — cellule, ligne, colonne, export et barèmes intacts');
 console.log('KALONEO_FUTURE_BLOCKS_ROUNDTRIP_UNIQUE_QUESTION=OK');

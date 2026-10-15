@@ -1946,6 +1946,74 @@ app.whenReady().then(async()=>{
     }
     console.log('KALONEO_ANSWER_LAYOUT_ELECTRON=OK',JSON.stringify(answerLayoutCheck));
 
+    const colorsCheck=await win.webContents.executeJavaScript(`(()=>{
+      const type=document.querySelector('.exercise-block .block-type');
+      if(!type)return {ok:false,reason:'Bloc introuvable'};
+      type.value='table-grid';
+      type.dispatchEvent(new Event('change',{bubbles:true}));
+      const column=document.querySelector('.grid-columns-editor .grid-color-input');
+      const columnReset=document.querySelector('.grid-columns-editor .grid-color-reset');
+      const line=document.querySelector('.grid-row-color-toolbar .grid-color-input');
+      const lineReset=document.querySelector('.grid-row-color-toolbar .grid-color-reset');
+      const selector=document.querySelector('.grid-row-color-picker');
+      const cell=document.querySelector('.grid-editor-scroll .grid-cell-color-toolbar .grid-color-input');
+      const cellReset=document.querySelector('.grid-editor-scroll .grid-cell-color-toolbar .grid-color-reset');
+      if(!column||!columnReset||!line||!lineReset||!selector||!cell||!cellReset)
+        return {ok:false,reason:'Commandes de couleur de grille manquantes',
+          columns:!!column,rows:!!line,cells:!!cell};
+      const read=()=>{
+        const td=document.querySelector('.preview-grid-table tbody tr:first-child td:first-child');
+        return td?.style.backgroundColor||'';
+      };
+      const trigger=(input,value)=>{
+        input.value=value;
+        input.dispatchEvent(new Event('input',{bubbles:true}));
+      };
+      trigger(column,'#dcecff');
+      const fromColumn=read();
+      selector.value='0';selector.dispatchEvent(new Event('change',{bubbles:true}));
+      trigger(line,'#fff0cc');
+      const fromRow=read();
+      trigger(cell,'#f5d0e7');
+      const fromCell=read();
+      cellReset.click();
+      const restoredRow=read();
+      lineReset.click();
+      const restoredColumn=read();
+      columnReset.click();
+      const reset=read();
+      // Vérifier aussi le moteur commun utilisé dans le parcours réel.
+      const shared=window.KaloneoSharedPresentation;
+      const definition={
+        columns:[{backgroundColor:'#dcecff'},{backgroundColor:'#aaffdd'}],
+        rowColors:['#fff0cc',null],
+        cells:[
+          [{kind:'fixed-text',value:'A',backgroundColor:'#f5d0e7'},
+           {kind:'fixed-text',value:'B'}],
+          [{kind:'fixed-text',value:'C'},{kind:'fixed-text',value:'D'}]
+        ]
+      };
+      const built=shared.renderGridTable({
+        doc:document,definition,renderCell:({cell,cellDefinition})=>{
+          cell.textContent=cellDefinition.value;
+        }
+      });
+      const visual=[...built.querySelectorAll('tbody td')].map(x=>x.style.backgroundColor);
+      return {ok:true,fromColumn,fromRow,fromCell,restoredRow,restoredColumn,
+        reset,visual,canRestore:cellReset.disabled&&lineReset.disabled&&columnReset.disabled};
+    })()`,true);
+    if(!colorsCheck.ok||colorsCheck.fromColumn!=='rgb(220, 236, 255)'||
+       colorsCheck.fromRow!=='rgb(255, 240, 204)'||
+       colorsCheck.fromCell!=='rgb(245, 208, 231)'||
+       colorsCheck.restoredRow!=='rgb(255, 240, 204)'||
+       colorsCheck.restoredColumn!=='rgb(220, 236, 255)'||
+       colorsCheck.reset!==''||!colorsCheck.canRestore||
+       colorsCheck.visual.join('|')!==
+         'rgb(245, 208, 231)|rgb(255, 240, 204)|rgb(220, 236, 255)|rgb(170, 255, 221)'){
+      return fail('R110 : couleur tableau / priorités / réinitialisation incorrectes',colorsCheck);
+    }
+    console.log('KALONEO_GRID_COLORS_ELECTRON=OK',JSON.stringify(colorsCheck));
+
         console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
     console.log('KALONEO_BUILDER_PREVIEW_ELECTRON=OK');
