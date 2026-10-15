@@ -1861,7 +1861,7 @@ app.whenReady().then(async()=>{
     }
     console.log('KALONEO_IMAGE_THEME_AFTER_REMOVAL_ELECTRON=OK',JSON.stringify(postRemovalTheme));
 
-    const answerLayoutCheck=await win.webContents.executeJavaScript(`(()=>{
+    const answerLayoutCheck=await win.webContents.executeJavaScript(`(async()=>{
       const block=document.querySelector('.exercise-block');
       const type=block?.querySelector('.block-type');
       if(!type)return {ok:false,reason:'bloc non disponible'};
@@ -1880,6 +1880,9 @@ app.whenReady().then(async()=>{
       field.dispatchEvent(new Event('change',{bubbles:true}));
       width.value='11';
       width.dispatchEvent(new Event('input',{bubbles:true}));
+      // La saisie numérique est volontairement temporisée (350 ms) pour
+      // conserver le curseur du Builder : attendre le vrai rafraîchissement.
+      await new Promise(resolve=>setTimeout(resolve,430));
       const mini=document.querySelector('.preview-question.kaloneo-shared-question');
       const changedImmediately=mini?.dataset.kaloneoAnswerLayout==='inline'&&
         mini?.style.getPropertyValue('--kaloneo-answer-width')==='11ch';
@@ -1911,7 +1914,11 @@ app.whenReady().then(async()=>{
       const legacyPreserved=!legacy.dataset.kaloneoAnswerLayout;
       host.remove();
       return {ok:true,choices,changedImmediately,columnAligned,inlineAdjacent,
-        belowPlaced,legacyPreserved,answerWidth:width.value};
+        belowPlaced,legacyPreserved,answerWidth:width.value,
+        miniLayout:mini?.dataset.kaloneoAnswerLayout||'',
+        miniWidth:mini?.style.getPropertyValue('--kaloneo-answer-width')||'',
+        inlineGeometry:{captionX:inlinePrompt.left,captionRight:inlinePrompt.right,
+          answerX:inlineInput.left,answerTop:inlineInput.top,captionBottom:inlinePrompt.bottom}};
     })()`,true);
     if(!answerLayoutCheck.ok||answerLayoutCheck.choices.join(',')!=='column,inline,below'||
        !answerLayoutCheck.changedImmediately||!answerLayoutCheck.columnAligned||

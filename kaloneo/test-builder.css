@@ -1455,6 +1455,7 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
    entre les lignes d'une même colonne, sans toucher au style des V1. */
 .preview-question.kaloneo-shared-question[data-kaloneo-answer-layout="inline"]{
   display:flex;
+  flex-direction:row;
   justify-content:flex-start;
   align-items:center;
   flex-wrap:wrap;

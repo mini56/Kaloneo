@@ -197,7 +197,7 @@ body{font-family:Calibri,"Segoe UI",Arial,sans-serif;background:linear-gradient(
   grid-template-columns:minmax(0,1fr) minmax(0,var(--kaloneo-answer-width));
 }
 .kaloneo-shared-question[data-kaloneo-answer-layout="inline"]{
-  display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:7px 9px;
+  display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:7px 9px;
 }
 .kaloneo-shared-question[data-kaloneo-answer-layout="below"]{
   display:flex;flex-direction:column;align-items:flex-start;gap:7px;
