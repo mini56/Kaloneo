@@ -1296,6 +1296,25 @@ ipcMain.handle('kaloneo-library:save-image', (_event, payload) => {
   }
 });
 
+ipcMain.handle('kaloneo-library:export-image-zip', async () => {
+  if (!adminSessionUnlocked) return { ok:false, error:'Accès administrateur requis.' };
+  if (getCandidateStore().getActiveCandidate()) return { ok:false, error:'Impossible d’exporter les images pendant une évaluation active.' };
+  try {
+    // Vérifier avant de proposer un fichier, pour éviter de créer un ZIP vide.
+    const count=getKaloneoLibrary().listImages().filter(image=>!image.systemProvided).length;
+    if (!count) return { ok:false, error:'Aucune image personnelle à exporter.' };
+    const chosen=await dialog.showSaveDialog(mainWindow, {
+      title:'Exporter les images personnelles KALONÉO',
+      defaultPath:'KALONEO-images-personnelles.zip',
+      filters:[{name:'Archive ZIP des images',extensions:['zip']}]
+    });
+    if (chosen.canceled || !chosen.filePath) return {ok:false,canceled:true};
+    return getKaloneoLibrary().exportImageZip(chosen.filePath);
+  } catch (error) {
+    return {ok:false,error:error?.message||String(error)};
+  }
+});
+
 ipcMain.handle('kaloneo-library:import-image-zip', async () => {
   if (!adminSessionUnlocked) return { ok:false, error:'Accès administrateur requis.' };
   if (getCandidateStore().getActiveCandidate()) return { ok:false, error:'Impossible de modifier la bibliothèque d’images pendant une évaluation active.' };
