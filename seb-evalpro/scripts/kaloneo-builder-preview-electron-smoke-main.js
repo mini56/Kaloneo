@@ -2113,6 +2113,10 @@ app.whenReady().then(async()=>{
     // vérifier que l'unité reprend l'identifiant de sa valeur, que l'auteur
     // peut régler points/type/variantes et que les paramètres persistent.
     const editorAudit=await win.webContents.executeJavaScript(`(()=>{
+      // Repartir de zéro : les tests V1 précédemment ouverts sont parfois
+      // protégés et ne permettent pas de modifier la nature des blocs.
+      window.confirm=()=>true;
+      document.getElementById('new-test')?.click();
       const block=()=>document.querySelector('.exercise-block');
       const type=block()?.querySelector('.block-type');
       if(!type)return {ok:false,reason:'Liste types absente'};
@@ -2128,7 +2132,10 @@ app.whenReady().then(async()=>{
         return true;
       };
       if(!first||!setKind('candidate-answer'))
-        return {ok:false,reason:'Impossible de créer une cellule Réponse candidat'};
+        return {ok:false,reason:'Impossible de créer une cellule Réponse candidat',
+          hasFirst:!!first,blockType:type.value,blockCount:document.querySelectorAll('.exercise-block').length,
+          picker:!!picker(),gridEditor:!!document.querySelector('.grid-editor-scroll'),
+          html:document.querySelector('.exercise-block .block-body')?.textContent?.slice(0,160)||''};
       const c0=visibleCell();
       const qid=c0?.querySelector('input[placeholder="ID réponse"]')?.value;
       const expected=c0?.querySelector('input[placeholder="Réponse attendue"]');
