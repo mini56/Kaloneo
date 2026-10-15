@@ -366,6 +366,15 @@
     return own||row||column||'';
   }
 
+  // La couleur de police est indépendante de celle du fond. La priorité
+  // suit les mêmes règles que la couleur de fond.
+  function gridCellTextColor(definition,rowIndex,colIndex,cellDefinition){
+    const own=normalizeGridColor(cellDefinition?.textColor);
+    const row=normalizeGridColor(definition?.rowTextColors?.[rowIndex]);
+    const column=normalizeGridColor(definition?.columns?.[colIndex]?.textColor);
+    return own||row||column||'';
+  }
+
   // Rendu de la structure d'un tableau libre, identique dans l'éditeur
   // et dans le candidat. Le contrôle de réponse reste au client appelant.
   function renderGridTable({doc,definition={},renderCell,className='',wrapperClassName='',compactClassName='',equalClassName='',titleTag='h3',titleClassName='',skipHiddenCells=false}) {
@@ -400,6 +409,8 @@
         applyColumn(th,definition.columns?.[index]);
         const headerBackground=normalizeGridColor(definition.columns?.[index]?.backgroundColor);
         if(headerBackground)th.style.backgroundColor=headerBackground;
+        const headerText=normalizeGridColor(definition.columns?.[index]?.textColor);
+        if(headerText)th.style.color=headerText;
         tr.appendChild(th);
       });
       thead.appendChild(tr);
@@ -419,12 +430,21 @@
         }
         const background=gridCellBackground(definition,rowIndex,colIndex,cellDefinition);
         if(background)td.style.backgroundColor=background;
+        const textColor=gridCellTextColor(definition,rowIndex,colIndex,cellDefinition);
+        if(textColor)td.style.color=textColor;
         const rowSpan=Math.max(1,Number(cellDefinition.rowSpan)||1);
         const colSpan=Math.max(1,Number(cellDefinition.colSpan)||1);
         if(rowSpan>1)td.rowSpan=rowSpan;
         if(colSpan>1)td.colSpan=colSpan;
         const node=renderCell({cell:td,cellDefinition,rowIndex,colIndex,rowNode:tr});
         if(node&&node.nodeType)td.appendChild(node);
+        // Certains champs de réponse possèdent une couleur explicite dans leur
+        // feuille CSS : leur police suit également le choix de la cellule.
+        if(textColor&&typeof td.querySelectorAll==='function'){
+          td.querySelectorAll('input, select, textarea').forEach(control=>{
+            control.style.color=textColor;
+          });
+        }
         tr.appendChild(td);
       }
       tbody.appendChild(tr);
@@ -472,5 +492,5 @@
   }
 
   return Object.freeze({columns,renderZones,alignCompactQuestionColumns,renderRichContext,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderQuestionTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup,
-    normalizeGridColor,gridCellBackground});
+    normalizeGridColor,gridCellBackground,gridCellTextColor});
 });

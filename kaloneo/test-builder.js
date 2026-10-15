@@ -1031,6 +1031,7 @@
     table.cols=newCols;
     table.cells=cells;
     if(Array.isArray(table.rowColors))table.rowColors.length=newRows;
+    if(Array.isArray(table.rowTextColors))table.rowTextColors.length=newRows;
     table.columns=Array.isArray(table.columns)?table.columns:[];
     while(table.columns.length<newCols) {
       const i=table.columns.length;
@@ -1125,12 +1126,16 @@
       const rest=document.createElement('span');
       rest.className='muted';
       rest.textContent=index===table.columns.length-1&&!col.widthChars?'Reste disponible':'';
-      const coloring=gridColorControl('Couleur',()=>col.backgroundColor||'',value=>{
+      const coloring=gridColorControl('Fond',()=>col.backgroundColor||'',value=>{
         if(value)col.backgroundColor=value;
         else delete col.backgroundColor;
       });
+      const textColor=gridColorControl('Texte',()=>col.textColor||'',value=>{
+        if(value)col.textColor=value;
+        else delete col.textColor;
+      });
       row.classList.add('grid-color-column-row');
-      row.append(label,width,align,coloring.element,rest);
+      row.append(label,width,align,coloring.element,textColor.element,rest);
       columns.appendChild(row);
     });
     body.appendChild(columns);
@@ -1171,8 +1176,23 @@
           if(!table.rowColors.some(Boolean))delete table.rowColors;
         }
       });
-    rowSelector.addEventListener('change',rowColors.refresh);
-    rowTools.append(rowSelector,rowColors.element);
+    const rowTextColors=gridColorControl('Texte de la ligne',
+      ()=>table.rowTextColors?.[Number(rowSelector.value)]||'',
+      value=>{
+        const row=Number(rowSelector.value);
+        if(value){
+          if(!Array.isArray(table.rowTextColors))table.rowTextColors=[];
+          table.rowTextColors[row]=value;
+        }else if(Array.isArray(table.rowTextColors)){
+          delete table.rowTextColors[row];
+          if(!table.rowTextColors.some(Boolean))delete table.rowTextColors;
+        }
+      });
+    rowSelector.addEventListener('change',()=>{
+      rowColors.refresh();
+      rowTextColors.refresh();
+    });
+    rowTools.append(rowSelector,rowColors.element,rowTextColors.element);
     body.appendChild(rowTools);
 
     const columnNavigation=document.createElement('div');
@@ -1222,11 +1242,15 @@
         });
         const cellToolbar=document.createElement('div');
         cellToolbar.className='grid-cell-color-toolbar';
-        const cellColors=gridColorControl('Couleur',()=>cell.backgroundColor||'',value=>{
+        const cellColors=gridColorControl('Fond',()=>cell.backgroundColor||'',value=>{
           if(value)cell.backgroundColor=value;
           else delete cell.backgroundColor;
         });
-        cellToolbar.append(kind,cellColors.element);
+        const cellTextColor=gridColorControl('Texte',()=>cell.textColor||'',value=>{
+          if(value)cell.textColor=value;
+          else delete cell.textColor;
+        });
+        cellToolbar.append(kind,cellColors.element,cellTextColor.element);
         td.appendChild(cellToolbar);
 
         if(cell.kind==='fixed-text'||cell.kind==='choice-option') {

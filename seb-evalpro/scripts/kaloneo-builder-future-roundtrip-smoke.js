@@ -118,11 +118,13 @@ assert.equal(rewritten.questions[0].points,4);
 const colored=Core.definitionToModel(definition);
 const gridColored=colored.blocks.find(b=>b.type==='table-grid');
 gridColored.table.columns=[
-  {id:'c1',align:'left',backgroundColor:'#ddf2ff'},
-  {id:'c2',align:'center',backgroundColor:'#fff8cf'}
+  {id:'c1',align:'left',backgroundColor:'#ddf2ff',textColor:'#003399'},
+  {id:'c2',align:'center',backgroundColor:'#fff8cf',textColor:'#007722'}
 ];
 gridColored.table.rowColors=['#f4ffde','#e9e9e9'];
+gridColored.table.rowTextColors=['#773300','#333399'];
 gridColored.table.cells[0][0].backgroundColor='#fbe1ec';
+gridColored.table.cells[0][0].textColor='#aa0022';
 const colorsBefore=JSON.stringify(gridColored.table);
 const coloredSave=Core.modelToDefinition(colored);
 assert(Core.analyzeDefinition(coloredSave).ok,'Couleurs : KALTEST invalide');
@@ -134,6 +136,10 @@ assert.equal(coloredTable.columns[0].backgroundColor,'#ddf2ff');
 assert.equal(coloredTable.columns[1].backgroundColor,'#fff8cf');
 assert.deepEqual(coloredTable.rowColors,['#f4ffde','#e9e9e9']);
 assert.equal(coloredTable.cells[0][0].backgroundColor,'#fbe1ec');
+assert.equal(coloredTable.columns[0].textColor,'#003399');
+assert.equal(coloredTable.columns[1].textColor,'#007722');
+assert.deepEqual(coloredTable.rowTextColors,['#773300','#333399']);
+assert.equal(coloredTable.cells[0][0].textColor,'#aa0022');
 assert.equal(JSON.stringify(gridColored.table),colorsBefore,'Source modifiée à la sauvegarde');
 const roundTrip=Core.modelToDefinition(Core.definitionToModel(coloredSave));
 const roundTripTable=roundTrip.presentation.builderContent.find(item=>item.type==='table-grid').table;
@@ -142,6 +148,9 @@ assert.equal(roundTrip.questions[0].points,2);
 const legacyColors=Core.modelToDefinition(Core.definitionToModel(definition));
 const legacyTable=legacyColors.presentation.builderContent.find(item=>item.type==='table-grid').table;
 assert.equal(legacyTable.rowColors,undefined,'Lignes ajoutées sans demande à une V1');
+assert.equal(legacyTable.rowTextColors,undefined,'Couleur de texte ajoutée à une V1');
+assert.equal(legacyTable.columns?.[0]?.textColor,undefined,'Colonne V1 modifiée');
 assert.equal(legacyTable.cells[0][0].backgroundColor,undefined,'Cellule V1 modifiée');
-console.log('KALONEO_GRID_COLORS_ROUNDTRIP=OK — cellule, ligne, colonne, export et barèmes intacts');
+assert.equal(legacyTable.cells[0][0].textColor,undefined,'Police V1 modifiée');
+console.log('KALONEO_GRID_COLORS_ROUNDTRIP=OK — fond + texte, cellule, ligne, colonne, export et barèmes intacts');
 console.log('KALONEO_FUTURE_BLOCKS_ROUNDTRIP_UNIQUE_QUESTION=OK');

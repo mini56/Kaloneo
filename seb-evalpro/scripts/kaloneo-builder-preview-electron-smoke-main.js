@@ -1953,18 +1953,24 @@ app.whenReady().then(async()=>{
       type.dispatchEvent(new Event('change',{bubbles:true}));
       const column=document.querySelector('.grid-columns-editor .grid-color-input');
       const columnReset=document.querySelector('.grid-columns-editor .grid-color-reset');
+      const columnText=document.querySelectorAll('.grid-columns-editor .grid-color-input')[1];
+      const columnTextReset=document.querySelectorAll('.grid-columns-editor .grid-color-reset')[1];
       const line=document.querySelector('.grid-row-color-toolbar .grid-color-input');
       const lineReset=document.querySelector('.grid-row-color-toolbar .grid-color-reset');
+      const lineText=document.querySelectorAll('.grid-row-color-toolbar .grid-color-input')[1];
+      const lineTextReset=document.querySelectorAll('.grid-row-color-toolbar .grid-color-reset')[1];
       const selector=document.querySelector('.grid-row-color-picker');
       const cell=document.querySelector('.grid-editor-scroll .grid-cell-color-toolbar .grid-color-input');
       const cellReset=document.querySelector('.grid-editor-scroll .grid-cell-color-toolbar .grid-color-reset');
-      if(!column||!columnReset||!line||!lineReset||!selector||!cell||!cellReset)
+      const cellText=document.querySelectorAll('.grid-editor-scroll .grid-cell-color-toolbar .grid-color-input')[1];
+      const cellTextReset=document.querySelectorAll('.grid-editor-scroll .grid-cell-color-toolbar .grid-color-reset')[1];
+      if(!column||!columnReset||!line||!lineReset||!selector||!cell||!cellReset||
+         !columnText||!columnTextReset||!lineText||!lineTextReset||!cellText||!cellTextReset)
         return {ok:false,reason:'Commandes de couleur de grille manquantes',
           columns:!!column,rows:!!line,cells:!!cell};
-      const read=()=>{
-        const td=document.querySelector('.preview-grid-table tbody tr:first-child td:first-child');
-        return td?.style.backgroundColor||'';
-      };
+      const firstCell=()=>document.querySelector('.preview-grid-table tbody tr:first-child td:first-child');
+      const read=()=>firstCell()?.style.backgroundColor||'';
+      const readText=()=>firstCell()?.style.color||'';
       const trigger=(input,value)=>{
         input.value=value;
         input.dispatchEvent(new Event('input',{bubbles:true}));
@@ -1982,13 +1988,29 @@ app.whenReady().then(async()=>{
       const restoredColumn=read();
       columnReset.click();
       const reset=read();
+      trigger(columnText,'#003399');
+      const textFromColumn=readText();
+      trigger(lineText,'#773300');
+      const textFromRow=readText();
+      trigger(cellText,'#aa0022');
+      const textFromCell=readText();
+      cellTextReset.click();
+      const textRestoredRow=readText();
+      lineTextReset.click();
+      const textRestoredColumn=readText();
+      columnTextReset.click();
+      const textReset=readText();
       // Vérifier aussi le moteur commun utilisé dans le parcours réel.
       const shared=window.KaloneoSharedPresentation;
       const definition={
-        columns:[{backgroundColor:'#dcecff'},{backgroundColor:'#aaffdd'}],
+        columns:[
+          {backgroundColor:'#dcecff',textColor:'#003399'},
+          {backgroundColor:'#aaffdd',textColor:'#007722'}
+        ],
         rowColors:['#fff0cc',null],
+        rowTextColors:['#773300',null],
         cells:[
-          [{kind:'fixed-text',value:'A',backgroundColor:'#f5d0e7'},
+          [{kind:'fixed-text',value:'A',backgroundColor:'#f5d0e7',textColor:'#aa0022'},
            {kind:'fixed-text',value:'B'}],
           [{kind:'fixed-text',value:'C'},{kind:'fixed-text',value:'D'}]
         ]
@@ -1999,8 +2021,19 @@ app.whenReady().then(async()=>{
         }
       });
       const visual=[...built.querySelectorAll('tbody td')].map(x=>x.style.backgroundColor);
+      const visualText=[...built.querySelectorAll('tbody td')].map(x=>x.style.color);
+      const headerTextTest=shared.renderGridTable({
+        doc:document,definition:{headers:['Colonne'],columns:[{textColor:'#118833'}],
+          cells:[[{kind:'candidate-answer'}]]},
+        renderCell:({cell})=>{const input=document.createElement('input');cell.appendChild(input);}
+      });
+      const inputText=headerTextTest.querySelector('tbody input')?.style.color||'';
+      const headerText=headerTextTest.querySelector('th')?.style.color||'';
       return {ok:true,fromColumn,fromRow,fromCell,restoredRow,restoredColumn,
-        reset,visual,canRestore:cellReset.disabled&&lineReset.disabled&&columnReset.disabled};
+        reset,visual,visualText,inputText,headerText,textFromColumn,textFromRow,
+        textFromCell,textRestoredRow,textRestoredColumn,textReset,
+        canRestore:cellReset.disabled&&lineReset.disabled&&columnReset.disabled&&
+          cellTextReset.disabled&&lineTextReset.disabled&&columnTextReset.disabled};
     })()`,true);
     if(!colorsCheck.ok||colorsCheck.fromColumn!=='rgb(220, 236, 255)'||
        colorsCheck.fromRow!=='rgb(255, 240, 204)'||
@@ -2009,7 +2042,17 @@ app.whenReady().then(async()=>{
        colorsCheck.restoredColumn!=='rgb(220, 236, 255)'||
        colorsCheck.reset!==''||!colorsCheck.canRestore||
        colorsCheck.visual.join('|')!==
-         'rgb(245, 208, 231)|rgb(255, 240, 204)|rgb(220, 236, 255)|rgb(170, 255, 221)'){
+         'rgb(245, 208, 231)|rgb(255, 240, 204)|rgb(220, 236, 255)|rgb(170, 255, 221)'||
+       colorsCheck.textFromColumn!=='rgb(0, 51, 153)'||
+       colorsCheck.textFromRow!=='rgb(119, 51, 0)'||
+       colorsCheck.textFromCell!=='rgb(170, 0, 34)'||
+       colorsCheck.textRestoredRow!=='rgb(119, 51, 0)'||
+       colorsCheck.textRestoredColumn!=='rgb(0, 51, 153)'||
+       colorsCheck.textReset!==''||
+       colorsCheck.visualText.join('|')!==
+         'rgb(170, 0, 34)|rgb(119, 51, 0)|rgb(0, 51, 153)|rgb(0, 119, 34)'||
+       colorsCheck.inputText!=='rgb(17, 136, 51)'||
+       colorsCheck.headerText!=='rgb(17, 136, 51)'){
       return fail('R110 : couleur tableau / priorités / réinitialisation incorrectes',colorsCheck);
     }
     console.log('KALONEO_GRID_COLORS_ELECTRON=OK',JSON.stringify(colorsCheck));

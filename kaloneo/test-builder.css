@@ -1554,3 +1554,28 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
   .grid-color-column-row>.grid-color-control>span{display:none}
   .grid-cell-color-toolbar .grid-color-control>span{display:none}
 }
+
+/* Couleur de police : deux pastilles compactes (Fond, Texte) par portée.
+   Le tooltip et l'intitulé accessible restent explicites sur petits écrans. */
+.grid-color-column-row>.grid-color-control>span,
+.grid-cell-color-toolbar>.grid-color-control>span{font-size:10px}
+.grid-color-column-row>.grid-color-control,
+.grid-cell-color-toolbar>.grid-color-control{gap:3px;flex-shrink:0}
+.grid-color-column-row>.grid-color-control .grid-color-input,
+.grid-cell-color-toolbar>.grid-color-control .grid-color-input{
+  width:29px!important;min-width:29px;height:28px!important;
+}
+.grid-color-column-row>.grid-color-control .grid-color-reset,
+.grid-cell-color-toolbar>.grid-color-control .grid-color-reset{
+  width:21px;min-width:21px;height:28px;
+}
+.grid-color-column-row>strong{flex:1 1 70px;min-width:68px}
+.grid-color-column-row>input[type=number]{flex:0 1 85px;min-width:52px}
+.grid-color-column-row>select{flex:0 1 85px;min-width:65px}
+.grid-color-column-row>.muted{display:none}
+.grid-row-color-toolbar{gap:8px}
+.grid-row-color-toolbar .grid-color-control>span{font-size:11px}
+@media(max-width:1250px){
+  .grid-color-column-row>.grid-color-control>span,
+  .grid-cell-color-toolbar>.grid-color-control>span{display:none}
+}
