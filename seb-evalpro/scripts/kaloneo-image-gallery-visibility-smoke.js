@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict');
-const {prepare,isTechnical,theme}=require('../../kaloneo/image-library-gallery.js');
+const {prepare,isTechnical,theme,matchesTheme}=require('../../kaloneo/image-library-gallery.js');
 const image=(id,name,category='Images exercices SEB EvalPro',options={})=>({
   id,name,category,systemProvided:true,size:1000,sourceName:name,...options
 });
@@ -47,21 +47,21 @@ assert.equal(theme(input[18]),'Mes images');
 assert.equal(theme(input[19]),'Icônes');
 assert.equal(theme(input[14]),'Illustrations');
 assert.equal(theme(input[20]),'Images V1','Postures doit être rangé dans Images V1');
-const defaultIds=gallery.images.filter(item=>gallery.matchesTheme(item,'__current__'))
+const defaultIds=gallery.images.filter(item=>matchesTheme(item,'__current__'))
   .map(item=>item.id);
 for(const id of ['posture','briques','restaurant','cantine-new'])
   assert.ok(!defaultIds.includes(id),'Image V1 absente des images courantes : '+id);
 for(const id of ['typewriter','user1','kaloneo-icon:calculs'])
   assert.ok(defaultIds.includes(id),'Image courante absente : '+id);
-const v1Ids=gallery.images.filter(item=>gallery.matchesTheme(item,'Images V1'))
+const v1Ids=gallery.images.filter(item=>matchesTheme(item,'Images V1'))
   .map(item=>item.id);
 for(const id of ['posture','briques','restaurant','cantine-new'])
   assert.ok(v1Ids.includes(id),'Image V1 disponible dans son thème : '+id);
 for(const id of ['flacon','fraction-webp','fractions-embed'])
   assert.ok(!v1Ids.includes(id),'Ressource technique invisible même dans Images V1 : '+id);
-assert.equal(gallery.images.filter(item=>gallery.matchesTheme(item,'')).length,
+assert.equal(gallery.images.filter(item=>matchesTheme(item,'')).length,
   gallery.images.length,'Tous les thèmes doit réellement tout afficher');
-assert.equal(gallery.matchesTheme(input[17],'Images V1'),false,
+assert.equal(matchesTheme(input[17],'Images V1'),false,
   'Une image personnelle ne doit pas être classée V1');
 console.log('KALONEO_IMAGE_GALLERY_VISIBILITY=OK',JSON.stringify({
   visible:gallery.images.length,hidden:gallery.hiddenTechnical,duplicates:gallery.duplicates
