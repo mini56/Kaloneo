@@ -91,6 +91,12 @@ try {
     fail('lecture réutilisable de demenagement.png impossible', loaded);
   }
 
+  const emptyZip=path.join(tempRoot,'no-personal-images.zip');
+  const emptyExport=library.exportImageZip(emptyZip);
+  if(emptyExport?.ok||fs.existsSync(emptyZip)){
+    fail('export vide doit ignorer les images système',emptyExport);
+  }
+
   const customData = 'data:image/svg+xml;base64,' + Buffer.from(
     '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="24"><rect width="32" height="24" fill="#123456"/></svg>'
   ).toString('base64');
