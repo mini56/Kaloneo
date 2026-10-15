@@ -2108,6 +2108,76 @@ app.whenReady().then(async()=>{
     }
     console.log('KALONEO_GRID_SELECT_AND_TEXT_COLOR_ELECTRON=OK',JSON.stringify(listCheck));
 
+
+    // Clics réellement effectués dans les contrôles du Builder :
+    // vérifier que l'unité reprend l'identifiant de sa valeur, que l'auteur
+    // peut régler points/type/variantes et que les paramètres persistent.
+    const editorAudit=await win.webContents.executeJavaScript(`(()=>{
+      const block=()=>document.querySelector('.exercise-block');
+      const type=block()?.querySelector('.block-type');
+      if(!type)return {ok:false,reason:'Liste types absente'};
+      type.value='table-grid';type.dispatchEvent(new Event('change',{bubbles:true}));
+      const visibleCell=()=>document.querySelector(
+        '.grid-editor-scroll tbody tr:first-child td:not([hidden])');
+      const picker=()=>document.querySelector('.grid-column-picker');
+      const first=visibleCell();
+      const setKind=(kind)=>{
+        const sel=visibleCell()?.querySelector('.grid-cell-color-toolbar select');
+        if(!sel)return false;
+        sel.value=kind;sel.dispatchEvent(new Event('change',{bubbles:true}));
+        return true;
+      };
+      if(!first||!setKind('candidate-answer'))
+        return {ok:false,reason:'Impossible de créer une cellule Réponse candidat'};
+      const c0=visibleCell();
+      const qid=c0?.querySelector('input[placeholder="ID réponse"]')?.value;
+      const expected=c0?.querySelector('input[placeholder="Réponse attendue"]');
+      const typeSelector=[...c0?.querySelectorAll('label')||[]]
+        .find(l=>l.textContent?.includes('Type de réponse'))?.querySelector('select');
+      const points=c0?.querySelector('.grid-points-input');
+      if(!qid||!expected||!typeSelector||!points)
+        return {ok:false,reason:'Champs valeur incomplets',qid,
+          expected:!!expected,type:!!typeSelector,points:!!points};
+      expected.value='12';expected.dispatchEvent(new Event('input',{bubbles:true}));
+      typeSelector.value='number';
+      typeSelector.dispatchEvent(new Event('change',{bubbles:true}));
+      points.value='2';points.dispatchEvent(new Event('input',{bubbles:true}));
+      picker().value='1';picker().dispatchEvent(new Event('change',{bubbles:true}));
+      if(!setKind('unit'))return {ok:false,reason:'Impossible de créer unité'};
+      const cell=visibleCell();
+      const unitId=cell?.querySelector('input[placeholder="ID réponse"]')?.value||'';
+      const units=cell?.querySelector('input[placeholder^="Unités acceptées"]');
+      const scored=[...cell?.querySelectorAll('label.inline-checkbox')||[]]
+        .find(l=>l.textContent?.includes('Unité notée'))?.querySelector('input[type="checkbox"]');
+      if(!units||!scored)return {ok:false,reason:'Unité non configurable',unitId,
+        units:!!units,scored:!!scored};
+      units.value='kg; kilo; kilogramme';
+      units.dispatchEvent(new Event('input',{bubbles:true}));
+      scored.checked=true;scored.dispatchEvent(new Event('change',{bubbles:true}));
+      picker().value='0';picker().dispatchEvent(new Event('change',{bubbles:true}));
+      const back=visibleCell();
+      const backPoints=back.querySelector('.grid-points-input')?.value;
+      const backType=[...back.querySelectorAll('label')]
+        .find(l=>l.textContent?.includes('Type de réponse'))?.querySelector('select')?.value;
+      const backExpected=back.querySelector('input[placeholder="Réponse attendue"]')?.value;
+      picker().value='1';picker().dispatchEvent(new Event('change',{bubbles:true}));
+      const unitBack=visibleCell();
+      const unitBackValues=unitBack.querySelector('input[placeholder^="Unités acceptées"]')?.value;
+      const unitBackScored=[...unitBack.querySelectorAll('label.inline-checkbox')]
+        .find(l=>l.textContent?.includes('Unité notée'))?.querySelector('input')?.checked;
+      return {ok:true,qid,unitId,backPoints,backType,backExpected,
+        unitBackValues,unitBackScored,
+        compact:!!unitBack.querySelector('.grid-cell-color-toolbar')};
+    })()`,true);
+    if(!editorAudit.ok||editorAudit.qid!==editorAudit.unitId||
+       editorAudit.backPoints!=='2'||editorAudit.backType!=='number'||
+       editorAudit.backExpected!=='12'||
+       editorAudit.unitBackValues!=='kg; kilo; kilogramme'||
+       editorAudit.unitBackScored!==true||!editorAudit.compact){
+      return fail('Audit strict de la cellule Unité du vrai Builder',editorAudit);
+    }
+    console.log('KALONEO_BUILDER_GRID_UNIT_EDITOR_ELECTRON=OK',JSON.stringify(editorAudit));
+
         console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
     console.log('KALONEO_BUILDER_PREVIEW_ELECTRON=OK');
