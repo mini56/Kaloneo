@@ -781,16 +781,22 @@
     // Chaque colonne supplémentaire d'un nouveau tableau de réponses a un
     // identifiant stable, même si elle n'a pas été créée manuellement dans
     // l'éditeur Question. Les données saisies par le candidat sont sauvegardées.
-    const responseTable=(model.blocks||[]).find(block=>block.type==='response-table');
-    const extraHeaders=responseTable?.responseTable?.headers?.slice(3)||[];
-    if(extraHeaders.length)for(const q of questions){
-      const configured=Array.isArray(q.supplementalFields)?q.supplementalFields:[];
-      const fields=extraHeaders.map((header,index)=>{
-        const field=configured[index]||{};
-        return {id:cleanId(field.id||header||('champ_'+(index+1)))||('champ_'+(index+1)),
-          label:String(header||('Champ '+(index+1)))};
-      });
-      q.supplementalFields=fields;
+    const tableBlocks=(model.blocks||[]).filter(block=>block.type==='response-table'||block.type==='multiple-tables');
+    for(const block of tableBlocks){
+      const table=block.type==='response-table'?block.responseTable:block.tableDefinition;
+      const offset=block.type==='response-table'?3:2;
+      const extras=(table?.headers||[]).slice(offset);
+      if(!extras.length)continue;
+      const ids=block.type==='multiple-tables'?new Set(table.questionIds||[]):null;
+      for(const q of questions){
+        if(ids&&!ids.has(q.id))continue;
+        const configured=Array.isArray(q.supplementalFields)?q.supplementalFields:[];
+        q.supplementalFields=extras.map((header,index)=>{
+          const field=configured[index]||{};
+          return {id:cleanId(field.id||header||('champ_'+(index+1)))||('champ_'+(index+1)),
+            label:String(header||('Champ '+(index+1)))};
+        });
+      }
     }
     const features=['runtime.basic'];
     if(questions.length) features.push('questionnaire.basic');
@@ -940,6 +946,11 @@
           for(const part of item.flow||[]){
             if(part?.type==='question'&&!questionIds.has(String(part.questionId||'')))
               errors.push('texte à trous : question manquante '+String(part.questionId||''));
+          }
+        }
+        if(modern&&type==='table-definition'){
+          for(const id of item.definition?.questionIds||[]){
+            if(!questionIds.has(String(id)))errors.push('tableau '+(index+1)+': question inconnue '+String(id));
           }
         }
         if(['image','audio','video'].includes(type)){
