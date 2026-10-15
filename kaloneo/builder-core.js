@@ -445,29 +445,46 @@
   }
 
   function gridQuestions(block,startIndex){
-    const out=[];
-    const seen=new Set();
+    const out=[],positions=new Map();
     const table=block.table||{};
-    for(const row of table.cells||[]){
-      for(const cell of row||[]){
-        if(!cell||!['candidate-answer','select','choice-option','unit'].includes(cell.kind)) continue;
-        const id=String(cell.questionId||('id'+(startIndex+out.length+1)+'_grille'));
-        if(seen.has(id)) continue;
-        seen.add(id);
-        // La nature de la cellule prévaut sur un ancien responseType='text'.
-        // Un changement de type dans le Builder ne doit jamais transformer
-        // une liste déroulante en champ libre lors de la compilation KALTEST.
-        const type=cell.kind==='select'?'select':
-          (cell.responseType||((cell.kind==='choice-option')?'single-choice':'text'));
-        const response={type};
-        if(Array.isArray(cell.options)&&cell.options.length) response.options=clone(cell.options);
-        out.push({
-          id,
-          prompt:cell.prompt||('Réponse '+id),
-          response,
-          acceptedAnswers:splitValues(cell.acceptedAnswers),
-          points:Math.max(0,Number(cell.points)||0)
-        });
+    for(const row of table.cells||[])for(const cell of row||[]){
+      if(!cell||!['candidate-answer','select','choice-option','unit'].includes(cell.kind))continue;
+      const id=String(cell.questionId||('id'+(startIndex+out.length+1)+'_grille'));
+      const previousIndex=positions.get(id);
+      if(cell.kind==='unit'){
+        const accepted=splitValues(cell.acceptedUnits||cell.acceptedAnswers);
+        const target=previousIndex===undefined
+          ?{id,prompt:'Unité '+id,response:{type:'text'},acceptedAnswers:[],points:0}
+          :out[previousIndex];
+        target.unitInput=true;
+        if(accepted.length)target.acceptedUnits=accepted;
+        if(cell.unitScored===true)target.unitScored=true;
+        if(previousIndex===undefined){positions.set(id,out.length);out.push(target);}
+        continue;
+      }
+      const type=cell.kind==='select'?'select':
+        cell.kind==='choice-option'?'single-choice':(cell.responseType||'text');
+      const response={type};
+      if(Array.isArray(cell.options)&&cell.options.length)response.options=clone(cell.options);
+      if(cell.kind==='choice-option'&&cell.value){
+        response.options=[...new Set([...(response.options||[]),String(cell.value)])];
+      }
+      const q={id,prompt:cell.prompt||('Réponse '+id),response,
+        acceptedAnswers:splitValues(cell.acceptedAnswers),
+        points:Math.max(0,Number(cell.points==null?1:cell.points)||0)};
+      if(previousIndex===undefined){positions.set(id,out.length);out.push(q);}
+      else if(cell.kind==='choice-option'){
+        const old=out[previousIndex];
+        if(old.response.type==='single-choice'){
+          const opts=new Set([...(old.response.options||[]),...(response.options||[])]);
+          old.response.options=[...opts];
+        }
+      }else{
+        const old=out[previousIndex];
+        if(old.unitInput)q.unitInput=true;
+        if(old.unitScored)q.unitScored=true;
+        if(old.acceptedUnits?.length)q.acceptedUnits=clone(old.acceptedUnits);
+        out[previousIndex]=q;
       }
     }
     return out;
