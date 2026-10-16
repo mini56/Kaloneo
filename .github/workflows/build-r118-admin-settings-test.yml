@@ -1,4 +1,4 @@
-name: 'KALONÉO R118 - Réglages Admin et manuel d'aide - Build 123'
+name: "KALONÉO R118 - Réglages Admin et manuel d'aide - Build 123"
 on:
   push:
     branches:
