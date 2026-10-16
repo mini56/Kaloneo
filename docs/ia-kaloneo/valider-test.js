@@ -27,7 +27,11 @@ function inspect(def){
   if(!object(def.runtime)||['start','save','restore','finish'].some(k=>def.runtime[k]!==true))add('Sauvegarde/restauration du moteur obligatoires.');
   if(!object(def.navigation)||def.navigation.next!=='host'||def.navigation.abandon!=='host-common')add('Navigation du composant hôte obligatoire.');
   if(!Array.isArray(def.features)||!def.features.includes('runtime.basic')||def.features.some(f=>!Core.SUPPORTED_FEATURES.includes(f)))add('Features inconnues ou runtime.basic absent.');
-  if(!object(def.presentation)||!Core.LAYOUTS.includes(def.presentation.layout)||!Array.isArray(def.presentation.builderContent)||!def.presentation.builderContent.length)add('Présentation Builder absente ou invalide.');
+  const pres=object(def.presentation)?def.presentation:{};
+  const fractions=object(pres.fractionSelection);
+  const blocksPresent=Array.isArray(pres.builderContent)&&pres.builderContent.length>0;
+  if(!object(def.presentation)||!Core.LAYOUTS.includes(pres.layout)||(!blocksPresent&&!fractions))add('Présentation Builder ou fractionSelection manquante.');
+  if(fractions&&Array.isArray(pres.builderContent))add('fractionSelection incompatible avec builderContent : le sélecteur candidat serait masqué.');
   const questions=Array.isArray(def.questions)?def.questions:[];
   if(!Array.isArray(def.questions))add('Tableau de questions absent.');
   if(def.kind==='questionnaire'&&questions.length===0)add('Questionnaire sans questions.');
@@ -69,6 +73,32 @@ function inspect(def){
     }
     if(typeof q.points==='number'&&q.points>=0&&Number.isFinite(q.points))scoreMax+=q.points;
   }
+  if(fractions) {
+    const groups=pres.fractionSelection.groups;
+    if(!Array.isArray(groups)||!groups.length)add('fractionSelection : groups manquant.');
+    else {
+      const seen=new Set();
+      for(const [i,g] of groups.entries()) {
+        const label='fractionSelection groupe '+(i+1);
+        if(!object(g)){add(label+' : objet manquant.');continue;}
+        if(!nonempty(g.questionId)||seen.has(g.questionId))add(label+' : questionId absent/dupliqué.');
+        seen.add(g.questionId);
+        if(!nonempty(g.label))add(label+' : label manquant.');
+        if(!Number.isInteger(g.totalItems)||g.totalItems<1||g.totalItems>120)add(label+' : totalItems invalide (1–120).');
+        if(!nonempty(g.itemImage)||!g.itemImage.startsWith('data:image/'))add(label+' : vraie image embarquée requise.');
+        const q=questions.find(q=>q&&q.id===g.questionId);
+        if(!q){add(label+' : question introuvable.');continue;}
+        if(q.response?.type!=='multiple-choice')add(label+' : type multiple-choice requis.');
+        if(!Number.isInteger(q.acceptedCount)||q.acceptedCount<0||q.acceptedCount>g.totalItems)add(label+' : quantité acceptedCount impossible.');
+        const expected=Array.from({length:Number.isInteger(g.totalItems)&&g.totalItems<=120?g.totalItems:0},(_,i)=>String(i+1));
+        if(JSON.stringify(q.response?.options)!==JSON.stringify(expected))add(label+' : response.options doit contenir 1 à totalItems.');
+        if(!Array.isArray(q.acceptedAnswers)||!Array.isArray(q.acceptedAnswers[0])||q.acceptedAnswers[0].length!==q.acceptedCount)add(label+' : acceptedAnswers incohérent avec acceptedCount.');
+      }
+      for(const q of questions)if(q&&!seen.has(q.id))add('fractionSelection : question sans groupe '+q.id);
+    }
+    const visual=pres.fractionSelection.visual;
+    if(visual?.src&&(!nonempty(visual.src)||!visual.src.startsWith('data:image/')))add('Image de contexte non embarquée.');
+  }
   const blocks=object(def.presentation)&&Array.isArray(def.presentation.builderContent)?def.presentation.builderContent:[];
   for(const [i,b] of blocks.entries()){
     const label='Bloc '+(i+1);
@@ -106,6 +136,7 @@ function inspect(def){
       const saved=Core.modelToDefinition(model);
       const again=Core.analyzeDefinition(saved);
       if(!again.ok)add('Aller-retour Builder non conforme : '+again.errors.join('; '));
+      if(fractions&&JSON.stringify(saved.presentation?.fractionSelection)!==JSON.stringify(pres.fractionSelection))add('Aller-retour Builder : fractionSelection altérée.');
       const before=new Map(questions.map(q=>[q.id,q]));
       const after=new Map((saved.questions||[]).map(q=>[q.id,q]));
       if(before.size!==after.size)add('Aller-retour : nombre de questions différent.');
