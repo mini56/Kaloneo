@@ -149,8 +149,14 @@ if(!kaltestRuntime.includes("test.calculator?.brandLabel ?? 'KALONÉO'")) {
   fail('Runtime KALTEST: libellé de calculatrice configurable absent');
 }
 
-for(const token of ["params.get('resume') === 'preview'","focusTitleField","startNewTest"]) {
+for(const token of ["params.get('resume') === 'preview'","ensureTitleEditable","startNewTest"]) {
   if(!builderJs.includes(token)) fail('Test Builder R3 incomplet: '+token);
+}
+if(builderJs.includes('focusTitleField(') ||
+   builderJs.includes("requestAnimationFrame(()=>$('test-library-search')?.focus())") ||
+   builderJs.includes("requestAnimationFrame(()=>$('image-library-search')?.focus())") ||
+   builderJs.includes("requestAnimationFrame(()=>$('developer-password').focus())")) {
+  fail('Test Builder : focus automatique réintroduit à l’ouverture ou à la création');
 }
 for(const token of ["Texte libre — évaluation Administrateur","saveToLibrary","kaloneoSaveTest"]) {
   if(!builderJs.includes(token)) fail('Test Builder R4 incomplet: '+token);
