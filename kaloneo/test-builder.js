@@ -1751,7 +1751,6 @@
       // Montrer d'abord la fenêtre ; les métadonnées/images arrivent ensuite.
       dialog.showModal();
       $('image-library-status').textContent='Chargement de la bibliothèque…';
-      requestAnimationFrame(()=>$('image-library-search')?.focus());
       await reloadImageLibrary();
     }catch(error){
       if(dialog?.open)dialog.close();
@@ -1943,10 +1942,6 @@
     changed();
     renderBlocks();
 
-    requestAnimationFrame(()=>{
-      const target=document.querySelector('[data-uid="'+questionBlock.uid+'"] textarea');
-      target?.focus();
-    });
   }
 
   const BLOCK_BACKGROUND_CHOICES=[
@@ -3357,7 +3352,6 @@
     dialog._kaloneoItems=Array.isArray(result.tests)?result.tests:[];
     renderLibraryTests(dialog._kaloneoItems);
     dialog.showModal();
-    requestAnimationFrame(()=>$('test-library-search')?.focus());
   }
 
   function exportDefinition(data) {
@@ -3488,7 +3482,6 @@
     const dialog=$('developer-unlock-dialog');
     dialog.showModal();
     $('developer-password').value='';
-    requestAnimationFrame(()=>$('developer-password').focus());
   }
   async function confirmDeveloperUnlock() {
     const password=$('developer-password').value;
@@ -3566,24 +3559,14 @@
     }
   }
 
-  // R115 focus : ne JAMAIS différer cette mise au point via
-  // requestAnimationFrame. Le frame initial pouvait s'exécuter après un clic
-  // rapide dans Scénario et le reprendre au profit de « Titre du test ».
-  // Nouveau test = focus immédiat et explicite ; initialisation = uniquement
-  // si aucun autre champ n'a déjà été sélectionné.
-  function focusTitleField(force=false) {
+  // Le Builder n'impose aucun focus lors de l'ouverture ou de la création.
+  // La validation obligatoire se produit au moment de l'enregistrement.
+  function ensureTitleEditable() {
     const title=$('test-title');
     if(!title)return;
     title.disabled=false;
     title.readOnly=false;
     title.removeAttribute('aria-disabled');
-    const focused=document.activeElement;
-    if(!force&&focused&&focused!==document.body&&focused!==title&&
-       focused!==$('new-test')&&!focused.closest?.('.builder-topbar'))return;
-    try{
-      title.focus({preventScroll:true});
-      title.setSelectionRange(0,title.value.length);
-    }catch(_){title.focus();}
   }
 
   function startNewTest(options={}) {
@@ -3604,7 +3587,7 @@
     renderBlocks();
     refreshPreview();
     resetHistory({markSaved:true});
-    focusTitleField(true);
+    ensureTitleEditable();
     return true;
   }
 
@@ -3895,7 +3878,8 @@
     refreshPreview();
     if(!restored)resetHistory({markSaved:true});
     else if(historyEntries.length===0)resetHistory({markSaved:false});
-    if(!resumeFromPreview)focusTitleField();
+    // Même après retour d'Aperçu, aucun curseur déplacé d'office.
+    ensureTitleEditable();
   }
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{install().catch(error=>alert('Initialisation du Builder impossible : '+String(error?.message||error)));},{once:true});

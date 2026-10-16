@@ -440,9 +440,9 @@ app.whenReady().then(async()=>{
         editorCanScroll:editor.scrollHeight>=editor.clientHeight
       };
     })()`);
-    if(initial.title!==''||initial.titleDisabled||initial.titleReadOnly||initial.activeId!=='test-title'||
+    if(initial.title!==''||initial.titleDisabled||initial.titleReadOnly||initial.activeId==='test-title'||
        initial.bodyOverflow!=='hidden'||!['auto','scroll'].includes(initial.editorOverflow)||initial.pageScroll) {
-      return fail('entrée R3 du Builder incorrecte',initial);
+      return fail('Builder : titre automatiquement sélectionné ou page incorrecte',initial);
     }
 
     const newTest=await win.webContents.executeJavaScript(`(()=>{
@@ -463,9 +463,11 @@ app.whenReady().then(async()=>{
         });
       })));
     })()`);
-    if(newTest.value!=='Saisie immédiate'||newTest.disabled||newTest.readOnly||newTest.activeId!=='test-title') {
-      return fail('Nouveau test non saisissable immédiatement',newTest);
+    if(newTest.value!=='Saisie immédiate'||newTest.disabled||newTest.readOnly||newTest.activeId==='test-title') {
+      return fail('Nouveau test non éditable ou focus forcé',newTest);
     }
+    console.log('KALONEO_BUILDER_NO_AUTOMATIC_FOCUS=OK',
+      JSON.stringify({initial:initial.activeId,newTest:newTest.activeId,editable:true}));
 
     const history=await win.webContents.executeJavaScript(`(async()=>{
       await new Promise(resolve=>setTimeout(resolve,450));
