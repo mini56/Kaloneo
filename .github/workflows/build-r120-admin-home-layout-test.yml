@@ -138,6 +138,7 @@ jobs:
         run: node scripts/kaloneo-testsv1-developer-smoke.js
       - name: Verify original V1 and V2 coexist without delete regression
         run: node scripts/kaloneo-edit-existing-test-smoke.js
+      # Les styles des Réglages sont vérifiés par node --check avant tout test Electron.
       # Contrôle strict par propriété inline: l'animation Chromium ne peint pas en fenêtre masquée.
       # Le smoke vérifie aussi la couleur de la rubrique active après changement d'onglet.
       - name: Verify real Admin landing screen, help layout and V1 in real Electron
