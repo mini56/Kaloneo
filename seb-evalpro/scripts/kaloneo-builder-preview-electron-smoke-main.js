@@ -199,7 +199,7 @@ app.whenReady().then(async()=>{
         item.frame?.h>400&&item.frame?.x>=realAdmin.content.x-2&&
         item.frame?.right<=realAdmin.content.right+2&&item.src?.includes('settings=1');
     });
-    const activeBlue=Object.values(panes).every(item=>item.selected==='true'&&item.inlineColor==='#0571a6');
+    const activeBlue=Object.values(panes).every(item=>item.selected==='true'&&item.inlineColor==='rgb(5, 113, 166)');
     if(!realAdmin.ok||realAdmin.mainTag!=='DIV'||realAdmin.homeMainDisplay!=='flex'||
        panelWidth<900||realAdmin.nav?.w<190||!largeDocs||!activeBlue||
        panes.passwords?.passwordFields!==3||!panes.passwords?.blankStatusHidden||
