@@ -16,12 +16,14 @@ const { createCandidateLocalProtection } = require('./candidate-local-protection
 const { internalStorageRoot, documentsWordRoot, migrateLegacyDocumentsStorage } = require('./storage-layout');
 const kaloneoFullParcoursRoute = require('./kaloneo-full-parcours-route');
 const { buildBilanDocxBuffer } = require('./bilan-docx-main');
+const { createPasswordStore } = require('./kaloneo-passwords');
 
 const ADMIN_PASSWORD_SHA256 = 'c800892ba3f11b33d36eedf7d3c4297f2b6c02e2c347dda8954b4c577f6666b5';
 // Mot de passe développeur défini par le responsable KALONÉO.
 // Le hash ne protège pas contre l'analyse d'un programme local ; le contrôle
 // est une séparation des opérations, pas un coffre-fort cryptographique.
 const DEVELOPER_PASSWORD_SHA256 = 'a4dd456bdab5214bd0de2f32b5cf036d4bc7466130ce54b75faf44e834801269';
+const passwordStore=createPasswordStore({directory:app.getPath('userData'),adminHash:ADMIN_PASSWORD_SHA256,developerHash:DEVELOPER_PASSWORD_SHA256});
 const STATE_VERSION = 1;
 const MIN_SPLASH_MS = 1400;
 const DESIGN_WIDTH = 1600;
@@ -431,10 +433,7 @@ function existingWebPage(pageName) {
 }
 
 function verifyAdminPassword(password) {
-  const received = crypto.createHash('sha256').update(String(password || '').trim().toUpperCase(), 'utf8').digest('hex');
-  const expected = Buffer.from(ADMIN_PASSWORD_SHA256, 'utf8');
-  const actual = Buffer.from(received, 'utf8');
-  return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+  return passwordStore.verify('admin',password);
 }
 
 function calculateAdaptiveZoom() {
@@ -908,6 +907,25 @@ ipcMain.handle('admin:verify-password', (_event, password) => {
 });
 
 ipcMain.handle('admin:status', () => adminSessionUnlocked);
+// Seule une session Admin sans candidat actif peut modifier ses accès.
+ipcMain.handle('kaloneo-settings:change-password', (event,request) => {
+  if(!adminSessionUnlocked || !mainWindow || event.sender!==mainWindow.webContents)
+    return {ok:false,error:'Accès administrateur requis.'};
+  if(getCandidateStore().getActiveCandidate())
+    return {ok:false,error:'Impossible pendant un parcours candidat actif.'};
+  const role=request?.role;
+  if(role!=='admin' && role!=='developer')return {ok:false,error:'Accès inconnu.'};
+  if(String(request?.nextPassword||'')!==String(request?.confirmation||''))
+    return {ok:false,error:'Les deux nouveaux mots de passe ne correspondent pas.'};
+  try{
+    const result=passwordStore.change(role,request?.currentPassword,request?.nextPassword);
+    if(result.ok){
+      developerSessionUnlocked=false;
+      if(role==='admin')adminSessionDocumentPassword=String(request.nextPassword||'');
+    }
+    return result;
+  }catch(error){return {ok:false,error:'Impossible d’enregistrer les accès : '+String(error.message||error)};}
+});
 ipcMain.handle('kaloneo-developer:status', () => ({
   ok:adminSessionUnlocked,
   unlocked:adminSessionUnlocked && developerSessionUnlocked
@@ -916,10 +934,7 @@ ipcMain.handle('kaloneo-developer:unlock', (_event,password) => {
   if(!adminSessionUnlocked)return {ok:false,error:'Ouvrez d’abord la session Administrateur.'};
   if(getCandidateStore().getActiveCandidate())
     return {ok:false,error:'Impossible pendant une évaluation active.'};
-  const given=crypto.createHash('sha256').update(String(password||'').trim().toUpperCase(),'utf8').digest('hex');
-  const expected=Buffer.from(DEVELOPER_PASSWORD_SHA256);
-  const received=Buffer.from(given);
-  if(received.length!==expected.length || !crypto.timingSafeEqual(received,expected))
+  if(!passwordStore.verify('developer',password))
     return {ok:false,error:'Mot de passe Développeur incorrect.'};
   developerSessionUnlocked=true;
   return {ok:true,unlocked:true};
