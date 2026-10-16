@@ -4,7 +4,7 @@ on:
     branches:
       - fix-r60-tri-rearm-only-20261011
     paths:
-      - '.github/workflows/build-r119-admin-settings-test.yml'
+      - '.github/workflows/build-r119-admin-settings-layout-test.yml'
 
 concurrency:
   group: kaloneo-r119-setup-${{ github.ref }}
@@ -31,10 +31,10 @@ jobs:
           $nsis=Get-Content -Raw -Encoding UTF8 build/installer.nsh
           if ([int]$p.sebBuildNumber -ne 124) { throw 'Build #124 requis.' }
           if ($nsis -notmatch '!define SEB_BUILD_NUMBER "124"') { throw 'Numéro NSIS incoherent.' }
-          if ($cfg -notmatch 'version: 0\.0\.147' -or $cfg -notmatch 'PILOTE-22-R119-0\.0\.147-Windows-Setup') { throw 'Version R119 incoherente.' }
-          git fetch --depth=1 origin tag seb-kaloneo-r118-builder-suffix-question-test
+          if ($cfg -notmatch 'version: 0\.0\.148' -or $cfg -notmatch 'PILOTE-22-R119-0\.0\.147-Windows-Setup') { throw 'Version R119 incoherente.' }
+          git fetch --depth=1 origin tag seb-kaloneo-r118-admin-settings-test
           if ($LASTEXITCODE -ne 0) { throw 'Tag de la version test R118 absent.' }
-          $oldJson=(git show 'seb-kaloneo-r118-builder-suffix-question-test:seb-evalpro/package.json') -join [Environment]::NewLine
+          $oldJson=(git show 'seb-kaloneo-r118-admin-settings-test:seb-evalpro/package.json') -join [Environment]::NewLine
           if ($LASTEXITCODE -ne 0) { throw 'R118 illisible.' }
           $old=$oldJson | ConvertFrom-Json
           if ([int]$p.sebBuildNumber -le [int]$old.sebBuildNumber) { throw 'Build deja utilise.' }
@@ -83,9 +83,9 @@ jobs:
       - name: Interdire toute modification des V1 ou images validées depuis R118
         shell: pwsh
         run: |
-          git fetch --depth=1 origin tag seb-kaloneo-r118-builder-suffix-question-test
+          git fetch --depth=1 origin tag seb-kaloneo-r118-admin-settings-test
           if ($LASTEXITCODE -ne 0) { throw 'R118 secours introuvable.' }
-          $files=git diff --name-only 'seb-kaloneo-r118-builder-suffix-question-test' HEAD
+          $files=git diff --name-only 'seb-kaloneo-r118-admin-settings-test' HEAD
           foreach ($file in $files) {
             if ($file -match '^(TESTS_VALIDES/|VALID2/|seb-evalpro/source/kaltest/tests/|images_tests/|kaloneo/icons-tests/)') {
               throw "Fichier V1 ou image protégée modifié: $file"
