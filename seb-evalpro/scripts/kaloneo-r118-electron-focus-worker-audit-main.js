@@ -12,6 +12,7 @@ async function run(){
   await wait(200);
   const initial=await win.webContents.executeJavaScript("(function(){const input=document.getElementById('user-input');input.focus();input.setSelectionRange(7,7);return {active:document.activeElement===input,position:input.selectionStart}})()");
   assert(initial.active,'Échec de prise de focus choisie par le scénario.');
+  assert(win.isFocused(),'Le runner Windows doit avoir le focus avant de mesurer une perte de focus.');
   const observations=[];
   for(let n=0;n<10;n++){
     const worker=new BrowserWindow({
