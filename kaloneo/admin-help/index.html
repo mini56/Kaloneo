@@ -2,18 +2,24 @@
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>KALONÉO — Aide de l'administration</title>
 <style>
-:root{color-scheme:light;font-family:Arial,sans-serif;color:#243b4c;background:#f7fafc}
-body{margin:0;padding:20px;line-height:1.55}h1{color:#004e70;font-size:24px;margin:0}
-.subtitle{color:#586c7c;margin:2px 0 18px}h2{color:#005b82;font-size:19px;margin:0 0 9px}
-#help-search{width:100%;max-width:750px;font:inherit;border:1px solid #8faec4;border-radius:7px;padding:12px;box-sizing:border-box}
-#results-status{margin:10px 0;font-size:14px;color:#596f7d}
-.help-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
-article{background:#fff;border:1px solid #bed3df;border-radius:10px;padding:16px;box-shadow:0 1px 3px #0001}
-article[hidden]{display:none!important}p{margin:8px 0}ul{padding-left:24px}
-.label{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5183a0;font-weight:700}
-button{border:1px solid #005b82;border-radius:6px;background:#fff;color:#005b82;padding:7px 11px;font-weight:700;cursor:pointer}
-.notice{margin-bottom:14px;background:#ecf5fb;border-left:4px solid #1b7fac;padding:12px;max-width:860px}
-@media print{#help-search,#results-status,.subtitle button{display:none}.help-items{display:block}article{break-inside:avoid;margin-bottom:15px}}
+:root{color-scheme:light;font-family:"Segoe UI",Arial,sans-serif;background:#f4f8fb;color:#1b3b4e}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;width:100%;background:#f4f8fb}
+body{padding:22px 26px 45px;font-size:15px;line-height:1.6}
+header{border-radius:13px;background:linear-gradient(115deg,#064c6e,#167ea1);padding:24px 29px;color:#fff;margin-bottom:22px}
+h1{font-size:27px;margin:0 0 9px;color:#fff;line-height:1.3}
+.subtitle{display:flex;flex-wrap:wrap;align-items:center;gap:14px;color:#e2f4fa;margin:0}
+#help-print{font:inherit;font-weight:700;background:white;color:#075b7b;border:1px solid #b6d5e3;border-radius:7px;padding:8px 16px;cursor:pointer}
+.notice{margin:0 0 19px;background:#e7f3f9;border-left:4px solid #2182ac;border-radius:6px;padding:13px 16px;font-size:14px}
+label[for=help-search]{display:block;color:#0a4e6d;margin:0 0 7px}
+#help-search{width:100%;max-width:100%;font:inherit;border:1px solid #a5c5d6;background:white;border-radius:8px;padding:12px 15px}
+#help-search:focus-visible,button:focus-visible{outline:3px solid #e3b94d;outline-offset:2px}
+#results-status{color:#426b84;font-weight:700;font-size:13px;margin:11px 0 18px}
+.help-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:16px}
+article{background:white;border:1px solid #d5e4ec;box-shadow:0 3px 13px #092d3c0b;border-radius:12px;padding:23px 24px;min-width:0;overflow-wrap:anywhere}
+article[hidden]{display:none!important}article h2{font-size:19px;line-height:1.3;color:#065775;margin:7px 0 13px}
+article p{color:#34566a;margin:8px 0}.label{font-size:11px;letter-spacing:.08em;font-weight:800;text-transform:uppercase;color:#53849d}
+@media(max-width:800px){body{padding:15px}.help-items{grid-template-columns:1fr}header{padding:20px}article{padding:19px}}
+@media print{body{padding:0;background:white}header{background:white;border:1px solid #aaa;color:black}h1,.subtitle{color:black}#help-print,#help-search,#results-status,label[for=help-search]{display:none}.help-items{display:block}article{break-inside:avoid;margin-bottom:15px;box-shadow:none}article[hidden]{display:block!important}}
 </style></head>
 <body>
 <header><h1>Guide de l'administration KALONÉO</h1>
