@@ -173,10 +173,16 @@ const uiRuntime = read('source/js/seb-ui-runtime.js');
 assert(uiRuntime.includes("closest('[data-seb-no-normalize=\"1\"]')"), 'runtime UI ne respecte pas les boutons à icône explicite.');
 
 const fractionsRuntime = read('source/js/kaltest-pilot2-runtime.js');
+const fractionsShared = read('../kaloneo/shared-presentation.js');
 const fractionsCss = read('source/css/kaltest-pilot2.css');
-assert(fractionsRuntime.includes('function randomFractionCloudPoints('), 'Fractions KALTEST : moteur de placement aléatoire du nuage absent.');
-assert(fractionsRuntime.includes('fractionCloudPositions'), 'Fractions KALTEST : persistance des positions du nuage absente.');
-assert(fractionsRuntime.includes("items.dataset.cloudReady = '1'"), 'Fractions KALTEST : signal de nuage prêt absent.');
+assert(fractionsShared.includes('function randomFractionCloudPoints(') &&
+  fractionsShared.includes('function installFractionCloud('),
+  'Fractions KALTEST : moteur commun de placement aléatoire du nuage absent.');
+assert(fractionsRuntime.includes('fractionCloudPositions') &&
+  fractionsRuntime.includes('KaloneoSharedPresentation.installFractionCloud('),
+  'Fractions KALTEST : restauration des nuages historiques par le moteur partagé absente.');
+assert(fractionsShared.includes("items.dataset.cloudReady = '1'"),
+  'Fractions KALTEST : signal de nuage prêt absent du moteur partagé.');
 assert(fractionsCss.includes('.kaltest-fraction-items.cloud{'), 'Fractions KALTEST : zone visuelle nuage absente.');
 assert(fractionsCss.includes('.kaltest-fraction-items.cloud .kaltest-fraction-item{position:absolute'), 'Fractions KALTEST : les 12 objets du nuage ne sont pas positionnés librement.');
 
