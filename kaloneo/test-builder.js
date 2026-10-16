@@ -2563,7 +2563,7 @@
       node=window.KaloneoSharedPresentation.renderImageSelection({
         doc:document,block:{
           label:block.label||block.question?.prompt||'Sélectionnez les images',
-          questionId:block.question?.id||'',totalItems:block.totalItems,
+          questionId:block.question?.id||'',totalItems:block.totalItems,cloud:block.cloud===true,
           resource:{data:block.mediaData||''}
         }
       });
