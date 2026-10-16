@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KALONÉO — Aide de l'administration</title>
+<style>
+:root{color-scheme:light;font-family:Arial,sans-serif;color:#243b4c;background:#f7fafc}
+body{margin:0;padding:20px;line-height:1.55}h1{color:#004e70;font-size:24px;margin:0}
+.subtitle{color:#586c7c;margin:2px 0 18px}h2{color:#005b82;font-size:19px;margin:0 0 9px}
+#help-search{width:100%;max-width:750px;font:inherit;border:1px solid #8faec4;border-radius:7px;padding:12px;box-sizing:border-box}
+#results-status{margin:10px 0;font-size:14px;color:#596f7d}
+.help-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+article{background:#fff;border:1px solid #bed3df;border-radius:10px;padding:16px;box-shadow:0 1px 3px #0001}
+article[hidden]{display:none!important}p{margin:8px 0}ul{padding-left:24px}
+.label{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5183a0;font-weight:700}
+button{border:1px solid #005b82;border-radius:6px;background:#fff;color:#005b82;padding:7px 11px;font-weight:700;cursor:pointer}
+.notice{margin-bottom:14px;background:#ecf5fb;border-left:4px solid #1b7fac;padding:12px;max-width:860px}
+@media print{#help-search,#results-status,.subtitle button{display:none}.help-items{display:block}article{break-inside:avoid;margin-bottom:15px}}
+</style></head>
+<body>
+<header><h1>Guide de l'administration KALONÉO</h1>
+<p class="subtitle">Première édition — guide évolutif, disponible hors connexion.
+<button type="button" id="help-print">Imprimer</button></p></header>
+<div class="notice">Ce guide décrit les fonctions déjà présentes dans l'application. Il sera complété, notamment par des captures d'écran authentiques, à mesure que KALONÉO évoluera.</div>
+<label for="help-search"><strong>Rechercher une fonction</strong></label>
+<input id="help-search" type="search" placeholder="Ex. candidat, résultat, bilan, import, parcours…" autocomplete="off">
+<p id="results-status" role="status"></p>
+<main class="help-items">
+<article data-keywords="introduction accueil fonctionnement hors ligne"><p class="label">01 · Prise en main</p><h2>À quoi sert KALONÉO ?</h2>
+<p>KALONÉO permet de préparer des exercices, composer des parcours, faire passer des évaluations à des candidats et consulter leurs résultats dans l'espace Administrateur.</p>
+<p>Le logiciel fonctionne localement et hors connexion, sur un poste Windows équipé de l'application.</p></article>
+<article data-keywords="administrateur accès verrouiller candidats sécurité"><p class="label">02 · Accès</p><h2>Passer en mode Administrateur</h2>
+<p>Utilisez le bouton « Administrateur » et saisissez le mot de passe prévu. La barre d'administration donne ensuite accès aux fonctions autorisées. Le bouton « Verrouiller » permet de revenir au mode protégé.</p>
+<p>La roue dentée des réglages ne s'affiche qu'en mode Administrateur.</p></article>
+<article data-keywords="lister dossiers candidats identification session"><p class="label">03 · Candidats</p><h2>Retrouver un candidat</h2>
+<p>Ouvrez « Lister les candidats » pour accéder aux dossiers présents sur le poste. Vérifiez toujours l'identité du candidat avant de consulter un résultat ou d'éditer un bilan.</p>
+<p>La création d'un dossier candidat et sa gestion suivent le parcours ; ne supprimez pas manuellement les données de travail.</p></article>
+<article data-keywords="tests parcours création choix sélection verrouillage"><p class="label">04 · Parcours</p><h2>Tests et parcours</h2>
+<p>La commande « Tests / Parcours » mène aux outils de préparation. « Choix du parcours » sert à sélectionner le parcours à proposer aux candidats.</p>
+<p>Un parcours regroupe des tests et leur ordre de passage. Vérifiez sa composition avant utilisation.</p></article>
+<article data-keywords="builder nouveaux exercices édition aperçu bibliothèque"><p class="label">05 · Création</p><h2>Créer ou modifier un test</h2>
+<p>Le Test Builder permet d'écrire le scénario, les consignes, les questions et les barèmes. Le bouton « Aperçu » ouvre le véritable rendu candidat dans Electron.</p>
+<p>Pour l'explication détaillée des blocs, utilisez l'autre bouton « Aide du Builder » depuis les Réglages.</p></article>
+<article data-keywords="notation notes points scores résultats sections"><p class="label">06 · Résultats</p><h2>Consulter les résultats</h2>
+<p>Ouvrez le dossier du candidat puis la page Résultat. Les sections correspondent aux exercices de son parcours. Une réponse saisie dans un test ne doit pas apparaître dans un autre.</p>
+<p>Les durées, erreurs et autoévaluations ne sont affichées que lorsqu'elles sont enregistrées par le test correspondant.</p></article>
+<article data-keywords="bilan synthèse révision word document"><p class="label">07 · Bilan</p><h2>Préparer le bilan</h2>
+<p>La page Bilan regroupe les observations et niveaux d'évaluation. Relisez les commentaires avant de finaliser le document.</p>
+<p>Les fonctions d'export de documents sont distinctes du parcours candidat.</p></article>
+<article data-keywords="import export usb clé transfert candidats tests images"><p class="label">08 · Transfert</p><h2>Importer et exporter</h2>
+<p>Les fonctions de transfert permettent de déplacer les dossiers candidats et les tests entre postes. Un test exporté doit conserver ses médias et ses règles de correction.</p>
+<p>Conservez une copie de sauvegarde avant un transfert important. Contrôlez l'identité des dossiers importés.</p></article>
+<article data-keywords="mot passe réglages administrateur développeur sécurité"><p class="label">09 · Réglages</p><h2>Changer les mots de passe</h2>
+<p>Dans la barre Administrateur, ouvrez la roue dentée puis « Mots de passe ». Choisissez l'accès Administrateur ou Développeur, saisissez le mot de passe actuel, puis le nouveau deux fois.</p>
+<p>Le changement est enregistré localement sur le PC et doit être répété sur les autres postes si nécessaire. Conservez le nouveau mot de passe en lieu sûr.</p></article>
+<article data-keywords="bibliothèque image icône stockage ressources test"><p class="label">10 · Ressources</p><h2>Images et icônes</h2>
+<p>Les bibliothèques servent à réutiliser des illustrations dans les tests. Les ressources internes techniques ne doivent pas être confondues avec les images pédagogiques.</p>
+<p>Les ressources d'un test exporté doivent rester utilisables après import sur un autre poste.</p></article>
+<article data-keywords="à propos version build développeur aide manuel"><p class="label">11 · Informations</p><h2>À propos du programme</h2>
+<p>La rubrique « À propos » des Réglages indique le développeur, la version installée, le numéro de compilation et les ressources intégrées.</p>
+<p>Pour demander de l'aide, relevez la version exacte et le nom de l'écran concerné.</p></article>
+<article data-keywords="dépannage focus curseur sauvegarde app problème"><p class="label">12 · En cas de problème</p><h2>Préserver votre travail</h2>
+<p>Avant de fermer une page de conception, enregistrez votre travail. Si le curseur quitte un champ sans raison ou si un aperçu semble incorrect, relevez l'étape précise et comparez avec l'aperçu Electron.</p>
+<p>Ne modifiez pas les versions V1 validées pour contourner une anomalie de l'interface.</p></article>
+</main><script src="help.js"></script></body></html>
