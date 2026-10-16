@@ -1,36 +1,22 @@
 'use strict';
-
-const fs = require('fs');
-const path = require('path');
-
-const root = path.resolve(__dirname, '..');
-const pkg = require(path.join(root, 'package.json'));
-const preload = fs.readFileSync(path.join(root, 'src', 'preload.js'), 'utf8');
-const installer = fs.readFileSync(path.join(root, 'build', 'installer.nsh'), 'utf8');
-const r47Builder = fs.readFileSync(path.join(root, 'build', 'kaloneo-test-builder-r47-builder.yml'), 'utf8');
-
-function fail(message) {
-  console.error('SEB EvalPro garde barre Admin / build: ' + message);
-  process.exit(2);
-}
-
-const buildNumber = String(pkg.sebBuildNumber || '').trim();
-if (!/^\d+$/.test(buildNumber)) fail('sebBuildNumber invalide dans package.json.');
-if (!preload.includes("const APP_BUILD_NUMBER = String(appPackage.sebBuildNumber || '').trim() || 'DEV';")) {
-  fail('preload.js ne lit pas le build central depuis package.json.');
-}
-if (!preload.includes('const APP_BUILD_LABEL = `Build #${APP_BUILD_NUMBER}`;')) {
-  fail('APP_BUILD_LABEL n’est pas construit depuis le build central.');
-}
-if (!preload.includes('<div id="seb-evalpro-build" class="seb-evalpro-build">${APP_BUILD_LABEL}</div>')) {
-  fail('la barre Admin n’injecte pas APP_BUILD_LABEL.');
-}
-const installerMatch = installer.match(/!define\s+SEB_BUILD_NUMBER\s+"(\d+)"/);
-if (!installerMatch || installerMatch[1] !== buildNumber) {
-  fail('le Setup et la barre Admin n’utilisent pas le même numéro de build.');
-}
-if (!r47Builder.includes('version: 0.0.' + buildNumber)) {
-  fail('la version du builder R47 ne correspond pas au Build #' + buildNumber + '.');
-}
-
-console.log('SEB_ADMIN_BUILD_LABEL=OK Build #' + buildNumber);
+const fs=require('fs');
+const path=require('path');
+const root=path.resolve(__dirname,'..');
+const pkg=require(path.join(root,'package.json'));
+const preload=fs.readFileSync(path.join(root,'src','preload.js'),'utf8');
+const installer=fs.readFileSync(path.join(root,'build','installer.nsh'),'utf8');
+function fail(message){console.error('KALONÉO garde version Admin : '+message);process.exit(2);}
+const build=String(pkg.sebBuildNumber||'');
+const version=String(pkg.sebReleaseVersion||'');
+if(!/^\d+$/.test(build)||!/^\d+\.\d+\.\d+$/.test(version))fail('Build/version manquants.');
+if(!preload.includes("const APP_BUILD_NUMBER = String(appPackage.sebBuildNumber || '').trim() || 'DEV';"))
+  fail('Numéro de build central introuvable.');
+if(!preload.includes("const APP_RELEASE_VERSION = String(appPackage.sebReleaseVersion || '').trim() || 'Version inconnue';"))
+  fail('Version de distribution non lue depuis package.json.');
+if(!preload.includes('APP_BUILD_LABEL')||!preload.includes('${APP_BUILD_LABEL}'))
+  fail('Version absente de la barre Admin.');
+if(!installer.includes('!define SEB_BUILD_NUMBER "'+build+'"'))
+  fail('Numéro NSIS et package.json incohérents.');
+const release=fs.readFileSync(path.join(root,'build','kaloneo-v1-fixes-r118-admin-settings-builder.yml'),'utf8');
+if(!release.includes('version: '+version))fail('La version installateur diffère de la barre Admin.');
+console.log('KALONÉO barre Admin = version '+version+' ; Build #'+build+' (compilation) — OK.');
