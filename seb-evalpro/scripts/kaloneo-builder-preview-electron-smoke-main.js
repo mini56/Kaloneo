@@ -881,6 +881,10 @@ app.whenReady().then(async()=>{
       const focusAfterInput=document.activeElement===header&&header.isConnected&&header.selectionStart===9;
       await new Promise(resolve=>setTimeout(resolve,410));
       const focusAfterPause=document.activeElement===header&&header.isConnected&&header.selectionStart===9;
+      // La miniature fidèle ne démarre qu'après 1100 ms d'inactivité.
+      // Ne pas s'arrêter au test historique de 410 ms, trop court pour la détecter.
+      await new Promise(resolve=>setTimeout(resolve,1900));
+      const focusAfterFullMiniPreview=document.activeElement===header&&header.isConnected&&header.selectionStart===9;
       const focusAfterPauseDiagnostic={
         activeTag:document.activeElement?.tagName,activeId:document.activeElement?.id,
         activeLabel:document.activeElement?.closest('label')?.textContent?.slice(0,70),
@@ -918,9 +922,9 @@ app.whenReady().then(async()=>{
       await new Promise(resolve=>setTimeout(resolve,30));
       const nextKeepsFocus=document.activeElement===next&&next.isConnected;
       document.getElementById('new-test').click();
-      return {ok:true,focusAfterInput,focusAfterPause,focusAfterPauseDiagnostic,updated,gridKeepsFocus,gridUpdated,nextKeepsFocus};
+      return {ok:true,focusAfterInput,focusAfterPause,focusAfterFullMiniPreview,focusAfterPauseDiagnostic,updated,gridKeepsFocus,gridUpdated,nextKeepsFocus};
     })()`,true);
-    if(!typingFocus.ok||!typingFocus.focusAfterInput||!typingFocus.focusAfterPause||
+    if(!typingFocus.ok||!typingFocus.focusAfterInput||!typingFocus.focusAfterPause||!typingFocus.focusAfterFullMiniPreview||
        !typingFocus.updated||!typingFocus.gridKeepsFocus||!typingFocus.gridUpdated||
        !typingFocus.nextKeepsFocus){
       return fail('Le curseur disparaît lors de la saisie dans le Builder',typingFocus);
