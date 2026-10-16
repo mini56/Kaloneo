@@ -1620,3 +1620,7 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 .scoring-audit-list .score-audit-error{color:#a62b27;font-weight:600}
 .scoring-audit-list .score-audit-unsupported{color:#986315}
 #scoring-audit-summary{font-weight:700;margin-top:8px}
+
+/* Un bloc replié retrouve strictement la hauteur d'en-tête validée.
+   Les actions avancées apparaissent uniquement quand le bloc est ouvert. */
+.exercise-block.is-collapsed>.block-quick-actions{display:none}
