@@ -31,3 +31,22 @@ for(const [label,mutate] of cases){
   assert.ok(result.errors.length,'Absence de message : '+label);
 }
 console.log('KALONEO_AI_KIT_VALIDATOR=OK '+JSON.stringify({scenarios:cases.length+1,scoreMax:good.scoreMax}));
+
+const fractions=JSON.parse(fs.readFileSync(path.join(__dirname,'exemples','fractions-pourcentages-images-selection.test.json'),'utf8'));
+const vf=inspect(fractions);
+assert.equal(vf.ok,true,'Exemple fractions-images refusé : '+vf.errors.join(' | '));
+assert.equal(vf.scoreMax,3,'Trois groupes doivent représenter 3 points.');
+const mutantImages=[
+ ['ID absent',x=>x.presentation.fractionSelection.groups[0].questionId='unknown'],
+ ['Compte impossible',x=>x.questions[0].acceptedCount=5],
+ ['Fraction non entière',x=>x.questions[0].acceptedCount=1.5],
+ ['Image distante',x=>x.presentation.fractionSelection.groups[0].itemImage='https://exemple.fr/photo.png'],
+ ['Options partielles',x=>x.questions[1].response.options.pop()],
+ ['builderContent prioritaire',x=>x.presentation.builderContent=[]],
+ ['Groupe perdu',x=>x.presentation.fractionSelection.groups.pop()]
+];
+for(const [label,change] of mutantImages){
+  const mutant=clone(fractions);change(mutant);
+  assert.equal(inspect(mutant).ok,false,'Anomalie fractions non bloquée : '+label);
+}
+console.log('KALONEO_AI_FRACTION_SELECTION_VALIDATOR=OK',JSON.stringify({scenarios:1+mutantImages.length,scoreMax:vf.scoreMax}));
