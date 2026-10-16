@@ -2275,6 +2275,7 @@ app.whenReady().then(async()=>{
       document.querySelector('[data-target="test-scenario"][data-format="color"]').click();
       const opened=document.getElementById('text-color-dialog').open;
       document.querySelector('[data-text-color="#005A8D"]').click();
+      await new Promise(r=>setTimeout(r,35)); // inclut l'événement natif dialog.close()
       const scenarioStatus={
         modalClosed:!document.getElementById('text-color-dialog').open,
         focused:document.activeElement===scenario,connected:scenario.isConnected,
@@ -2291,12 +2292,14 @@ app.whenReady().then(async()=>{
       textarea.setSelectionRange(10,15);
       block.querySelector('.context-color-btn').click();
       document.querySelector('[data-text-color="#1F6B3A"]').click();
+      await new Promise(r=>setTimeout(r,35));
       const blockRestored=document.activeElement===textarea&&textarea.isConnected&&
         textarea.value.includes('[c=#1F6B3A]cette[/c]');
       // Escape / Fermer doit également rendre le champ à l'utilisateur.
       textarea.setSelectionRange(0,7);
       block.querySelector('.context-color-btn').click();
       document.getElementById('close-text-color-dialog').click();
+      await new Promise(r=>setTimeout(r,35));
       const cancelRestored=document.activeElement===textarea&&textarea.selectionStart===0&&
         textarea.selectionEnd===7;
       document.getElementById('add-output').click();

@@ -20,6 +20,7 @@
   let textColorTarget = null;
   let textColorChanged = null;
   let textColorSelection = null;
+  let paletteReturnTarget = null;
 
   const HISTORY_LIMIT = 30;
   const SAVED_FINGERPRINT_KEY = 'kaloneo_test_builder_saved_fingerprint';
@@ -399,6 +400,7 @@
 
   function closeTextColorPalette(color=''){
     const target=textColorTarget;
+    paletteReturnTarget=target?.isConnected?target:null;
     const callback=textColorChanged;
     const selection=textColorSelection;
     // Important : fermer le dialogue AVANT de redonner le focus au champ,
@@ -3757,7 +3759,21 @@
     // Esc ferme aussi le dialogue natif ; libérer sa référence sans ramener
     // tardivement le curseur si l'utilisateur a déjà changé de contrôle.
     $('text-color-dialog').addEventListener('close',()=>{
+      // Chromium peut rétablir le focus sur l'ancien contrôle de la page
+      // (souvent « Titre du test ») APRÈS dialog.close(). La restauration
+      // synchrone à la sélection de couleur ne suffit donc pas.
+      const target=paletteReturnTarget||textColorTarget;
+      paletteReturnTarget=null;
       textColorTarget=null;textColorChanged=null;textColorSelection=null;
+      if(target?.isConnected&&!$('text-color-dialog').open){
+        // Éviter de voler le curseur si une véritable nouvelle saisie a
+        // commencé avant le traitement de l'événement close.
+        const active=document.activeElement;
+        if(!active||active===document.body||active===$('test-title')||
+           active.closest?.('#text-color-dialog')||active===target){
+          try{target.focus({preventScroll:true});}catch(_){target.focus();}
+        }
+      }
     });
     document.querySelectorAll('[data-text-color]').forEach(button=>{
       button.addEventListener('click',()=>{
