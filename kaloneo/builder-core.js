@@ -700,7 +700,13 @@
         // R48.1: une grille importée peut conserver ses libellés historiques.
         // L'éditeur ne doit pas les écraser par « Réponse id » lors d'un changement de style.
         const prompt=(previous?.prompt && q.prompt==='Réponse '+q.id)?previous.prompt:q.prompt;
-        return Object.assign({},previous||{},q,{prompt});
+        const merged=Object.assign({},previous||{},q,{prompt});
+        // Si l'utilisateur efface le texte fixe après réponse, ne jamais
+        // laisser une ancienne valeur survivre dans sourceDefinition.
+        // Ne concerne que le bloc Question explicite, pas les V1 ou grilles.
+        if(explicitIds.has(String(q.id))&&!Object.prototype.hasOwnProperty.call(q,'answerSuffix'))
+          delete merged.answerSuffix;
+        return merged;
       });
     }else if(Object.prototype.hasOwnProperty.call(def,'questions')){
       delete def.questions;
