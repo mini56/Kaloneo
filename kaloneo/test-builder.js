@@ -928,11 +928,19 @@
     ensureQuestionId(q);
     const row1=document.createElement('div');
     row1.className='field-row';
+    const questionField=inputField('Question',q.prompt,value=>{
+      q.prompt=value;changed({typing:true});
+    },{multiline:true,title:'Entrez le texte de la question présenté au candidat. Sélectionnez un passage puis utilisez G / I / U / A🎨.'});
     row1.append(
       inputField('ID automatique / stable',q.id,()=>{},{readOnly:true,title:'Identifiant généré automatiquement. Il reste stable même si la question est déplacée ou reformulée.'}),
-      inputField('Question',q.prompt,value=>{q.prompt=value;changed();},{multiline:true,title:'Entrez le texte de la question présenté au candidat.'})
+      questionField
     );
     body.appendChild(row1);
+    // Réutiliser la même barre que les blocs Texte pour tous les types de
+    // questions. La réponse du candidat et les règles de score sont inchangées.
+    body.appendChild(createTextFormatToolbar(questionField.querySelector('textarea'),value=>{
+      q.prompt=value;
+    }));
 
     const row2=document.createElement('div');
     row2.className='field-row cols-3';

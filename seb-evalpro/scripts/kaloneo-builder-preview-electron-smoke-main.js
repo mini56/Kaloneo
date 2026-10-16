@@ -2408,6 +2408,74 @@ app.whenReady().then(async()=>{
       return fail('Manuel hors ligne intégré non fonctionnel dans Electron',helpCheck);
     console.log('KALONEO_BUILDER_HELP_ELECTRON=OK',JSON.stringify(helpCheck));
 
+
+    // Boutons du vrai Builder : format de l'énoncé d'une question libre.
+    const questionFormatting=await win.webContents.executeJavaScript('('+async function(){
+      const Core=window.KaloneoBuilderCore;
+      document.getElementById('new-test').click();
+      const get=()=>document.querySelector('.exercise-block');
+      let block=get();
+      block.querySelector('.block-type').value='question';
+      block.querySelector('.block-type').dispatchEvent(new Event('change',{bubbles:true}));
+      block=get();
+      if(block.classList.contains('is-collapsed'))block.querySelector('.toggle-block').click();
+      const editor=()=>[...get().querySelectorAll('label')].find(n=>n.firstChild?.nodeType===3&&
+        n.firstChild.textContent.trim()==='Question')?.querySelector('textarea');
+      const area=editor();
+      if(!area)return {ok:false,reason:'Énoncé introuvable'};
+      const buttons=[...block.querySelectorAll('.inline-text-format-toolbar button')];
+      if(buttons.length!==4)return {ok:false,reason:'Barre absente',count:buttons.length};
+      area.value='Explique ton calcul et souligne le résultat.';
+      area.dispatchEvent(new Event('input',{bubbles:true}));
+      area.focus();area.setSelectionRange(0,8);
+      buttons[0].click();
+      const bold=area.isConnected&&area.value.includes('[b]Explique[/b]')&&document.activeElement===area;
+      const index=area.value.indexOf('résultat');
+      area.setSelectionRange(index,index+8);buttons[2].click();
+      const underlined=area.value.includes('[u]résultat[/u]')&&document.activeElement===area;
+      const type=[...block.querySelectorAll('label')].find(x=>x.textContent.includes('Type de réponse'))?.querySelector('select');
+      if(!type)return {ok:false,reason:'Sélecteur de réponse libre absent'};
+      type.value='free-text';type.dispatchEvent(new Event('change',{bubbles:true}));
+      block=get();
+      const updated=editor();
+      const prompt=updated?.value||'';
+      const remains=prompt.includes('[b]Explique[/b]')&&prompt.includes('[u]résultat[/u]');
+      const sample=window.KaloneoSharedPresentation.renderQuestion({
+        doc:document,question:{prompt},makeAnswer:()=>document.createElement('textarea')
+      });
+      const rendered=sample.querySelector('strong')?.textContent==='Explique'&&
+        sample.querySelector('u')?.textContent==='résultat';
+      const plain=window.KaloneoSharedPresentation.renderQuestion({
+        doc:document,question:{prompt:'Question ancienne'},makeAnswer:()=>document.createElement('input')
+      });
+      const legacyPlain=plain.textContent==='Question ancienne'&&!plain.querySelector('strong');
+      updated.focus();updated.setSelectionRange(0,0);
+      const palette=[...block.querySelectorAll('.inline-text-format-toolbar button')][3];
+      palette.click();
+      const opened=document.getElementById('text-color-dialog').open;
+      document.querySelector('[data-text-color="#005A8D"]').click();
+      await new Promise(r=>setTimeout(r,70));
+      const color=updated.value.includes('[c=#005A8D][/c]')&&!document.getElementById('text-color-dialog').open;
+      const def=Core.modelToDefinition({
+        meta:{id:'new_rich_question',title:'Question formatée',version:'1.0.0',
+          category:'mathematiques',layout:'single',scored:false},
+        blocks:[{uid:'richer',zone:'left',type:'question',
+          question:{id:'question_explanation',prompt:updated.value,responseType:'free-text',points:0}}]
+      });
+      const persisted=def.questions[0].prompt===updated.value&&
+        def.questions[0].response.type==='free-text'&&
+        def.questions[0].manualEvaluation===true&&def.questions[0].points===0;
+      document.getElementById('new-test').click();
+      return {ok:true,bold,underlined,remains,rendered,legacyPlain,opened,color,persisted};
+    }.toString()+')()',true);
+    if(!questionFormatting.ok||!questionFormatting.bold||
+       !questionFormatting.underlined||!questionFormatting.remains||
+       !questionFormatting.rendered||!questionFormatting.legacyPlain||
+       !questionFormatting.opened||!questionFormatting.color||!questionFormatting.persisted){
+      return fail('Mise en forme du champ Question du Builder',questionFormatting);
+    }
+    console.log('KALONEO_BUILDER_RICH_QUESTION_ELECTRON=OK',JSON.stringify(questionFormatting));
+
     console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
     console.log('KALONEO_BUILDER_PREVIEW_ELECTRON=OK');

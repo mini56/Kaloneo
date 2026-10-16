@@ -420,4 +420,21 @@ console.log('KALONEO_BUILDER_FIVE_WORKFLOWS_CORE=OK',JSON.stringify({
   scoring:{maximum:audit.maximum,earned:audit.earned},specialRequiresElectron:true
 }));
 
+
+const styledQuestionModel={
+  meta:{id:'rich_question_new',title:'Question formatée',
+    category:'francais',scored:true,version:'1.0.0',layout:'single'},
+  blocks:[{uid:'format_bloc',zone:'left',type:'question',
+    question:{id:'question_justification',prompt:'[b]Explique[/b] et [u]justifie[/u] [c=#005A8D]ta réponse[/c]',
+      responseType:'free-text',manualEvaluation:true,points:0}}]
+};
+const styledDefinition=Core.modelToDefinition(styledQuestionModel);
+assert.equal(styledDefinition.questions[0].prompt,styledQuestionModel.blocks[0].question.prompt);
+assert.equal(styledDefinition.questions[0].manualEvaluation,true);
+assert.equal(styledDefinition.questions[0].points,0);
+const styledRecovered=Core.definitionToModel(styledDefinition);
+assert.equal(styledRecovered.blocks[0].question.prompt,styledQuestionModel.blocks[0].question.prompt);
+assert.equal(Core.analyzeDefinition(styledDefinition).ok,true);
+console.log('KALONEO_RICH_QUESTION_JSON_ROUNDTRIP=OK');
+
 console.log('KALONEO_FUTURE_BLOCKS_ROUNDTRIP_UNIQUE_QUESTION=OK');

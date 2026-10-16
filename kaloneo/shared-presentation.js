@@ -194,7 +194,14 @@
     }
     const caption=doc.createElement('span');
     caption.className=captionClassName;
-    caption.textContent=String(question?.prompt||'');
+    const prompt=String(question?.prompt||'');
+    // Aucun HTML injecté : uniquement le balisage connu du moteur de texte.
+    // Les anciennes questions sans balisage gardent exactement le même DOM.
+    if(/\[(?:\/?(?:b|i|u)|c=#[0-9a-f]{6}|\/c)\]/i.test(prompt)){
+      renderRichContext(caption,prompt);
+    }else{
+      caption.textContent=prompt;
+    }
     if(example){
       const tag=doc.createElement('strong');
       tag.className='example-tag';tag.textContent='Exemple';
