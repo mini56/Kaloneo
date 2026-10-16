@@ -932,16 +932,19 @@
     const questionField=inputField('Question',q.prompt,value=>{
       q.prompt=value;changed({typing:true});
     },{multiline:true,title:'Entrez le texte de la question présenté au candidat. Sélectionnez un passage puis utilisez G / I / U / A🎨.'});
-    row1.append(
-      inputField('ID automatique / stable',q.id,()=>{},{readOnly:true,title:'Identifiant généré automatiquement. Il reste stable même si la question est déplacée ou reformulée.'}),
-      questionField
-    );
-    body.appendChild(row1);
-    // Réutiliser la même barre que les blocs Texte pour tous les types de
-    // questions. La réponse du candidat et les règles de score sont inchangées.
-    body.appendChild(createTextFormatToolbar(questionField.querySelector('textarea'),value=>{
+    // Placer la barre sous l'énoncé (colonne droite), et non sous l'ID.
+    // La garder hors du <label> pour ne pas déplacer le focus lors du clic.
+    const questionColumn=document.createElement('div');
+    questionColumn.className='question-editor-column';
+    questionColumn.appendChild(questionField);
+    questionColumn.appendChild(createTextFormatToolbar(questionField.querySelector('textarea'),value=>{
       q.prompt=value;
     }));
+    row1.append(
+      inputField('ID automatique / stable',q.id,()=>{},{readOnly:true,title:'Identifiant généré automatiquement. Il reste stable même si la question est déplacée ou reformulée.'}),
+      questionColumn
+    );
+    body.appendChild(row1);
 
     const row2=document.createElement('div');
     row2.className='field-row cols-3';
