@@ -672,7 +672,10 @@
       stableWidth = items.clientWidth || 0;
       stableHeight = items.clientHeight || 0;
       settled = true;
-      layoutFractionCloud(items, {...options,allowRegenerateSaved:true});
+      // Stabiliser la taille sans modifier les positions sauvegardées :
+      // seule une véritable modification de taille par ResizeObserver
+      // autorise une nouvelle répartition si les objets se chevauchent.
+      layoutFractionCloud(items, {...options,allowRegenerateSaved:false});
     }, 220);
 
     if (typeof ResizeObserver === 'function' && !items.__sebFractionCloudObserver) {
