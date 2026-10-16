@@ -1705,3 +1705,7 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 .kaloneo-shared-question[data-kaloneo-answer-layout="below"]>.kaloneo-answer-with-suffix{
   flex:0 1 auto;
 }
+
+/* R118 : la barre de formatage appartient uniquement à la colonne Question. */
+.question-editor-column{min-width:0;display:flex;flex-direction:column;align-items:stretch}
+.question-editor-column>.inline-text-format-toolbar{align-self:flex-start;margin:6px 0 4px}
