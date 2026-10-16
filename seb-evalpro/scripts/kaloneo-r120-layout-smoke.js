@@ -1,0 +1,15 @@
+'use strict';
+const fs=require('fs'),path=require('path'),assert=require('assert'),crypto=require('crypto');
+const root=path.resolve(__dirname,'..'),repo=path.resolve(root,'..');
+const icon=fs.readFileSync(path.join(repo,'kaloneo','assets','settings-28.png'));
+assert.strictEqual(icon.readUInt32BE(16),28);assert.strictEqual(icon.readUInt32BE(20),28);
+assert.strictEqual(crypto.createHash('sha256').update(icon).digest('hex'),'79308b9dcd0494c9f1e2a3f4c011580853b0bb89a48af1aa736399bae65c3de4');
+const settings=fs.readFileSync(path.join(root,'src','kaloneo-admin-settings.js'),'utf8');
+assert(!settings.includes('<main class="settings-main">'));
+assert(settings.includes('settings-property')&&settings.includes('status:empty'));
+for(const phrase of ['settings-layout','settings-nav','settings-main','settings-help iframe','settings=1','kaloneo-builder/assets/settings-28.png','width:min(1320px,96vw)'])assert(settings.includes(phrase),'R119 UI: '+phrase);
+const preload=fs.readFileSync(path.join(root,'src','preload.js'),'utf8');
+assert(preload.includes('#seb-evalpro-settings[hidden]{display:none!important}'));
+assert(preload.includes('settingsButton.hidden = !adminUnlocked'));
+const p=require('../package.json');assert.strictEqual(p.sebBuildNumber,125);assert.strictEqual(p.sebReleaseVersion,'0.0.149');
+console.log('KALONEO_R120_LAYOUT_GUARD=OK exact original icon 28px + large manual layout + candidate hidden');
