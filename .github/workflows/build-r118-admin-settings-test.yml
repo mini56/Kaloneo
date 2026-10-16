@@ -30,7 +30,7 @@ jobs:
           $cfg=Get-Content -Raw -Encoding UTF8 build/kaloneo-v1-fixes-r118-admin-settings-builder.yml
           $nsis=Get-Content -Raw -Encoding UTF8 build/installer.nsh
           if ([int]$p.sebBuildNumber -ne 123) { throw 'Build #123 requis.' }
-          if ($nsis -notmatch '!define SEB_BUILD_NUMBER "122"') { throw 'Numéro NSIS incoherent.' }
+          if ($nsis -notmatch '!define SEB_BUILD_NUMBER "123"') { throw 'Numéro NSIS incoherent.' }
           if ($cfg -notmatch 'version: 0\.0\.147' -or $cfg -notmatch 'PILOTE-22-R118-0\.0\.147-Windows-Setup') { throw 'Version R118 incoherente.' }
           git fetch --depth=1 origin tag seb-kaloneo-r117-builder-suffix-question-test
           if ($LASTEXITCODE -ne 0) { throw 'Tag de la version test R117 absent.' }
