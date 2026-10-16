@@ -4,9 +4,11 @@ const replayPrototype = require('./replay-preload');
 const replayNavigationCapture = require('./replay-navigation-capture');
 const bilanHistory = require('./bilan-history-preload');
 const candidateCatalog = require('./candidate-catalog-preload');
+const { installAdminSettings } = require('./kaloneo-admin-settings');
 const appPackage = require('../package.json');
 const APP_BUILD_NUMBER = String(appPackage.sebBuildNumber || '').trim() || 'DEV';
-const APP_BUILD_LABEL = `Build #${APP_BUILD_NUMBER}`;
+const APP_RELEASE_VERSION = String(appPackage.sebReleaseVersion || '').trim() || 'Version inconnue';
+const APP_BUILD_LABEL = `Version ${APP_RELEASE_VERSION}`;
 // SEB_CANDIDATE_REPLAY_PROTO_PRELOAD
 const editionCapabilities = ipcRenderer.sendSync('app:edition-sync') || {
   edition:'unified', canBilan:true, canAi:true, canImport:true, canExport:true
@@ -836,6 +838,8 @@ function showTransferProgress(mode = 'export') {
 function sebSyncAdminBarState() {
   const bar = document.getElementById('seb-evalpro-topbar');
   if (!bar) return;
+  const settingsButton = document.getElementById('seb-evalpro-settings');
+  if(settingsButton)settingsButton.hidden = !adminUnlocked;
   const adminButton = document.getElementById('seb-evalpro-admin');
   const bilanButton = document.getElementById('seb-evalpro-bilan');
   const returnButton = document.getElementById('seb-evalpro-return');
@@ -1107,6 +1111,7 @@ function injectAdminBar() {
   const bar = document.createElement('div');
   bar.id = 'seb-evalpro-topbar';
   bar.innerHTML = `
+    <button id="seb-evalpro-settings" type="button" hidden title="Réglages internes de KALONÉO" aria-label="Réglages internes de KALONÉO">⚙</button>
     <div class="seb-evalpro-name">SEB EvalPro</div>
     <div id="seb-evalpro-build" class="seb-evalpro-build">${APP_BUILD_LABEL}</div>
     <div id="seb-evalpro-candidate-badge" class="seb-evalpro-candidate-badge" hidden></div>
@@ -1135,6 +1140,7 @@ function injectAdminBar() {
     #seb-evalpro-top-hotzone{position:fixed;top:0;left:0;right:0;height:${HOTZONE_HEIGHT}px;z-index:2147483645;background:transparent}
     #seb-evalpro-topbar{position:fixed;top:0;left:0;right:0;height:${BAR_HEIGHT}px;z-index:2147483646;display:flex;align-items:center;gap:4px;padding:0 6px;box-sizing:border-box;overflow:hidden;background:#0070c0;color:#fff;font-family:Arial,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.25);transform:translateY(-100%);transition:transform .16s ease;will-change:transform}
     #seb-evalpro-topbar.seb-evalpro-visible{transform:translateY(0)}
+    #seb-evalpro-topbar #seb-evalpro-settings{font-size:23px;line-height:1;min-width:35px;padding:4px 6px}
     #seb-evalpro-topbar .seb-evalpro-name{font-size:18px;font-weight:700;white-space:nowrap}
     #seb-evalpro-topbar .seb-evalpro-build{font-size:12px;font-weight:700;white-space:nowrap;opacity:.9;padding:3px 7px;border:1px solid rgba(255,255,255,.55);border-radius:10px}
     #seb-evalpro-topbar .seb-evalpro-candidate-badge{font-size:13px;font-weight:700;white-space:nowrap;padding:5px 9px;border:1px solid rgba(255,255,255,.55);border-radius:4px;background:rgba(255,255,255,.14)}
@@ -1243,6 +1249,7 @@ function injectAdminBar() {
   document.body.prepend(bar);
   document.body.prepend(hotzone);
 
+  installAdminSettings({ipcRenderer,bar,button:bar.querySelector('#seb-evalpro-settings'),buildNumber:APP_BUILD_NUMBER,releaseVersion:APP_RELEASE_VERSION,author:appPackage.author});
   const adminButton = bar.querySelector('#seb-evalpro-admin');
   const candidateBadge = bar.querySelector('#seb-evalpro-candidate-badge');
   const bilanButton = bar.querySelector('#seb-evalpro-bilan');
@@ -1267,6 +1274,7 @@ function injectAdminBar() {
     if (document.getElementById('seb-evalpro-admin-dialog')) return;
     if (document.getElementById('seb-evalpro-session-close-dialog')) return;
     if (document.getElementById('seb-evalpro-quit-application-dialog')) return;
+    if (document.getElementById('seb-evalpro-settings-dialog')) return;
     if (document.getElementById('seb-evalpro-transfer-dialog')) return;
     if (document.getElementById('seb-evalpro-transfer-password-dialog')) return;
     bar.classList.remove('seb-evalpro-visible');
