@@ -2270,6 +2270,8 @@ app.whenReady().then(async()=>{
       document.getElementById('new-test').click();
       const scenario=document.getElementById('test-scenario');
       scenario.focus();
+      await new Promise(r=>setTimeout(r,90)); // Teste surtout le frame auto-focus initial.
+      const noLateTitleFocus=document.activeElement===scenario;
       scenario.value='Texte avec accent';
       scenario.setSelectionRange(6,10);
       document.querySelector('[data-target="test-scenario"][data-format="color"]').click();
@@ -2337,10 +2339,10 @@ app.whenReady().then(async()=>{
       await new Promise(r=>setTimeout(r,460));
       const continuousTyping=editable.isConnected&&document.activeElement===editable&&
         editable.selectionStart===6&&editable.value==='Une chaîne';
-      return {opened,scenarioRestored,scenarioStatus,blockRestored,cancelRestored,contractRestored,
+      return {opened,noLateTitleFocus,scenarioRestored,scenarioStatus,blockRestored,cancelRestored,contractRestored,
         bilanRestored,gridKindRestored,continuousTyping};
     }.toString()+')()',true);
-    if(['opened','scenarioRestored','blockRestored','cancelRestored','contractRestored',
+    if(['opened','noLateTitleFocus','scenarioRestored','blockRestored','cancelRestored','contractRestored',
       'bilanRestored','gridKindRestored','continuousTyping'].some(k=>focusWorkflow[k]!==true))
       return fail('Focus du Builder perdu pendant la couleur, le Bilan ou une grille',focusWorkflow);
     console.log('KALONEO_BUILDER_FOCUS_CAUSES_FIXED_ELECTRON=OK',JSON.stringify(focusWorkflow));

@@ -3566,32 +3566,24 @@
     }
   }
 
-  // Ne jamais reprendre le curseur après un clic ou une frappe dans un autre
-  // champ, même si Electron exécute tardivement le requestAnimationFrame.
-  let focusSequence=0;
-  let titleFocusRequest=0;
-  document.addEventListener('focusin',()=>{focusSequence++;},true);
-  function focusTitleField() {
-    const request=++titleFocusRequest;
-    const sequence=focusSequence;
-    requestAnimationFrame(()=>{
-      const title=$('test-title');
-      if(!title)return;
-      title.disabled=false;
-      title.readOnly=false;
-      title.removeAttribute('aria-disabled');
-      if(request!==titleFocusRequest||sequence!==focusSequence)return;
-      // Electron peut retarder un requestAnimationFrame pendant l'aperçu.
-      // Ne jamais reprendre le focus si l'utilisateur a déjà commencé à
-      // modifier un bloc : l'ancien comportement volait alors son curseur.
-      const focused=document.activeElement;
-      if(focused&&focused!==document.body&&focused!==title&&
-         focused!==$('new-test')&&!focused.closest?.('.builder-topbar'))return;
-      try{
-        title.focus({preventScroll:true});
-        title.setSelectionRange(0,title.value.length);
-      }catch(_){title.focus();}
-    });
+  // R115 focus : ne JAMAIS différer cette mise au point via
+  // requestAnimationFrame. Le frame initial pouvait s'exécuter après un clic
+  // rapide dans Scénario et le reprendre au profit de « Titre du test ».
+  // Nouveau test = focus immédiat et explicite ; initialisation = uniquement
+  // si aucun autre champ n'a déjà été sélectionné.
+  function focusTitleField(force=false) {
+    const title=$('test-title');
+    if(!title)return;
+    title.disabled=false;
+    title.readOnly=false;
+    title.removeAttribute('aria-disabled');
+    const focused=document.activeElement;
+    if(!force&&focused&&focused!==document.body&&focused!==title&&
+       focused!==$('new-test')&&!focused.closest?.('.builder-topbar'))return;
+    try{
+      title.focus({preventScroll:true});
+      title.setSelectionRange(0,title.value.length);
+    }catch(_){title.focus();}
   }
 
   function startNewTest(options={}) {
@@ -3612,7 +3604,7 @@
     renderBlocks();
     refreshPreview();
     resetHistory({markSaved:true});
-    focusTitleField();
+    focusTitleField(true);
     return true;
   }
 
