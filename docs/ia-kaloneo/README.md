@@ -26,3 +26,11 @@ Le vérificateur est en lecture seule. Pour l'auto-test de ce kit : `node docs/i
 ## Limites
 
 Le programme, pas l'IA, a toujours le dernier mot. Le contrôleur de ce kit ne peut pas prouver seul la fidélité des pixels, les performances Windows, ni un parcours candidat complet. Le contrôle actuel de l'import est volontairement plus léger que cette garde pré-import : **ne pas l'utiliser comme seul test de compatibilité**. Les images/audio/vidéo nécessitent des octets embarqués réels ; pas d'URL ni de chemins fictifs. Les V1 validées, tests de candidats et dossiers `TESTS_VALIDES` ne sont jamais modifiés par ce kit. Ne pas utiliser un ID/version déjà utilisé. Toute évolution future de KALTEST nécessite une mise à jour de ce kit.
+
+
+## Extensions IA — Fractions et pourcentages en images cliquables
+
+Un nouvel exemple autonome et hors ligne est disponible : `exemples/fractions-pourcentages-images-selection.test.json`.
+Le programme candidat sait déjà afficher des groupes d'objets illustrés cliquables avec `presentation.fractionSelection`. Le candidat choisit **la bonne quantité** ; `acceptedCount` fixe le nombre exact. Les 3 groupes de l'exemple valent 3 points.
+
+**Limite actuelle du Builder** : les groupes ne disposent pas encore d'éditeur visuel dédié. Le Builder peut montrer une liste de questions simplifiée, mais le vrai candidat affiche les objets sélectionnables. Tester la page candidat Electron avant de l'utiliser. Ne pas mélanger `fractionSelection` et `builderContent`, ce dernier désactiverait la sélection spécifique.
