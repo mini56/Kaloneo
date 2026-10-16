@@ -1,0 +1,35 @@
+name: "KALONÉO - audit autonome du focus après Setup R118"
+on:
+  push:
+    branches:
+      - fix-r60-tri-rearm-only-20261011
+    paths:
+      - '.github/workflows/audit-r118-focus.yml'
+jobs:
+  focus-audit:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - name: Source sur la branche approuvée
+        uses: actions/checkout@v4
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Installation des dépendances Electron
+        run: npm install --no-audit --no-fund
+      - name: Préparer le Builder sans créer de Setup
+        run: npm run prepare:web
+      - name: Dix captures Electron cachées sans perte du focus préalablement choisi
+        run: npx electron --no-sandbox scripts/kaloneo-r118-electron-focus-worker-audit-main.js
+      - name: Confirmer que le Build R118 publié reste inchangé
+        shell: pwsh
+        run: |
+          $p=Get-Content -Raw -Encoding UTF8 package.json | ConvertFrom-Json
+          if ([int]$p.sebBuildNumber -ne 123 -or [string]$p.sebReleaseVersion -ne '0.0.147') {
+            throw 'Un audit ne doit pas incrémenter le build publié.'
+          }
+          Write-Host 'R118 conservée, aucun Setup généré par cet audit.'
