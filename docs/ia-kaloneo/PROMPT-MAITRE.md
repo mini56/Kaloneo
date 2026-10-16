@@ -36,10 +36,10 @@ N'affirme pas qu'un fichier est prêt pour un usage candidat tant que la vérifi
 ## Cas spécial : sélectionner des images pour construire une fraction ou un pourcentage
 
 **Ne refuse pas cette demande** : le moteur candidat KALONÉO prend déjà en charge `presentation.fractionSelection`.
-Utilise **strictement** le modèle `exemples/fractions-pourcentages-images-selection.test.json` fourni avec le kit. Demande à recevoir ce fichier si l'utilisateur ne l'a pas joint.
+**Privilégie désormais le modèle Builder natif** `exemples/selection-images-builder.test.json` (blocs `image-selection` dans `builderContent`) fourni avec le kit. L'ancien fichier `fractions-pourcentages-images-selection.test.json` reste un exemple de compatibilité historique. Demande à recevoir ce fichier si l'utilisateur ne l'a pas joint.
 
 Pour chaque groupe : `questionId`, `label`, `totalItems`, `itemImage` en véritable image locale intégrée (`data:image/`), et éventuellement `cloud`. La question correspondante utilise `multiple-choice`, les options 1..totalItems, et `acceptedCount` pour indiquer le nombre d'objets à sélectionner. Exemple : 3/4 de 4 = 3 ; 25 % de 8 = 2 ; 40 % de 10 = 4. Choisis des totaux donnant un résultat entier ou précise l'arrondi attendu. Les objets d'un même groupe sont identiques et interchangeables.
 
-Il est possible de dessiner un SVG complet puis de l'encoder en `data:image/svg+xml,` : c'est une véritable image intégrée, utilisable hors connexion. Ne fabrique pas une chaîne base64 fictive. **N'ajoute pas `builderContent`** : ce bloc est prioritaire et empêcherait l'affichage cliquable.
+Il est possible de dessiner un SVG complet puis de l'encoder en `data:image/svg+xml,` : c'est une véritable image intégrée, utilisable hors connexion. Ne fabrique pas une chaîne base64 fictive. Pour un test **natif** `image-selection`, utilise au contraire `presentation.builderContent` et les champs documentés dans `CONTRAT-IA.md`. Ne l'interdis que pour un ancien `fractionSelection`.
 
-Signale cette limite sans masquer la capacité existante : le Builder ne possède pas encore d'éditeur dédié à ces groupes ; une vérification dans le vrai candidat Electron reste nécessaire. Le mécanisme ne convient pas aux questions où chaque image possède une réponse différente.
+Le bloc natif peut maintenant être édité dans le Builder et affiché par le moteur candidat, toujours avec vérification Electron avant utilisation. Le mécanisme ne convient pas aux questions où chaque image possède une réponse différente.

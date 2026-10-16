@@ -80,4 +80,32 @@ La question associée : `{"id":"q1","prompt":"Sélectionnez 25 % des 8 objets.",
 
 Les valeurs de `itemImage` et `visual.src` doivent contenir **de vrais pixels ou du vrai SVG embarqué**, et non des chemins ou liens externes. Un groupe compte un point si le nombre d'objets sélectionnés est exact. Ne pas utiliser ce mode si certaines images sont les « bonnes » et d'autres les « mauvaises » : toutes les images du groupe représentent le même objet.
 
-**Limite honnête** : le rendu candidat existe, mais l'éditeur Builder ne montre pas encore un véritable bloc `fractionSelection` éditable. Importation et usage candidat nécessitent un test Electron réel. Le validateur strict du kit accepte le mode et vérifie les groupes et les quantités, mais ne prétend pas résoudre cette différence de présentation.
+**Compatibilité historique uniquement** : l'éditeur Builder ne transforme pas `fractionSelection` en bloc natif. Pour les nouveaux tests, utiliser le bloc `image-selection` ci-dessous. Importation et usage candidat nécessitent un test Electron réel. Le validateur strict du kit accepte le mode et vérifie les groupes et les quantités, mais ne prétend pas résoudre cette différence de présentation.
+
+## Bloc natif Builder 2.0.0 — `image-selection` (recommandé)
+
+Le nouveau bloc « Sélection d’images (fractions / pourcentages) » figure dans les options du Builder et dans `presentation.builderContent`. Il utilise les mêmes règles de correction KALTEST que les fractions existantes, **sans HTML ni JavaScript arbitraires**.
+
+Structure à reproduire pour chaque groupe :
+
+```json
+{
+  "type": "image-selection",
+  "zone": "right",
+  "questionId": "selection_25_pourcent",
+  "label": "25 % de huit objets",
+  "totalItems": 8,
+  "acceptedCount": 2,
+  "cloud": false,
+  "resource": {
+    "name": "objets.svg",
+    "mime": "image/svg+xml",
+    "data": "data:image/svg+xml,...",
+    "alt": "Objets identiques"
+  }
+}
+```
+
+La valeur `resource.data` dans cet extrait est une explication : **fournir une véritable image locale dans le fichier final**. La question associée doit déclarer `response.type:"multiple-choice"`, options `["1",...,"8"]`, `acceptedAnswers:[["1","2"]]`, `acceptedCount:2`, `points:1`. La correction porte sur le nombre de sélections, pas sur les positions. Au maximum 60 images par bloc ; `acceptedCount` doit être entier entre 0 et `totalItems`. Plusieurs blocs peuvent cohabiter avec des consignes, tableaux et images dans la même page.
+
+**Référence complète à copier** : `exemples/selection-images-builder.test.json`. Ce modèle, contrairement à l'ancien `fractionSelection`, est directement modifiable via le nouveau type de bloc du Builder et utilise `builderContent`. Ne jamais mélanger les deux formats dans une même définition.

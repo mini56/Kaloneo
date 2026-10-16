@@ -277,7 +277,16 @@ function applyBlockStyle(node,block){
 
 function renderBlock(block){
   let node;
-  if(block.type==='text'){
+  if(block.type==='image-selection'){
+    node=window.KaloneoSharedPresentation.renderImageSelection({
+      doc:document,block:{
+        label:block.label||block.question?.prompt||'Sélectionnez les images',
+        questionId:block.question?.id||'',totalItems:block.totalItems,
+        resource:{data:block.mediaData||''}
+      }
+    });
+  }
+  else if(block.type==='text'){
     node=el('section','kb-block kb-text');
     renderRichContext(node,block.text||'Bloc texte vide');
   }

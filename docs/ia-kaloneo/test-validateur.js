@@ -50,3 +50,20 @@ for(const [label,change] of mutantImages){
   assert.equal(inspect(mutant).ok,false,'Anomalie fractions non bloquée : '+label);
 }
 console.log('KALONEO_AI_FRACTION_SELECTION_VALIDATOR=OK',JSON.stringify({scenarios:1+mutantImages.length,scoreMax:vf.scoreMax}));
+
+// Vérification du modèle natif qui sera importé puis modifié dans le Builder.
+const native=JSON.parse(fs.readFileSync(path.join(__dirname,'exemples','selection-images-builder.test.json'),'utf8'));
+const nativeCheck=inspect(native);
+assert.equal(nativeCheck.ok,true,'Sélection native refusée : '+nativeCheck.errors.join(' | '));
+assert.equal(nativeCheck.scoreMax,3,'Le modèle natif doit compter 3 points.');
+const edits=[
+ ['image manquante',x=>x.presentation.builderContent[1].resource.data=''],
+ ['ID inconnu',x=>x.presentation.builderContent[1].questionId='absent'],
+ ['compte trop grand',x=>x.questions[0].acceptedCount=100],
+ ['trop d’objets',x=>x.presentation.builderContent[1].totalItems=61]
+];
+for(const [label,change] of edits){
+ const copy=clone(native);change(copy);
+ assert.equal(inspect(copy).ok,false,'Modèle natif invalide accepté : '+label);
+}
+console.log('KALONEO_AI_IMAGE_SELECTION_BUILDER=OK',JSON.stringify({scoreMax:nativeCheck.scoreMax,negativeCases:edits.length}));

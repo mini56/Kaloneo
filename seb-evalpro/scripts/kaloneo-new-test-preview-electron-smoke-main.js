@@ -323,6 +323,74 @@ app.whenReady().then(async()=>{
     JSON.stringify({preview:secondPreview,interactive:interacted,
       questions:reimported.questions.map(q=>({id:q.id,points:q.points,
         unitScored:q.unitScored||false,units:q.acceptedUnits||[]}))}));
+
+  // Test créé dans le Builder : aperçu et parcours Electron utilisant le même rendu.
+  const visualModel={
+    meta:{id:'future_novel_image_selection_2026',title:'Fractions par sélection d’images',
+      version:'1.0.0',category:'mathematiques',scored:true,layout:'50-50',
+      scenario:'Constituez la fraction',instruction:'Choisissez deux images sur huit'},
+    blocks:[
+      {uid:'fraction_intro',type:'text',zone:'left',text:'Sélectionnez 25 % des 8 images.'},
+      {uid:'fraction_images',type:'image-selection',zone:'right',label:'25 % de huit images',
+        totalItems:8,acceptedCount:2,cloud:false,
+        mediaName:'illustration.svg',mediaType:'image/svg+xml',mediaData:image,mediaAlt:'Objets',
+        question:{id:'fraction_image_q',prompt:'Sélectionnez 25 % des 8 images',points:1}}
+    ]
+  };
+  const visualDefinition=Core.modelToDefinition(visualModel);
+  assert.equal(Core.analyzeDefinition(visualDefinition).ok,true,'KALTEST illustré non conforme');
+  const roundtripped=Core.modelToDefinition(Core.definitionToModel(visualDefinition));
+  assert.deepEqual(roundtripped.questions,visualDefinition.questions,'Notation perdue après import Builder');
+  assert.deepEqual(roundtripped.presentation.builderContent,visualDefinition.presentation.builderContent,
+    'Images cliquables perdues après import Builder');
+  activePreviewDefinition=roundtripped;runtime.runtime.tests=[roundtripped];
+  await win.loadFile(path.join(root,'app','web','kaloneo-builder','test-preview.html'));
+  await new Promise(resolve=>setTimeout(resolve,500));
+  const visualPreview=await win.webContents.executeJavaScript('('+function(){
+    const buttons=[...document.querySelectorAll('.kaltest-image-selection-item')];
+    const zones=[...document.querySelectorAll('.kb-zone')];
+    const imageOk=buttons.length===8&&buttons.every(x=>x.style.backgroundImage.includes('data:image/svg+xml'));
+    buttons[0]?.click();buttons[1]?.click();
+    return {count:buttons.length,imageOk,selected:document.querySelectorAll('.kaltest-image-selection-item.selected').length,
+      zones:zones.length,error:document.querySelector('.kb-error')?.textContent||''};
+  }.toString()+')()');
+  assert.deepEqual(visualPreview,{count:8,imageOk:true,selected:2,zones:2,error:''},
+    'Aperçu Electron du bloc Sélection d’images incorrect');
+  await win.loadFile(path.join(root,'app','web','kaltest-pilot2.html'),{query:{kaloneoPreview:'1'}});
+  await new Promise(resolve=>setTimeout(resolve,900));
+  const visualCandidate=await win.webContents.executeJavaScript('('+function(){
+    const api=window.sebKaltestPilot2;
+    const test=api?.currentTest?.();
+    const buttons=[...document.querySelectorAll('.kaltest-image-selection-item')];
+    if(!api||!test||buttons.length!==8)return {ok:false,buttons:buttons.length};
+    const evaluate=()=>{
+      const r=api.evaluateTest(test,api.state.tests[test.id]);
+      return [r.score,r.scoreMax];
+    };
+    const before=evaluate();
+    buttons[0].click();buttons[1].click();
+    const correct=evaluate();
+    buttons[2].click();
+    const wrong=evaluate();
+    buttons[2].click();
+    const restored=evaluate();
+    return {ok:true,before,correct,wrong,restored,
+      selections:api.state.tests[test.id].answers.fraction_image_q,
+      image:buttons.every(x=>x.style.backgroundImage.includes('data:image/svg+xml')),
+      realCandidateId:document.body.dataset.sebKaltestId,
+      visualColumns:document.querySelectorAll('.kaltest-builder-runtime-zone').length};
+  }.toString()+')()');
+  assert.equal(visualCandidate.ok,true,JSON.stringify(visualCandidate));
+  assert.deepEqual(visualCandidate.before,[0,1]);
+  assert.deepEqual(visualCandidate.correct,[1,1]);
+  assert.deepEqual(visualCandidate.wrong,[0,1]);
+  assert.deepEqual(visualCandidate.restored,[1,1]);
+  assert.deepEqual(visualCandidate.selections,['1','2']);
+  assert.equal(visualCandidate.image,true);
+  assert.equal(visualCandidate.realCandidateId,roundtripped.id);
+  assert.equal(visualCandidate.visualColumns,2);
+  console.log('KALONEO_NATIVE_IMAGE_SELECTION_ELECTRON=OK',JSON.stringify({
+    preview:visualPreview,candidate:visualCandidate,baremeMax:roundtripped.questions[0].points}));
   console.log('FRESH_KALTEST_PREVIEW: OK',JSON.stringify({
     columns:observed.zoneCount,tableCount:observed.tableCount,
     rowCounts:observed.rowCounts,imageReady:observed.imageReady,

@@ -169,6 +169,12 @@
 
   function baseBlock(type='text') {
     const styled=block=>Object.assign({fontSize:'',backgroundColor:'',backgroundImage:'',backgroundFit:'decorative',backgroundPosition:'right bottom',backgroundOpacity:100},block);
+    if(type==='image-selection')return styled({
+      uid:uid('selection'),type,zone:'left',label:'Sélectionnez les images',
+      totalItems:4,acceptedCount:3,cloud:false,
+      mediaName:'',mediaType:'',mediaData:'',mediaAlt:'',
+      question:{...baseQuestion(),id:nextQuestionId(),prompt:'Sélectionnez 3 images sur 4',points:1}
+    });
     if (type === 'table-grid') return styled(Core.createGridBlock(3, 3));
     if (type === 'response-table') {
       return styled({
@@ -769,7 +775,7 @@
   function usedQuestionIds() {
     const ids=new Set();
     for(const block of state.blocks) {
-      if(block.type==='question'&&block.question?.id) ids.add(block.question.id);
+      if(['question','image-selection'].includes(block.type)&&block.question?.id) ids.add(block.question.id);
       if(block.type==='table-grid') {
         for(const cell of (block.table?.cells||[]).flat()) if(cell?.questionId) ids.add(cell.questionId);
       }
@@ -1516,7 +1522,7 @@
       changed();renderBlocks();$('image-library-dialog')?.close();return true;
     }
     const target=blockByUid(state.imageLibraryTargetUid);
-    if(!target || target.type!=='image') return false;
+    if(!target || !['image','image-selection'].includes(target.type)) return false;
     target.mediaName=result.image.name||'image';
     target.mediaType=result.image.mime||'image/*';
     target.mediaData=result.image.data;
@@ -2025,6 +2031,54 @@
     return node;
   }
 
+  function renderImageSelectionEditor(block,body){
+    const q=block.question||(block.question=baseQuestion());
+    ensureQuestionId(q);
+    const layout=document.createElement('div');layout.className='field-row cols-3';
+    layout.append(
+      inputField('ID de la question',q.id,()=>{},{readOnly:true,title:'Identifiant unique conservé dans le JSON'}),
+      inputField('Consigne',q.prompt||'',value=>{q.prompt=value;changed({typing:true});},{placeholder:'Sélectionnez 25 % des images'}),
+      inputField('Titre affiché',block.label||'',value=>{block.label=value;changed({typing:true});},{placeholder:'25 % de 8 objets'})
+    );
+    body.appendChild(layout);
+    const numbers=document.createElement('div');numbers.className='field-row cols-3';
+    numbers.append(
+      inputField('Nombre d’images (1 à 60)',block.totalItems||4,value=>{
+        if(value==='')return;const n=Number(value);if(!Number.isInteger(n)||n<1||n>60)return;
+        block.totalItems=n;block.acceptedCount=Math.min(Number(block.acceptedCount)||0,n);
+        changed({typing:true});
+      },{type:'number',min:1,max:60}),
+      inputField('Nombre à sélectionner',block.acceptedCount??3,value=>{
+        if(value==='')return;const n=Number(value);
+        if(!Number.isInteger(n)||n<0||n>Number(block.totalItems||4))return;
+        block.acceptedCount=n;changed({typing:true});
+      },{type:'number',min:0,max:60}),
+      inputField('Points',q.points==null?1:q.points,value=>{
+        if(value==='')return;const n=Number(value);if(!Number.isFinite(n)||n<0)return;
+        q.points=n;changed({typing:true});
+      },{type:'number',min:0})
+    );
+    body.appendChild(numbers);
+    const controls=document.createElement('div');controls.className='field-row';
+    const choose=document.createElement('button');choose.type='button';choose.className='mini-btn choose-library-image';
+    choose.textContent=block.mediaData?'Changer l’image des objets':'Choisir l’image des objets';
+    choose.addEventListener('click',()=>openImageLibrary(block.uid).catch(error=>alert(String(error?.message||error))));
+    controls.appendChild(choose);
+    const picture=document.createElement('span');picture.className='file-preview-name';
+    picture.textContent=block.mediaData?'Image embarquée : '+(block.mediaName||'Image'):'Image requise avant enregistrement';
+    controls.appendChild(picture);
+    if(block.mediaData){
+      const clear=document.createElement('button');clear.type='button';clear.className='mini-btn danger';clear.textContent='Retirer';
+      clear.addEventListener('click',()=>{block.mediaData='';block.mediaName='';block.mediaType='';changed();renderBlocks();});
+      controls.appendChild(clear);
+    }
+    body.appendChild(controls);
+    body.appendChild(checkboxField('Présentation en nuage',block.cloud===true,value=>{block.cloud=value;changed();}));
+    const note=document.createElement('small');note.className='question-help';
+    note.textContent='Toutes les images sont interchangeables : le nombre sélectionné est noté, pas leur position.';
+    body.appendChild(note);
+  }
+
   function renderBlockBody(block,body,index) {
     body.innerHTML='';
     renderBlockStyleEditor(block,body);
@@ -2092,6 +2146,7 @@
       body.appendChild(panel);
       return;
     }
+    if(block.type==='image-selection') {renderImageSelectionEditor(block,body);return;}
     if(block.type==='question') {renderQuestionEditor(block,body);return;}
     if(block.type==='response-table') {renderResponseTableEditor(block,body);return;}
     if(block.type==='table-grid') {renderGridEditor(block,body);return;}
@@ -2504,6 +2559,14 @@
       const badge=document.createElement('small');
       badge.textContent=(block.config?.scoringProfile==='seb-bureautique-v1')?'Correction SEB /8':'Éditeur libre';
       wrap.append(toolbar,page,badge);
+    } else if(block.type==='image-selection'){
+      node=window.KaloneoSharedPresentation.renderImageSelection({
+        doc:document,block:{
+          label:block.label||block.question?.prompt||'Sélectionnez les images',
+          questionId:block.question?.id||'',totalItems:block.totalItems,
+          resource:{data:block.mediaData||''}
+        }
+      });
     } else if(block.type==='question') {
       node=createQuestionPreview(block);
     } else if(block.type==='table-grid') {
@@ -2767,6 +2830,15 @@
       }
     });
 
+    state.blocks.filter(b=>b.type==='image-selection').forEach((b,bi)=>{
+      const count=Number(b.acceptedCount),total=Number(b.totalItems);
+      add(Boolean(b.question?.id),'Sélection images '+(bi+1)+' : identifiant');
+      add(Boolean(String(b.question?.prompt||'').trim()),'Sélection images '+(bi+1)+' : consigne');
+      add(Number.isInteger(total)&&total>=1&&total<=60,'Sélection images '+(bi+1)+' : nombre de 1 à 60');
+      add(Number.isInteger(count)&&count>=0&&count<=total,'Sélection images '+(bi+1)+' : nombre à sélectionner');
+      add(!m.scored||(Number(b.question?.points)>0),'Sélection images '+(bi+1)+' : points');
+      add(/^data:image\//i.test(String(b.mediaData||'')),'Sélection images '+(bi+1)+' : image intégrée au JSON');
+    });
     state.blocks.filter(b=>b.type==='table-grid').forEach((block,bi)=>{
       const t=block.table||{};
       add(Number(t.rows)>0&&Number(t.cols)>0,'Grille '+(bi+1)+' : dimensions valides');

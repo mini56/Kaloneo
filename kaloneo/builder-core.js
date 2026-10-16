@@ -20,7 +20,7 @@
   const LAYOUTS=new Set(['single','50-50','40-60','60-40','chars-rest']);
   const LEGACY_LAYOUTS=new Set(['single-block']);
   const BUILDER_CONTENT_TYPES=new Set([
-    'text','html','html-js','image','audio','video','question',
+    'text','html','html-js','image','audio','video','image-selection','question',
     'response-table','table-grid','inline-flow','table-definition','text-editor'
   ]);
 
@@ -299,6 +299,16 @@
         const q=byId.get(item.questionId)||{id:item.questionId||'',prompt:'',response:{type:'text'},acceptedAnswers:[],points:1};
         return withBuilderStyle(questionToBlock(q,zone),item);
       }
+      if(type==='image-selection'){
+        const q=byId.get(item.questionId)||{},r=item.resource||{};
+        return withBuilderStyle({
+          uid:'content_'+index,type,zone,
+          label:String(item.label||''),totalItems:Math.max(1,Number(item.totalItems)||4),
+          acceptedCount:Number.isInteger(Number(q.acceptedCount))?Number(q.acceptedCount):Math.max(0,Number(item.acceptedCount)||0),
+          cloud:item.cloud===true,mediaName:r.name||'',mediaType:r.mime||'',mediaData:r.data||'',mediaAlt:r.alt||'',
+          question:{id:String(item.questionId||q.id||''),prompt:String(q.prompt||item.label||''),points:q.points==null?1:q.points}
+        },item);
+      }
       if(type==='text') return withBuilderStyle({uid:'content_'+index,type,zone,text:item.text||''},item);
       if(type==='html') return withBuilderStyle({uid:'content_'+index,type,zone,html:item.html||''},item);
       if(type==='html-js') return withBuilderStyle({uid:'content_'+index,type,zone,html:item.html||'',js:item.script||'',preset:item.preset||''},item);
@@ -444,6 +454,20 @@
     return out;
   }
 
+  function imageSelectionQuestion(block,index){
+    const source=block.question||{};
+    const id=String(source.id||('image_selection_'+(index+1)));
+    const total=Math.max(1,Math.floor(Number(block.totalItems)||4));
+    const count=Math.max(0,Math.min(total,Math.floor(Number(block.acceptedCount)||0)));
+    const values=Array.from({length:total},(_,i)=>String(i+1));
+    return {
+      id,prompt:String(source.prompt||block.label||'Sélectionnez les images'),
+      response:{type:'multiple-choice',options:values},
+      acceptedAnswers:[values.slice(0,count)],acceptedCount:count,
+      points:Math.max(0,Number(source.points==null?1:source.points)||0)
+    };
+  }
+
   function gridQuestions(block,startIndex){
     const out=[],positions=new Map();
     const table=block.table||{};
@@ -555,6 +579,15 @@
         const q=blockQuestion(block,index);
         return styled({type:'question',zone:block.zone||'left',questionId:q.id},block);
       }
+      if(block.type==='image-selection') return styled({
+        type:'image-selection',zone:block.zone||'left',
+        questionId:String(block.question?.id||''),
+        label:String(block.label||block.question?.prompt||''),
+        totalItems:Math.max(1,Number(block.totalItems)||4),
+        acceptedCount:Math.max(0,Number(block.acceptedCount)||0),
+        cloud:block.cloud===true,
+        resource:{name:block.mediaName||'',mime:block.mediaType||'',data:block.mediaData||'',alt:block.mediaAlt||''}
+      },block);
       if(block.type==='text') return styled({type:'text',zone:block.zone||'left',text:block.text||''},block);
       if(block.type==='html') return styled({type:'html',zone:block.zone||'left',html:block.html||''},block);
       if(block.type==='html-js') return styled({type:'html-js',zone:block.zone||'left',html:block.html||'',script:block.js||'',preset:block.preset||undefined},block);
@@ -599,6 +632,7 @@
     for(const block of blocks||[]){
       let candidates=[];
       if(block.type==='question')candidates=[blockQuestion(block,questionIndex++)];
+      if(block.type==='image-selection')candidates=[imageSelectionQuestion(block,questionIndex++)];
       if(block.type==='table-grid'){
         candidates=gridQuestions(block,questionIndex);
         questionIndex+=candidates.length;
@@ -609,8 +643,8 @@
         if(position===undefined){
           positions.set(id,questions.length);
           questions.push(question);
-          if(block.type==='question')explicit.add(id);
-        }else if(block.type==='question'){
+          if(block.type==='question'||block.type==='image-selection')explicit.add(id);
+        }else if(block.type==='question'||block.type==='image-selection'){
           // Mettre à jour l'objet canonique sans déplacer l'ordre des
           // questions, même si le bloc explicite est placé après la grille.
           questions[position]=question;
@@ -628,7 +662,7 @@
     const existing=new Map((def.questions||[]).map(q=>[q.id,q]));
     const rebuilt=collectBuilderQuestions(model.blocks);
     const explicitIds=new Set((model.blocks||[])
-      .filter(b=>b.type==='question').map(b=>String(b.question?.id||'')));
+      .filter(b=>b.type==='question'||b.type==='image-selection').map(b=>String(b.question?.id||'')));
     // Pour les grilles déjà enregistrées, comparer les métadonnées d'origine
     // plutôt que d'écraser une correction complète par leurs valeurs par défaut.
     const initialGrids=(model.sourceDefinition?.presentation?.builderContent||[])
@@ -741,6 +775,7 @@
       const usesTextEditor=(model.blocks||[]).some(block=>block.type==='text-editor');
       const usesHtmlJs=(model.blocks||[]).some(block=>block.type==='html-js');
       const featureSet=new Set(def.features||[]);
+      if((model.blocks||[]).some(b=>b.type==='image-selection')) featureSet.add('media.image');
       if(usesTextEditor) featureSet.add('host.text-editor'); else featureSet.delete('host.text-editor');
       if(usesHtmlJs) featureSet.add('content.html-js'); else featureSet.delete('content.html-js');
       def.features=[...featureSet];
@@ -805,6 +840,7 @@
     if((model.blocks||[]).some(b=>['table-grid','response-table','multiple-tables'].includes(b.type))) features.push('questionnaire.table');
     if((model.blocks||[]).some(b=>b.type==='table-grid')) features.push('questionnaire.grid');
     if((model.blocks||[]).some(b=>b.type==='inline-flow')) features.push('questionnaire.inline-gaps');
+    if((model.blocks||[]).some(b=>b.type==='image-selection')) features.push('media.image');
     if((model.blocks||[]).some(b=>b.type==='html')) features.push('content.html');
     if((model.blocks||[]).some(b=>b.type==='html-js')) features.push('content.html-js');
     for(const type of ['image','audio','video']) if((model.blocks||[]).some(b=>b.type===type)) features.push('media.'+type);
@@ -938,6 +974,22 @@
         if(!BUILDER_CONTENT_TYPES.has(type)) {
           errors.push('bloc Builder non supporté '+(index+1)+': '+type);
           return;
+        }
+        if(type==='image-selection'){
+          const q=questions.find(q=>String(q.id)===String(item.questionId||''));
+          const total=Number(item.totalItems);
+          if(!q)errors.push('sélection images : questionId inconnu');
+          else if(q.response?.type!=='multiple-choice')errors.push('sélection images : multiple-choice requis');
+          if(!Number.isInteger(total)||total<1||total>60)
+            errors.push('sélection images : nombre d’objets entre 1 et 60 requis');
+          const count=Number(q?.acceptedCount);
+          if(!Number.isInteger(count)||count<0||count>total)
+            errors.push('sélection images : quantité attendue invalide');
+          const options=q?.response?.options||[];
+          if(Number.isInteger(total)&&options.length!==total)
+            errors.push('sélection images : nombre d’options différent des objets');
+          if(!/^data:image\//i.test(String(item.resource?.data||'')))
+            errors.push('sélection images : image locale embarquée obligatoire');
         }
         if(type==='question'&&!questionIds.has(item.questionId)) {
           errors.push('bloc Question sans questionId valide: '+String(item.questionId||''));

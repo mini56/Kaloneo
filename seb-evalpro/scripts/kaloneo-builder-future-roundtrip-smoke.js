@@ -264,4 +264,47 @@ Object.assign(durationGrid.table.cells[0][0],{kind:'candidate-answer',
 const durationDef=Core.modelToDefinition(makeFuture('Duree_configurable',[durationGrid]));
 assert.equal(durationDef.questions[0].acceptedMinutes,75);
 console.log('KALONEO_BUILDER_AUDIT_NEW_TESTS=OK — unité, 1 point, listes, trous, types, colonnes et points');
+
+const nativeSelection={
+  uid:'native_image_selection',type:'image-selection',zone:'left',
+  label:'25 % de 8 objets',totalItems:8,acceptedCount:2,cloud:false,
+  mediaName:'pomme.svg',mediaType:'image/svg+xml',
+  mediaData:'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%2F%3E',
+  mediaAlt:'Objet identique',
+  question:{id:'future_image_selection_q',prompt:'Sélectionnez 25 % des objets',points:1}
+};
+const nativeModel={meta:{
+  title:'Sélection native inédite',id:'future_native_image_selection',version:'1.0.0',
+  category:'mathematiques',scored:true,layout:'single',scenario:'Nouvel exercice',instruction:'Cliquez sur deux objets'
+},blocks:[nativeSelection]};
+const nativeDefinition=Core.modelToDefinition(nativeModel);
+assert.equal(nativeDefinition.presentation.builderContent[0].type,'image-selection');
+assert.deepEqual(nativeDefinition.questions[0].response.options,['1','2','3','4','5','6','7','8']);
+assert.equal(nativeDefinition.questions[0].acceptedCount,2);
+assert.equal(nativeDefinition.questions[0].points,1);
+assert.deepEqual(nativeDefinition.questions[0].acceptedAnswers,[['1','2']]);
+assert(Core.analyzeDefinition(nativeDefinition).ok,JSON.stringify(Core.analyzeDefinition(nativeDefinition).errors));
+const importedSelection=Core.definitionToModel(nativeDefinition);
+assert.equal(importedSelection.blocks[0].type,'image-selection');
+assert.equal(importedSelection.blocks[0].mediaData,nativeSelection.mediaData);
+const savedSelection=Core.modelToDefinition(importedSelection);
+assert.deepEqual(savedSelection.questions,nativeDefinition.questions,'La correction a changé après l’import dans le Builder');
+assert.deepEqual(savedSelection.presentation.builderContent,nativeDefinition.presentation.builderContent,
+  'La sélection ou le média a changé après enregistrement dans le Builder');
+for(const change of [
+  d=>{d.questions[0].acceptedCount=9;},
+  d=>{d.presentation.builderContent[0].resource.data='';},
+  d=>{d.presentation.builderContent[0].questionId='unknown';},
+  d=>{d.presentation.builderContent[0].totalItems=0;}
+]){
+  const invalid=Core.clone(nativeDefinition);change(invalid);
+  assert.equal(Core.analyzeDefinition(invalid).ok,false,'Définition image invalide acceptée');
+}
+// Vérifier qu’une modification du nombre attendu est bien persistée dans la réponse canonique.
+importedSelection.blocks[0].acceptedCount=4;
+const changedSelection=Core.modelToDefinition(importedSelection);
+assert.equal(changedSelection.questions[0].acceptedCount,4);
+assert.deepEqual(changedSelection.questions[0].acceptedAnswers,[['1','2','3','4']]);
+assert.equal(Core.analyzeDefinition(changedSelection).ok,true);
+
 console.log('KALONEO_FUTURE_BLOCKS_ROUNDTRIP_UNIQUE_QUESTION=OK');

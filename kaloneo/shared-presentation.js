@@ -522,6 +522,57 @@
     table.appendChild(group);
   }
 
-  return Object.freeze({columns,renderZones,alignCompactQuestionColumns,renderRichContext,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderQuestionTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup,
+  // Rendu natif partagé. Le moteur candidat gère l'enregistrement et la correction.
+  // Aucune exécution de scripts fournis par un test.
+  function renderImageSelection({doc,block,selected=[],onChange,disabled=false}){
+    const outer=doc.createElement('section');
+    outer.className='kaltest-image-selection kaltest-fraction-row';
+    outer.dataset.questionId=String(block.questionId||'');
+    outer.style.cssText='box-sizing:border-box;min-width:0;padding:12px;border-radius:10px;border:1px solid #b8d0e4;background:#f7fbff;';
+    const title=doc.createElement('strong');
+    title.textContent=String(block.label||'Sélectionnez les images');
+    title.style.cssText='display:block;margin-bottom:10px;color:#183c5c;';
+    outer.appendChild(title);
+    const total=Math.max(1,Math.min(60,Math.floor(Number(block.totalItems)||4)));
+    const values=new Set(Array.isArray(selected)?selected.map(String):[]);
+    const grid=doc.createElement('div');
+    grid.className='kaltest-fraction-items kaltest-image-selection-items';
+    grid.style.cssText='display:flex;flex-wrap:wrap;gap:9px;align-items:flex-start;min-height:64px;';
+    if(block.cloud===true){grid.style.justifyContent='space-around';grid.style.rowGap='22px';}
+    const image=String(block.resource?.data||block.itemImage||'');
+    for(let i=1;i<=total;i++){
+      const id=String(i);
+      const button=doc.createElement('button');
+      button.type='button';button.className='kaltest-fraction-item kaltest-image-selection-item';
+      button.dataset.itemIndex=id;
+      if(block.cloud===true)button.style.transform='translateY('+(((i*13)%19)-8)+'px)';
+      button.setAttribute('aria-label',String(block.label||'Image')+' — objet '+id);
+      button.style.cssText='box-sizing:border-box;flex:0 0 62px;width:62px;height:62px;border:2px solid #9ab3c9;border-radius:9px;background:#ffffff;cursor:pointer;transition:border-color .15s,background-color .15s;';
+      if(/^data:image\//i.test(image)){
+        button.style.backgroundImage='url('+JSON.stringify(image)+')';
+        button.style.backgroundSize='contain';button.style.backgroundRepeat='no-repeat';button.style.backgroundPosition='center';
+      }
+      const update=()=>{
+        const active=values.has(id);
+        button.classList.toggle('selected',active);
+        button.setAttribute('aria-pressed',String(active));
+        button.style.borderColor=active?'#147d48':'#9ab3c9';
+        button.style.backgroundColor=active?'#d9f3e4':'#ffffff';
+        button.style.boxShadow=active?'inset 0 0 0 3px #147d48':'none';
+      };
+      update();
+      button.disabled=disabled;
+      if(!disabled)button.addEventListener('click',()=>{
+        if(values.has(id))values.delete(id);else values.add(id);
+        update();
+        if(typeof onChange==='function')onChange([...values]);
+      });
+      grid.appendChild(button);
+    }
+    outer.appendChild(grid);
+    return outer;
+  }
+
+  return Object.freeze({renderImageSelection,columns,renderZones,alignCompactQuestionColumns,renderRichContext,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderQuestionTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup,
     normalizeGridColor,gridCellBackground,gridCellTextColor,gridSelectQuestion});
 });

@@ -3362,6 +3362,16 @@
     wrap.className = 'kaltest-builder-content-item';
     applyBuilderItemStyle(wrap, item);
 
+    if (item.type === 'image-selection') {
+      const testState=testStateFor(test);
+      wrap.appendChild(window.KaloneoSharedPresentation.renderImageSelection({
+        doc:document,block:item,
+        selected:Array.isArray(testState.answers?.[item.questionId])?testState.answers[item.questionId]:[],
+        onChange:values=>saveAnswer(test,item.questionId,values),
+        disabled:testState.status==='COMPLETED'
+      }));
+      return wrap;
+    }
     if (item.type === 'text') {
       renderRichContext(wrap, item.text || '');
       // R48.5: garder les dernières lignes du texte hors de l'illustration

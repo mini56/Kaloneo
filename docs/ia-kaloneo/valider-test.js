@@ -105,6 +105,18 @@ function inspect(def){
     if(!object(b)||!Core.BUILDER_CONTENT_TYPES.includes(b.type)){add(label+' : type de bloc inexistant.');continue;}
     if(!['left','right'].includes(b.zone))add(label+' : zone gauche/droite absente.');
     if(b.type==='question'&&!ids.has(b.questionId))add(label+' : questionId non défini.');
+    if(b.type==='image-selection') {
+      const q=questions.find(q=>q&&q.id===b.questionId);
+      const total=Number(b.totalItems);
+      if(!q||q.response?.type!=='multiple-choice')add(label+' : question de sélection multiple inconnue.');
+      if(!Number.isInteger(total)||total<1||total>60)add(label+' : nombre total entre 1 et 60.');
+      if(!q||!Number.isInteger(q.acceptedCount)||q.acceptedCount<0||q.acceptedCount>total)
+        add(label+' : quantité attendue incorrecte.');
+      if(q&&Array.isArray(q.response?.options)&&q.response.options.length!==total)
+        add(label+' : les options ne correspondent pas au nombre d’objets.');
+      if(!String(b.resource?.data||'').startsWith('data:image/'))
+        add(label+' : image réelle embarquée obligatoire.');
+    }
     if(b.type==='text'&&!nonempty(b.text))add(label+' : texte vide.');
     if(['image','audio','video'].includes(b.type)){
       const r=b.resource;
@@ -122,7 +134,7 @@ function inspect(def){
     ['questionnaire.grid',blocks.some(b=>b.type==='table-grid')],
     ['questionnaire.inline-gaps',blocks.some(b=>b.type==='inline-flow')],
     ['questionnaire.free-text-manual',questions.some(q=>q.response&&q.response.type==='free-text')],
-    ['media.image',blocks.some(b=>b.type==='image')],
+    ['media.image',blocks.some(b=>b.type==='image'||b.type==='image-selection')],
     ['media.audio',blocks.some(b=>b.type==='audio')],
     ['media.video',blocks.some(b=>b.type==='video')],
     ['content.html-js',blocks.some(b=>b.type==='html-js')],
