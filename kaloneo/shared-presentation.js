@@ -603,7 +603,9 @@
   }
 
   function layoutFractionCloud(items, options = {}) {
-    if (!items) return false;
+    // Ne jamais écraser un nuage restauré pendant la destruction/recréation
+    // d'une page, ni avec les dimensions nulles d'un élément invisible.
+    if (!items?.isConnected) return false;
     const allowRegenerateSaved = options.allowRegenerateSaved === true;
     const buttons = Array.from(items.querySelectorAll('.kaltest-fraction-item'));
     if (!buttons.length) return false;
@@ -614,6 +616,7 @@
     // Marge volontairement large : un objet sélectionné grossit légèrement
     // (transform:scale), le nuage doit rester sans contact même dans cet état.
     const margin = 16;
+    if(width<itemSize+margin||height<itemSize+margin)return false;
     const maxX = Math.max(0, width - itemSize);
     const maxY = Math.max(0, height - itemSize);
     const saved = typeof options.getSaved==='function'
@@ -668,6 +671,7 @@
     // ResizeObserver émis pendant le chargement ne doivent jamais remélanger
     // un nuage restauré.
     setTimeout(() => {
+      if(!items.isConnected)return;
       prepareFractionCloud(items);
       stableWidth = items.clientWidth || 0;
       stableHeight = items.clientHeight || 0;
@@ -681,7 +685,17 @@
     if (typeof ResizeObserver === 'function' && !items.__sebFractionCloudObserver) {
       const observer = new ResizeObserver(() => {
         clearTimeout(resizeTimer);
+        if(!items.isConnected){
+          observer.disconnect();
+          items.__sebFractionCloudObserver=null;
+          return;
+        }
         resizeTimer = setTimeout(() => {
+          if(!items.isConnected){
+            observer.disconnect();
+            items.__sebFractionCloudObserver=null;
+            return;
+          }
           if (!settled) {
             restore();
             return;
