@@ -31,7 +31,7 @@ jobs:
           $nsis=Get-Content -Raw -Encoding UTF8 build/installer.nsh
           if ([int]$p.sebBuildNumber -ne 125) { throw 'Build #125 requis.' }
           if ($nsis -notmatch '!define SEB_BUILD_NUMBER "125"') { throw 'Numéro NSIS incoherent.' }
-          if ($cfg -notmatch 'version: 0\.0\.148' -or $cfg -notmatch 'PILOTE-22-R120-0\.0\.148-Windows-Setup') { throw 'Version R120 incoherente.' }
+          if ($cfg -notmatch 'version: 0\.0\.149' -or $cfg -notmatch 'PILOTE-22-R120-0\.0\.149-Windows-Setup') { throw 'Version R120 incoherente.' }
           git fetch --depth=1 origin tag seb-kaloneo-r119-admin-settings-layout-test
           if ($LASTEXITCODE -ne 0) { throw 'Tag de la version test R119 absent.' }
           $oldJson=(git show 'seb-kaloneo-r119-admin-settings-layout-test:seb-evalpro/package.json') -join [Environment]::NewLine
@@ -197,7 +197,7 @@ jobs:
           path: seb-evalpro/dist/SEB-EvalPro-Kaloneo-PILOTE-22-R120-0.0.149-Windows-Setup.exe
           if-no-files-found: error
 
-      - name: Publish R120 with R118 kept as rollback
+      - name: Publish R120 with R119 kept as rollback
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
