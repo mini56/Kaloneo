@@ -415,7 +415,7 @@ expert.evaluation={nwtexteRules:true};
 const special=Workflow.scoringAudit(expert,Core.analyzeDefinition);
 assert.equal(special.special,true,'Simulation du moteur NWTEXT présentée comme une validation exhaustive');
 console.log('KALONEO_BUILDER_FIVE_WORKFLOWS_CORE=OK',JSON.stringify({
-  copyIds:[sourceGroup[0].question.id,copied[0].question.id,twice[0].question.id],
+  copyIds:[sourceGroup[0].question.id,copied[0].question.id,anotherCopy[0].question.id],
   mediaKept:true,lines:Workflow.lines(groups).map(g=>g.zone),
   scoring:{maximum:audit.maximum,earned:audit.earned},specialRequiresElectron:true
 }));
