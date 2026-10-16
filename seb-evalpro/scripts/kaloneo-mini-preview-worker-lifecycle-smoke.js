@@ -9,6 +9,9 @@ const start=main.indexOf("ipcMain.handle('kaloneo-builder:render-mini-preview',"
 const stop=main.indexOf("\nipcMain.handle('kaloneo-builder:get-preview',",start);
 assert(start>=0&&stop>start,'Handler de miniature introuvable.');
 const handlerSource=main.slice(start,stop);
+const workerDefinition=main.slice(main.indexOf('function getKaloneoMiniPreviewWorker()'),start);
+assert(workerDefinition.includes('show:false, focusable:false'),
+  'La fenêtre Electron invisible doit être non focusable sur Windows.');
 const harness=[
   'let adminSessionUnlocked=true;',
   'let kaloneoMiniPreviewJob=Promise.resolve();',

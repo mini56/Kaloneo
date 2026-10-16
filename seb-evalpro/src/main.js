@@ -1561,7 +1561,7 @@ function getKaloneoMiniPreviewWorker() {
     return kaloneoMiniPreviewWorker;
   }
   kaloneoMiniPreviewWorker=new BrowserWindow({
-    show:false, width:1366,height:768,useContentSize:true,
+    show:false, focusable:false, width:1366,height:768,useContentSize:true,
     frame:false,skipTaskbar:true,paintWhenInitiallyHidden:true,
     backgroundColor:'#ffffff',
     webPreferences:{

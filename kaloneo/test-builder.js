@@ -19,6 +19,7 @@
   let developerUnlocked=false;
   let textColorTarget = null;
   let textColorChanged = null;
+  let textColorSelection = null;
 
   const HISTORY_LIMIT = 30;
   const SAVED_FINGERPRINT_KEY = 'kaloneo_test_builder_saved_fingerprint';
@@ -365,26 +366,54 @@
 
   const renderRichContext=window.KaloneoSharedPresentation.renderRichContext;
 
-  function applyMarkupToTextarea(input,format,onChanged,color='') {
-    if(!input)return;
-    const start=Number.isFinite(input.selectionStart)?input.selectionStart:input.value.length;
-    const end=Number.isFinite(input.selectionEnd)?input.selectionEnd:start;
+  function applyMarkupToTextarea(input,format,onChanged,color='',selection=null) {
+    if(!input||!input.isConnected)return;
+    // Le clic sur la palette déplace le focus vers un dialogue. La sélection
+    // de texte mémorisée à l'ouverture reste la seule source fiable.
+    const start=Number.isInteger(selection?.start)?selection.start:
+      (Number.isFinite(input.selectionStart)?input.selectionStart:input.value.length);
+    const end=Number.isInteger(selection?.end)?selection.end:
+      (Number.isFinite(input.selectionEnd)?input.selectionEnd:start);
     const open=format==='c'?'[c='+color+']':'['+format+']';
     const close='[/'+format+']';
     const selected=input.value.slice(start,end);
     input.value=input.value.slice(0,start)+open+selected+close+input.value.slice(end);
     const nextStart=start+open.length;
     const nextEnd=nextStart+selected.length;
-    input.focus();
+    try{input.focus({preventScroll:true});}catch(_){input.focus();}
     input.setSelectionRange(nextStart,nextEnd);
     if(typeof onChanged==='function') onChanged(input.value);
     changed();
   }
 
   function openTextColorPalette(input,onChanged) {
-    textColorTarget=input||null;
+    if(!input?.isConnected)return;
+    textColorTarget=input;
     textColorChanged=typeof onChanged==='function'?onChanged:null;
+    textColorSelection={
+      start:Number.isInteger(input.selectionStart)?input.selectionStart:input.value.length,
+      end:Number.isInteger(input.selectionEnd)?input.selectionEnd:input.value.length
+    };
     $('text-color-dialog')?.showModal();
+  }
+
+  function closeTextColorPalette(color=''){
+    const target=textColorTarget;
+    const callback=textColorChanged;
+    const selection=textColorSelection;
+    // Important : fermer le dialogue AVANT de redonner le focus au champ,
+    // sinon Chromium interdit le focus sur le contenu hors de la modale.
+    const dialog=$('text-color-dialog');
+    if(dialog?.open)dialog.close();
+    textColorTarget=null;textColorChanged=null;textColorSelection=null;
+    if(!target?.isConnected)return;
+    if(color&&/^#[0-9a-f]{6}$/i.test(color)){
+      applyMarkupToTextarea(target,'c',callback,color,selection);
+    }else{
+      try{target.focus({preventScroll:true});}catch(_){target.focus();}
+      if(selection&&typeof target.setSelectionRange==='function')
+        try{target.setSelectionRange(selection.start,selection.end);}catch(_){}
+    }
   }
 
   function createTextFormatToolbar(input,onChanged) {
@@ -2185,9 +2214,40 @@
     btn.className='mini-btn danger';btn.textContent='Retirer';btn.title=title;
     btn.addEventListener('click',callback);return btn;
   }
+  // Une modification de type de sortie ou de ligne du Bilan recrée
+  // l'éditeur de contrat. Conserver le SELECT/INPUT et sa position, sans
+  // intervenir si le focus appartient déjà à un autre élément.
+  function rememberContractFocus(hosts){
+    const active=document.activeElement;
+    if(!active||!active.matches('input,textarea,select'))return null;
+    const host=hosts.find(element=>element.contains(active));
+    if(!host)return null;
+    const path=[];
+    for(let node=active;node!==host;node=node.parentElement){
+      if(!node?.parentElement)return null;
+      path.unshift(Array.prototype.indexOf.call(node.parentElement.children,node));
+    }
+    let start=null,end=null;
+    try{start=active.selectionStart;end=active.selectionEnd;}catch(_){}
+    return {hostId:host.id,path,original:active,tag:active.tagName,type:active.type,start,end};
+  }
+  function restoreContractFocus(snapshot){
+    if(!snapshot||snapshot.original.isConnected||
+       (document.activeElement&&document.activeElement!==document.body))return;
+    let control=$(snapshot.hostId);
+    for(const index of snapshot.path)control=control?.children?.[index];
+    if(!control||control.tagName!==snapshot.tag||control.disabled||
+       (snapshot.tag==='INPUT'&&control.type!==snapshot.type))return;
+    try{control.focus({preventScroll:true});}catch(_){control.focus();}
+    if(Number.isInteger(snapshot.start)&&Number.isInteger(snapshot.end)&&
+       typeof control.setSelectionRange==='function')
+      try{control.setSelectionRange(snapshot.start,snapshot.end);}catch(_){}
+  }
+
   function renderContractEditors(){
     const outHost=$('outputs-editor'),bilanHost=$('bilan-editor');
     if(!outHost||!bilanHost)return;
+    const focus=rememberContractFocus([outHost,bilanHost]);
     outHost.replaceChildren();bilanHost.replaceChildren();
     state.outputs.forEach((output,index)=>{
       const item=document.createElement('div');item.className='contract-item';
@@ -2280,6 +2340,7 @@
       const empty=document.createElement('p');empty.className='contract-empty';
       empty.textContent='Aucune liaison directe vers le Bilan.';bilanHost.appendChild(empty);
     }
+    restoreContractFocus(focus);
   }
   function validateContract(add){
     const ids=new Set();
@@ -3692,16 +3753,15 @@
         applyContextFormat(button.dataset.target,button.dataset.format);
       });
     });
-    $('close-text-color-dialog').addEventListener('click',()=>$('text-color-dialog').close());
+    $('close-text-color-dialog').addEventListener('click',()=>closeTextColorPalette());
+    // Esc ferme aussi le dialogue natif ; libérer sa référence sans ramener
+    // tardivement le curseur si l'utilisateur a déjà changé de contrôle.
+    $('text-color-dialog').addEventListener('close',()=>{
+      textColorTarget=null;textColorChanged=null;textColorSelection=null;
+    });
     document.querySelectorAll('[data-text-color]').forEach(button=>{
       button.addEventListener('click',()=>{
-        const color=String(button.dataset.textColor||'');
-        if(textColorTarget&&/^#[0-9a-f]{6}$/i.test(color)) {
-          applyMarkupToTextarea(textColorTarget,'c',textColorChanged,color);
-        }
-        $('text-color-dialog').close();
-        textColorTarget=null;
-        textColorChanged=null;
+        closeTextColorPalette(String(button.dataset.textColor||''));
       });
     });
 

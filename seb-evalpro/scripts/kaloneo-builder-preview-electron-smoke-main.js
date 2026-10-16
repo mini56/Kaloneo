@@ -2262,6 +2262,79 @@ app.whenReady().then(async()=>{
       return fail('Actions Editor : duplication, insertion, ensembles, barème ou ligne incorrects',editWorkflow);
     console.log('KALONEO_FIVE_BUILDER_ACTIONS_ELECTRON=OK',JSON.stringify(editWorkflow));
 
+
+    // Contrôle des causes de perte de focus (pas seulement des valeurs) :
+    // modal couleur, sélecteurs reconstruits, attente de la capture miniature.
+    const focusWorkflow=await win.webContents.executeJavaScript('('+async function(){
+      window.confirm=()=>true;
+      document.getElementById('new-test').click();
+      const scenario=document.getElementById('test-scenario');
+      scenario.focus();
+      scenario.value='Texte avec accent';
+      scenario.setSelectionRange(6,10);
+      document.querySelector('[data-target="test-scenario"][data-format="color"]').click();
+      const opened=document.getElementById('text-color-dialog').open;
+      document.querySelector('[data-text-color="#005A8D"]').click();
+      const scenarioRestored=!document.getElementById('text-color-dialog').open&&
+        document.activeElement===scenario&&scenario.isConnected&&
+        scenario.value.includes('[c=#005A8D]avec[/c]')&&scenario.selectionStart===17;
+      const block=document.querySelector('.exercise-block');
+      if(block.classList.contains('is-collapsed'))block.querySelector('.toggle-block').click();
+      const textarea=block.querySelector('.block-body textarea');
+      textarea.focus();textarea.value='Changeons cette couleur';
+      textarea.setSelectionRange(10,15);
+      block.querySelector('.context-color-btn').click();
+      document.querySelector('[data-text-color="#1F6B3A"]').click();
+      const blockRestored=document.activeElement===textarea&&textarea.isConnected&&
+        textarea.value.includes('[c=#1F6B3A]cette[/c]');
+      // Escape / Fermer doit également rendre le champ à l'utilisateur.
+      textarea.setSelectionRange(0,7);
+      block.querySelector('.context-color-btn').click();
+      document.getElementById('close-text-color-dialog').click();
+      const cancelRestored=document.activeElement===textarea&&textarea.selectionStart===0&&
+        textarea.selectionEnd===7;
+      document.getElementById('add-output').click();
+      const type=document.querySelector('#outputs-editor .contract-item select');
+      type.focus();type.value='integer';type.dispatchEvent(new Event('change',{bubbles:true}));
+      const typeAfter=document.querySelector('#outputs-editor .contract-item select');
+      const contractRestored=typeAfter.isConnected&&document.activeElement===typeAfter&&
+        typeAfter.value==='integer';
+      document.getElementById('add-bilan-contribution').click();
+      const line=document.querySelector('#bilan-editor .contract-item select');
+      const options=[...line.options].filter(o=>o.value);
+      let bilanRestored=true;
+      if(options.length){
+        line.focus();line.value=options[0].value;line.dispatchEvent(new Event('change',{bubbles:true}));
+        const lineAfter=document.querySelector('#bilan-editor .contract-item select');
+        bilanRestored=document.activeElement===lineAfter&&lineAfter.isConnected&&
+          lineAfter.value===options[0].value;
+      }
+      // Les opérations structurelles d'une grille ne doivent pas perdre le champ
+      // avant une nouvelle saisie, même après un cycle de 400 ms.
+      document.getElementById('new-test').click();
+      const first=document.querySelector('.exercise-block');
+      first.querySelector('.block-type').value='table-grid';
+      first.querySelector('.block-type').dispatchEvent(new Event('change',{bubbles:true}));
+      const grid=document.querySelector('.exercise-block');
+      if(grid.classList.contains('is-collapsed'))grid.querySelector('.toggle-block').click();
+      const kind=grid.querySelector('.cell-grid-editor .grid-cell-color-toolbar select');
+      kind.focus();kind.value='fixed-text';kind.dispatchEvent(new Event('change',{bubbles:true}));
+      const gridAfter=document.querySelector('.exercise-block .cell-grid-editor .grid-cell-color-toolbar select');
+      const gridKindRestored=gridAfter===document.activeElement&&gridAfter.isConnected&&
+        gridAfter.value==='fixed-text';
+      const editable=document.querySelector('.exercise-block .cell-grid-editor input[placeholder="Texte affiché"]');
+      editable.focus();editable.value='Une chaîne';editable.setSelectionRange(6,6);
+      editable.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(r=>setTimeout(r,460));
+      const continuousTyping=editable.isConnected&&document.activeElement===editable&&
+        editable.selectionStart===6&&editable.value==='Une chaîne';
+      return {opened,scenarioRestored,blockRestored,cancelRestored,contractRestored,
+        bilanRestored,gridKindRestored,continuousTyping};
+    }.toString()+')()',true);
+    if(Object.values(focusWorkflow).some(x=>x!==true))
+      return fail('Focus du Builder perdu pendant la couleur, le Bilan ou une grille',focusWorkflow);
+    console.log('KALONEO_BUILDER_FOCUS_CAUSES_FIXED_ELECTRON=OK',JSON.stringify(focusWorkflow));
+
     console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
     console.log('KALONEO_BUILDER_PREVIEW_ELECTRON=OK');
