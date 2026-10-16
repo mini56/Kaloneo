@@ -2275,9 +2275,15 @@ app.whenReady().then(async()=>{
       document.querySelector('[data-target="test-scenario"][data-format="color"]').click();
       const opened=document.getElementById('text-color-dialog').open;
       document.querySelector('[data-text-color="#005A8D"]').click();
-      const scenarioRestored=!document.getElementById('text-color-dialog').open&&
-        document.activeElement===scenario&&scenario.isConnected&&
-        scenario.value.includes('[c=#005A8D]avec[/c]')&&scenario.selectionStart===17;
+      const scenarioStatus={
+        modalClosed:!document.getElementById('text-color-dialog').open,
+        focused:document.activeElement===scenario,connected:scenario.isConnected,
+        value:scenario.value,selectionStart:scenario.selectionStart,selectionEnd:scenario.selectionEnd,
+        activeTag:document.activeElement?.tagName,activeId:document.activeElement?.id
+      };
+      const scenarioRestored=scenarioStatus.modalClosed&&scenarioStatus.focused&&
+        scenarioStatus.connected&&scenarioStatus.value.includes('[c=#005A8D]avec[/c]')&&
+        scenarioStatus.selectionStart===17;
       const block=document.querySelector('.exercise-block');
       if(block.classList.contains('is-collapsed'))block.querySelector('.toggle-block').click();
       const textarea=block.querySelector('.block-body textarea');
@@ -2328,10 +2334,11 @@ app.whenReady().then(async()=>{
       await new Promise(r=>setTimeout(r,460));
       const continuousTyping=editable.isConnected&&document.activeElement===editable&&
         editable.selectionStart===6&&editable.value==='Une chaîne';
-      return {opened,scenarioRestored,blockRestored,cancelRestored,contractRestored,
+      return {opened,scenarioRestored,scenarioStatus,blockRestored,cancelRestored,contractRestored,
         bilanRestored,gridKindRestored,continuousTyping};
     }.toString()+')()',true);
-    if(Object.values(focusWorkflow).some(x=>x!==true))
+    if(['opened','scenarioRestored','blockRestored','cancelRestored','contractRestored',
+      'bilanRestored','gridKindRestored','continuousTyping'].some(k=>focusWorkflow[k]!==true))
       return fail('Focus du Builder perdu pendant la couleur, le Bilan ou une grille',focusWorkflow);
     console.log('KALONEO_BUILDER_FOCUS_CAUSES_FIXED_ELECTRON=OK',JSON.stringify(focusWorkflow));
 
