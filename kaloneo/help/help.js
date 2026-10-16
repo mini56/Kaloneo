@@ -67,6 +67,7 @@
   document.getElementById('reset-search').addEventListener('click',()=>{
     search.value='';update();search.focus();
   });
+  if(new URLSearchParams(location.search).has('settings'))document.getElementById('close-help').style.display='none';
   document.getElementById('print-help').addEventListener('click',()=>window.print());
   document.getElementById('close-help').addEventListener('click',()=>{
     // Compatible aussi lorsque ce fichier est ouvert seul hors de KALONÉO.

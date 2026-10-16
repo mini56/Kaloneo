@@ -187,6 +187,14 @@ app.whenReady().then(async()=>{
     await win.loadFile(builder);
     await wait(900);
 
+    // R119 : contrôler l'icône fournie et la largeur des aides en vrai Electron.
+    const settingsLayout=await win.webContents.executeJavaScript("(async()=>{\n const btn=document.getElementById('seb-evalpro-settings');\n if(!btn||btn.hidden)return {ok:false,reason:'button hidden'};\n const icon=btn.querySelector('img');\n if(!icon||!icon.complete||icon.naturalWidth!==28||icon.naturalHeight!==28)return {ok:false,reason:'icon'};\n btn.click();\n await new Promise(r=>setTimeout(r,210));\n const dialog=document.getElementById('seb-evalpro-settings-dialog');\n if(!dialog)return {ok:false,reason:'dialog'};\n const side=dialog.querySelector('.settings-nav').getBoundingClientRect().width;\n const width=dialog.querySelector('.settings-main').getBoundingClientRect().width;\n const docs=[];\n for(const kind of ['admin','builder']){\n   dialog.querySelector('[data-tab=\"'+kind+'\"]').click();\n   await new Promise(r=>setTimeout(r,70));\n   const section=dialog.querySelector('[data-section=\"'+kind+'\"]');\n   const iframe=section.querySelector('iframe');\n   docs.push({kind,width:iframe.getBoundingClientRect().width,src:iframe.src.includes('settings=1')});\n }\n dialog.querySelector('[data-tab=\"passwords\"]').click();\n const password=!!dialog.querySelector('[name=\"currentPassword\"]');\n dialog.querySelector('[data-tab=\"about\"]').click();\n const about=!!dialog.querySelector('#kaloneo-setting-version');\n dialog.querySelector('[data-close]').click();\n return {ok:true,side,width,docs,password,about,closed:!document.getElementById('seb-evalpro-settings-dialog')};\n})()",true);
+    if(!settingsLayout.ok||settingsLayout.side<180||settingsLayout.width<820||
+       !settingsLayout.password||!settingsLayout.about||!settingsLayout.closed||
+       !settingsLayout.docs.every(x=>x.src&&x.width>=800))
+      return fail('R119 Réglages ou aide étroits dans Electron',settingsLayout);
+    console.log('KALONEO_R119_SETTINGS_FULL_WIDTH_ELECTRON=OK',JSON.stringify(settingsLayout));
+
     // Contrôle d'un test inédit : aucun ID/catalogue/fixture particulier.
     // Vérifier le moteur commun de colonnes et la structure Q/R partagée.
     const unknownTest=await win.webContents.executeJavaScript(`(()=>{

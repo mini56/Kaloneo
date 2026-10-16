@@ -1140,7 +1140,10 @@ function injectAdminBar() {
     #seb-evalpro-top-hotzone{position:fixed;top:0;left:0;right:0;height:${HOTZONE_HEIGHT}px;z-index:2147483645;background:transparent}
     #seb-evalpro-topbar{position:fixed;top:0;left:0;right:0;height:${BAR_HEIGHT}px;z-index:2147483646;display:flex;align-items:center;gap:4px;padding:0 6px;box-sizing:border-box;overflow:hidden;background:#0070c0;color:#fff;font-family:Arial,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.25);transform:translateY(-100%);transition:transform .16s ease;will-change:transform}
     #seb-evalpro-topbar.seb-evalpro-visible{transform:translateY(0)}
-    #seb-evalpro-topbar #seb-evalpro-settings{font-size:23px;line-height:1;min-width:35px;padding:4px 6px}
+    #seb-evalpro-topbar #seb-evalpro-settings{min-width:38px;width:38px;max-width:38px;padding:3px;border:1px solid transparent;background:transparent;border-radius:8px;flex:0 0 38px}
+    #seb-evalpro-topbar #seb-evalpro-settings:hover{background:#ffffff24;border-color:#ffffff70}
+    #seb-evalpro-topbar #seb-evalpro-settings[hidden]{display:none!important}
+    #seb-evalpro-topbar #seb-evalpro-settings img.seb-admin-settings-icon{display:block;width:28px;height:28px;object-fit:contain}
     #seb-evalpro-topbar .seb-evalpro-name{font-size:18px;font-weight:700;white-space:nowrap}
     #seb-evalpro-topbar .seb-evalpro-build{font-size:12px;font-weight:700;white-space:nowrap;opacity:.9;padding:3px 7px;border:1px solid rgba(255,255,255,.55);border-radius:10px}
     #seb-evalpro-topbar .seb-evalpro-candidate-badge{font-size:13px;font-weight:700;white-space:nowrap;padding:5px 9px;border:1px solid rgba(255,255,255,.55);border-radius:4px;background:rgba(255,255,255,.14)}
@@ -1452,6 +1455,8 @@ function injectAdminBar() {
   };
 
   const updateAdminButtons = () => {
+    const settingsButton = bar.querySelector('#seb-evalpro-settings');
+    if(settingsButton)settingsButton.hidden = !adminUnlocked;
     const onBilan = isAdminBilanPage();
     const onCandidateResults = !!adminCandidateResultsWorkspace;
     const onAdminDetail = (!!adminCandidateWorkspace && onBilan) || onCandidateResults;
