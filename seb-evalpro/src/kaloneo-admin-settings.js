@@ -31,8 +31,14 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
   }
   function selectTab(tab){
     if(!layer)return;
-    for(const b of layer.querySelectorAll('[data-tab]'))
-      b.setAttribute('aria-selected',String(b.dataset.tab===tab));
+    for(const b of layer.querySelectorAll('[data-tab]')){
+      const active=b.dataset.tab===tab;
+      b.setAttribute('aria-selected',String(active));
+      // Verrouille la sélection visuelle après chaque clic, même sur l’accueil Admin.
+      b.style.setProperty('background-color',active?'#0571a6':'transparent','important');
+      b.style.setProperty('color',active?'#ffffff':'#25546b','important');
+      b.style.setProperty('border-color',active?'#0571a6':'transparent','important');
+    }
     for(const section of layer.querySelectorAll('[data-section]')){
       section.hidden=section.dataset.section!==tab;
       if(!section.hidden&&(tab==='admin'||tab==='builder')){
