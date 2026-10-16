@@ -1,0 +1,225 @@
+name: "KALONÉO R120 - Correction des aides réelles depuis accueil Admin - Build 125"
+on:
+  push:
+    branches:
+      - fix-r60-tri-rearm-only-20261011
+    paths:
+      - '.github/workflows/build-r120-admin-home-layout-test.yml'
+
+concurrency:
+  group: kaloneo-r120-setup-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  tri-rearm:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - name: Checkout isolated Tri correction
+        uses: actions/checkout@v4
+      - name: Garantir Build #125 inédit et R119 en secours
+        shell: pwsh
+        run: |
+          $p=Get-Content -Raw -Encoding UTF8 package.json | ConvertFrom-Json
+          $cfg=Get-Content -Raw -Encoding UTF8 build/kaloneo-v1-fixes-r120-admin-home-layout.yml
+          $nsis=Get-Content -Raw -Encoding UTF8 build/installer.nsh
+          if ([int]$p.sebBuildNumber -ne 125) { throw 'Build #125 requis.' }
+          if ($nsis -notmatch '!define SEB_BUILD_NUMBER "125"') { throw 'Numéro NSIS incoherent.' }
+          if ($cfg -notmatch 'version: 0\.0\.148' -or $cfg -notmatch 'PILOTE-22-R120-0\.0\.148-Windows-Setup') { throw 'Version R120 incoherente.' }
+          git fetch --depth=1 origin tag seb-kaloneo-r119-admin-settings-layout-test
+          if ($LASTEXITCODE -ne 0) { throw 'Tag de la version test R119 absent.' }
+          $oldJson=(git show 'seb-kaloneo-r119-admin-settings-layout-test:seb-evalpro/package.json') -join [Environment]::NewLine
+          if ($LASTEXITCODE -ne 0) { throw 'R119 illisible.' }
+          $old=$oldJson | ConvertFrom-Json
+          if ([int]$p.sebBuildNumber -le [int]$old.sebBuildNumber) { throw 'Build deja utilise.' }
+          $existing=git ls-remote --tags origin 'refs/tags/seb-kaloneo-r120-admin-home-layout-test'
+          if ($LASTEXITCODE -ne 0 -or $existing) { throw 'R120 deja publiee ou remote indisponible.' }
+          Write-Host 'R119 conservée, R120 Build #125 inédit.'
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check restored Tri runtime and smoke syntax
+        run: |
+          node --check source/js/kaltest-pilot2-runtime.js
+          node --check ../kaloneo/builder-core.js
+          node --check ../kaloneo/builder-workflow.js
+          node --check ../kaloneo/test-preview.js
+          node --check ../kaloneo/test-builder.js
+          node --check ../kaloneo/help/help.js
+          node --check scripts/kaloneo-builder-help-guard.js
+          node --check scripts/kaloneo-builder-preview-electron-smoke-main.js
+          node --check scripts/kaloneo-new-test-preview-electron-smoke-main.js
+          node --check scripts/kaloneo-shared-html-candidate-electron-smoke-main.js
+          node --check scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
+          node --check scripts/kaloneo-builder-future-roundtrip-smoke.js
+          node --check scripts/kaloneo-catalog-roundtrip-score-guard.js
+          node --check scripts/kaloneo-results-strict-isolation-electron-smoke-main.js
+          node --check scripts/kaloneo-results-readable-formats-electron-smoke-main.js
+          node --check source/js/qcm-runtime.js
+          node --check source/js/qcm-runtime.js
+          node --check source/js/admin-bilan-kaloneo.js
+          node --check scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
+          node --check scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
+      - name: Vérifier les accès, réglages, aide et version
+        run: |
+          node --check src/kaloneo-passwords.js
+          node --check src/kaloneo-admin-settings.js
+          node --check scripts/kaloneo-r118-settings-smoke.js
+          node scripts/kaloneo-r118-settings-smoke.js
+          node --check scripts/kaloneo-r120-layout-smoke.js
+          node scripts/kaloneo-r120-layout-smoke.js
+          node scripts/admin-build-label-guard.js
+
+      - name: Interdire toute modification des V1 ou images validées depuis R119
+        shell: pwsh
+        run: |
+          git fetch --depth=1 origin tag seb-kaloneo-r119-admin-settings-layout-test
+          if ($LASTEXITCODE -ne 0) { throw 'R119 secours introuvable.' }
+          $files=git diff --name-only 'seb-kaloneo-r119-admin-settings-layout-test' HEAD
+          foreach ($file in $files) {
+            if ($file -match '^(TESTS_VALIDES/|VALID2/|seb-evalpro/source/kaltest/tests/|images_tests/|kaloneo/icons-tests/)') {
+              throw "Fichier V1 ou image protégée modifié: $file"
+            }
+          }
+          Write-Host 'Aucun test validé ni image protégée modifié.'
+
+      - name: No offscreen Electron worker survives an image capture
+        run: node scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
+      - name: Validate answer layouts, widths and V1 compatibility
+        run: |
+          node --check scripts/kaloneo-answer-layout-roundtrip-smoke.js
+          node scripts/kaloneo-answer-layout-roundtrip-smoke.js
+      - name: Check all 12 block types in new tests and canonical question scores
+        run: node scripts/kaloneo-builder-future-roundtrip-smoke.js
+      - name: Validate unit points and non-scored units with the actual candidate evaluator
+        run: |
+          node --check scripts/kaloneo-units-score-audit-smoke.js
+          node scripts/kaloneo-units-score-audit-smoke.js
+      - name: Audit all catalog KALTESTs, scoring, outputs and embedded media
+        run: node scripts/kaloneo-catalog-roundtrip-score-guard.js
+      - name: Verify gallery contains test illustrations only, without deleting images
+        run: |
+          node --check ../kaloneo/image-library-gallery.js
+          node --check ../kaloneo/test-builder.js
+          node scripts/kaloneo-image-gallery-visibility-smoke.js
+      - name: Verify bulk image ZIP transfer, CRC32, themes, duplicates and UI wiring
+        run: |
+          node --check src/kaloneo-image-export.js
+          node --check source/js/admin-kaloneo-transfer.js
+          node scripts/kaloneo-image-export-ui-smoke.js
+          node scripts/kaloneo-image-library-smoke.js
+          node scripts/kaloneo-ergonomics-library-smoke.js
+      - name: Verify one library with icons, hidden technical assets, all Builder sizes and future tests
+        run: |
+          node --check ../kaloneo/image-library-gallery.js
+          node --check ../kaloneo/test-builder.js
+          node --check scripts/kaloneo-library-unified-future-smoke.js
+          node scripts/kaloneo-image-gallery-visibility-smoke.js
+          node scripts/kaloneo-library-unified-future-smoke.js
+      - name: Verify Genre et nombre font persistence without changing original V1
+        run: node scripts/kaloneo-genre-nombre-font-smoke.js
+      - name: Generate historical KALTEST pilot data
+        run: node scripts/build-kaltest-pilot2-data.js
+      - name: Prepare authentic KALTEST candidate application
+        run: npm run prepare:web
+      - name: Verify portable exported tests retain their images
+        run: node scripts/kaloneo-export-restaurant-r69-smoke.js
+      - name: Verify Admin V1 save backups and persistence across app upgrades
+        run: node scripts/kaloneo-testsv1-developer-smoke.js
+      - name: Verify original V1 and V2 coexist without delete regression
+        run: node scripts/kaloneo-edit-existing-test-smoke.js
+      - name: Verify real Admin landing screen, help layout and V1 in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
+      - name: Check Tri first attempt error and next chrono in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
+      - name: Check Briques 0-99 including 12/99 and Admin persistence in Electron
+        run: npx electron --no-sandbox scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
+      - name: Check full candidate parcours transitions in real Electron
+        id: full_journey
+        continue-on-error: true
+        run: npx electron --no-sandbox scripts/full-pilot-journey-smoke-main.js
+      - name: Check selected parcours execution in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-selected-parcours-electron-smoke-main.js
+      - name: Check validated NWTEXT exercise in real Electron
+        run: npx electron --no-sandbox scripts/nwtexte-functional-smoke-main.js
+      - name: Check e-mail exercise in real Electron
+        run: npx electron --no-sandbox scripts/nvmail-functional-smoke-main.js
+      - name: Validate readable results for editor, self-evaluation, tri, bricks and e-mail
+        run: npx electron --no-sandbox scripts/kaloneo-results-readable-formats-electron-smoke-main.js
+      - name: Prove that Mail scores cannot appear in another test or Bilan
+        run: npx electron --no-sandbox scripts/kaloneo-results-strict-isolation-electron-smoke-main.js
+      - name: Check dynamic evaluation results and Bilan in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-bilan-dynamic-smoke-main.js
+      - name: Check validated Builder R48.10 auto columns in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-builder-r48-10-generic-columns-electron-smoke-main.js
+      - name: Check synthetic HTML/JS in the real candidate Electron engine
+        run: npx electron --no-sandbox scripts/kaloneo-shared-html-candidate-electron-smoke-main.js
+      - name: Check novel KALTEST tables and image in standalone Electron preview
+        run: npx electron --no-sandbox scripts/kaloneo-new-test-preview-electron-smoke-main.js
+      - name: Check test icons in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-candidate-icon-electron-smoke-main.js
+      - name: Check preserved validated R48.10 / NWTEXT R55 / icons
+        run: node scripts/kaloneo-consolidation-regression.js
+      - name: Final gate - do not mask any full journey regression
+        if: always()
+        shell: pwsh
+        run: |
+          if ('${{ steps.full_journey.outcome }}' -ne 'success') {
+            throw 'Parcours complet non valide : la publication reste bloquee, meme si les autres controles passent.'
+          }
+      - name: Compiler uniquement apres validation automatisee
+        run: npx electron-builder --win nsis --config build/kaloneo-v1-fixes-r120-admin-home-layout.yml --publish never
+
+      - name: Calculer SHA256 du Setup R120
+        shell: pwsh
+        run: |
+          $setup=Get-ChildItem -Path dist -Filter 'SEB-EvalPro-Kaloneo-PILOTE-22-R120-0.0.149-Windows-Setup.exe' -File | Select-Object -First 1
+          if (-not $setup) { throw 'Setup R120 manquant.' }
+          $hash=(Get-FileHash -Algorithm SHA256 $setup.FullName).Hash.ToUpperInvariant()
+          "SETUP_PATH=$($setup.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "SETUP_SHA256=$hash" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "R120 Build #125: SHA256=$hash"
+
+      - name: Fournir le Setup R120 comme artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SEB-EvalPro-Kaloneo-R120-Build-125-Setup
+          path: seb-evalpro/dist/SEB-EvalPro-Kaloneo-PILOTE-22-R120-0.0.149-Windows-Setup.exe
+          if-no-files-found: error
+
+      - name: Publish R120 with R118 kept as rollback
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag='seb-kaloneo-r120-admin-home-layout-test'
+          if (gh release view $tag 2>$null) { throw 'R120 existe deja. Refus de reutiliser Build #125.' }
+          $title='SEB EvalPro Kalonéo - R120 / Build #125 - REGLAGES ADMIN CORRIGES A TESTER'
+          $notes=@"
+          R120 / Build #125 / version 0.0.149 - CORRECTION DU RENDU DE L'ACCUEIL ADMIN.
+          - Roue dentée PNG 28x28 fournie par l'utilisateur, accessible uniquement en mode Administrateur.
+          - Version 0.0.149 dans la barre, Build #125 dans À propos.
+          - Mots de passe Admin et Développeur : changement vérifié,
+            sauvegarde locale hachée, anciens mots de passe préservés.
+          - Aide du Builder existante accessible depuis les réglages.
+          - Aides Admin et Builder pleine largeur, contrôlées sur l'accueil Administrateur réel en Electron, avec navigation latérale.
+          - Informations sur la version, le développeur et les ressources.
+          - Mise en forme de l'énoncé sous le champ Question, à droite.
+          - Aucun test V1 ni ressource d'origine modifié.
+          - Contrôles Electron de parcours, résultats et bilan conservés.
+          - R119 / Build #124 conservé comme secours.
+          - Tester l'ergonomie des deux aides et le focus du Builder sous Windows.
+          Commit : $env:GITHUB_SHA
+          SHA256 : $env:SETUP_SHA256
+          "@
+          gh release create $tag "$env:SETUP_PATH" --target "$env:GITHUB_SHA" --title $title --notes $notes --prerelease
