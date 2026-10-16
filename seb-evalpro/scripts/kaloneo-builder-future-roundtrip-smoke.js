@@ -435,6 +435,27 @@ assert.equal(styledDefinition.questions[0].points,0);
 const styledRecovered=Core.definitionToModel(styledDefinition);
 assert.equal(styledRecovered.blocks[0].question.prompt,styledQuestionModel.blocks[0].question.prompt);
 assert.equal(Core.analyzeDefinition(styledDefinition).ok,true);
+
+const suffixModel={
+  meta:{id:'suffix_generic',title:'Surface au mètre carré',version:'1.0.0',
+    category:'mathematiques',scored:true,layout:'single'},
+  blocks:[{uid:'surface_block',zone:'left',type:'question',
+    question:{id:'surface',prompt:'Quelle surface ?',responseType:'number',
+      acceptedAnswers:'12',points:2,answerLayout:'inline',
+      answerSuffix:'m²',unitScored:false,unitInput:false}}]
+};
+const suffixDef=Core.modelToDefinition(suffixModel);
+assert.equal(suffixDef.questions[0].answerSuffix,'m²');
+assert.equal(suffixDef.questions[0].points,2);
+assert.equal(suffixDef.questions[0].unitInput,undefined);
+assert.equal(suffixDef.questions[0].unitScored,undefined);
+const suffixRecovered=Core.definitionToModel(suffixDef);
+assert.equal(suffixRecovered.blocks[0].question.answerSuffix,'m²');
+assert.equal(Core.analyzeDefinition(suffixDef).ok,true);
+suffixRecovered.blocks[0].question.answerSuffix='';
+const noSuffix=Core.modelToDefinition(suffixRecovered);
+assert.equal(Object.hasOwn(noSuffix.questions[0],'answerSuffix'),false);
+console.log('KALONEO_ANSWER_FIXED_SUFFIX_JSON_ROUNDTRIP=OK');
 console.log('KALONEO_RICH_QUESTION_JSON_ROUNDTRIP=OK');
 
 console.log('KALONEO_FUTURE_BLOCKS_ROUNDTRIP_UNIQUE_QUESTION=OK');

@@ -2476,6 +2476,59 @@ app.whenReady().then(async()=>{
     }
     console.log('KALONEO_BUILDER_RICH_QUESTION_ELECTRON=OK',JSON.stringify(questionFormatting));
 
+
+    const fixedSuffix=await win.webContents.executeJavaScript('('+async function(){
+      document.getElementById('new-test').click();
+      let block=document.querySelector('.exercise-block');
+      block.querySelector('.block-type').value='question';
+      block.querySelector('.block-type').dispatchEvent(new Event('change',{bubbles:true}));
+      block=document.querySelector('.exercise-block');
+      if(block.classList.contains('is-collapsed'))block.querySelector('.toggle-block').click();
+      const label=[...block.querySelectorAll('label')].find(x=>
+        x.firstChild?.textContent.trim()==='Texte fixe après la réponse (ex. m²)');
+      const field=label?.querySelector('input');
+      if(!field)return {ok:false,reason:'Réglage du suffixe absent'};
+      field.focus();field.value='m²';field.dispatchEvent(new Event('input',{bubbles:true}));
+      const unchangedFocus=field.isConnected&&document.activeElement===field;
+      await new Promise(r=>setTimeout(r,430));
+      const preview=document.querySelector('.preview-question.kaloneo-shared-question');
+      const previewSuffix=preview?.querySelector('.kaloneo-fixed-answer-suffix');
+      const previewInput=preview?.querySelector('.kaloneo-answer-with-suffix input');
+      const previewWorks=previewSuffix?.textContent==='m²'&&!!previewInput;
+      const shared=window.KaloneoSharedPresentation;
+      const cases=['column','compact-column','inline','below',''];
+      const nodes=cases.map(layout=>shared.renderQuestion({
+        doc:document,question:{prompt:'Quelle surface ?',answerLayout:layout,
+          answerWidthChars:12,answerSuffix:'m²'},
+        makeAnswer:()=>{
+          const input=document.createElement('input');input.type='text';return input;
+        }
+      }));
+      const allModes=nodes.every(node=>node.querySelector('.kaloneo-fixed-answer-suffix')?.textContent==='m²'&&
+        node.querySelector('input')?.parentNode?.classList.contains('kaloneo-answer-with-suffix'));
+      const host=document.createElement('div');
+      host.style.cssText='position:absolute;left:-1300px;top:0;width:640px';
+      document.body.appendChild(host);nodes.forEach(x=>host.appendChild(x));
+      const aligned=nodes.every(n=>{const input=n.querySelector('input')?.getBoundingClientRect(),
+        suffix=n.querySelector('.kaloneo-fixed-answer-suffix')?.getBoundingClientRect();
+        return input&&suffix&&suffix.left>=input.right-2&&Math.abs(suffix.top-input.top)<26;
+      });
+      const baseline=shared.renderQuestion({doc:document,question:{prompt:'Question V1 sans suffixe'},
+        makeAnswer:()=>document.createElement('input')});
+      const legacyUnchanged=baseline.children.length===2&&
+        baseline.querySelector('.kaloneo-answer-with-suffix')===null;
+      const free=shared.renderQuestion({doc:document,question:{prompt:'Explique',
+        answerLayout:'below',answerSuffix:'m²'},makeAnswer:()=>document.createElement('textarea')});
+      const freeTextarea=free.querySelector('.kaloneo-answer-with-suffix textarea')!==null;
+      host.remove();
+      return {ok:true,unchangedFocus,previewWorks,allModes,aligned,legacyUnchanged,freeTextarea};
+    }.toString()+')()',true);
+    if(!fixedSuffix.ok||!fixedSuffix.unchangedFocus||!fixedSuffix.previewWorks||
+       !fixedSuffix.allModes||!fixedSuffix.aligned||!fixedSuffix.legacyUnchanged||
+       !fixedSuffix.freeTextarea)
+      return fail('Texte fixe après la réponse incorrect dans Builder / rendu partagé',fixedSuffix);
+    console.log('KALONEO_ANSWER_FIXED_SUFFIX_ELECTRON=OK',JSON.stringify(fixedSuffix));
+
     console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
     console.log('KALONEO_BUILDER_PREVIEW_ELECTRON=OK');

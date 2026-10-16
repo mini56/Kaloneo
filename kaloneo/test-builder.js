@@ -158,6 +158,7 @@
       responseType: 'text',
       answerLayout: 'column',
       answerWidthChars: '',
+      answerSuffix: '',
       manualEvaluation: false,
       normalizer: '',
       acceptedAnswers: '',
@@ -985,6 +986,12 @@
         title:'Entre 6 et 30 caractères. Laisser vide pour la largeur automatique.'})
     );
     body.appendChild(answerDisplay);
+    // Texte purement affiché à la suite du contrôle candidat.
+    // Contrairement au champ « Unité », il n'est ni saisi ni noté.
+    body.appendChild(inputField('Texte fixe après la réponse (ex. m²)',q.answerSuffix||'',value=>{
+      q.answerSuffix=value;changed({typing:true});
+    },{placeholder:'m², €, %, cm… (facultatif)',
+      title:'Ce texte apparaît juste après la zone de réponse. Le candidat ne le saisit pas et il ne compte jamais dans le barème.'}));
 
     const row3=document.createElement('div');
     row3.className='field-row cols-3';

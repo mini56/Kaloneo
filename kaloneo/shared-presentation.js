@@ -208,7 +208,20 @@
       caption.appendChild(tag);
     }
     const answer=makeAnswer(question);
-    if(answer)row.append(caption,answer);
+    const suffix=typeof question?.answerSuffix==='string'?question.answerSuffix:'';
+    if(answer&&suffix){
+      // Uniquement pour les nouveaux réglages explicites : ne pas modifier le
+      // DOM des tests V1. Aucune valeur de réponse n'est changée.
+      const wrapper=doc.createElement('span');
+      wrapper.className='kaloneo-answer-with-suffix';
+      wrapper.appendChild(answer);
+      const label=doc.createElement('span');
+      label.className='kaloneo-fixed-answer-suffix';
+      label.textContent=suffix;
+      label.setAttribute('aria-hidden','true');
+      wrapper.appendChild(label);
+      row.append(caption,wrapper);
+    }else if(answer)row.append(caption,answer);
     else row.appendChild(caption);
     return row;
   }

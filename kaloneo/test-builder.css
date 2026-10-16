@@ -1668,3 +1668,40 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
  .builder-help-dialog-top h2{font-size:15px}
  .builder-help-button{padding:8px;font-size:13px}
 }
+
+
+/* Texte fixe facultatif juste après la zone de réponse. L'absence de suffixe
+   conserve la structure et le style existants, y compris les V1. */
+.kaloneo-shared-question>.kaloneo-answer-with-suffix{
+  display:inline-flex;align-items:center;gap:5px;min-width:0;max-width:100%;
+  width:max-content;vertical-align:middle;
+}
+.kaloneo-shared-question>.kaloneo-answer-with-suffix>input,
+.kaloneo-shared-question>.kaloneo-answer-with-suffix>select{
+  flex:0 1 auto;min-width:0;width:var(--kaloneo-answer-width,14ch);
+  max-width:100%;box-sizing:border-box;
+}
+.kaloneo-shared-question>.kaloneo-answer-with-suffix>textarea{
+  flex:1 1 auto;min-width:0;max-width:100%;
+}
+.kaloneo-shared-question>.kaloneo-answer-with-suffix>.kaloneo-fixed-answer-suffix{
+  flex:none;width:auto;white-space:pre-wrap;font:inherit;
+  color:inherit;overflow-wrap:normal;
+}
+.kaloneo-shared-question[data-kaloneo-answer-layout="column"]>.kaloneo-answer-with-suffix,
+.kaloneo-shared-question[data-kaloneo-answer-layout="compact-column"]>.kaloneo-answer-with-suffix{
+  width:100%;
+}
+.kaloneo-shared-question[data-kaloneo-answer-layout="column"]>.kaloneo-answer-with-suffix>input,
+.kaloneo-shared-question[data-kaloneo-answer-layout="column"]>.kaloneo-answer-with-suffix>select,
+.kaloneo-shared-question[data-kaloneo-answer-layout="compact-column"]>.kaloneo-answer-with-suffix>input,
+.kaloneo-shared-question[data-kaloneo-answer-layout="compact-column"]>.kaloneo-answer-with-suffix>select{
+  flex:1 1 auto;width:0;
+}
+.kaloneo-shared-question[data-kaloneo-answer-layout="below"]>.kaloneo-answer-with-suffix:has(>textarea){
+  width:100%;
+}
+.kaloneo-shared-question[data-kaloneo-answer-layout="inline"]>.kaloneo-answer-with-suffix,
+.kaloneo-shared-question[data-kaloneo-answer-layout="below"]>.kaloneo-answer-with-suffix{
+  flex:0 1 auto;
+}

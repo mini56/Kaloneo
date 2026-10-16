@@ -64,6 +64,7 @@
         answerLayout:['column','compact-column','inline','below'].includes(q.answerLayout)?q.answerLayout:'',
         answerWidthChars:Number(q.answerWidthChars)>=6&&Number(q.answerWidthChars)<=30
           ?Number(q.answerWidthChars):'',
+        answerSuffix:typeof q.answerSuffix==='string'?q.answerSuffix:'',
         manualEvaluation:Boolean(q.manualEvaluation)||String(q.response?.type||'')==='free-text',
         normalizer:q.response?.normalizer||'',
         acceptedAnswers:q.response?.type==='multiple-choice'
@@ -435,6 +436,10 @@
        Number.isInteger(answerWidth)&&answerWidth>=6&&answerWidth<=30){
       out.answerWidthChars=answerWidth;
     }
+    // Champ d'affichage uniquement : aucune incidence sur les règles de score
+    // et aucun nouveau champ de saisie côté candidat.
+    if(typeof q.answerSuffix==='string'&&q.answerSuffix.length)
+      out.answerSuffix=q.answerSuffix;
     if(manual) {
       out.manualEvaluation=true;
       out.manualLevels=['NE','I','II','III'];
@@ -533,6 +538,8 @@
       if(!target) continue;
       target.prompt=built.prompt;
       target.response=built.response;
+      if(Object.prototype.hasOwnProperty.call(built,'answerSuffix'))target.answerSuffix=built.answerSuffix;
+      else if(Object.prototype.hasOwnProperty.call(target,'answerSuffix'))delete target.answerSuffix;
       if(built.response?.type==='duration'){
         target.acceptedMinutes=built.acceptedMinutes;
         if(Object.prototype.hasOwnProperty.call(target,'acceptedAnswers')) delete target.acceptedAnswers;

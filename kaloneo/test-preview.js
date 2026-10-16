@@ -57,7 +57,8 @@ function renderQuestion(block){
     doc:document,question:{
       id:q.id,prompt:q.prompt||'Question',
       answerLayout:q.answerLayout||'',
-      answerWidthChars:q.answerWidthChars??''
+      answerWidthChars:q.answerWidthChars??'',
+      answerSuffix:q.answerSuffix??''
     },
     // Un bloc multi-choix ne doit pas être contenu dans une étiquette <label>.
     rowTag:'div',captionClassName:'kb-question-label',
