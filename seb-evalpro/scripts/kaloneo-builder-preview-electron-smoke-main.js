@@ -2268,7 +2268,12 @@ app.whenReady().then(async()=>{
     const focusWorkflow=await win.webContents.executeJavaScript('('+async function(){
       window.confirm=()=>true;
       document.getElementById('new-test').click();
+      // Un nouveau test ferme Style de la page par défaut. L'exercice doit
+      // ouvrir la section exactement comme un concepteur avant de taper.
+      document.getElementById('toggle-page-style').click();
       const scenario=document.getElementById('test-scenario');
+      if(document.getElementById('page-style-content').hidden)
+        return {opened:false,reason:'Scénario masqué dans la section fermée'};
       scenario.focus();
       await new Promise(r=>setTimeout(r,90)); // Teste surtout le frame auto-focus initial.
       const noLateTitleFocus=document.activeElement===scenario;
