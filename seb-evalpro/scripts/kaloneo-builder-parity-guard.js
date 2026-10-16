@@ -443,6 +443,7 @@ for(const id of requiredArchetypes){
   if(!registryIds.has(id)) fail('archétype validé absent du registre exécutable: '+id);
 }
 
+require('./kaloneo-builder-help-guard.js');
 console.log('KALONEO_BUILDER_PARITY: OK');
 console.log('KALONEO_COMPILED_WITH_SEB_EVALPRO=YES');
 console.log('KALONEO_FIXTURES_REALISABLES='+report.length+'/'+fixtureFiles.length);

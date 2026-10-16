@@ -9,9 +9,15 @@
 </head>
 <body>
   <header class="builder-topbar">
-    <div>
-      <h1>KALONÉO — Test Builder</h1>
-      <p>Créer • Vérifier • Enregistrer</p>
+    <div class="builder-top-brand">
+      <button id="open-builder-help" class="builder-help-button" type="button"
+        aria-haspopup="dialog" aria-controls="builder-help-dialog" title="Ouvrir le mode d’emploi illustré du Builder">
+        <span aria-hidden="true">?</span> Aide
+      </button>
+      <div>
+        <h1>KALONÉO — Test Builder</h1>
+        <p>Créer • Vérifier • Enregistrer</p>
+      </div>
     </div>
     <div class="builder-top-actions">
       <button id="undo-change" class="seb-action-btn seb-btn-functional builder-history-btn" type="button" disabled title="Annuler la dernière modification (Ctrl+Z)">↶ Annuler</button>
@@ -346,6 +352,19 @@
       <p id="candidate-preview-warning" class="candidate-preview-warning">Aperçu direct — vérification du rendu candidat après une pause.</p>
     </section>
   </main>
+
+  <dialog id="builder-help-dialog" class="builder-help-dialog"
+    aria-labelledby="builder-help-heading" aria-modal="true">
+    <div class="builder-help-dialog-top">
+      <div>
+        <h2 id="builder-help-heading">Mode d’emploi du Test Builder</h2>
+        <p>Guide illustré, consultable hors connexion</p>
+      </div>
+      <button id="close-builder-help" class="builder-help-close" type="button">Fermer l’aide</button>
+    </div>
+    <iframe id="builder-help-frame" title="Mode d’emploi interactif du Test Builder"
+      src="help/index.html" loading="lazy"></iframe>
+  </dialog>
 
   <template id="block-template">
     <article class="exercise-block seb-card">

@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Aide — KALONÉO Test Builder</title>
+  <link rel="stylesheet" href="help.css">
+  <script src="help.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#guide-articles">Aller directement aux explications</a>
+  <header class="help-banner">
+    <div class="brand">
+      <div class="brand-symbol" aria-hidden="true">?</div>
+      <div><strong>Mode d’emploi KALONÉO</strong><span>Test Builder · Guide illustré · Hors connexion</span></div>
+    </div>
+    <div class="banner-actions">
+      <button id="print-help" type="button" title="Imprimer les rubriques visibles ou enregistrer en PDF via Windows">Imprimer</button>
+      <button id="close-help" type="button" title="Revenir au Builder">Fermer l’aide</button>
+    </div>
+  </header>
+  <div class="help-layout">
+    <aside class="help-sidebar" aria-label="Recherche et table des matières">
+      <div class="search-box">
+        <label for="help-search">Rechercher dans l’aide</label>
+        <div class="search-control">
+          <span aria-hidden="true">⌕</span>
+          <input id="help-search" type="search" autocomplete="off" spellcheck="false"
+            placeholder="Ex. tableau, image, points, erreur…" aria-describedby="search-hint">
+          <button id="clear-search" type="button" title="Effacer la recherche" aria-label="Effacer la recherche" hidden>×</button>
+        </div>
+        <p id="search-hint">Recherche dans les titres, explications et mots-clés. Raccourci : Ctrl + K.</p>
+        <p id="search-status" role="status" aria-live="polite"></p>
+      </div>
+      <nav id="help-navigation" aria-label="Rubriques du mode d'emploi"></nav>
+    </aside>
+    <main id="guide-articles" class="help-main" tabindex="-1">
+      <div class="guide-intro">
+        <span class="eyebrow">Bienvenue</span>
+        <h1>Créer un test, de la première question à l’enregistrement</h1>
+        <p>Cette aide explique les fonctions du <strong>Test Builder</strong> étape par étape, pour une personne qui découvre KALONÉO. Les images sont des <strong>schémas explicatifs</strong> de l’interface ; les boutons de votre écran restent la référence.</p>
+        <p class="intro-pills"><span>Sans Internet</span><span>Recherche immédiate</span><span>Explications illustrées</span><span>Aucune modification des tests</span></p>
+      </div>
+
+      <article id="premiers-pas" data-group="Découvrir" data-tags="démarrer débutant première utilisation accueil aide navigation tutoriel"
+        data-controls="open-builder-help close-builder-help close-help print-help">
+        <h2><span class="number">01</span> Premiers pas : comprendre l’écran</h2>
+        <p>Le Builder sert à <strong>concevoir les tests</strong>. Il ne s’agit pas de l’écran utilisé par les candidats. La partie gauche contient les réglages et les blocs ; la partie droite affiche l’aperçu du candidat.</p>
+        <figure><img src="figures/interface.svg" alt="Schéma de l’écran Builder avec le bouton Aide, les zones de création à gauche et l’aperçu à droite" width="1020" height="460" loading="lazy"><figcaption>Schéma 1 — Les trois repères : bouton Aide, zone de travail, aperçu candidat.</figcaption></figure>
+        <ol><li>Choisissez <strong>Nouveau test</strong> pour partir d’un modèle vide, ou <strong>Bibliothèque de tests</strong> pour ouvrir un test existant.</li><li>Renseignez le titre, la catégorie et les informations nécessaires.</li><li>Ajoutez les blocs puis vérifiez le résultat à droite.</li><li>Utilisez <strong>Enregistrer</strong> lorsque le test est prêt.</li></ol>
+        <p class="tip">Le Builder ne place pas votre curseur automatiquement dans un champ. Cliquez là où vous souhaitez écrire.</p>
+      </article>
+
+      <article id="nouveau-test" data-group="Découvrir" data-tags="nouveau créer effacer brouillon enregistrer titre document"
+        data-controls="new-test">
+        <h2><span class="number">02</span> Créer un nouveau test</h2>
+        <ol><li>Cliquez sur le bouton rouge <strong>Nouveau test</strong> dans la barre du haut.</li><li>Si un travail non enregistré existe, lisez l’avertissement et choisissez de continuer ou non.</li><li>Un test générique apparaît avec un premier bloc de texte.</li><li>Complétez les champs avant d’enregistrer.</li></ol>
+        <p><strong>Attention :</strong> « Nouveau test » repart d’un test vierge. Ce n’est pas le bouton permettant d’ajouter une question à un test existant ; utilisez plutôt « Ajouter un bloc ».</p>
+      </article>
+
+      <article id="definition" data-group="Découvrir" data-tags="titre id identifiant version catégorie mathematiques francais noté non noté nom obligatoire"
+        data-controls="make-id">
+        <h2><span class="number">03</span> Remplir la définition du test</h2>
+        <p><strong>Titre du test :</strong> un nom compréhensible, par exemple « Calculs de commandes ». <strong>ID du test :</strong> identifiant technique stable, distinct du titre ; le bouton <strong>Créer l’ID</strong> le prépare à partir du titre.</p>
+        <p><strong>Version :</strong> indique la version du test. <strong>Catégorie :</strong> classe le test dans la bonne famille (mathématiques, français, organisation…). <strong>Notation :</strong> choisissez « Test noté » si les réponses doivent produire un score ; sinon « Test non noté ».</p>
+        <p class="tip">Pour une activité pratique, la catégorie peut entraîner un test non noté. Le score n’est jamais à inventer : il dépend des réponses et des règles enregistrées.</p>
+      </article>
+
+      <article id="presentation" data-group="Composer une page" data-tags="presentation exercice modèle 50 50 40 60 60 40 colonnes largeur caracteres libre"
+        data-controls="">
+        <h2><span class="number">04</span> Choisir la présentation de l’exercice</h2>
+        <p>Dans <strong>Présentation de l’exercice</strong>, sélectionnez une page pleine largeur ou une disposition en deux colonnes : <strong>50/50</strong>, <strong>40/60</strong> ou <strong>60/40</strong>. Le mode <strong>Libre</strong> permet de définir des largeurs en caractères.</p>
+        <p>Une fois une présentation à deux colonnes choisie, chaque bloc possède un choix de zone : <strong>Zone gauche</strong>, <strong>Zone droite</strong> ou <strong>Pleine largeur</strong>. Les blocs restent dans l’ordre vertical de la liste.</p>
+        <figure><img src="figures/dispositions.svg" alt="Trois schémas montrant pleine largeur au-dessus de deux colonnes, puis deux colonnes au-dessus d’un bloc pleine largeur" width="960" height="440" loading="lazy"><figcaption>Schéma 2 — Vous pouvez combiner les lignes pleine largeur et les paires gauche/droite.</figcaption></figure>
+        <p class="tip">La présentation est un réglage général. La zone est choisie séparément pour chaque bloc. Les anciens tests à deux colonnes conservent leur disposition.</p>
+      </article>
+
+      <article id="modeles" data-group="Composer une page" data-tags="modele modèle préréglage generique questions tableaux gratte ciel exemple"
+        data-controls="">
+        <h2><span class="number">05</span> Utiliser un modèle prêt à l’emploi</h2>
+        <p>La liste <strong>Modèle KALONÉO</strong> propose des structures de départ : questions et image, texte à trous, deux tableaux, grille pleine largeur, Gratte-ciel, etc.</p>
+        <ol><li>Choisissez le modèle qui ressemble le plus à votre exercice.</li><li>Confirmez le remplacement des blocs si un message apparaît.</li><li>Adaptez chaque bloc avec vos consignes et vos réponses.</li></ol>
+        <p class="warning">Appliquer un modèle peut remplacer les blocs déjà présents. Vérifiez avant de confirmer, surtout si vous avez commencé votre exercice.</p>
+      </article>
+
+      <article id="ajouter-bloc" data-group="Composer une page" data-tags="ajouter bloc type texte image question audio video html grille selection images editeur"
+        data-controls="add-block">
+        <h2><span class="number">06</span> Ajouter un bloc et choisir son type</h2>
+        <p>Cliquez sur <strong>+ Ajouter un bloc</strong>. Dans l’en-tête du bloc, ouvrez la liste des types : <strong>Texte, HTML, HTML + JavaScript, Image, Sélection d’images, Audio, Vidéo, Éditeur de texte KALONÉO, Question, Tableau de réponses, Tableau/grille, Texte à trous</strong> ou <strong>Tableau structuré supplémentaire</strong>.</p>
+        <p>Cliquez sur <strong>+</strong> pour déplier le bloc, saisir son contenu et régler ses options. Cliquez sur <strong>−</strong> pour le replier sans effacer son contenu.</p>
+        <figure><img src="figures/blocs.svg" alt="Schéma d’un en-tête de bloc avec type, zone gauche ou droite, flèches, suppression, repli et actions de duplication" width="960" height="415" loading="lazy"><figcaption>Schéma 3 — Commandes d’un bloc et actions de la ligne.</figcaption></figure>
+      </article>
+
+      <article id="gerer-blocs" data-group="Composer une page" data-tags="supprimer monter descendre replier déplier ordonner ligne déplacer blocs zone">
+        <h2><span class="number">07</span> Réorganiser ou supprimer des blocs</h2>
+        <p>Les petites flèches <strong>↑</strong> et <strong>↓</strong> déplacent <em>un seul bloc</em>. <strong>↑ Ligne</strong> et <strong>↓ Ligne</strong> déplacent une rangée entière, par exemple un bloc gauche accompagné d’un bloc droit.</p>
+        <p>Le bouton <strong>Supprimer</strong> retire le bloc concerné. Les blocs peuvent être repliés individuellement pour voir plus facilement l’ensemble du test.</p>
+        <p class="tip">Si vous supprimez un bloc par erreur, utilisez immédiatement « Annuler », tant que l’action figure dans l’historique.</p>
+      </article>
+
+      <article id="inserer-dupliquer" data-group="Composer une page" data-tags="insérer insertion ici dupliquer copier clone répétition question identifiant blocs"
+        data-controls="">
+        <h2><span class="number">08</span> Insérer ou dupliquer sans tout refaire</h2>
+        <p>Entre deux blocs, choisissez un type puis cliquez sur <strong>+ Insérer ici</strong> : le nouveau bloc arrive directement à cet endroit. Pour reproduire un bloc existant, dépliez-le et cliquez sur <strong>Dupliquer</strong>.</p>
+        <p>La duplication conserve le contenu, les images et la mise en forme. Les identifiants de questions copiées sont renouvelés automatiquement pour éviter de mélanger les réponses.</p>
+        <p>Après insertion, vérifiez la <strong>Zone gauche / Zone droite / Pleine largeur</strong> et l’ordre des blocs dans l’aperçu.</p>
+      </article>
+
+      <article id="ensembles" data-group="Composer une page" data-tags="ensemble ensembles enregistrer sélectionnés réutilisable bibliotheque modele blocs plusieurs sauvegarder copier supprimer"
+        data-controls="save-block-ensemble insert-block-ensemble delete-block-ensemble">
+        <h2><span class="number">09</span> Réutiliser plusieurs blocs avec « Mes ensembles »</h2>
+        <ol><li>Dans les blocs à conserver, cochez <strong>Inclure dans l’ensemble</strong>.</li><li>Cliquez sur <strong>Enregistrer les blocs sélectionnés</strong> puis donnez un nom parlant, par exemple « En-tête et deux questions ».</li><li>Dans un futur test, choisissez cet ensemble dans <strong>Mes ensembles</strong>.</li><li>Cliquez sur <strong>Insérer l’ensemble</strong>, ou utilisez « + Insérer ici » à l’emplacement souhaité.</li></ol>
+        <p>Les blocs réutilisés reçoivent de nouveaux identifiants de réponses. Le contenu et les images sont conservés.</p>
+        <p class="warning">Les ensembles sont conservés localement sur ce PC, dans les données du Builder. Ils ne sont pas automatiquement synchronisés entre ordinateurs ni inclus dans l’export d’un autre test.</p>
+      </article>
+
+      <article id="questions" data-group="Réponses et tableaux" data-tags="question type reponse attendue score points chiffre nombre texte booléen choix durée correction automatique"
+        data-controls="">
+        <h2><span class="number">10</span> Écrire une question et ses bonnes réponses</h2>
+        <ol><li>Ajoutez un bloc de type <strong>Question</strong>.</li><li>Renseignez l’énoncé, puis le <strong>type de réponse</strong> attendu : nombre, texte, choix, durée ou autre type proposé.</li><li>Indiquez clairement toutes les réponses acceptées quand le champ le permet ; plusieurs variantes peuvent être séparées par un point-virgule.</li><li>Fixez les points en accord avec le barème de l’exercice.</li><li>Testez le résultat via <strong>Vérifier les réponses et le barème</strong>, puis avec l’aperçu Electron.</li></ol>
+        <p class="tip">Exemple : pour une réponse numérique, une virgule et un point peuvent être traités comme variantes compatibles selon le type choisi. N’indiquez pas les unités dans la valeur si un champ Unité dédié existe.</p>
+      </article>
+
+      <article id="unites" data-group="Réponses et tableaux" data-tags="unité unités kg kilo grammes noté points acceptable unités acceptées correction"
+        data-controls="">
+        <h2><span class="number">11</span> Faire accepter plusieurs unités</h2>
+        <p>Dans une question ou une cellule de réponse prenant en charge l’unité, définissez les <strong>unités acceptées</strong> : par exemple <strong>kg ; kilo ; kilogramme</strong>. Utilisez l’option <strong>Unité notée</strong> uniquement si l’unité doit compter dans le score.</p>
+        <p>Quand <strong>Unité notée</strong> est activé, une unité correcte peut ajouter <strong>1 point</strong> au barème de la question. Si elle est désactivée, le champ peut servir à comprendre la réponse sans ajouter de point.</p>
+        <p class="warning">Vérifiez la liste des variantes et les points en utilisant le bouton de vérification du barème. Une unité non acceptée ne doit pas être considérée correcte.</p>
+      </article>
+
+      <article id="tableaux" data-group="Réponses et tableaux" data-tags="grille tableau cellule ligne colonne entetes cellules largeur fusion selection couleur score"
+        data-controls="">
+        <h2><span class="number">12</span> Construire un tableau ou une grille</h2>
+        <p>Choisissez le type <strong>Tableau / grille cellule par cellule</strong>. Définissez les lignes et les colonnes, puis cliquez sur chaque cellule pour sélectionner son rôle : texte fixe, réponse du candidat, liste de choix, image, unité… Les paramètres disponibles dépendent du rôle de la cellule.</p>
+        <figure><img src="figures/grille.svg" alt="Schéma d’un tableau à trois colonnes avec une cellule texte, une cellule réponse et une cellule unité, avec réglages de points" width="960" height="410" loading="lazy"><figcaption>Schéma 4 — Une cellule peut contenir du texte, une réponse ou une unité.</figcaption></figure>
+        <p>Vous pouvez ajuster la largeur des colonnes, l’alignement, les couleurs de fond et de texte, les en-têtes et, pour les structures qui le permettent, la fusion de cellules.</p>
+        <p class="tip">Après un changement de type de cellule, vérifiez toujours la réponse attendue et le nombre de points, surtout pour les cellules de sélection et d’unité.</p>
+      </article>
+
+      <article id="images" data-group="Images et contenus" data-tags="image images importer png jpeg webp svg bibliothèque theme orientation portrait paysage taille agrandir reduire"
+        data-controls="choose-page-background-image clear-page-background-image image-library-import-pc close-image-library">
+        <h2><span class="number">13</span> Ajouter et dimensionner une image</h2>
+        <ol><li>Ajoutez un bloc <strong>Image</strong> ou choisissez une image pour le fond de page.</li><li>Ouvrez la <strong>bibliothèque d’images</strong> et recherchez par nom, thème ou orientation.</li><li>Choisissez une illustration déjà présente ou cliquez sur <strong>Importer une image du PC</strong>.</li><li>Réglez sa taille et son affichage dans les options proposées pour le bloc.</li><li>Contrôlez l’image complète dans l’aperçu.</li></ol>
+        <figure><img src="figures/images.svg" alt="Schéma du dialogue de bibliothèque d’images avec champ de recherche, filtre de thème, orientation, vignettes et import depuis le PC" width="960" height="410" loading="lazy"><figcaption>Schéma 5 — Rechercher, filtrer, importer puis choisir une illustration.</figcaption></figure>
+        <p class="warning">Pour transférer un test sur un autre PC, utilisez l’export/import KALTEST prévu avec les ressources du test. Une simple copie d’un chemin de fichier Windows n’est pas suffisante.</p>
+      </article>
+
+      <article id="selection-images" data-group="Images et contenus" data-tags="sélection images nuage pourcentage fractions choisir cliquer plusieurs compter nombre attendu scoring"
+        data-controls="">
+        <h2><span class="number">14</span> Créer une sélection d’images, classique ou en nuage</h2>
+        <p>Le type <strong>Sélection d’images</strong> permet au candidat de cliquer sur plusieurs objets pour répondre. Indiquez la question, le nombre d’éléments, le nombre à sélectionner et le barème.</p>
+        <p>Choisissez une présentation normale ou <strong>en nuage</strong> : les objets sont disposés dans l’espace de manière non alignée. L’aperçu et le candidat utilisent le même moteur d’affichage partagé.</p>
+        <p class="tip">Exemple : « Sélectionne 25 % des 8 objets ». La réponse attendue est de 2 objets. Vérifiez le nombre configuré avant d’enregistrer.</p>
+      </article>
+
+      <article id="icones" data-group="Images et contenus" data-tags="icones icône symbole image miniature liste theme choisir supprimer"
+        data-controls="clear-icon toggle-icon-library">
+        <h2><span class="number">15</span> Donner une icône à un test</h2>
+        <p>Dans <strong>Icône du test</strong>, cliquez sur le bouton <strong>+</strong> pour ouvrir la bibliothèque. Recherchez une icône adaptée au thème puis sélectionnez-la. L’icône choisie est enregistrée avec le test.</p>
+        <p>Le bouton <strong>Aucune icône</strong> retire uniquement l’icône choisie pour le test ; il ne supprime aucune image de la bibliothèque.</p>
+      </article>
+
+      <article id="multimedia" data-group="Images et contenus" data-tags="audio video vidéo multimedia html javascript web texte riche editeur quill risque"
+        data-controls="">
+        <h2><span class="number">16</span> Utiliser du texte, de l’audio, de la vidéo et l’éditeur</h2>
+        <p><strong>Texte :</strong> pour expliquer une consigne ou présenter une activité. <strong>Audio / Vidéo :</strong> pour les supports multimédias du test. <strong>Éditeur de texte KALONÉO :</strong> pour une activité de rédaction avec l’éditeur commun.</p>
+        <p>Les blocs <strong>HTML</strong> et <strong>HTML + JavaScript</strong> sont destinés à des contenus techniques spécifiques. Privilégiez les blocs standards quand ils répondent au besoin : ils facilitent l’import/export, la correction et la maintenance.</p>
+      </article>
+
+      <article id="texte-et-style" data-group="Images et contenus" data-tags="scenario scénario consigne style page fond texte couleur gras italique souligné police taille palette"
+        data-controls="toggle-page-style close-text-color-dialog">
+        <h2><span class="number">17</span> Mettre en forme scénario, consignes et blocs</h2>
+        <ol><li>Dépliez <strong>Style de la page</strong> pour afficher les champs Scénario et Consignes et les options de fond.</li><li>Sélectionnez le texte à mettre en forme.</li><li>Utilisez les boutons <strong>G</strong> (gras), <strong>I</strong> (italique), <strong>U</strong> (souligné) ou <strong>A🎨</strong> (couleur).</li><li>Choisissez un fond de page clair ou une image d’arrière-plan lorsque cela améliore la lisibilité.</li></ol>
+        <p>La sélection du texte et le champ que vous éditiez doivent être conservés après un choix de couleur. Le Builder ne doit pas placer le curseur ailleurs spontanément.</p>
+      </article>
+
+      <article id="options-test" data-group="Images et contenus" data-tags="chrono chronomètre calculatrice administrateur autoévaluation materiel matériel répétées focus après arrêt"
+        data-controls="">
+        <h2><span class="number">18</span> Activer calculatrice, compteur et aide administrateur</h2>
+        <p>Les cases de la section <strong>Style de la page</strong> permettent d’activer les capacités du test : calculatrice, compteur KALONÉO, intervention administrateur, autoévaluation et matériel extérieur.</p>
+        <p>Pour le <strong>compteur</strong>, choisissez la mesure simple ou répétée, le nombre de mesures et les options de remise à zéro ou d’affichage du temps. L’option <strong>Focus après arrêt</strong> concerne uniquement le comportement du compteur dans le test candidat, pas le curseur dans le Builder.</p>
+        <p>Renseignez les instructions de l’administrateur et le matériel nécessaire lorsque ces options sont activées.</p>
+      </article>
+
+      <article id="sorties-bilan" data-group="Évaluer et enregistrer" data-tags="sorties bilan liaison ligne resultat score erreur temps commentaire export admin identifiant"
+        data-controls="add-output toggle-contract-section add-bilan-contribution">
+        <h2><span class="number">19</span> Comprendre « Sorties et Bilan »</h2>
+        <p>Une <strong>sortie</strong> est une donnée produite par le test, par exemple un score, une réponse ou un résultat utile. Une <strong>liaison Bilan</strong> indique où une sortie doit apparaître dans le bilan administratif.</p>
+        <ol><li>Dépliez <strong>Sorties et Bilan</strong>.</li><li>Cliquez sur <strong>+ Sortie</strong> et définissez l’identifiant, le type et les réglages de la donnée.</li><li>Utilisez <strong>+ Liaison Bilan</strong> pour raccorder cette donnée à une ligne du catalogue de bilan.</li><li>Vérifiez le résultat affiché dans l’espace administrateur après un parcours d’essai.</li></ol>
+        <p class="warning">Les identifiants doivent rester cohérents. Une sortie mal reliée peut produire une rubrique vide ou un résultat au mauvais endroit.</p>
+      </article>
+
+      <article id="barème" data-group="Évaluer et enregistrer" data-tags="barème bareme verifier vérifier points notation unité bonnes mauvaises réponses scoring calcul"
+        data-controls="toggle-validation-section audit-test-scoring close-scoring-audit">
+        <h2><span class="number">20</span> Vérifier les réponses et le barème</h2>
+        <ol><li>Dépliez <strong>Contrôle avant génération</strong>.</li><li>Cliquez sur <strong>Vérifier les réponses et le barème</strong>.</li><li>Lisez les vérifications de bonnes et mauvaises réponses, des points et des unités.</li><li>Corrigez les questions signalées, puis recommencez.</li></ol>
+        <figure><img src="figures/bareme.svg" alt="Schéma d’une fenêtre de contrôle du barème avec questions vérifiées, nombre de points et avertissement pour les moteurs spécialisés" width="960" height="400" loading="lazy"><figcaption>Schéma 6 — Le contrôle indique ce qu’il a vérifié et ce qui nécessite un essai Electron.</figcaption></figure>
+        <p class="warning">Le contrôle automatique couvre les questions standards. Un exercice doté d’un moteur de correction spécialisé doit aussi être contrôlé dans Electron ; un rapport vert ne remplace pas cet essai.</p>
+      </article>
+
+      <article id="apercu" data-group="Évaluer et enregistrer" data-tags="aperçu electron visuel rendu actualisation candidat grand ecran retour navigateur"
+        data-controls="open-electron-preview">
+        <h2><span class="number">21</span> Comprendre l’aperçu du candidat</h2>
+        <p>La colonne droite affiche un <strong>aperçu simplifié immédiat</strong> pendant la saisie. Après une pause, elle reçoit une image de la <strong>véritable page candidat Electron</strong>.</p>
+        <p>Cliquez sur le bouton <strong>Aperçu</strong> pour ouvrir la version interactive en grand. Vérifiez les colonnes, les tableaux, les réponses et les images, puis utilisez la commande de fermeture de l’aperçu pour revenir au Builder.</p>
+        <p class="tip">L’aperçu sert à vérifier l’apparence et les interactions sans lancer une véritable évaluation candidat. Vos modifications restent dans le Builder.</p>
+      </article>
+
+      <article id="enregistrer" data-group="Évaluer et enregistrer" data-tags="enregistrer sauver sauvegarder obligatoire erreur test incomplet validation brouillon refus message"
+        data-controls="save-draft">
+        <h2><span class="number">22</span> Enregistrer un test et corriger les erreurs</h2>
+        <ol><li>Vérifiez le titre, l’ID, les questions, les bonnes réponses et les autres champs obligatoires.</li><li>Cliquez sur <strong>Enregistrer</strong> dans la barre supérieure.</li><li>Si une anomalie subsiste, le Builder <strong>refuse l’enregistrement</strong> et affiche un message. Dépliez <strong>Contrôle avant génération</strong> pour lire les erreurs.</li><li>Corrigez les éléments indiqués puis relancez l’enregistrement.</li></ol>
+        <p>Le statut de brouillon vous aide à distinguer un travail en cours d’un test enregistré. Les brouillons locaux ne doivent pas être confondus avec un test enregistré dans la bibliothèque.</p>
+        <p class="tip">Il n’est pas nécessaire de placer automatiquement le curseur dans un champ manquant : le message explique ce qu’il faut corriger, et vous choisissez où intervenir.</p>
+      </article>
+
+      <article id="bibliotheque-tests" data-group="Évaluer et enregistrer" data-tags="bibliotheque bibliothèque test retrouver ouvrir recherche modifier v1 v2 import exporter fichier json ordinateur"
+        data-controls="open-library-test close-test-library">
+        <h2><span class="number">23</span> Retrouver, modifier, importer ou exporter un test</h2>
+        <p>Le bouton <strong>Bibliothèque de tests</strong> permet de rechercher et d’ouvrir un test existant. Le Builder travaille avec des définitions au format <strong>KALTEST / JSON</strong> ; les commandes d’import et d’export disponibles dans KALONÉO permettent de transférer les tests avec leurs ressources prises en charge.</p>
+        <p>Pour modifier un test déjà existant, ouvrez-le explicitement depuis la bibliothèque et vérifiez son titre et sa version avant d’enregistrer. Pour un transfert entre PC, utilisez la fonction d’export/import du programme plutôt qu’un simple copier-coller des images.</p>
+      </article>
+
+      <article id="historique" data-group="Évaluer et enregistrer" data-tags="annuler rétablir historique retour arriere undo redo clavier ctrl z ctrl y"
+        data-controls="undo-change redo-change">
+        <h2><span class="number">24</span> Annuler et rétablir vos changements</h2>
+        <p><strong>↶ Annuler</strong> revient sur une modification du test. <strong>↷ Rétablir</strong> réapplique la modification annulée. Les boutons peuvent être grisés lorsque l’historique ne contient aucune action possible.</p>
+        <p>Dans un champ de texte actif, <strong>Ctrl + Z</strong> conserve son comportement normal pour annuler la saisie, sans déclencher une annulation globale du test. En dehors d’un champ de texte, les raccourcis globaux du Builder peuvent gérer l’historique.</p>
+      </article>
+
+      <article id="developpeur" data-group="Évaluer et enregistrer" data-tags="mode developpeur développeur mot de passe v1 test valide proteger protection export officiel"
+        data-controls="developer-unlock developer-export-v1 developer-unlock-cancel developer-unlock-confirm">
+        <h2><span class="number">25</span> Mode Développeur et versions officielles V1</h2>
+        <p>Le <strong>Mode Développeur</strong> est un accès protégé réservé aux opérations particulières sur les versions officielles. Il n’est <strong>pas nécessaire</strong> pour créer un test ordinaire.</p>
+        <p>Les versions originales V1 sont sensibles : un export officiel vers <strong>TESTS_V1</strong> exige le mode prévu à cet effet. Ne remplacez pas une V1 validée par inadvertance ; conservez des copies de sécurité et respectez les règles de version du projet.</p>
+      </article>
+
+      <article id="depannage" data-group="Évaluer et enregistrer" data-tags="aide assistance depannage problème curseur focus perdu chargement aperçu image erreur formulaire installation"
+        data-controls="back-tests">
+        <h2><span class="number">26</span> Résoudre les problèmes fréquents</h2>
+        <dl>
+          <dt>Je ne peux pas enregistrer.</dt><dd>Ouvrez « Contrôle avant génération », lisez les erreurs, remplissez les éléments obligatoires et réessayez.</dd>
+          <dt>Je ne vois pas mes options.</dt><dd>Vérifiez si la section est repliée : le bouton « + » déplie le contenu. Il peut être nécessaire de descendre dans le panneau de gauche.</dd>
+          <dt>Mon image n’apparaît pas dans un test exporté.</dt><dd>Vérifiez qu’elle est réellement présente dans la bibliothèque ou embarquée, puis utilisez les commandes de transfert KALTEST prévues.</dd>
+          <dt>L’aperçu semble différent pendant la saisie.</dt><dd>L’affichage immédiat est simplifié. Attendez la capture fidèle ou cliquez sur « Aperçu » pour la version interactive.</dd>
+          <dt>Le curseur ne reste pas dans mon champ.</dt><dd>Notez le champ, l’action qui déclenche la perte et si un aperçu était en cours. Le Builder n’est pas censé déplacer automatiquement le curseur : signalez le comportement.</dd>
+          <dt>Je veux quitter le Builder.</dt><dd>Cliquez sur <strong>Fermer</strong>. Si le test a été modifié, tenez compte de la confirmation concernant les modifications non enregistrées.</dd>
+        </dl>
+      </article>
+
+      <div class="guide-end"><strong>À retenir :</strong> créez vos blocs, choisissez leur disposition, vérifiez les réponses, contrôlez l’aperçu puis enregistrez. Cette aide doit être mise à jour à chaque nouvelle fonction du Builder.</div>
+      <div id="empty-search" class="empty-search" hidden>
+        <h2>Aucune rubrique trouvée</h2>
+        <p>Essayez un mot plus court (par exemple « image », « tableau » ou « bilan »).</p>
+        <button id="reset-search" type="button">Afficher toutes les rubriques</button>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

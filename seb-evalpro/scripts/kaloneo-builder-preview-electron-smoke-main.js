@@ -2354,6 +2354,60 @@ app.whenReady().then(async()=>{
       return fail('Focus du Builder perdu pendant la couleur, le Bilan ou une grille',focusWorkflow);
     console.log('KALONEO_BUILDER_FOCUS_CAUSES_FIXED_ELECTRON=OK',JSON.stringify(focusWorkflow));
 
+
+    // Manuel intégré : une vraie page hors ligne, recherche accent-insensible,
+    // illustrations et fermeture, sans modification du test en cours.
+    const helpCheck=await win.webContents.executeJavaScript('('+async function(){
+      const open=document.getElementById('open-builder-help');
+      const dialog=document.getElementById('builder-help-dialog');
+      const frame=document.getElementById('builder-help-frame');
+      if(!open||!dialog||!frame)return {ok:false,reason:'Bouton ou dialogue absent'};
+      const savedTitle=document.getElementById('test-title')?.value;
+      const savedBlockCount=document.querySelectorAll('.exercise-block').length;
+      open.click();
+      if(!dialog.open)return {ok:false,reason:'Le bouton vert n’ouvre pas l’aide'};
+      await new Promise(resolve=>{
+        if(frame.contentDocument?.readyState==='complete')return resolve();
+        const timer=setTimeout(resolve,800);
+        frame.addEventListener('load',()=>{clearTimeout(timer);resolve();},{once:true});
+      });
+      let doc;
+      try{doc=frame.contentDocument;}catch(error){
+        return {ok:false,reason:'Page d’aide inaccessible depuis la fenêtre Builder : '+String(error)};
+      }
+      if(!doc)return {ok:false,reason:'Fichier HTML d’aide non chargé dans l’iframe'};
+      const topics=doc.querySelectorAll('main article[id]').length;
+      const images=doc.querySelectorAll('main article figure img').length;
+      const input=doc.getElementById('help-search');
+      if(!input)return {ok:false,reason:'Recherche absente du manuel'};
+      input.value='unites';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      const found=[...doc.querySelectorAll('main article[id]:not([hidden])')].map(a=>a.id);
+      const accentSearch=found.includes('unites')&&found.length>0&&found.length<topics;
+      input.value='zzzx_unmot_quinexistepas';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      const noMatch=doc.getElementById('empty-search').hidden===false;
+      doc.getElementById('clear-search').click();
+      const reset=[...doc.querySelectorAll('main article[id]:not([hidden])')].length===topics;
+      const link=doc.querySelector('#help-navigation a[href="#presentation"]');
+      if(link)link.click();
+      const navigation=!!link&&doc.location.hash==='#presentation';
+      doc.getElementById('close-help').click();
+      await new Promise(r=>setTimeout(r,90));
+      const closed=!dialog.open;
+      const kept=document.getElementById('test-title')?.value===savedTitle&&
+        document.querySelectorAll('.exercise-block').length===savedBlockCount;
+      const style=getComputedStyle(open).backgroundColor;
+      return {ok:true,topics,images,accentSearch,found,noMatch,reset,navigation,
+        closed,kept,style};
+    }.toString()+')()',true);
+    if(!helpCheck.ok||helpCheck.topics<25||helpCheck.images<6||
+       !helpCheck.accentSearch||!helpCheck.noMatch||!helpCheck.reset||
+       !helpCheck.navigation||!helpCheck.closed||!helpCheck.kept||
+       helpCheck.style==='rgba(0, 0, 0, 0)')
+      return fail('Manuel hors ligne intégré non fonctionnel dans Electron',helpCheck);
+    console.log('KALONEO_BUILDER_HELP_ELECTRON=OK',JSON.stringify(helpCheck));
+
     console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
     console.log('KALONEO_BUILDER_PREVIEW_ELECTRON=OK');

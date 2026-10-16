@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" role="img">
+  <rect width="960" height="440" rx="16" fill="#ecf4f8"/>
+  <text x="242" y="39" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#075171" text-anchor="middle">PLEINE LARGEUR PUIS DEUX COLONNES</text>
+<text x="720" y="39" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#075171" text-anchor="middle">DEUX COLONNES PUIS PLEINE LARGEUR</text>
+<rect x="24" y="54" width="428" height="351" rx="14" fill="#fff" stroke="#adc8d9" stroke-width="1"/>
+<rect x="506" y="54" width="428" height="351" rx="14" fill="#fff" stroke="#adc8d9" stroke-width="1"/>
+<rect x="42" y="84" width="390" height="99" rx="12" fill="#daf4e4" stroke="#7dbf9c" stroke-width="1"/>
+<text x="237" y="128" font-family="Segoe UI, Arial, sans-serif" font-size="23" font-weight="700" fill="#125c3b" text-anchor="middle">Bloc 1</text>
+<text x="237" y="157" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="500" fill="#146a43" text-anchor="middle">Pleine largeur</text>
+<rect x="42" y="196" width="188" height="139" rx="12" fill="#dceffa" stroke="#8dbdd7" stroke-width="1"/>
+<text x="136" y="253" font-family="Segoe UI, Arial, sans-serif" font-size="23" font-weight="700" fill="#075578" text-anchor="middle">Bloc 2</text>
+<text x="136" y="280" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="500" fill="#075578" text-anchor="middle">Gauche</text>
+<rect x="244" y="196" width="188" height="139" rx="12" fill="#dceffa" stroke="#8dbdd7" stroke-width="1"/>
+<text x="338" y="253" font-family="Segoe UI, Arial, sans-serif" font-size="23" font-weight="700" fill="#075578" text-anchor="middle">Bloc 3</text>
+<text x="338" y="280" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="500" fill="#075578" text-anchor="middle">Droite</text>
+<rect x="524" y="84" width="188" height="139" rx="12" fill="#dceffa" stroke="#8dbdd7" stroke-width="1"/>
+<text x="618" y="146" font-family="Segoe UI, Arial, sans-serif" font-size="23" font-weight="700" fill="#075578" text-anchor="middle">Bloc 1</text>
+<text x="618" y="174" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="500" fill="#075578" text-anchor="middle">Gauche</text>
+<rect x="726" y="84" width="188" height="139" rx="12" fill="#dceffa" stroke="#8dbdd7" stroke-width="1"/>
+<text x="820" y="146" font-family="Segoe UI, Arial, sans-serif" font-size="23" font-weight="700" fill="#075578" text-anchor="middle">Bloc 2</text>
+<text x="820" y="174" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="500" fill="#075578" text-anchor="middle">Droite</text>
+<rect x="524" y="238" width="390" height="97" rx="12" fill="#daf4e4" stroke="#7dbf9c" stroke-width="1"/>
+<text x="720" y="276" font-family="Segoe UI, Arial, sans-serif" font-size="23" font-weight="700" fill="#125c3b" text-anchor="middle">Bloc 3</text>
+<text x="720" y="306" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="500" fill="#146a43" text-anchor="middle">Pleine largeur</text>
+<text x="237" y="380" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="500" fill="#516f83" text-anchor="middle">Ordre dans la liste : 1 → 2 → 3</text>
+<text x="720" y="380" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="500" fill="#516f83" text-anchor="middle">Ordre dans la liste : 1 → 2 → 3</text>
+<text x="480" y="426" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="600" fill="#155876" text-anchor="middle">Fonctionne avec la présentation générale en deux colonnes</text>
+</svg>

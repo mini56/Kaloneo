@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 460" role="img">
+  <rect width="1020" height="460" rx="16" fill="#ecf4f8"/>
+  <rect x="12" y="12" width="996" height="436" rx="16" fill="#fff" stroke="#9bb8c8" stroke-width="1"/>
+<rect x="12" y="12" width="996" height="77" rx="16" fill="#fff" stroke="#d5e4ea" stroke-width="1"/>
+<rect x="30" y="30" width="84" height="41" rx="9" fill="#17884f" stroke="#087044" stroke-width="1"/>
+<text x="72" y="57" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#fff" text-anchor="middle">?  Aide</text>
+<text x="134" y="55" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#075171" text-anchor="start">KALONÉO — Test Builder</text>
+<rect x="510" y="32" width="107" height="39" rx="9" fill="#f6fbfd" stroke="#abc6d7" stroke-width="1"/><text x="564" y="56" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#074764" text-anchor="middle">Bibliothèque</text>
+<rect x="626" y="32" width="107" height="39" rx="9" fill="#f6fbfd" stroke="#abc6d7" stroke-width="1"/><text x="680" y="56" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#074764" text-anchor="middle">Nouveau test</text>
+<rect x="742" y="32" width="107" height="39" rx="9" fill="#eef8f1" stroke="#16854d" stroke-width="1"/><text x="796" y="56" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#187347" text-anchor="middle">Enregistrer</text>
+<rect x="858" y="32" width="107" height="39" rx="9" fill="#f6fbfd" stroke="#abc6d7" stroke-width="1"/><text x="912" y="56" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#074764" text-anchor="middle">Fermer</text>
+<rect x="31" y="105" width="445" height="314" rx="10" fill="#fff" stroke="#c4d8e2" stroke-width="1"/>
+<rect x="493" y="105" width="495" height="314" rx="10" fill="#fff" stroke="#c4d8e2" stroke-width="1"/>
+<text x="48" y="138" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="600" fill="#135875" text-anchor="start">Définition du test</text>
+<text x="511" y="138" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="600" fill="#135875" text-anchor="start">Aperçu du candidat</text>
+<text x="51" y="172" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" fill="#075171" text-anchor="start">Titre du test</text><rect x="48" y="182" width="122" height="31" rx="5" fill="#f9fcfe" stroke="#becfd8" stroke-width="1"/>
+<text x="187" y="172" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" fill="#075171" text-anchor="start">ID du test</text><rect x="184" y="182" width="122" height="31" rx="5" fill="#f9fcfe" stroke="#becfd8" stroke-width="1"/>
+<text x="323" y="172" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" fill="#075171" text-anchor="start">Version</text><rect x="320" y="182" width="122" height="31" rx="5" fill="#f9fcfe" stroke="#becfd8" stroke-width="1"/>
+<text x="51" y="242" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" fill="#075171" text-anchor="start">Catégorie</text><rect x="48" y="251" width="122" height="31" rx="5" fill="#f9fcfe" stroke="#becfd8" stroke-width="1"/>
+<text x="187" y="242" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" fill="#075171" text-anchor="start">Notation</text><rect x="184" y="251" width="122" height="31" rx="5" fill="#f9fcfe" stroke="#becfd8" stroke-width="1"/>
+<text x="323" y="242" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" fill="#075171" text-anchor="start">Présentation</text><rect x="320" y="251" width="122" height="31" rx="5" fill="#f9fcfe" stroke="#becfd8" stroke-width="1"/>
+<rect x="49" y="298" width="406" height="44" rx="10" fill="#f8fbfc" stroke="#d7e4ea" stroke-width="1"/>
+<text x="67" y="327" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#27657e" text-anchor="start">Icône du test                         +</text>
+<rect x="49" y="354" width="406" height="44" rx="10" fill="#f8fbfc" stroke="#d7e4ea" stroke-width="1"/>
+<text x="67" y="382" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#27657e" text-anchor="start">Style de la page                         +</text>
+<rect x="511" y="165" width="459" height="210" rx="10" fill="#f8fbfd" stroke="#d5e3ea" stroke-width="1"/>
+<text x="739" y="192" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#0c6487" text-anchor="middle">Exercice</text>
+<rect x="524" y="212" width="430" height="30" rx="5" fill="#fff" stroke="#bcd3de" stroke-width="1"/>
+<text x="540" y="233" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#0a5574" text-anchor="start">Scénario : ...</text>
+<rect x="524" y="251" width="430" height="30" rx="5" fill="#fff4e3" stroke="#e4c39d" stroke-width="1"/>
+<text x="540" y="271" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#946028" text-anchor="start">Consigne : ...</text>
+<rect x="524" y="290" width="430" height="70" rx="6" fill="#fff" stroke="#d6e4eb" stroke-width="1"/>
+<rect x="58" y="434" width="37" height="32" rx="10" fill="#14794d" stroke="#14794d" stroke-width="1"/><text x="76.5" y="456" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">1</text>
+<text x="107" y="456" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" fill="#28734e" text-anchor="start">Aide</text>
+<rect x="328" y="434" width="37" height="32" rx="10" fill="#14794d" stroke="#14794d" stroke-width="1"/><text x="346.5" y="456" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">2</text>
+<text x="377" y="456" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" fill="#28734e" text-anchor="start">Modifier le test</text>
+<rect x="720" y="434" width="37" height="32" rx="10" fill="#14794d" stroke="#14794d" stroke-width="1"/><text x="738.5" y="456" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">3</text>
+<text x="769" y="456" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" fill="#28734e" text-anchor="start">Voir le rendu</text>
+</svg>

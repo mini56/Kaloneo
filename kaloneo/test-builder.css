@@ -1624,3 +1624,47 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 /* Un bloc replié retrouve strictement la hauteur d'en-tête validée.
    Les actions avancées apparaissent uniquement quand le bloc est ouvert. */
 .exercise-block.is-collapsed>.block-quick-actions{display:none}
+
+
+/* Aide Builder : aucune incidence sur les pages de tests candidats. */
+.builder-top-brand{display:flex;align-items:center;gap:14px;min-width:0}
+.builder-top-brand>div{min-width:0}
+.builder-help-button{
+  flex:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid #086b3e;border-radius:11px;padding:11px 14px;
+  color:#fff;background:#13894b;font:700 15px system-ui,sans-serif;
+  box-shadow:0 3px 0 #075c32,0 5px 11px #102b1e27;cursor:pointer;
+}
+.builder-help-button:hover{background:#0d7740;transform:translateY(-1px)}
+.builder-help-button:active{transform:translateY(2px);box-shadow:0 1px 0 #075c32}
+.builder-help-button:focus-visible,.builder-help-close:focus-visible{
+  outline:3px solid #f2b84a;outline-offset:3px
+}
+.builder-help-button span{width:22px;height:22px;border:2px solid currentColor;
+  border-radius:50%;display:inline-flex;justify-content:center;align-items:center;font-size:15px}
+.builder-help-dialog{
+  box-sizing:border-box;border:1px solid #b6cdd7;border-radius:14px;
+  padding:0;background:#f8fbfd;box-shadow:0 25px 80px #061d3190;
+  width:min(1240px,calc(100vw - 48px));height:min(880px,calc(100vh - 42px));
+  max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:hidden
+}
+.builder-help-dialog[open]{display:flex;flex-direction:column}
+.builder-help-dialog::backdrop{background:rgba(5,24,38,.66)}
+.builder-help-dialog-top{display:flex;align-items:center;justify-content:space-between;
+  gap:16px;padding:12px 20px;background:#fff;border-bottom:1px solid #cad8e2}
+.builder-help-dialog-top h2{font-size:19px;color:#034a68;margin:0}
+.builder-help-dialog-top p{font-size:12px;color:#5c7180;margin:3px 0 0}
+.builder-help-close{background:#fff;border:1px solid #2a607e;border-radius:8px;
+  color:#0c4d70;padding:10px 15px;white-space:nowrap;font-weight:700;cursor:pointer}
+.builder-help-close:hover{background:#e9f5fa}
+#builder-help-frame{border:0;background:#f5f9fb;flex:1;width:100%;min-height:0}
+@media(max-width:1150px){
+ .builder-topbar{flex-wrap:wrap;gap:8px}
+ .builder-top-actions{margin-left:auto}
+}
+@media(max-width:650px){
+ .builder-help-dialog{width:calc(100vw - 12px);height:calc(100vh - 12px)}
+ .builder-help-dialog-top{padding:9px 12px}
+ .builder-help-dialog-top h2{font-size:15px}
+ .builder-help-button{padding:8px;font-size:13px}
+}

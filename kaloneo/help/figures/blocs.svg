@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 415" role="img">
+  <rect width="960" height="415" rx="16" fill="#ecf4f8"/>
+  <rect x="26" y="36" width="908" height="330" rx="13" fill="#fff" stroke="#aac8d7" stroke-width="1"/>
+<text x="47" y="70" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="700" fill="#0b5173" text-anchor="start">En-tête du bloc</text>
+<rect x="45" y="90" width="91" height="55" rx="10" fill="#eaf3f8" stroke="#afccd9" stroke-width="1"/>
+<text x="90" y="123" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#075171" text-anchor="middle">Bloc 2</text>
+<rect x="149" y="90" width="192" height="55" rx="10" fill="#f8fbfc" stroke="#a9c5d7" stroke-width="1"/>
+<text x="245" y="122" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#0e4b67" text-anchor="middle">Type : Question</text>
+<rect x="353" y="90" width="188" height="55" rx="10" fill="#f8fbfc" stroke="#a9c5d7" stroke-width="1"/>
+<text x="448" y="122" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#0e4b67" text-anchor="middle">Zone : droite</text>
+<rect x="553" y="90" width="54" height="55" rx="10" fill="#f3f8fb" stroke="#9cb8c8" stroke-width="1"/>
+<text x="580" y="123" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#0c5880" text-anchor="middle">↑</text>
+<rect x="615" y="90" width="54" height="55" rx="10" fill="#f3f8fb" stroke="#9cb8c8" stroke-width="1"/>
+<text x="642" y="123" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#0c5880" text-anchor="middle">↓</text>
+<rect x="677" y="90" width="133" height="55" rx="10" fill="#fff5f2" stroke="#c9867d" stroke-width="1"/>
+<text x="743" y="122" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#9b3028" text-anchor="middle">Supprimer</text>
+<rect x="818" y="90" width="89" height="55" rx="10" fill="#edf4f8" stroke="#adcad9" stroke-width="1"/>
+<text x="862" y="123" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#0c5880" text-anchor="middle">+</text>
+<line x1="49" y1="166" x2="910" y2="166" stroke="#a0bdcd" stroke-width="2" stroke-linecap="round"/>
+<text x="54" y="194" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#0b5173" text-anchor="start">Actions du bloc déplié</text>
+<rect x="45" y="209" width="240" height="43" rx="10" fill="#eff7f2" stroke="#98cbb0" stroke-width="1"/>
+<text x="165" y="235" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#1e6b48" text-anchor="middle">☐ Inclure dans l’ensemble</text>
+<rect x="297" y="209" width="159" height="43" rx="10" fill="#e5f3fb" stroke="#93c3dd" stroke-width="1"/>
+<text x="377" y="235" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#075779" text-anchor="middle">Dupliquer</text>
+<rect x="469" y="209" width="153" height="43" rx="10" fill="#e8f4fa" stroke="#93c3dd" stroke-width="1"/>
+<text x="545" y="235" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#075779" text-anchor="middle">↑ Ligne</text>
+<rect x="634" y="209" width="153" height="43" rx="10" fill="#e8f4fa" stroke="#93c3dd" stroke-width="1"/>
+<text x="710" y="235" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#075779" text-anchor="middle">↓ Ligne</text>
+<text x="49" y="285" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#456679" text-anchor="start">Contenu du bloc</text>
+<rect x="47" y="294" width="860" height="39" rx="10" fill="#fff" stroke="#b8d3df" stroke-width="1"/>
+<text x="63" y="320" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="400" fill="#778c99" text-anchor="start">Écrivez ou configurez votre exercice ici…</text>
+<text x="480" y="396" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#10724c" text-anchor="middle">Sous chaque bloc :  Type de bloc  +  Insérer ici</text>
+</svg>

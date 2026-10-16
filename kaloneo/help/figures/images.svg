@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 410" role="img">
+  <rect width="960" height="410" rx="16" fill="#ecf4f8"/>
+  <rect x="22" y="24" width="916" height="347" rx="14" fill="#fff" stroke="#a9c8d7" stroke-width="1"/>
+<text x="43" y="64" font-family="Segoe UI, Arial, sans-serif" font-size="23" font-weight="700" fill="#0b5879" text-anchor="start">Bibliothèque d’images KALONÉO</text>
+<rect x="44" y="83" width="330" height="48" rx="7" fill="#f7fbfd" stroke="#afc9d5" stroke-width="1"/>
+<text x="62" y="112" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="400" fill="#879aa5" text-anchor="start">Rechercher une image…</text>
+<rect x="388" y="83" width="221" height="48" rx="7" fill="#f7fbfd" stroke="#afc9d5" stroke-width="1"/>
+<text x="406" y="112" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#37657b" text-anchor="start">Thème : tous</text>
+<rect x="619" y="83" width="296" height="48" rx="7" fill="#f7fbfd" stroke="#afc9d5" stroke-width="1"/>
+<text x="637" y="112" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#37657b" text-anchor="start">Orientation : toutes</text>
+<rect x="51" y="156" width="187" height="148" rx="10" fill="#f3f9fc" stroke="#b2d0de" stroke-width="1"/><rect x="65" y="170" width="159" height="81" rx="8" fill="#dceef8" stroke="#b3ccdb" stroke-width="1"/><circle cx="109" cy="208" r="22" fill="#64b5ad"/><circle cx="168" cy="208" r="22" fill="#378fc0"/><text x="145" y="279" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="600" fill="#275d77" text-anchor="middle">Illustration 1</text>
+<rect x="275" y="156" width="187" height="148" rx="10" fill="#f3f9fc" stroke="#b2d0de" stroke-width="1"/><rect x="289" y="170" width="159" height="81" rx="8" fill="#fff0d8" stroke="#b3ccdb" stroke-width="1"/><rect x="321" y="183" width="67" height="54" rx="6" fill="#e9a65c" stroke="#c98c40" stroke-width="1"/><text x="369" y="279" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="600" fill="#275d77" text-anchor="middle">Illustration 2</text>
+<rect x="499" y="156" width="187" height="148" rx="10" fill="#f3f9fc" stroke="#b2d0de" stroke-width="1"/><rect x="513" y="170" width="159" height="81" rx="8" fill="#dceef8" stroke="#b3ccdb" stroke-width="1"/><path d="M519 242L579 176L658 242" fill="#75b8ca"/><text x="593" y="279" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="600" fill="#275d77" text-anchor="middle">Illustration 3</text>
+<rect x="723" y="156" width="187" height="148" rx="10" fill="#f3f9fc" stroke="#b2d0de" stroke-width="1"/><rect x="737" y="170" width="159" height="81" rx="8" fill="#fff0d8" stroke="#b3ccdb" stroke-width="1"/><circle cx="822" cy="206" r="35" fill="#a4bf70"/><text x="817" y="279" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="600" fill="#275d77" text-anchor="middle">Illustration 4</text>
+<rect x="641" y="326" width="270" height="30" rx="7" fill="#e4f4e8" stroke="#80bda1" stroke-width="1"/>
+<text x="776" y="346" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" fill="#11663e" text-anchor="middle">Importer une image du PC</text>
+<text x="479" y="396" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#0a5879" text-anchor="middle">Chercher → Filtrer → Choisir ou importer</text>
+</svg>

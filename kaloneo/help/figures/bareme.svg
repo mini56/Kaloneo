@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" role="img">
+  <rect width="960" height="400" rx="16" fill="#ecf4f8"/>
+  <rect x="43" y="25" width="874" height="334" rx="15" fill="#fff" stroke="#a7c5d5" stroke-width="1"/>
+<rect x="43" y="25" width="874" height="60" rx="15" fill="#e9f5fa" stroke="#bdd5df" stroke-width="1"/>
+<text x="67" y="63" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#064d70" text-anchor="start">Vérification des réponses et du barème</text>
+<rect x="68" y="103" width="822" height="48" rx="8" fill="#e6f6e9" stroke="#82bc9b" stroke-width="1"/>
+<text x="88" y="133" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="600" fill="#185f3d" text-anchor="start">✓  Question 1 : bonne et mauvaise réponses vérifiées</text>
+<rect x="68" y="162" width="822" height="48" rx="8" fill="#e6f6e9" stroke="#82bc9b" stroke-width="1"/>
+<text x="88" y="192" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="600" fill="#185f3d" text-anchor="start">✓  Question 2 : 2 points + unité notée (1 point)</text>
+<rect x="68" y="223" width="822" height="61" rx="8" fill="#fff6dc" stroke="#dfb570" stroke-width="1"/>
+<text x="88" y="248" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#976116" text-anchor="start">!  Moteur spécialisé : essai Electron nécessaire</text>
+<text x="88" y="272" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="400" fill="#966221" text-anchor="start">Le contrôle automatique ne simule pas tous les exercices spécialisés.</text>
+<rect x="648" y="302" width="242" height="38" rx="9" fill="#e8f3fa" stroke="#8fbcd4" stroke-width="1"/>
+<text x="768" y="326" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#07587b" text-anchor="middle">Fermer</text>
+<text x="480" y="386" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#165f7a" text-anchor="middle">Un contrôle indique ce qui est validé — et ses limites</text>
+</svg>

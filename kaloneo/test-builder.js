@@ -3600,7 +3600,25 @@
     window.location.href='../admin-tests-parcours.html';
   }
 
+  function installBuilderHelp(){
+    const dialog=$('builder-help-dialog');
+    const open=$('open-builder-help');
+    const close=$('close-builder-help');
+    if(!dialog||!open||!close)return;
+    open.addEventListener('click',()=>{
+      if(!dialog.open)dialog.showModal();
+    });
+    close.addEventListener('click',()=>{if(dialog.open)dialog.close();});
+    // L'iframe reste en place et garde la dernière rubrique consultée.
+    // Aucune modification de brouillon, de focus de champ ou de parcours.
+    window.addEventListener('message',event=>{
+      if(event.source!==$('builder-help-frame')?.contentWindow)return;
+      if(event.data?.type==='kaloneo-builder-help-close'&&dialog.open)dialog.close();
+    });
+  }
+
   async function install() {
+    installBuilderHelp();
     try {
       const status=await window.sebEvalPro?.kaloneoDeveloperStatus?.();
       developerUnlocked=status?.unlocked===true;

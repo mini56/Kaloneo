@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 410" role="img">
+  <rect width="960" height="410" rx="16" fill="#ecf4f8"/>
+  <rect x="20" y="24" width="920" height="350" rx="14" fill="#fff" stroke="#aecad8" stroke-width="1"/>
+<text x="43" y="63" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="700" fill="#075171" text-anchor="start">Tableau : trois colonnes, deux lignes</text>
+<rect x="48" y="89" width="155" height="49" rx="2" fill="#d5ebf7" stroke="#a8c7d6" stroke-width="1"/><text x="125.5" y="119.5" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#18556e" text-anchor="middle">Produit</text>
+<rect x="204" y="89" width="155" height="49" rx="2" fill="#d5ebf7" stroke="#a8c7d6" stroke-width="1"/><text x="281.5" y="119.5" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#18556e" text-anchor="middle">Quantité</text>
+<rect x="360" y="89" width="155" height="49" rx="2" fill="#d5ebf7" stroke="#a8c7d6" stroke-width="1"/><text x="437.5" y="119.5" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#18556e" text-anchor="middle">Unité</text>
+<rect x="48" y="139" width="155" height="68" rx="2" fill="#f5fafc" stroke="#a8c7d6" stroke-width="1"/><text x="125.5" y="179" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#18556e" text-anchor="middle">Cartons</text>
+<rect x="204" y="139" width="155" height="68" rx="2" fill="#e4f6eb" stroke="#a8c7d6" stroke-width="1"/><text x="281.5" y="179" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#18556e" text-anchor="middle">12</text>
+<rect x="360" y="139" width="155" height="68" rx="2" fill="#fff5dc" stroke="#a8c7d6" stroke-width="1"/><text x="437.5" y="179" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#18556e" text-anchor="middle">kg</text>
+<rect x="48" y="208" width="155" height="67" rx="2" fill="#f5fafc" stroke="#a8c7d6" stroke-width="1"/><text x="125.5" y="247.5" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#18556e" text-anchor="middle">Sacs</text>
+<rect x="204" y="208" width="155" height="67" rx="2" fill="#e4f6eb" stroke="#a8c7d6" stroke-width="1"/><text x="281.5" y="247.5" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#18556e" text-anchor="middle">[réponse]</text>
+<rect x="360" y="208" width="155" height="67" rx="2" fill="#fff5dc" stroke="#a8c7d6" stroke-width="1"/><text x="437.5" y="247.5" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#18556e" text-anchor="middle">[unité]</text>
+<rect x="541" y="88" width="365" height="236" rx="10" fill="#f2f8fb" stroke="#bdd3de" stroke-width="1"/>
+<text x="561" y="121" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#0d5675" text-anchor="start">Réglages de la cellule sélectionnée</text>
+<text x="561" y="157" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="600" fill="#234e66" text-anchor="start">Type : Réponse candidat</text>
+<rect x="559" y="169" width="324" height="35" rx="5" fill="#fff" stroke="#a6bdcb" stroke-width="1"/>
+<text x="573" y="191" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="500" fill="#59788a" text-anchor="start">Réponse attendue : 12</text>
+<text x="561" y="233" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#147348" text-anchor="start">Points attribués : 2</text>
+<rect x="559" y="257" width="324" height="37" rx="6" fill="#fff8e9" stroke="#e6c28e" stroke-width="1"/>
+<text x="575" y="280" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#775623" text-anchor="start">Unité : kg ; kilo ; kilogramme</text>
+<text x="480" y="396" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="600" fill="#165a7a" text-anchor="middle">Chaque cellule a un rôle et des paramètres propres</text>
+</svg>
