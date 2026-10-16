@@ -2185,7 +2185,84 @@ app.whenReady().then(async()=>{
     }
     console.log('KALONEO_BUILDER_GRID_UNIT_EDITOR_ELECTRON=OK',JSON.stringify(editorAudit));
 
-        console.log('KALONEO_PROTECTED_V1_UI=OK');
+        // Les cinq nouvelles commandes sont actionnées depuis les vrais contrôles
+    // Electron (et non seulement dans la bibliothèque Core).
+    const editWorkflow=await win.webContents.executeJavaScript('('+async function(){
+      const W=window.KaloneoBuilderWorkflow;
+      window.confirm=()=>true;window.prompt=()=> 'Ensemble Electron';
+      document.getElementById('new-test').click();
+      const layout=document.getElementById('test-layout');
+      layout.value='50-50';layout.dispatchEvent(new Event('change',{bubbles:true}));
+      const blocks=()=>[...document.querySelectorAll('.exercise-block')];
+      const set=(field,value,kind='input')=>{
+        field.value=value;field.dispatchEvent(new Event(kind,{bubbles:true}));
+      };
+      set(blocks()[0].querySelector('.block-type'),'question','change');
+      const one=blocks()[0];
+      const question=one.querySelector('textarea');
+      const expected=one.querySelector('input[placeholder="Séparer par ;"]');
+      if(!question||!expected)return {ok:false,reason:'Question non éditable'};
+      set(question,'Combien de colis ?');
+      set(expected,'12');
+      document.getElementById('audit-test-scoring').click();
+      const auditOpen=document.getElementById('scoring-audit-dialog').open;
+      const auditText=document.getElementById('scoring-audit-summary').textContent;
+      document.getElementById('close-scoring-audit').click();
+      const original=blocks()[0].querySelector('input[readonly]')?.value;
+      blocks()[0].querySelector('.duplicate-block').click();
+      const duplicate=blocks()[1]?.querySelector('input[readonly]')?.value;
+      const duplicated=blocks().length===2&&original&&duplicate&&original!==duplicate;
+      const rowBefore=blocks().map(b=>b.dataset.uid);
+      // Le déplacement d'une ligne composée de gauche + droite doit
+      // déplacer exactement les deux blocs dans leur ordre.
+      set(blocks()[1].querySelector('.block-zone'),'right','change');
+      document.querySelector('.block-insert-divider .block-insert-type').value='text';
+      document.querySelector('.block-insert-divider .block-insert-here').click();
+      set(blocks()[0].querySelector('.block-zone'),'full','change');
+      const before=blocks().map(b=>b.dataset.uid);
+      blocks()[1].querySelector('.move-line-up').click();
+      const after=blocks().map(b=>b.dataset.uid);
+      const moved=after.length===3&&
+        after[0]===before[1]&&after[1]===before[2]&&after[2]===before[0];
+      // Réorganiser l'aperçu indépendamment des IDs pour l'essai de stockage.
+      blocks().slice(0,2).forEach(b=>{
+        const check=b.querySelector('.select-block-for-ensemble');
+        check.checked=true;check.dispatchEvent(new Event('change',{bubbles:true}));
+      });
+      document.getElementById('save-block-ensemble').click();
+      await new Promise(r=>setTimeout(r,300));
+      const entries=await W.templates.list();
+      const saved=entries.find(x=>x.name==='Ensemble Electron');
+      if(saved){
+        document.getElementById('block-ensemble-select').value=saved.id;
+        document.getElementById('insert-block-ensemble').click();
+      }
+      await new Promise(r=>setTimeout(r,250));
+      const inserted=blocks().length===5;
+      const template=await W.templates.get(saved?.id||'missing');
+      // Retour en arrière puis restauration d'un ensemble inséré.
+      const beforeUndo=blocks().length;
+      document.getElementById('undo-change').click();
+      const undone=blocks().length===beforeUndo-2;
+      document.getElementById('redo-change').click();
+      const redone=blocks().length===beforeUndo;
+      const imageDemo='data:image/svg+xml;base64,PHN2Zy8+';
+      const transferred=W.copyBlocks([{uid:'img-src',type:'image',zone:'left',mediaData:imageDemo}],[],()=>'img-copied');
+      const mediaKept=transferred[0].mediaData===imageDemo;
+      await W.templates.remove(saved?.id||'missing');
+      return {ok:true,auditOpen,auditText,duplicated,moved,stored:saved?.blocks?.length,
+        inserted,templateCount:template?.blocks?.length,undone,redone,mediaKept,
+        original,duplicate,rows:rowBefore.length};
+    }.toString()+')()',true);
+    if(!editWorkflow.ok||!editWorkflow.auditOpen||
+       !editWorkflow.auditText.includes('1 / 1')||!editWorkflow.duplicated||
+       !editWorkflow.moved||editWorkflow.stored!==2||!editWorkflow.inserted||
+       editWorkflow.templateCount!==2||!editWorkflow.undone||!editWorkflow.redone||
+       !editWorkflow.mediaKept)
+      return fail('Actions Editor : duplication, insertion, ensembles, barème ou ligne incorrects',editWorkflow);
+    console.log('KALONEO_FIVE_BUILDER_ACTIONS_ELECTRON=OK',JSON.stringify(editWorkflow));
+
+    console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
     console.log('KALONEO_BUILDER_PREVIEW_ELECTRON=OK');
     console.log(JSON.stringify({setup,shown,returned,definitionId:previewDefinition&&previewDefinition.id}));

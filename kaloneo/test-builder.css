@@ -1598,3 +1598,25 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 .preview-exercise.kaloneo-mixed-rows>.kaloneo-full-width-zone{
   grid-column:1 / -1;
 }
+
+/* Outils d'édition génériques : ne modifient pas les 7 colonnes historiques
+   de l'en-tête, y compris lorsque le bloc est replié. */
+.builder-ensemble-tools{display:flex;align-items:end;gap:8px;flex-wrap:wrap;margin:8px 0 0}
+.builder-ensemble-tools label{display:grid;gap:4px;min-width:160px;flex:1 1 210px;font-size:13px}
+.builder-ensemble-tools select{min-width:0;width:100%;padding:6px}
+.builder-ensemble-tools button{min-height:32px}
+.builder-ensemble-hint{font-size:12px;margin:7px 0 0}
+.block-quick-actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:8px}
+.block-quick-actions .mini-btn{min-height:28px;white-space:nowrap;font-size:12px;padding:4px 7px}
+.block-quick-actions .inline-checkbox{font-size:12px;margin-right:auto;display:inline-flex;align-items:center;gap:4px}
+.block-quick-actions input[type="checkbox"]{margin:0}
+.block-insert-divider{display:flex;align-items:center;justify-content:center;gap:8px;padding:3px 9px;
+ border-top:1px dashed #b7c5d2;border-bottom:1px dashed #b7c5d2;border-radius:5px}
+.block-insert-divider select{width:min(230px,60%);min-width:0;min-height:29px;font-size:12px;padding:3px 6px}
+.block-insert-divider button{white-space:nowrap;min-height:29px}
+.scoring-audit-list{list-style:disc;margin:12px 0;padding-left:22px;max-height:55vh;overflow:auto}
+.scoring-audit-list li{padding:5px 0;border-bottom:1px solid #e3e9ef}
+.scoring-audit-list .score-audit-ok{color:#185a3d}
+.scoring-audit-list .score-audit-error{color:#a62b27;font-weight:600}
+.scoring-audit-list .score-audit-unsupported{color:#986315}
+#scoring-audit-summary{font-weight:700;margin-top:8px}

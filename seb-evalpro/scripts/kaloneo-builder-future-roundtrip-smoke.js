@@ -338,4 +338,86 @@ for(const zone of ['full','left','right']){
  assert(Core.analyzeDefinition(changed).ok);
 }
 console.log('KALONEO_MIXED_FULL_WIDTH_ROUNDTRIP=OK',JSON.stringify({zones:expectedMixedZones}));
+
+const Workflow=require('../../kaloneo/builder-workflow.js');
+// Test de duplication et d'ensembles sans V1 : conserver données multimédias,
+// refaire tous les ID de réponse et leurs liens internes.
+const mediaBytes='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iYSIvPg==';
+const sourceGroup=[
+  {uid:'source_1',type:'question',zone:'left',
+    question:{id:'test_question_1',prompt:'Combien ?',responseType:'number',
+      acceptedAnswers:'12',points:2}},
+  {uid:'source_2',type:'table-grid',zone:'right',
+    table:{rows:1,cols:2,headers:['Image','Réponse'],cells:[[
+      {kind:'image',value:mediaBytes},
+      {kind:'candidate-answer',questionId:'test_question_1',
+        responseType:'number',acceptedAnswers:'12',points:2}
+    ]]}},
+  {uid:'source_3',type:'inline-flow',zone:'full',
+    wordBank:['12'],flow:[{type:'text',text:'Répondre '},
+      {type:'question',questionId:'test_question_1'}]}
+];
+const originalJSON=JSON.stringify(sourceGroup);
+let uidCounter=0;
+const copied=Workflow.copyBlocks(sourceGroup,sourceGroup,()=>('new_clone_'+(++uidCounter)));
+assert.equal(JSON.stringify(sourceGroup),originalJSON,'La duplication a modifié la source');
+assert.equal(copied.length,3);
+assert.equal(copied[0].question.id,copied[1].table.cells[0][1].questionId);
+assert.equal(copied[0].question.id,copied[2].flow[1].questionId);
+assert.notEqual(copied[0].question.id,sourceGroup[0].question.id);
+assert.equal(copied[1].table.cells[0][0].value,mediaBytes,'Image perdue après duplication');
+assert.equal(new Set([...sourceGroup,...copied].map(b=>b.uid)).size,6);
+const twice=Workflow.copyBlocks(sourceGroup,[...sourceGroup,...copied],()=>('again_'+(++uidCounter)));
+assert.notEqual(twice[0].question.id,copied[0].question.id,'ID dupliqué après une seconde copie');
+assert.notEqual(twice[0].question.id,sourceGroup[0].question.id);
+const inserted=Workflow.insertBlocks(sourceGroup,1,copied);
+assert.deepEqual(inserted.map(b=>b.uid),['source_1',...copied.map(b=>b.uid),'source_2','source_3']);
+const templateBytes=JSON.parse(JSON.stringify(sourceGroup));
+const instantiated=Workflow.copyBlocks(templateBytes,[],()=>('fresh_'+(++uidCounter)));
+assert.equal(instantiated[1].table.cells[0][0].value,mediaBytes);
+assert.equal(instantiated[0].question.id,instantiated[1].table.cells[0][1].questionId);
+const groups=[
+  {uid:'fullA',zone:'full'},{uid:'leftA',zone:'left'},
+  {uid:'rightA',zone:'right'},{uid:'fullB',zone:'full'},
+  {uid:'leftB',zone:'left'},{uid:'rightB',zone:'right'}];
+assert.deepEqual(Workflow.lines(groups).map(g=>g.zone),['full','pair','full','pair']);
+const down=Workflow.moveLine(groups,1,1);
+assert.deepEqual(down.map(b=>b.uid),['fullA','fullB','leftA','rightA','leftB','rightB']);
+const up=Workflow.moveLine(down,2,-1);
+assert.deepEqual(up.map(b=>b.uid),groups.map(b=>b.uid));
+assert.deepEqual(Workflow.moveLine(groups,0,-1),groups);
+assert.deepEqual(Workflow.moveLine(groups,4,1),groups);
+const scoringModel={meta:{
+  id:'audit_auto_generation_2026',title:'Vérification indépendante',
+  version:'1.0.0',category:'mathematiques',scored:true,layout:'single',
+  scenario:'Exercice',instruction:'Répondre'
+},blocks:[
+  {uid:'audit_num',type:'question',zone:'left',
+    question:{id:'audit_nombre',prompt:'Combien ?',responseType:'number',
+      acceptedAnswers:'12',unitInput:true,unitScored:true,units:'kg; kilo',points:2}},
+  {uid:'audit_bool',type:'question',zone:'left',
+    question:{id:'audit_bool',prompt:'Vrai ou faux',responseType:'boolean',
+      acceptedAnswers:'Vrai',points:1}}
+]};
+const scoringDefinition=Core.modelToDefinition(scoringModel);
+assert(Core.analyzeDefinition(scoringDefinition).ok,
+  JSON.stringify(Core.analyzeDefinition(scoringDefinition).errors));
+const audit=Workflow.scoringAudit(scoringDefinition,Core.analyzeDefinition);
+assert.equal(audit.standardOk,true,JSON.stringify(audit.errors));
+assert.equal(audit.maximum,4,'2 points valeur + 1 unité + 1 vrai/faux');
+assert.equal(audit.earned,4);
+assert(audit.rows.filter(r=>r.status==='ok').length===2);
+const wrongAudit=Core.clone(scoringDefinition);
+wrongAudit.questions[0].acceptedAnswers=['pas un nombre'];
+assert.equal(Workflow.scoringAudit(wrongAudit,Core.analyzeDefinition).standardOk,false);
+const expert=Core.clone(scoringDefinition);
+expert.evaluation={nwtexteRules:true};
+const special=Workflow.scoringAudit(expert,Core.analyzeDefinition);
+assert.equal(special.special,true,'Simulation du moteur NWTEXT présentée comme une validation exhaustive');
+console.log('KALONEO_BUILDER_FIVE_WORKFLOWS_CORE=OK',JSON.stringify({
+  copyIds:[sourceGroup[0].question.id,copied[0].question.id,twice[0].question.id],
+  mediaKept:true,lines:Workflow.lines(groups).map(g=>g.zone),
+  scoring:{maximum:audit.maximum,earned:audit.earned},specialRequiresElectron:true
+}));
+
 console.log('KALONEO_FUTURE_BLOCKS_ROUNDTRIP_UNIQUE_QUESTION=OK');

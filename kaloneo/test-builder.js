@@ -2,7 +2,8 @@
   'use strict';
 
   const Core = window.KaloneoBuilderCore;
-  if (!Core) throw new Error('KALONÉO Builder Core absent.');
+  const Workflow = window.KaloneoBuilderWorkflow;
+  if (!Core || !Workflow) throw new Error('KALONÉO Builder Core / Workflow absent.');
 
   const DRAFT_KEY = 'kaloneo_test_builder_v2';
   const state = {
@@ -58,6 +59,7 @@
 
   const activeGridEditorColumn=new Map(); // UI only: never saved into KALTEST
   const collapsedBlockUids=new Set(); // état d'affichage uniquement, jamais écrit dans les tests
+  const selectedBlockUids=new Set(); // sélection temporaire, hors JSON
   const PREVIEW_FOLD_KEY='kaloneo_builder_preview_fold_state_v1';
   let imageLibraryOpening=false;
   let imageSelectionBusy=false;
@@ -2350,12 +2352,98 @@
     }
   }
 
+
+  function cloneTo(index,blocks){
+    const copies=Workflow.copyBlocks(blocks,state.blocks,()=>uid('copie'));
+    state.blocks=Workflow.insertBlocks(state.blocks,index,copies);
+    copies.forEach(block=>collapsedBlockUids.add(block.uid));
+    changed();renderBlocks();
+  }
+  async function refreshEnsembles(selected){
+    const sel=$('block-ensemble-select');
+    const entries=(await Workflow.templates.list()).sort((a,b)=>a.name.localeCompare(b.name,'fr'));
+    const current=selected||sel.value;
+    sel.replaceChildren();
+    const blank=document.createElement('option');blank.value='';blank.textContent='Choisir un ensemble';
+    sel.appendChild(blank);
+    entries.forEach(entry=>{
+      const opt=document.createElement('option');opt.value=entry.id;
+      opt.textContent=entry.name+' ('+entry.blocks.length+' bloc'+(entry.blocks.length>1?'s':'')+')';
+      sel.appendChild(opt);
+    });
+    if(entries.some(e=>e.id===current))sel.value=current;
+  }
+  async function saveSelectedEnsemble(){
+    const blocks=state.blocks.filter(b=>selectedBlockUids.has(b.uid));
+    if(!blocks.length){alert('Cochez les blocs à enregistrer.');return;}
+    const name=prompt('Nom de l’ensemble réutilisable :','Mon ensemble');
+    if(name===null)return;
+    if(!String(name).trim()){alert('Indiquez un nom.');return;}
+    const id=await Workflow.templates.put({name:String(name).trim(),blocks});
+    await refreshEnsembles(id);
+    transientStatus('Ensemble enregistré sur ce PC',2500);
+  }
+  async function addSavedEnsemble(index){
+    const id=$('block-ensemble-select').value;
+    if(!id){alert('Choisissez un ensemble enregistré.');return;}
+    const entry=await Workflow.templates.get(id);
+    if(!entry||!Array.isArray(entry.blocks)||!entry.blocks.length)throw Error('Ensemble introuvable.');
+    cloneTo(index,entry.blocks);
+  }
+  function addAt(index,type){
+    if(type==='__ensemble__'){
+      void addSavedEnsemble(index).catch(e=>alert('Insertion impossible : '+String(e.message||e)));return;
+    }
+    const block=baseBlock(type);
+    state.blocks=Workflow.insertBlocks(state.blocks,index,[block]);
+    collapsedBlockUids.add(block.uid);
+    changed();renderBlocks();
+  }
+  function makeInsertionControl(index){
+    const row=document.createElement('div');row.className='block-insert-divider';
+    const select=document.createElement('select');select.className='block-insert-type';
+    select.setAttribute('aria-label','Type à insérer en position '+(index+1));
+    for(const entry of $('block-template').content.querySelector('.block-type').options){
+      const opt=document.createElement('option');opt.value=entry.value;opt.textContent=entry.textContent;
+      select.appendChild(opt);
+    }
+    const reuse=document.createElement('option');reuse.value='__ensemble__';reuse.textContent='Ensemble enregistré';
+    select.appendChild(reuse);select.value='text';
+    const button=document.createElement('button');button.type='button';button.className='mini-btn block-insert-here';
+    button.textContent='+ Insérer ici';
+    button.addEventListener('click',()=>addAt(index,select.value));
+    row.append(select,button);
+    return row;
+  }
+  function displayScoringAudit(){
+    const definition=Core.modelToDefinition(currentModel());
+    const audit=Workflow.scoringAudit(definition,Core.analyzeDefinition);
+    $('scoring-audit-summary').textContent=audit.errors.length
+      ?'Anomalies : '+audit.errors.length+' — maximum '+audit.maximum+' point(s).'
+      :'Simulation des réponses correctes : '+audit.earned+' / '+audit.maximum+' point(s).';
+    if(audit.special)$('scoring-audit-summary').textContent+=' Les règles spécialisées nécessitent un parcours Electron.';
+    const host=$('scoring-audit-rows');host.replaceChildren();
+    const list=document.createElement('ul');list.className='scoring-audit-list';
+    audit.rows.forEach(row=>{
+      const li=document.createElement('li');li.className='score-audit-'+row.status;
+      const title=document.createElement('strong');title.textContent=String(row.id||'');
+      li.append(title,document.createTextNode(' — '+(row.status==='ok'?'Bonne et mauvaise réponses vérifiées':row.reason||'À corriger')+
+        ' — '+(row.points||0)+' point(s)'));
+      list.appendChild(li);
+    });
+    audit.errors.forEach(error=>{
+      const li=document.createElement('li');li.className='score-audit-error';li.textContent=error;list.appendChild(li);
+    });
+    host.appendChild(list);$('scoring-audit-dialog').showModal();
+  }
+
   function renderBlocks() {
     const host=$('blocks-editor');
     const focusSnapshot=rememberBlockFocus(host);
     host.innerHTML='';
     const split=$('test-layout').value!=='single';
 
+    host.appendChild(makeInsertionControl(0));
     state.blocks.forEach((block,index)=>{
       const frag=$('block-template').content.cloneNode(true);
       const article=frag.querySelector('.exercise-block');
@@ -2406,9 +2494,31 @@
         [state.blocks[index+1],state.blocks[index]]=[state.blocks[index],state.blocks[index+1]];
         changed();renderBlocks();
       });
+      const select=frag.querySelector('.select-block-for-ensemble');
+      select.checked=selectedBlockUids.has(block.uid);
+      select.addEventListener('change',()=>{
+        if(select.checked)selectedBlockUids.add(block.uid);
+        else selectedBlockUids.delete(block.uid);
+      });
+      frag.querySelector('.duplicate-block').addEventListener('click',()=>cloneTo(index+1,[block]));
+      const groups=Workflow.lines(state.blocks);
+      const group=Workflow.groupAt(state.blocks,index);
+      const g=groups.findIndex(e=>e.start===group?.start);
+      for(const [selector,direction] of [['.move-line-up',-1],['.move-line-down',1]]){
+        const button=frag.querySelector(selector);
+        button.disabled=g+direction<0||g+direction>=groups.length;
+        button.title=(direction<0?'Monter':'Descendre')+
+          (group?.zone==='pair'?' la ligne gauche/droite':' la ligne');
+        button.addEventListener('click',()=>{
+          const next=Workflow.moveLine(state.blocks,index,direction);
+          if(next.map(b=>b.uid).join('|')===state.blocks.map(b=>b.uid).join('|'))return;
+          state.blocks=next;changed();renderBlocks();
+        });
+      }
       frag.querySelector('.remove-block').addEventListener('click',()=>{
         if(!confirm('Supprimer le bloc complet '+(index+1)+' ? Tout le contenu de ce bloc sera perdu.')) return;
         collapsedBlockUids.delete(block.uid);
+        selectedBlockUids.delete(block.uid);
         state.blocks.splice(index,1);changed();renderBlocks();
       });
 
@@ -2433,6 +2543,7 @@
       renderBlockBody(block,blockBody,index);
       updateFold();
       host.appendChild(frag);
+      host.appendChild(makeInsertionControl(index+1));
     });
 
     refreshPreview();
@@ -3647,6 +3758,19 @@
       renderContractEditors();changed();
     });
     $('test-template').addEventListener('change',()=>applyTemplate($('test-template').value));
+    $('save-block-ensemble').addEventListener('click',()=>void saveSelectedEnsemble()
+      .catch(e=>alert('Enregistrement impossible : '+String(e.message||e))));
+    $('insert-block-ensemble').addEventListener('click',()=>void addSavedEnsemble(state.blocks.length)
+      .catch(e=>alert('Insertion impossible : '+String(e.message||e))));
+    $('delete-block-ensemble').addEventListener('click',async()=>{
+      const id=$('block-ensemble-select').value;
+      if(!id||!confirm('Supprimer cet ensemble de ce PC ?'))return;
+      try{await Workflow.templates.remove(id);await refreshEnsembles();}
+      catch(e){alert('Suppression impossible : '+String(e.message||e));}
+    });
+    $('close-scoring-audit').addEventListener('click',()=>$('scoring-audit-dialog').close());
+    $('audit-test-scoring').addEventListener('click',displayScoringAudit);
+    void refreshEnsembles().catch(e=>console.warn('Stockage des ensembles indisponible',e));
     $('add-block').addEventListener('click',()=>{
       state.blocks.push(baseBlock('text'));changed();renderBlocks();
     });
