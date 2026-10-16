@@ -67,3 +67,17 @@ Sans définition institutionnelle précise des lignes du Bilan : `"bilanContribu
 ## Règle avant import
 
 Le système actuel contrôle à l'import surtout le format, le titre, la version, l'ID et le type de page. **Cela ne garantit pas la cohérence pédagogique ni la notation.** Exécuter `node docs/ia-kaloneo/valider-test.js fichier/test.json`, puis contrôler l'affichage et les résultats dans un vrai parcours Electron. Aucun accès aux tests validés, et aucune modification de V1.
+
+
+## Mode historique générique « fractionSelection » : images cliquables
+
+Le moteur candidat existant expose `renderFractions` dans `seb-evalpro/source/js/kaltest-pilot2-runtime.js` : cela fonctionne pour tout nouvel identifiant de test, pas seulement le test fractions d'origine. Le clic change la sélection et enregistre une liste des objets choisis. Pour les questions avec `acceptedCount`, **c'est le nombre de clics sélectionnés qui est noté**, pas l'identité de l'objet.
+
+Exemple complet : `exemples/fractions-pourcentages-images-selection.test.json`. La présentation a `layout:"40-60"` et `fractionSelection:{visual:{type:"image",src:"data:image/svg+xml,...",alt:"..."},groups:[...]}`, **sans `builderContent`**.
+
+Chaque groupe : `{"questionId":"q1","label":"25 % de 8 objets","totalItems":8,"itemImage":"data:image/svg+xml,...","cloud":false}`.
+La question associée : `{"id":"q1","prompt":"Sélectionnez 25 % des 8 objets.","response":{"type":"multiple-choice","options":["1","2","3","4","5","6","7","8"]},"acceptedAnswers":[["1","2"]],"acceptedCount":2,"points":1}`.
+
+Les valeurs de `itemImage` et `visual.src` doivent contenir **de vrais pixels ou du vrai SVG embarqué**, et non des chemins ou liens externes. Un groupe compte un point si le nombre d'objets sélectionnés est exact. Ne pas utiliser ce mode si certaines images sont les « bonnes » et d'autres les « mauvaises » : toutes les images du groupe représentent le même objet.
+
+**Limite honnête** : le rendu candidat existe, mais l'éditeur Builder ne montre pas encore un véritable bloc `fractionSelection` éditable. Importation et usage candidat nécessitent un test Electron réel. Le validateur strict du kit accepte le mode et vérifie les groupes et les quantités, mais ne prétend pas résoudre cette différence de présentation.
