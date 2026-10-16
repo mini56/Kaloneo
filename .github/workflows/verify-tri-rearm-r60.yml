@@ -43,6 +43,12 @@ jobs:
           node --check scripts/kaloneo-shared-html-candidate-electron-smoke-main.js
           node --check scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
           node --check scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
+      - name: Validate portable AI KALTEST kit against real Builder core
+        run: |
+          node --check ../docs/ia-kaloneo/valider-test.js
+          node --check ../docs/ia-kaloneo/test-validateur.js
+          node ../docs/ia-kaloneo/test-validateur.js
+          node ../docs/ia-kaloneo/valider-test.js ../docs/ia-kaloneo/exemples/calculs-stock-demo.test.json
       - name: Verify inactive Electron preview workers are always released
         run: node scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
       - name: Check new tests with all Builder block formats and unique question IDs

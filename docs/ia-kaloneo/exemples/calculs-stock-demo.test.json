@@ -1,0 +1,170 @@
+{
+  "kaltestFormat": 1,
+  "minSebEvalPro": "0.3.10",
+  "builderVersion": "2.0.0",
+  "id": "ia_calcul_stock_demo_20261016",
+  "version": "1.0.0",
+  "title": "Calculs de stock — démonstration IA",
+  "category": "mathematiques",
+  "kind": "questionnaire",
+  "scored": true,
+  "features": [
+    "runtime.basic",
+    "questionnaire.basic",
+    "questionnaire.free-text-manual",
+    "host.calculator",
+    "layout.split"
+  ],
+  "scenario": "Vous préparez une commande dans une réserve.",
+  "instruction": "Répondez à chaque question. Le point d'unité est indépendant de la valeur.",
+  "calculator": {
+    "compatible": true,
+    "defaultEnabled": false
+  },
+  "chrono": {
+    "enabled": false,
+    "engine": null
+  },
+  "adminIntervention": {
+    "enabled": false
+  },
+  "autoevaluation": false,
+  "externalMaterial": {
+    "enabled": false
+  },
+  "presentation": {
+    "layout": "50-50",
+    "builderContent": [
+      {
+        "type": "text",
+        "zone": "left",
+        "text": "Trois cartons de quatre pièces ; le colis pèse 8 kg."
+      },
+      {
+        "type": "question",
+        "zone": "left",
+        "questionId": "q1"
+      },
+      {
+        "type": "question",
+        "zone": "left",
+        "questionId": "q2"
+      },
+      {
+        "type": "question",
+        "zone": "left",
+        "questionId": "q3"
+      },
+      {
+        "type": "question",
+        "zone": "right",
+        "questionId": "q4"
+      },
+      {
+        "type": "question",
+        "zone": "right",
+        "questionId": "q5"
+      }
+    ]
+  },
+  "navigation": {
+    "next": "host",
+    "abandon": "host-common"
+  },
+  "runtime": {
+    "start": true,
+    "save": true,
+    "restore": true,
+    "finish": true
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "prompt": "Combien de pièces pour trois cartons de quatre ?",
+      "response": {
+        "type": "number"
+      },
+      "acceptedAnswers": [
+        "12"
+      ],
+      "points": 1
+    },
+    {
+      "id": "q2",
+      "prompt": "Quel est le poids du colis ? Indiquez valeur et unité.",
+      "response": {
+        "type": "number"
+      },
+      "acceptedAnswers": [
+        "8"
+      ],
+      "acceptedUnits": [
+        "kg",
+        "kilo",
+        "kilogramme"
+      ],
+      "unitInput": true,
+      "unitScored": true,
+      "points": 1
+    },
+    {
+      "id": "q3",
+      "prompt": "Choisissez la bonne zone de stockage.",
+      "response": {
+        "type": "select",
+        "options": [
+          "Fragile",
+          "Lourd",
+          "Déchets"
+        ]
+      },
+      "acceptedAnswers": [
+        "Fragile"
+      ],
+      "points": 1
+    },
+    {
+      "id": "q4",
+      "prompt": "Durée en minutes de 9 h à 10 h 15 ?",
+      "response": {
+        "type": "duration"
+      },
+      "acceptedMinutes": 75,
+      "points": 1
+    },
+    {
+      "id": "q5",
+      "prompt": "Comment protéger un colis fragile ?",
+      "response": {
+        "type": "free-text"
+      },
+      "points": 0,
+      "manualEvaluation": true,
+      "manualLevels": [
+        "NE",
+        "I",
+        "II",
+        "III"
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "id": "score",
+      "type": "number"
+    },
+    {
+      "id": "score_max",
+      "type": "number"
+    },
+    {
+      "id": "pourcentage",
+      "type": "number"
+    },
+    {
+      "id": "status",
+      "type": "string"
+    }
+  ],
+  "bilanContributions": []
+}
