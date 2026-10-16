@@ -1,0 +1,175 @@
+{
+  "kaltestFormat": 1,
+  "minSebEvalPro": "0.3.10",
+  "builderVersion": "2.0.0",
+  "id": "ia_fractions_pourcentages_illustrations_20261016",
+  "version": "1.0.0",
+  "title": "Sélectionner des fractions et des pourcentages",
+  "category": "mathematiques",
+  "description": "Exercice de fractions et pourcentages avec images cliquables et correction automatique.",
+  "kind": "questionnaire",
+  "scored": true,
+  "features": [
+    "runtime.basic",
+    "questionnaire.basic",
+    "layout.split"
+  ],
+  "scenario": "Vous préparez trois lots d'objets à répartir en quantités précises.",
+  "instruction": "Pour chaque ligne, cliquez sur le nombre d'objets correspondant à la fraction ou au pourcentage indiqué. Cliquez à nouveau pour annuler une sélection.",
+  "calculator": {
+    "compatible": false,
+    "defaultEnabled": false
+  },
+  "chrono": {
+    "enabled": false,
+    "engine": null
+  },
+  "adminIntervention": {
+    "enabled": false
+  },
+  "autoevaluation": false,
+  "externalMaterial": {
+    "enabled": false
+  },
+  "presentation": {
+    "layout": "40-60",
+    "fractionSelection": {
+      "visual": {
+        "type": "image",
+        "orientation": "portrait",
+        "src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20440%20560%22%20width%3D%22440%22%20height%3D%22560%22%3E%3Crect%20width%3D%22440%22%20height%3D%22560%22%20rx%3D%2222%22%20fill%3D%22%23edf6ff%22%2F%3E%3Ctext%20x%3D%22220%22%20y%3D%2295%22%20text-anchor%3D%22middle%22%20font-size%3D%2234%22%20font-family%3D%22Arial%22%20font-weight%3D%22bold%22%20fill%3D%22%23173855%22%3EPr%C3%A9paration%20de%20lots%3C%2Ftext%3E%3Crect%20x%3D%2255%22%20y%3D%22145%22%20width%3D%22330%22%20height%3D%22265%22%20rx%3D%2224%22%20fill%3D%22%23d8eaff%22%2F%3E%3Cg%20fill%3D%22%2370a8ee%22%20stroke%3D%22%231a466d%22%20stroke-width%3D%223%22%3E%3Crect%20x%3D%2295%22%20y%3D%22185%22%20width%3D%2290%22%20height%3D%2290%22%20rx%3D%2210%22%2F%3E%3Ccircle%20cx%3D%22275%22%20cy%3D%22230%22%20r%3D%2246%22%2F%3E%3Cpath%20d%3D%22M220%20375L275%20284L330%20375Z%22%2F%3E%3C%2Fg%3E%3Ctext%20x%3D%22220%22%20y%3D%22485%22%20text-anchor%3D%22middle%22%20font-size%3D%2224%22%20font-family%3D%22Arial%22%20fill%3D%22%23173855%22%3EChoisissez%20la%20quantit%C3%A9%3C%2Ftext%3E%3Ctext%20x%3D%22220%22%20y%3D%22523%22%20text-anchor%3D%22middle%22%20font-size%3D%2224%22%20font-family%3D%22Arial%22%20fill%3D%22%23173855%22%3Edemand%C3%A9e%20%C3%A0%20droite%3C%2Ftext%3E%3C%2Fsvg%3E",
+        "alt": "Illustration de lots de trois types d'objets"
+      },
+      "groups": [
+        {
+          "questionId": "q_fraction_trois_quarts",
+          "label": "3/4 de 4 carrés",
+          "totalItems": 4,
+          "itemImage": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2080%2080%22%20width%3D%2280%22%20height%3D%2280%22%3E%3Crect%20x%3D%2212%22%20y%3D%2212%22%20width%3D%2256%22%20height%3D%2256%22%20rx%3D%229%22%20fill%3D%22%2370a8ee%22%20stroke%3D%22%2318344a%22%20stroke-width%3D%223%22%2F%3E%3C%2Fsvg%3E",
+          "cloud": false
+        },
+        {
+          "questionId": "q_pourcentage_vingt_cinq",
+          "label": "25 % de 8 disques",
+          "totalItems": 8,
+          "itemImage": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2080%2080%22%20width%3D%2280%22%20height%3D%2280%22%3E%3Ccircle%20cx%3D%2240%22%20cy%3D%2240%22%20r%3D%2227%22%20fill%3D%22%23efaa6b%22%20stroke%3D%22%2318344a%22%20stroke-width%3D%223%22%2F%3E%3C%2Fsvg%3E",
+          "cloud": false
+        },
+        {
+          "questionId": "q_pourcentage_quarante",
+          "label": "40 % de 10 triangles",
+          "totalItems": 10,
+          "itemImage": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2080%2080%22%20width%3D%2280%22%20height%3D%2280%22%3E%3Cpath%20d%3D%22M40%209%20L72%2066%20L8%2066%20Z%22%20fill%3D%22%2381c9a1%22%20stroke%3D%22%2318344a%22%20stroke-width%3D%223%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E",
+          "cloud": false
+        }
+      ]
+    }
+  },
+  "navigation": {
+    "next": "host",
+    "abandon": "host-common"
+  },
+  "runtime": {
+    "start": true,
+    "save": true,
+    "restore": true,
+    "finish": true
+  },
+  "questions": [
+    {
+      "id": "q_fraction_trois_quarts",
+      "prompt": "Sélectionnez trois quarts des quatre carrés.",
+      "response": {
+        "type": "multiple-choice",
+        "options": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      "acceptedAnswers": [
+        [
+          "1",
+          "2",
+          "3"
+        ]
+      ],
+      "acceptedCount": 3,
+      "points": 1
+    },
+    {
+      "id": "q_pourcentage_vingt_cinq",
+      "prompt": "Sélectionnez 25 % des huit disques.",
+      "response": {
+        "type": "multiple-choice",
+        "options": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8"
+        ]
+      },
+      "acceptedAnswers": [
+        [
+          "1",
+          "2"
+        ]
+      ],
+      "acceptedCount": 2,
+      "points": 1
+    },
+    {
+      "id": "q_pourcentage_quarante",
+      "prompt": "Sélectionnez 40 % des dix triangles.",
+      "response": {
+        "type": "multiple-choice",
+        "options": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10"
+        ]
+      },
+      "acceptedAnswers": [
+        [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      ],
+      "acceptedCount": 4,
+      "points": 1
+    }
+  ],
+  "outputs": [
+    {
+      "id": "score",
+      "type": "number"
+    },
+    {
+      "id": "score_max",
+      "type": "number"
+    },
+    {
+      "id": "pourcentage",
+      "type": "number"
+    },
+    {
+      "id": "status",
+      "type": "string"
+    }
+  ],
+  "bilanContributions": []
+}
