@@ -332,7 +332,7 @@ app.whenReady().then(async()=>{
     blocks:[
       {uid:'fraction_intro',type:'text',zone:'left',text:'Sélectionnez 25 % des 8 images.'},
       {uid:'fraction_images',type:'image-selection',zone:'right',label:'25 % de huit images',
-        totalItems:8,acceptedCount:2,cloud:false,
+        totalItems:8,acceptedCount:2,cloud:true,
         mediaName:'illustration.svg',mediaType:'image/svg+xml',mediaData:image,mediaAlt:'Objets',
         question:{id:'fraction_image_q',prompt:'Sélectionnez 25 % des 8 images',points:1}}
     ]
@@ -351,10 +351,16 @@ app.whenReady().then(async()=>{
     const zones=[...document.querySelectorAll('.kb-zone')];
     const imageOk=buttons.length===8&&buttons.every(x=>x.style.backgroundImage.includes('data:image/svg+xml'));
     buttons[0]?.click();buttons[1]?.click();
+    const cloud=document.querySelector('.kaltest-image-selection-items.cloud');
     return {count:buttons.length,imageOk,selected:document.querySelectorAll('.kaltest-image-selection-item.selected').length,
-      zones:zones.length,error:document.querySelector('.kb-error')?.textContent||''};
+      zones:zones.length,error:document.querySelector('.kb-error')?.textContent||'',
+      cloudReady:cloud?.dataset.cloudReady==='1',
+      cloudPosition:cloud?getComputedStyle(cloud).position:'',
+      itemPosition:buttons[0]?getComputedStyle(buttons[0]).position:'',
+      locations:buttons.filter(x=>x.style.left&&x.style.top).length};
   }.toString()+')()');
-  assert.deepEqual(visualPreview,{count:8,imageOk:true,selected:2,zones:2,error:''},
+  assert.deepEqual(visualPreview,{count:8,imageOk:true,selected:2,zones:2,error:'',
+    cloudReady:true,cloudPosition:'relative',itemPosition:'absolute',locations:8},
     'Aperçu Electron du bloc Sélection d’images incorrect');
   await win.loadFile(path.join(root,'app','web','kaltest-pilot2.html'),{query:{kaloneoPreview:'1'}});
   await new Promise(resolve=>setTimeout(resolve,900));
@@ -378,7 +384,12 @@ app.whenReady().then(async()=>{
       selections:api.state.tests[test.id].answers.fraction_image_q,
       image:buttons.every(x=>x.style.backgroundImage.includes('data:image/svg+xml')),
       realCandidateId:document.body.dataset.sebKaltestId,
-      visualColumns:document.querySelectorAll('.kaltest-builder-runtime-zone').length};
+      visualColumns:document.querySelectorAll('.kaltest-builder-runtime-zone').length,
+      cloudReady:document.querySelector('.kaltest-image-selection-items.cloud')?.dataset.cloudReady==='1',
+      cloudPosition:getComputedStyle(document.querySelector('.kaltest-image-selection-items.cloud')).position,
+      itemPosition:getComputedStyle(buttons[0]).position,
+      cloudSaved:api.state.tests[test.id].fractionCloudPositions?.fraction_image_q?.length||0,
+      positions:buttons.map(x=>[x.style.left,x.style.top])};
   }.toString()+')()');
   assert.equal(visualCandidate.ok,true,JSON.stringify(visualCandidate));
   assert.deepEqual(visualCandidate.before,[0,1]);
@@ -389,6 +400,57 @@ app.whenReady().then(async()=>{
   assert.equal(visualCandidate.image,true);
   assert.equal(visualCandidate.realCandidateId,roundtripped.id);
   assert.equal(visualCandidate.visualColumns,2);
+  assert.equal(visualCandidate.cloudReady,true,'Nuage nouveau non initialisé');
+  assert.equal(visualCandidate.cloudPosition,'relative');
+  assert.equal(visualCandidate.itemPosition,'absolute');
+  assert.equal(visualCandidate.cloudSaved,8,'Nuage nouveau non mémorisé');
+  assert.equal(new Set(visualCandidate.positions.map(x=>x.join(','))).size,8,
+    'Positions des objets du nuage non distinctes');
+
+  // Le vrai test Fractions V1 doit continuer à exploiter exactement le même moteur de nuage.
+  // Chargement en mémoire, sans sauvegarder ou modifier son JSON.
+  const legacyFractions=require('../source/kaltest/tests/fractions-preparation-lots/1.0.0/test.json');
+  runtime.runtime.tests=[legacyFractions];activePreviewDefinition=legacyFractions;
+  await win.loadFile(path.join(root,'app','web','kaltest-pilot2.html'),{query:{kaloneoPreview:'1'}});
+  await new Promise(resolve=>setTimeout(resolve,950));
+  const legacyCloud=await win.webContents.executeJavaScript('('+function(){
+    const api=window.sebKaltestPilot2;
+    const test=api?.currentTest?.();
+    const cloud=document.querySelector('.kaltest-fraction-items.cloud');
+    const objects=[...(cloud?.querySelectorAll('.kaltest-fraction-item')||[])];
+    const positions=api?.state?.tests?.[test?.id]?.fractionCloudPositions?.fraction_2_8||[];
+    const original=positions.map(p=>({x:p.x,y:p.y}));
+    const result={testId:test?.id,cloudReady:cloud?.dataset.cloudReady==='1',
+      count:objects.length,savedCount:positions.length,
+      cloudPosition:cloud?getComputedStyle(cloud).position:'',
+      itemPosition:objects[0]?getComputedStyle(objects[0]).position:'',
+      coordinates:objects.map(b=>[b.style.left,b.style.top]),original};
+    api?.renderCurrentTest?.();
+    return result;
+  }.toString()+')()');
+  assert.equal(legacyCloud.testId,'fractions_preparation_lots');
+  assert.equal(legacyCloud.cloudReady,true,'Nuage V1 non initialisé');
+  assert.equal(legacyCloud.count,12,'Nuage V1 : nombre d’objets modifié');
+  assert.equal(legacyCloud.savedCount,12,'Nuage V1 : positions non sauvegardées');
+  assert.equal(legacyCloud.cloudPosition,visualCandidate.cloudPosition,'Rendu de nuage différent');
+  assert.equal(legacyCloud.itemPosition,visualCandidate.itemPosition,'Positionnement nuage différent');
+  assert.equal(new Set(legacyCloud.coordinates.map(x=>x.join(','))).size,12);
+  await new Promise(resolve=>setTimeout(resolve,390));
+  const restoredCloud=await win.webContents.executeJavaScript('('+function(){
+    const api=window.sebKaltestPilot2,test=api.currentTest();
+    const saved=api.state.tests[test.id].fractionCloudPositions?.fraction_2_8||[];
+    const cloud=document.querySelector('.kaltest-fraction-items.cloud');
+    return {count:saved.length,ready:cloud?.dataset.cloudReady==='1',
+      positions:saved.map(p=>({x:p.x,y:p.y}))};
+  }.toString()+')()');
+  assert.equal(restoredCloud.ready,true,'Nuage V1 non restauré après un nouvel affichage');
+  assert.equal(restoredCloud.count,12);
+  assert.deepEqual(restoredCloud.positions,legacyCloud.original,
+    'Le nuage V1 a changé après un simple nouvel affichage');
+  console.log('KALONEO_SHARED_FRACTION_CLOUD_V1_ELECTRON=OK',JSON.stringify({
+    legacy:{count:legacyCloud.count,restored:restoredCloud.ready},
+    native:{count:visualCandidate.cloudSaved,cloudReady:visualCandidate.cloudReady}
+  }));
   console.log('KALONEO_NATIVE_IMAGE_SELECTION_ELECTRON=OK',JSON.stringify({
     preview:visualPreview,candidate:visualCandidate,baremeMax:roundtripped.questions[0].points}));
   console.log('FRESH_KALTEST_PREVIEW: OK',JSON.stringify({

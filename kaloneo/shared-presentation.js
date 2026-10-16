@@ -522,43 +522,231 @@
     table.appendChild(group);
   }
 
+  // Nuage UNIQUE KALONÉO : algorithme historique Fractions V1, sans chevauchement,
+  // positions normalisées persistantes et régénération uniquement après vrai redimensionnement.
+  // Utilisé dans la V1 ET les nouveaux blocs image-selection (Builder, aperçu, candidat).
+  function prepareFractionCloud(items){
+    items.classList.add('cloud');
+    const view=items.ownerDocument?.defaultView;
+    const computed=view?.getComputedStyle?.(items);
+    // Dans le candidat, les classes de la V1 apportent ces dimensions.
+    // Dans les aperçus Builder sans feuille CSS candidat, reproduire la même géométrie.
+    if(computed?.position!=='relative'||computed?.display!=='block'){
+      items.style.position='relative';
+      items.style.display='block';
+      items.style.width='100%';
+      items.style.height='clamp(190px,28vh,260px)';
+      items.style.minHeight='190px';
+      items.style.border='1px dashed #b8c0ca';
+      items.style.borderRadius='9px';
+      items.style.background='rgba(255,255,255,.72)';
+      items.style.overflow='hidden';
+    }
+    for(const button of items.querySelectorAll('.kaltest-fraction-item')){
+      button.style.position='absolute';
+      button.style.margin='0';
+    }
+  }
+
+  function fractionCloudOverlap(points, itemSize, margin) {
+    for (let i = 0; i < points.length; i += 1) {
+      for (let j = i + 1; j < points.length; j += 1) {
+        if (
+          Math.abs(points[i].x - points[j].x) < itemSize + margin &&
+          Math.abs(points[i].y - points[j].y) < itemSize + margin
+        ) return true;
+      }
+    }
+    return false;
+  }
+
+  function randomFractionCloudPoints(count, width, height, itemSize, margin) {
+    const maxX = Math.max(0, width - itemSize);
+    const maxY = Math.max(0, height - itemSize);
+    const points = [];
+    const maxAttempts = Math.max(800, count * 350);
+    let attempts = 0;
+
+    while (points.length < count && attempts < maxAttempts) {
+      attempts += 1;
+      const candidate = {
+        x:Math.random() * maxX,
+        y:Math.random() * maxY
+      };
+      const collides = points.some(point =>
+        Math.abs(point.x - candidate.x) < itemSize + margin &&
+        Math.abs(point.y - candidate.y) < itemSize + margin
+      );
+      if (!collides) points.push(candidate);
+    }
+
+    if (points.length === count) return points;
+
+    // Garde de secours : grille légèrement décalée, utilisée uniquement si
+    // l'espace devient trop petit pour le placement aléatoire par rejet.
+    const columns = Math.max(1, Math.floor((width + margin) / (itemSize + margin)));
+    const rows = Math.max(1, Math.ceil(count / columns));
+    const stepX = columns > 1 ? maxX / (columns - 1) : 0;
+    const stepY = rows > 1 ? maxY / (rows - 1) : 0;
+    const fallback = [];
+    for (let index = 0; index < count; index += 1) {
+      const column = index % columns;
+      const row = Math.floor(index / columns);
+      const jitterX = Math.min(Math.max(0, stepX * 0.16), Math.max(0, stepX - itemSize - margin));
+      const jitterY = Math.min(Math.max(0, stepY * 0.16), Math.max(0, stepY - itemSize - margin));
+      fallback.push({
+        x:Math.max(0, Math.min(maxX, column * stepX + ((row % 2) ? jitterX : 0))),
+        y:Math.max(0, Math.min(maxY, row * stepY + ((column % 2) ? jitterY : 0)))
+      });
+    }
+    return fallback;
+  }
+
+  function layoutFractionCloud(items, options = {}) {
+    if (!items) return false;
+    const allowRegenerateSaved = options.allowRegenerateSaved === true;
+    const buttons = Array.from(items.querySelectorAll('.kaltest-fraction-item'));
+    if (!buttons.length) return false;
+
+    const width = Math.max(1, items.clientWidth || items.getBoundingClientRect().width || 1);
+    const height = Math.max(1, items.clientHeight || items.getBoundingClientRect().height || 1);
+    const itemSize = Math.max(1, buttons[0].getBoundingClientRect().width || buttons[0].offsetWidth || 54);
+    // Marge volontairement large : un objet sélectionné grossit légèrement
+    // (transform:scale), le nuage doit rester sans contact même dans cet état.
+    const margin = 16;
+    const maxX = Math.max(0, width - itemSize);
+    const maxY = Math.max(0, height - itemSize);
+    const saved = typeof options.getSaved==='function'
+      ? options.getSaved() : items.__kaloneoCloudPositions;
+    let points = null;
+    if (Array.isArray(saved) && saved.length === buttons.length) {
+      const restored = saved.map(position => ({
+        x:Math.max(0, Math.min(maxX, Number(position?.x || 0) * maxX)),
+        y:Math.max(0, Math.min(maxY, Number(position?.y || 0) * maxY))
+      }));
+      // Comme l'ancien qcm-page4.js : au rechargement, on conserve
+      // strictement le nuage enregistré. Un contrôle de chevauchement pendant
+      // la stabilisation d'Electron peut être faux et ne doit pas remélanger
+      // les 12 images. Seul un vrai redimensionnement stable peut régénérer.
+      if (!allowRegenerateSaved || !fractionCloudOverlap(restored, itemSize, margin)) points = restored;
+    }
+
+    let generated = false;
+    if (!points) {
+      points = randomFractionCloudPoints(buttons.length, width, height, itemSize, margin);
+      const normalized=points.map(point => ({
+        x:maxX > 0 ? point.x / maxX : 0,
+        y:maxY > 0 ? point.y / maxY : 0
+      }));
+      if(typeof options.setSaved==='function')options.setSaved(normalized);
+      else items.__kaloneoCloudPositions=normalized;
+      generated = true;
+    }
+
+    buttons.forEach((button, index) => {
+      const point = points[index] || { x:0, y:0 };
+      button.style.left = point.x + 'px';
+      button.style.top = point.y + 'px';
+    });
+    items.dataset.cloudReady = '1';
+
+    // Le rappel setSaved conserve le stockage historique candidat ; dans le Builder, état local seulement.
+    return true;
+  }
+
+  function installFractionCloud(items, options={}) {
+    if(!items)return;
+    let resizeTimer = null;
+    let stableWidth = 0;
+    let stableHeight = 0;
+    let settled = false;
+
+    const restore = () => {prepareFractionCloud(items);return layoutFractionCloud(items, {...options,allowRegenerateSaved:false});};
+    requestAnimationFrame(restore);
+
+    // On mémorise la géométrie une fois la page stabilisée. Les premiers
+    // ResizeObserver émis pendant le chargement ne doivent jamais remélanger
+    // un nuage restauré.
+    setTimeout(() => {
+      prepareFractionCloud(items);
+      stableWidth = items.clientWidth || 0;
+      stableHeight = items.clientHeight || 0;
+      settled = true;
+      layoutFractionCloud(items, {...options,allowRegenerateSaved:true});
+    }, 220);
+
+    if (typeof ResizeObserver === 'function' && !items.__sebFractionCloudObserver) {
+      const observer = new ResizeObserver(() => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          if (!settled) {
+            restore();
+            return;
+          }
+          const width = items.clientWidth || 0;
+          const height = items.clientHeight || 0;
+          const realResize = Math.abs(width - stableWidth) > 2 || Math.abs(height - stableHeight) > 2;
+          stableWidth = width;
+          stableHeight = height;
+          layoutFractionCloud(items, {...options,allowRegenerateSaved:realResize});
+        }, 120);
+      });
+      observer.observe(items);
+      items.__sebFractionCloudObserver = observer;
+    }
+  }
+
   // Rendu natif partagé. Le moteur candidat gère l'enregistrement et la correction.
   // Aucune exécution de scripts fournis par un test.
-  function renderImageSelection({doc,block,selected=[],onChange,disabled=false}){
+  function renderImageSelection({doc,block,selected=[],onChange,disabled=false,cloudState={}}){
     const outer=doc.createElement('section');
     outer.className='kaltest-image-selection kaltest-fraction-row';
     outer.dataset.questionId=String(block.questionId||'');
-    outer.style.cssText='box-sizing:border-box;min-width:0;padding:12px;border-radius:10px;border:1px solid #b8d0e4;background:#f7fbff;';
-    const title=doc.createElement('strong');
-    title.textContent=String(block.label||'Sélectionnez les images');
-    title.style.cssText='display:block;margin-bottom:10px;color:#183c5c;';
+    // Rendu identique à la ligne des fractions historiques, y compris dans les aperçus.
+    outer.style.cssText='box-sizing:border-box;display:grid;grid-template-columns:minmax(105px,145px) minmax(0,1fr);gap:10px;align-items:'+((block.cloud===true)?'start':'center')+';min-width:0;';
+    if(block.cloud===true)outer.classList.add('cloud-row');
+    const title=doc.createElement('div');
+    title.className='kaltest-fraction-title';
+    title.style.cssText='min-height:42px;display:flex;align-items:center;justify-content:center;gap:7px;padding:5px 7px;border:1px solid rgba(0,78,112,.28);border-radius:9px;background:rgba(0,78,112,.08);color:#004E70;';
+    const label=doc.createElement('strong');
+    label.textContent=String(block.label||'Sélectionnez les images');
+    title.appendChild(label);
+    const image=String(block.resource?.data||block.itemImage||'');
+    if(/^data:image\//i.test(image)){
+      const icon=doc.createElement('img');icon.src=image;icon.alt='';
+      icon.style.cssText='width:34px;height:34px;object-fit:contain;';
+      title.appendChild(icon);
+    }
     outer.appendChild(title);
     const total=Math.max(1,Math.min(60,Math.floor(Number(block.totalItems)||4)));
     const values=new Set(Array.isArray(selected)?selected.map(String):[]);
     const grid=doc.createElement('div');
-    grid.className='kaltest-fraction-items kaltest-image-selection-items';
-    grid.style.cssText='display:flex;flex-wrap:wrap;gap:9px;align-items:flex-start;min-height:64px;';
-    if(block.cloud===true){grid.style.justifyContent='space-around';grid.style.rowGap='22px';}
-    const image=String(block.resource?.data||block.itemImage||'');
+    grid.className='kaltest-fraction-items kaltest-image-selection-items'+(block.cloud===true?' cloud':'');
+    grid.style.cssText=block.cloud===true
+      ?'min-width:0;'
+      :'min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:8px;';
     for(let i=1;i<=total;i++){
       const id=String(i);
       const button=doc.createElement('button');
       button.type='button';button.className='kaltest-fraction-item kaltest-image-selection-item';
       button.dataset.itemIndex=id;
-      if(block.cloud===true)button.style.transform='translateY('+(((i*13)%19)-8)+'px)';
       button.setAttribute('aria-label',String(block.label||'Image')+' — objet '+id);
-      button.style.cssText='box-sizing:border-box;flex:0 0 62px;width:62px;height:62px;border:2px solid #9ab3c9;border-radius:9px;background:#ffffff;cursor:pointer;transition:border-color .15s,background-color .15s;';
+      // Mêmes dimensions que le test Fractions V1, y compris écran bas.
+      const size=doc.defaultView?.matchMedia?.('(max-height:760px)')?.matches?46:54;
+      button.style.cssText='box-sizing:border-box;flex:0 0 '+size+'px;width:'+size+'px;height:'+size+'px;border:3px solid #c5cbd2;border-radius:9px;background:#ffffff;cursor:pointer;';
       if(/^data:image\//i.test(image)){
         button.style.backgroundImage='url('+JSON.stringify(image)+')';
-        button.style.backgroundSize='contain';button.style.backgroundRepeat='no-repeat';button.style.backgroundPosition='center';
+        button.style.backgroundSize='contain';
+        button.style.backgroundRepeat='no-repeat';
+        button.style.backgroundPosition='center';
       }
       const update=()=>{
         const active=values.has(id);
         button.classList.toggle('selected',active);
         button.setAttribute('aria-pressed',String(active));
-        button.style.borderColor=active?'#147d48':'#9ab3c9';
-        button.style.backgroundColor=active?'#d9f3e4':'#ffffff';
-        button.style.boxShadow=active?'inset 0 0 0 3px #147d48':'none';
+        button.style.borderColor=active?'#F9B233':'#c5cbd2';
+        button.style.transform=active?'scale(1.08)':'';
+        button.style.boxShadow=active?'0 4px 10px rgba(0,0,0,.14)':'';
       };
       update();
       button.disabled=disabled;
@@ -570,9 +758,10 @@
       grid.appendChild(button);
     }
     outer.appendChild(grid);
+    if(block.cloud===true)installFractionCloud(grid,cloudState);
     return outer;
   }
 
-  return Object.freeze({renderImageSelection,columns,renderZones,alignCompactQuestionColumns,renderRichContext,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderQuestionTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup,
+  return Object.freeze({installFractionCloud,renderImageSelection,columns,renderZones,alignCompactQuestionColumns,renderRichContext,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderQuestionTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup,
     normalizeGridColor,gridCellBackground,gridCellTextColor,gridSelectQuestion});
 });
