@@ -1579,3 +1579,22 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
   .grid-color-column-row>.grid-color-control>span,
   .grid-cell-color-toolbar>.grid-color-control>span{display:none}
 }
+
+/* Disposition mixte KALTEST : rangées 100 % et rangées gauche/droite.
+   Ne touche pas aux présentations historiques sans bloc "full". */
+.preview-exercise.kaloneo-mixed-rows{
+  grid-auto-rows:max-content;
+  align-content:start;
+  overflow:auto;
+}
+.preview-exercise.kaloneo-mixed-rows>.preview-zone{
+  height:auto;
+  min-height:0;
+  overflow:visible;
+}
+.preview-exercise.kaloneo-mixed-rows .preview-content-block:last-child{
+  flex:0 0 auto;
+}
+.preview-exercise.kaloneo-mixed-rows>.kaloneo-full-width-zone{
+  grid-column:1 / -1;
+}

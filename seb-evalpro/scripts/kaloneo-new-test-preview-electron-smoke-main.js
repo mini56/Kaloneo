@@ -453,6 +453,77 @@ app.whenReady().then(async()=>{
   }));
   console.log('KALONEO_NATIVE_IMAGE_SELECTION_ELECTRON=OK',JSON.stringify({
     preview:visualPreview,candidate:visualCandidate,baremeMax:roundtripped.questions[0].points}));
+
+  // Nouveau test SANS fixture : pleine largeur, deux colonnes, pleine largeur,
+  // puis deux colonnes. Import/export et ordre de lecture conservés partout.
+  const mixedModel={
+    meta:{id:'future_mixed_layout_test',title:'Disposition mixte nouvelle',
+      version:'1.0.0',category:'mathematiques',scored:false,layout:'40-60',
+      scenario:'Disposition mixte',instruction:'Lisez les zones dans l’ordre'},
+    blocks:[
+      {uid:'mix_full_1',type:'text',zone:'full',text:'En-tête pleine largeur'},
+      {uid:'mix_left_1',type:'text',zone:'left',text:'Gauche avant le bilan'},
+      {uid:'mix_right_1',type:'text',zone:'right',text:'Droite avant le bilan'},
+      {uid:'mix_full_2',type:'text',zone:'full',text:'Bilan pleine largeur'},
+      {uid:'mix_left_2',type:'text',zone:'left',text:'Gauche après le bilan'},
+      {uid:'mix_right_2',type:'text',zone:'right',text:'Droite après le bilan'}
+    ]
+  };
+  const mixedDef=Core.modelToDefinition(mixedModel);
+  assert(Core.analyzeDefinition(mixedDef).ok);
+  const mixedRestored=Core.modelToDefinition(Core.definitionToModel(mixedDef));
+  assert.deepEqual(mixedRestored.presentation.builderContent,mixedDef.presentation.builderContent);
+  const expectedMixed=['full','left','right','full','left','right'];
+  assert.deepEqual(mixedRestored.presentation.builderContent.map(x=>x.zone),expectedMixed);
+  activePreviewDefinition=mixedRestored;runtime.runtime.tests=[mixedRestored];
+  await win.loadFile(path.join(root,'app','web','kaloneo-builder','test-preview.html'));
+  await new Promise(resolve=>setTimeout(resolve,480));
+  const getMixedLayout=function(rootSelector){
+    const root=document.querySelector(rootSelector);
+    if(!root)return {ok:false,reason:'no root'};
+    const children=[...root.children];
+    const rects=children.map(x=>{
+      const r=x.getBoundingClientRect();
+      return {x:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width};
+    });
+    const fullIndexes=[0,3];
+    return {
+      ok:true,
+      mixed:root.classList.contains('kaloneo-mixed-rows'),
+      zoneCount:children.length,
+      zones:children.map(x=>x.dataset.kaloneoZone),
+      texts:children.map(x=>x.textContent.trim()),
+      fullSpan:fullIndexes.every(i=>children[i].style.gridColumn==='1 / -1'),
+      fullWidth:fullIndexes.every(i=>rects[i].width>rects[1].width+100),
+      horizontal:rects[2].x>=rects[1].right-3&&rects[5].x>=rects[4].right-3,
+      vertical:rects[1].top>=rects[0].bottom-3&&
+        rects[3].top>=Math.max(rects[1].bottom,rects[2].bottom)-3&&
+        rects[4].top>=rects[3].bottom-3,
+      positions:rects.map(x=>({width:Math.round(x.width),top:Math.round(x.top)}))
+    };
+  };
+  const p=await win.webContents.executeJavaScript('('+getMixedLayout.toString()+')(".kb-layout")');
+  assert.equal(p.ok,true,JSON.stringify(p));
+  assert.equal(p.mixed,true,JSON.stringify(p));
+  assert.deepEqual(p.zones,expectedMixed,JSON.stringify(p));
+  assert.equal(p.fullSpan,true);
+  assert.equal(p.fullWidth,true,JSON.stringify(p));
+  assert.equal(p.horizontal,true,JSON.stringify(p));
+  assert.equal(p.vertical,true,JSON.stringify(p));
+  assert.equal(p.texts[0],'En-tête pleine largeur');
+  assert.equal(p.texts[3],'Bilan pleine largeur');
+  await win.loadFile(path.join(root,'app','web','kaltest-pilot2.html'),{query:{kaloneoPreview:'1'}});
+  await new Promise(resolve=>setTimeout(resolve,900));
+  const c=await win.webContents.executeJavaScript('('+getMixedLayout.toString()+')(".kaltest-builder-runtime-layout")');
+  assert.equal(c.ok,true,JSON.stringify(c));
+  assert.equal(c.mixed,true,JSON.stringify(c));
+  assert.deepEqual(c.zones,expectedMixed,JSON.stringify(c));
+  assert.equal(c.fullSpan,true);
+  assert.equal(c.fullWidth,true,JSON.stringify(c));
+  assert.equal(c.horizontal,true,JSON.stringify(c));
+  assert.equal(c.vertical,true,JSON.stringify(c));
+  assert.deepEqual(c.texts,p.texts,'Rendu candidat différent de l’aperçu');
+  console.log('KALONEO_MIXED_ROWS_ELECTRON=OK',JSON.stringify({preview:p,candidate:c}));
   console.log('FRESH_KALTEST_PREVIEW: OK',JSON.stringify({
     columns:observed.zoneCount,tableCount:observed.tableCount,
     rowCounts:observed.rowCounts,imageReady:observed.imageReady,

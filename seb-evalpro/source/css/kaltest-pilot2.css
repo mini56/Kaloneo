@@ -3566,3 +3566,20 @@ body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2 .kaltest-
 .kaloneo-shared-question[data-kaloneo-answer-layout="compact-column"]>textarea{
   width:100%;min-width:0;max-width:100%;
 }
+
+/* Rangées mixtes du Builder : pleine largeur puis colonnes, et inversement.
+   Les anciens KALTEST sans zone="full" gardent le rendu inchangé. */
+.kaltest-builder-runtime-layout.kaloneo-mixed-rows{
+  height:auto;
+  min-height:100%;
+  grid-auto-rows:max-content;
+  align-content:start;
+  overflow:visible;
+}
+.kaltest-builder-runtime-layout.kaloneo-mixed-rows>.kaltest-builder-runtime-zone{
+  min-height:0;
+  overflow:visible;
+}
+.kaltest-builder-runtime-layout.kaloneo-mixed-rows>.kaloneo-full-width-zone{
+  grid-column:1 / -1;
+}

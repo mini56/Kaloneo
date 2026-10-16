@@ -2378,7 +2378,7 @@
       if(split){
         zone.value=block.zone||'left';
         zone.disabled=false;
-        zone.title='Choisir la zone de ce bloc';
+        zone.title='Gauche, droite ou pleine largeur. Les blocs suivent leur ordre vertical.';
       }else{
         const singleOption=document.createElement('option');
         singleOption.value='single';

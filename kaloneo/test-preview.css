@@ -233,3 +233,22 @@ body{font-family:Calibri,"Segoe UI",Arial,sans-serif;background:linear-gradient(
 .kaloneo-shared-question[data-kaloneo-answer-layout="compact-column"]>textarea{
   width:100%;min-width:0;max-width:100%;
 }
+
+/* Lignes transversales : aperçu Electron fidèle à l'ordre du Builder. */
+.kb-layout.kaloneo-mixed-rows{
+  height:auto;
+  min-height:100%;
+  grid-auto-rows:max-content;
+  align-content:start;
+}
+.kb-layout.kaloneo-mixed-rows>.kb-zone{
+  height:auto;
+  min-height:0;
+  overflow:visible;
+}
+.kb-layout.kaloneo-mixed-rows>.kaloneo-full-width-zone{
+  grid-column:1 / -1;
+}
+.kb-layout.kaloneo-mixed-rows .kb-zone>.kb-block:last-child{
+  flex:0 0 auto;
+}

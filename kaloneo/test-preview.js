@@ -333,10 +333,10 @@ function buildLayout(page){
     zoneClass:'kb-zone',
     renderItem:block=>renderBlock(block)
   });
-  if(!zones.left.childNodes.length){
+  if(!zones.mixed&&!zones.left.childNodes.length){
     zones.left.append(el('div','kb-empty',mode==='single'?'Aucun bloc Exercice':'Zone gauche vide'));
   }
-  if(zones.right&&!zones.right.childNodes.length){
+  if(!zones.mixed&&zones.right&&!zones.right.childNodes.length){
     zones.right.append(el('div','kb-empty','Zone droite vide'));
   }
   workspace.append(layout);

@@ -31,6 +31,49 @@
     const doc=host.ownerDocument;
     const single=layout==='single'||!layout;
     host.style.gridTemplateColumns=columns(layout,blockSizing);
+    // Le mode historique répartit TOUS les blocs entre deux colonnes :
+    // on le conserve strictement quand aucun bloc n'est pleine largeur.
+    // Avec un bloc "full", chaque segment gauche/droite est encadré
+    // par des lignes transversales, dans l'ordre du Builder.
+    const mixed=!single&&(items||[]).some(item=>item?.zone==='full');
+    if(mixed){
+      host.classList.add('kaloneo-mixed-rows');
+      const rows=[];
+      let active=null;
+      let firstLeft=null,firstRight=null;
+      const zone=kind=>{
+        const part=doc.createElement('section');
+        part.className=zoneClass;
+        part.dataset.kaloneoZone=kind;
+        if(kind==='full'){
+          part.style.gridColumn='1 / -1';
+          part.classList.add('kaloneo-full-width-zone');
+        }
+        return part;
+      };
+      for(const item of items||[]){
+        const node=renderItem(item);
+        if(!node)continue;
+        if(item?.zone==='full'){
+          active=null;
+          const full=zone('full');
+          full.appendChild(node);
+          host.appendChild(full);
+          rows.push({full});
+          continue;
+        }
+        if(!active){
+          const left=zone('left'),right=zone('right');
+          host.append(left,right);
+          active={left,right};
+          rows.push(active);
+          if(!firstLeft){firstLeft=left;firstRight=right;}
+        }
+        (item?.zone==='right'?active.right:active.left).appendChild(node);
+      }
+      watchCompactQuestionColumns(host);
+      return {left:firstLeft,right:firstRight,rows,mixed:true};
+    }
     const left=doc.createElement('section');
     const right=doc.createElement('section');
     left.className=right.className=zoneClass;

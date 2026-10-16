@@ -307,4 +307,35 @@ assert.equal(changedSelection.questions[0].acceptedCount,4);
 assert.deepEqual(changedSelection.questions[0].acceptedAnswers,[['1','2','3','4']]);
 assert.equal(Core.analyzeDefinition(changedSelection).ok,true);
 
+
+const mixedRowsModel={
+  meta:{id:'synthetic_100_split_100',title:'Disposition mixte nouvelle',
+    version:'1.0.0',category:'mathematiques',scored:false,layout:'40-60',
+    scenario:'Exercice de géométrie',instruction:'Observez les 6 blocs'},
+  blocks:[
+    {uid:'mf0',type:'text',zone:'full',text:'Introduction sur toute la largeur'},
+    {uid:'ml1',type:'text',zone:'left',text:'Colonne gauche — première paire'},
+    {uid:'mr1',type:'text',zone:'right',text:'Colonne droite — première paire'},
+    {uid:'mf1',type:'text',zone:'full',text:'Bilan sur toute la largeur'},
+    {uid:'ml2',type:'text',zone:'left',text:'Colonne gauche — deuxième paire'},
+    {uid:'mr2',type:'text',zone:'right',text:'Colonne droite — deuxième paire'}
+  ]
+};
+const mixedRowsDefinition=Core.modelToDefinition(mixedRowsModel);
+const expectedMixedZones=['full','left','right','full','left','right'];
+assert.deepEqual(mixedRowsDefinition.presentation.builderContent.map(x=>x.zone),expectedMixedZones);
+assert.equal(Core.analyzeDefinition(mixedRowsDefinition).ok,true,
+  JSON.stringify(Core.analyzeDefinition(mixedRowsDefinition).errors));
+const mixedRowsRestored=Core.modelToDefinition(Core.definitionToModel(mixedRowsDefinition));
+assert.deepEqual(mixedRowsRestored.presentation.builderContent,mixedRowsDefinition.presentation.builderContent,
+  'Le Builder a modifié ordre, type ou zone des blocs 100 % + deux colonnes');
+assert.equal(Core.analyzeDefinition(mixedRowsRestored).ok,true);
+for(const zone of ['full','left','right']){
+ const clone=Core.definitionToModel(mixedRowsDefinition);
+ clone.blocks[2].zone=zone;
+ const changed=Core.modelToDefinition(clone);
+ assert.equal(changed.presentation.builderContent[2].zone,zone);
+ assert(Core.analyzeDefinition(changed).ok);
+}
+console.log('KALONEO_MIXED_FULL_WIDTH_ROUNDTRIP=OK',JSON.stringify({zones:expectedMixedZones}));
 console.log('KALONEO_FUTURE_BLOCKS_ROUNDTRIP_UNIQUE_QUESTION=OK');

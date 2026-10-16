@@ -975,6 +975,11 @@
           errors.push('bloc Builder non supporté '+(index+1)+': '+type);
           return;
         }
+        if(!['left','right','full'].includes(String(item.zone||'left')))
+          errors.push('bloc Builder : zone inconnue');
+        if(item.zone==='full'&&presentation.layout==='single'){
+          // Pleine largeur = zone unique sur une page à une colonne.
+        }
         if(type==='image-selection'){
           const q=questions.find(q=>String(q.id)===String(item.questionId||''));
           const total=Number(item.totalItems);
