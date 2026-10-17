@@ -1,0 +1,92 @@
+name: "KALONÉO R124 - Audit débordement réel et cinq résolutions (sans Setup)"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/audit-r124-overflow.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: kaloneo-r124-audit-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  responsive-audit:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - name: Checkout unique existing work branch
+        uses: actions/checkout@v4
+      - name: Preserve original validated tests and images
+        shell: pwsh
+        run: |
+          git fetch --depth=1 origin tag seb-kaloneo-r123-free-text-height-test
+          if ($LASTEXITCODE -ne 0) { throw 'R123 tag is unavailable' }
+          $files=git diff --name-only seb-kaloneo-r123-free-text-height-test HEAD
+          foreach ($file in $files) {
+            if ($file -match '^(TESTS_VALIDES/|VALID2/|seb-evalpro/source/kaltest/tests/|images_tests/|kaloneo/icons-tests/)') {
+              throw "Validated V1/image changed: $file"
+            }
+          }
+          $p=Get-Content -Raw -Encoding UTF8 package.json | ConvertFrom-Json
+          if ([int]$p.sebBuildNumber -ne 128) { throw 'Audit only; do not invent or reuse build number' }
+          Write-Host 'V1 and R123 Build #128 preserved. This audit will not publish.'
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Syntax and detection unit tests
+        shell: pwsh
+        run: |
+          node --check src/kaloneo-layout-diagnostics.js
+          node --check src/main.js
+          node --check ../kaloneo/test-builder.js
+          node --check scripts/kaloneo-responsive-overflow-electron-smoke-main.js
+          node --check scripts/kaloneo-layout-diagnostics-unit-smoke.js
+          node scripts/kaloneo-layout-diagnostics-unit-smoke.js
+      - name: Guard new Builder questions, units, portability and V1 compatibility
+        shell: pwsh
+        run: |
+          node scripts/kaloneo-builder-future-roundtrip-smoke.js
+          node scripts/kaloneo-answer-layout-roundtrip-smoke.js
+          node scripts/kaloneo-units-score-audit-smoke.js
+          node scripts/kaloneo-catalog-roundtrip-score-guard.js
+          node scripts/kaloneo-free-text-height-r123-smoke.js
+      - name: Build candidate web application without Setup
+        run: npm run prepare:web
+      - name: Verify image transfer, import/export and existing tests
+        shell: pwsh
+        run: |
+          node scripts/kaloneo-image-library-smoke.js
+          node scripts/kaloneo-image-export-ui-smoke.js
+          node scripts/kaloneo-export-restaurant-r69-smoke.js
+          node scripts/kaloneo-edit-existing-test-smoke.js
+      - name: Five candidate screen resolutions and genuine clipping in Electron
+        run: npx electron --no-sandbox scripts/kaloneo-responsive-overflow-electron-smoke-main.js
+      - name: Preview and newly authored tables in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-new-test-preview-electron-smoke-main.js
+      - name: Existing Builder preview and focus in Electron
+        run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
+      - name: Candidate questions with real generic columns
+        run: npx electron --no-sandbox scripts/kaloneo-builder-r48-10-generic-columns-electron-smoke-main.js
+      - name: Selected candidate parcours
+        run: npx electron --no-sandbox scripts/kaloneo-selected-parcours-electron-smoke-main.js
+      - name: Candidate results and strict isolation
+        run: npx electron --no-sandbox scripts/kaloneo-results-strict-isolation-electron-smoke-main.js
+      - name: Candidate results, self evaluations and writing
+        run: npx electron --no-sandbox scripts/kaloneo-results-readable-formats-electron-smoke-main.js
+      - name: Full candidate end-to-end journey
+        run: npx electron --no-sandbox scripts/full-pilot-journey-smoke-main.js
+      - name: Validate security and candidate transfer persistence
+        run: npm run test:security
+      - name: End of audit
+        shell: pwsh
+        run: Write-Host 'R124 five resolutions, false positives, real clipping, future test, full parcours and results validated. No Setup created.'
