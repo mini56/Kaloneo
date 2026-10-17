@@ -53,6 +53,7 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Logo generation failed'}
       - name: Install app dependencies
         run: npm install --no-audit --no-fund
+      # Repeat build after the original registry path was restored for the validated V1 compatibility guard.
       - name: Static audit for true installation folder and guarded migration
         shell: pwsh
         run: |
