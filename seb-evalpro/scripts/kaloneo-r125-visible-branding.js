@@ -11,6 +11,12 @@ function transform(html){
   // repository for potential future "À propos", but no longer shown.
   out=out.replace(/(?:imageqcm\/seb-evalpro-privacy-screen\.jpg|sauvegarde56-logo\.svg)/gi,
     'assets/kaloneo-logo-app.png');
+  // The original V1 entry screen embeds the old institution's vector logo
+  // directly in its HTML. Replace ONLY the generated copy, never the V1 source.
+  out=out.replace(/<svg\\b(?=[^>]*\\bid=["']Calque_1["'])[^>]*>[\\s\\S]*?<\\/svg>/gi,
+    '<img class="icon-svg" src="assets/kaloneo-logo-app.png" '+
+    'alt="KALONÉO — Au cœur d’un nouvel élan." '+
+    'style="width:165px;height:104px;object-fit:contain">');
   // HTML text nodes. Script code and identifiers stay intact; source HTML
   // contains no inline JavaScript (enforced by prepare:web guard).
   out=out.replace(/>([^<>]*)</g,(full,visible)=>'>'+textBrand(visible)+'<');
