@@ -1,0 +1,47 @@
+'use strict';
+// R122 : contrat d'affichage, aucun changement au parcours, score ou V1.
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..','..');
+const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
+const preload=read('seb-evalpro/src/preload.js');
+const settings=read('seb-evalpro/src/kaloneo-admin-settings.js');
+const main=read('seb-evalpro/src/main.js');
+const candidate=read('seb-evalpro/source/js/kaltest-pilot2-runtime.js');
+const builder=read('kaloneo/test-builder.js');
+const html=read('kaloneo/test-builder.html');
+const css=read('kaloneo/test-builder.css');
+const shared=read('kaloneo/shared-presentation.js');
+assert.match(settings,/button\.removeAttribute\('title'\)/);
+assert.doesNotMatch(settings,/button\.title\s*=/);
+assert.match(preload,/'seb-evalpro-settings': 'Ouvre les réglages internes/);
+assert.match(preload,/const ADMIN_HELP_DELAY_MS = 650/);
+assert.match(preload,/#seb-evalpro-admin-help\{/);
+assert.doesNotMatch(preload,/<button id="seb-evalpro-settings"[^>]*title=/);
+assert.match(main,/const miniBlocks=\[\.\.\.content\?\.querySelectorAll/);
+assert.match(main,/miniBlocks,\s*ready:/);
+assert.equal((main.match(/worker\.webContents\.capturePage\(\)/g)||[]).length,1,
+  'Le repérage doit réutiliser la capture existante');
+assert.match(candidate,/if\(BUILDER_MINI_PREVIEW_MODE && node\)/);
+assert.match(candidate,/node\.dataset\.kaloneoMiniBlockIndex/);
+assert.match(html,/id="mini-block-hover-layer"/);
+assert.match(builder,/function miniBlockDefinition\(/);
+assert.match(builder,/function renderMiniBlockHoverLayer\(/);
+assert.match(builder,/renderMiniBlockHoverLayer\(result\.report\)/);
+assert.match(builder,/hover\.replaceChildren\(\)/);
+assert.match(builder,/if\(Supplementary\?\.isEditing\(\)\)return;/);
+assert.match(css,/\.mini-block-hover-target:hover/);
+assert.match(css,/content:attr\(data-label\)/);
+assert.match(shared,/function placeDocumentButtons\(/);
+assert.match(builder,/function renderBlockBody\(/);
+assert.match(builder,/Supplementary\?\.addBlockControls/);
+const support=read('kaloneo/supplementary-builder.js');
+assert.match(support,/\['inline','Dans le texte \(au curseur\)'\]/);
+assert.match(support,/function setDocumentPosition\(/);
+assert.match(html,/id="toggle-exercise-section"/);
+assert.match(css,/\.builder-image-action-row/);
+// Vérifier le garde-fou de toutes les V1 sans toucher aux fichiers validés.
+const mini=builder.match(/function miniBlockDefinition\([\s\S]+?return definition;\n  \}/);
+assert(mini&&mini[0].includes('Core.modelToDefinition(currentModel())'));
+assert(!mini[0].includes('state.blocks.push('));
+console.log('KALONEO_R122_ERGONOMICS=OK — roue dentée homogène, une seule capture Electron, survol miniature seul, blocs et V1 isolés');
