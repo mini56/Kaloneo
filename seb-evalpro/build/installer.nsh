@@ -2,14 +2,14 @@
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
 
-!define SEB_BUILD_NUMBER "129"
+!define SEB_BUILD_NUMBER "130"
 !define SEB_BUILD_LABEL "Build #${SEB_BUILD_NUMBER}"
 
 # Désinstallation/mise à jour sûre.
 # Les dossiers candidats et les données techniques nécessaires à leur déchiffrement
 # et à la reprise d'un parcours ne sont jamais supprimés automatiquement.
 !macro customUnInstall
-  DetailPrint "Nettoyage des anciennes données SEB-éval-PRO..."
+  DetailPrint "Mise à jour de KALONÉO..."
 
   # Nettoyer les raccourcis du contexte d'installation courant.
   Delete "$DESKTOP\SEB EvalPro.lnk"
@@ -110,7 +110,7 @@ seb_state_recovery_done:
 seb_pointer_recovery_done:
 
   InitPluginsDir
-  File /oname=$PLUGINSDIR\seb-eval-pro-branding.bmp "${BUILD_RESOURCES_DIR}\installerBranding.bmp"
+  File /oname=$PLUGINSDIR\kaloneo-branding.bmp "${BUILD_RESOURCES_DIR}\installerBranding.bmp"
 !macroend
 
 !macro customWelcomePage
@@ -126,10 +126,10 @@ Function SebBrandingWelcomeCreate
 
   ${NSD_CreateBitmap} 0 0 100% 100% ""
   Pop $SebBrandingWelcomeImage
-  ${NSD_SetBitmap} $SebBrandingWelcomeImage "$PLUGINSDIR\seb-eval-pro-branding.bmp" $SebBrandingWelcomeHandle
+  ${NSD_SetBitmap} $SebBrandingWelcomeImage "$PLUGINSDIR\kaloneo-branding.bmp" $SebBrandingWelcomeHandle
 
   ; Le Build reste affiché dans le Setup unique sans réintroduire de choix d'édition.
-  ${NSD_CreateLabel} 8u 172u 92% 18u "SEB EvalPro — ${SEB_BUILD_LABEL}"
+  ${NSD_CreateLabel} 8u 172u 92% 18u "KALONÉO — ${SEB_BUILD_LABEL}"
   Pop $0
 
   GetDlgItem $0 $HWNDPARENT 1
@@ -151,7 +151,7 @@ Function SebBrandingFinishCreate
 
   ${NSD_CreateBitmap} 0 0 100% 100% ""
   Pop $SebBrandingFinishImage
-  ${NSD_SetBitmap} $SebBrandingFinishImage "$PLUGINSDIR\seb-eval-pro-branding.bmp" $SebBrandingFinishHandle
+  ${NSD_SetBitmap} $SebBrandingFinishImage "$PLUGINSDIR\kaloneo-branding.bmp" $SebBrandingFinishHandle
 
   GetDlgItem $0 $HWNDPARENT 1
   SendMessage $0 ${WM_SETTEXT} 0 "STR:Fermer"
