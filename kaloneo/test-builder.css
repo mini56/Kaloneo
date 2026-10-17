@@ -1736,3 +1736,39 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 /* R118 : la barre de formatage appartient uniquement à la colonne Question. */
 .question-editor-column{min-width:0;display:flex;flex-direction:column;align-items:stretch}
 .question-editor-column>.inline-text-format-toolbar{align-self:flex-start;margin:6px 0 4px}
+
+
+/* Gestion des documents complémentaires, isolée de la capture Electron. */
+.builder-exercise-section>.section-title-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.builder-exercise-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.builder-exercise-section{margin:12px 0}
+.builder-exercise-section>.collapsible-section-content[hidden]{display:none!important}
+.builder-supplementary-button-panel{margin:9px 0;border:1px solid #d5e3ef;border-radius:8px;padding:8px;background:#f8fcff}
+.builder-supplementary-button-panel summary{cursor:pointer;color:#004e70;font-weight:700;font-size:13px;margin-bottom:6px}
+.builder-supplementary-button-panel>.mini-btn{margin:4px 0 7px}
+.builder-supplementary-button-row{display:grid;grid-template-columns:minmax(130px,1fr) minmax(110px,1fr) minmax(110px,auto) auto;align-items:end;gap:7px;padding:7px 0;border-top:1px solid #dce7ee}
+.builder-supplementary-button-row label{min-width:0}
+.builder-supplementary-button-row input,.builder-supplementary-button-row select{min-width:0;width:100%;box-sizing:border-box}
+.supplementary-workspace{margin-top:8px;padding:10px;border:1px solid #c9dbe8;border-radius:10px;background:#f8fcff;min-width:0}
+.supplementary-toolbar,.supplementary-toolbar-actions{display:flex;gap:7px;align-items:center;justify-content:space-between}
+.supplementary-toolbar strong{color:#004e70;font-size:13px}
+.supplementary-toolbar .mini-btn{min-height:30px;font-size:12px;padding:4px 8px;white-space:nowrap}
+.supplementary-thumbnails{display:flex;gap:7px;overflow-x:auto;min-height:53px;padding:7px 0 0;align-items:stretch}
+.supplementary-thumbnails>.muted{font-size:12px;align-self:center}
+.supplementary-thumbnail{display:flex;flex-direction:column;align-items:center;gap:3px;flex:0 0 93px;max-width:93px;min-width:0;padding:4px 6px;border:1px solid #bfccd8;border-radius:7px;background:white;color:#004e70;cursor:pointer;font-size:11px!important}
+.supplementary-thumbnail span:last-child{width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.supplementary-thumbnail.is-active{background:#e3f2fc;border:2px solid #0070ba;font-weight:700}
+.supplementary-thumb-icon{font-size:17px;line-height:1.15}
+.supplementary-editor{display:grid;gap:12px;margin-top:10px;max-height:calc(100vh - 290px);overflow:auto}
+.supplementary-editor[hidden],.supplementary-image-actions[hidden],.supplementary-editor label[hidden]{display:none!important}
+.supplementary-editor>label{display:grid;gap:5px;color:#004e70;font-weight:700;font-size:13px}
+.supplementary-editor input,.supplementary-editor select,.supplementary-editor textarea{box-sizing:border-box;width:100%;padding:8px;border:1px solid #b7cbd9;border-radius:7px;font:14px Calibri,"Segoe UI",Arial,sans-serif;background:#fff}
+.supplementary-editor textarea{min-height:170px;resize:vertical}
+.supplementary-image-actions{display:flex;align-items:center;gap:9px;min-width:0;flex-wrap:wrap}
+.supplementary-image-actions .file-preview-name{margin:0;flex:1 1 auto;min-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.supplementary-editor-footer{display:flex;justify-content:space-between;gap:9px;flex-wrap:wrap}
+.builder-preview[data-supplementary-mode="true"] #candidate-preview-viewport,
+.builder-preview[data-supplementary-mode="true"] #candidate-preview-warning{display:none!important}
+.builder-preview[data-supplementary-mode="true"] .supplementary-workspace{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+.builder-preview[data-supplementary-mode="true"] .supplementary-editor{flex:1 1 auto;max-height:none;min-height:0}
+@media(max-width:1300px){.builder-supplementary-button-row{grid-template-columns:1fr 1fr}.builder-supplementary-button-row .mini-btn{justify-self:end}}

@@ -278,15 +278,20 @@
 
       <hr>
 
-      <div class="section-title-row">
-        <div>
-          <h2>Bloc Exercice</h2>
-          <p class="muted">Les blocs restent dans l’ordre ci-dessous. Un seul niveau de blocs est utilisé.</p>
+      <div class="builder-exercise-section is-collapsed">
+        <div class="section-title-row">
+          <div>
+            <h2>Bloc Exercice</h2>
+            <p class="muted">Les blocs restent dans l’ordre ci-dessous. Un seul niveau de blocs est utilisé.</p>
+          </div>
+          <div class="builder-exercise-actions">
+            <button id="add-block" class="seb-action-btn seb-btn-functional" type="button">+ Ajouter un bloc</button>
+            <button id="toggle-exercise-section" class="section-fold-btn mini-btn" type="button"
+              aria-controls="exercise-section-content" aria-expanded="false"
+              aria-label="Déployer Bloc Exercice" title="Déployer Bloc Exercice">+</button>
+          </div>
         </div>
-        <button id="add-block" class="seb-action-btn seb-btn-functional" type="button">+ Ajouter un bloc</button>
-      </div>
-
-
+        <div id="exercise-section-content" class="collapsible-section-content" hidden>
       <div class="builder-ensemble-tools" aria-label="Ensembles réutilisables">
         <button id="save-block-ensemble" class="mini-btn" type="button" title="Sauvegarde les blocs cochés avec leurs images dans la bibliothèque locale">Enregistrer les blocs sélectionnés</button>
         <label>Mes ensembles
@@ -297,6 +302,8 @@
       </div>
       <p class="muted builder-ensemble-hint">Cochez un ou plusieurs blocs pour les enregistrer ensemble. Images et paramètres sont conservés. L’insertion se fait à la fin des blocs (ou à la position choisie avec « Insérer ici »).</p>
       <div id="blocks-editor" class="blocks-editor"></div>
+        </div>
+      </div>
 
       <div class="validation-box is-collapsed" data-validation-status="ok">
         <div class="section-title-row">
@@ -350,6 +357,41 @@
       </div>
       </div>
       <p id="candidate-preview-warning" class="candidate-preview-warning">Aperçu direct — vérification du rendu candidat après une pause.</p>
+      <section id="supplementary-workspace" class="supplementary-workspace" aria-label="Fenêtres complémentaires">
+        <div class="supplementary-toolbar">
+          <strong>Fenêtres complémentaires</strong>
+          <div class="supplementary-toolbar-actions">
+            <button id="supplementary-main" class="mini-btn" type="button">Test principal</button>
+            <button id="supplementary-add" class="mini-btn" type="button">+ Fenêtre</button>
+          </div>
+        </div>
+        <div id="supplementary-thumbnails" class="supplementary-thumbnails" aria-label="Liste des fenêtres complémentaires"></div>
+        <div id="supplementary-editor" class="supplementary-editor" hidden>
+          <label>Titre de la fenêtre
+            <input id="supplementary-title" type="text" maxlength="140" placeholder="Ex. Plan de l'entrepôt">
+          </label>
+          <label>Contenu affiché
+            <select id="supplementary-type">
+              <option value="text">Texte long</option>
+              <option value="list">Liste</option>
+              <option value="table">Tableau (séparer les colonnes par ;)</option>
+              <option value="image">Image ou plan</option>
+            </select>
+          </label>
+          <label id="supplementary-text-label">Contenu
+            <textarea id="supplementary-text" rows="9" placeholder="Texte, liste ou tableau à consulter"></textarea>
+          </label>
+          <div id="supplementary-image-actions" class="supplementary-image-actions" hidden>
+            <button id="supplementary-select-image" class="mini-btn" type="button">Choisir dans la bibliothèque</button>
+            <span id="supplementary-image-name" class="file-preview-name">Aucune image</span>
+            <button id="supplementary-clear-image" class="mini-btn danger" type="button">Retirer l’image</button>
+          </div>
+          <div class="supplementary-editor-footer">
+            <button id="supplementary-delete" class="mini-btn danger" type="button">Supprimer cette fenêtre</button>
+            <button id="supplementary-return" class="mini-btn" type="button">Retour au test principal</button>
+          </div>
+        </div>
+      </section>
     </section>
   </main>
 
@@ -499,6 +541,7 @@
   <script src="image-library-gallery.js"></script>
   <script src="shared-presentation.js"></script>
   <script src="builder-legacy-table-preview.js"></script>
+  <script src="supplementary-builder.js"></script>
   <script src="test-builder.js"></script>
 </body>
 </html>
