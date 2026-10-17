@@ -1,4 +1,5 @@
 name: "KALONÉO R125 - Identité officielle et installation Windows - Build 130"
+# La V1 historique conserve ses adresses pédagogiques pendant le changement de marque.
 on:
   push:
     branches:
