@@ -5,7 +5,7 @@ process.env.SEB_KALTEST_PILOT2 = '1';
 process.env.SEB_KALTEST_FULL_PARCOURS = '1';
 process.env.SEB_EVALPRO_EDITION = 'admin';
 
-const APP_NAME = 'SEB EvalPro Kalonéo - PILOTE 21';
+const APP_NAME = 'KALONÉO';
 
 try {
   app.setName(APP_NAME);
