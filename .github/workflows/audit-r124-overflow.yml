@@ -1,4 +1,5 @@
 name: "KALONÉO R124 - Audit débordement réel et cinq résolutions (sans Setup)"
+# Un écran large où tout tient est aussi un résultat valide.
 on:
   push:
     branches: [fix-r60-tri-rearm-only-20261011]
