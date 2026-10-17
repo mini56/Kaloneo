@@ -3,7 +3,7 @@
 // Do NOT rename filenames, APIs, storage paths, or IDs used by old candidate data.
 const fs=require('node:fs');
 const path=require('node:path');
-const OLD=/(?:SEB[\s-]*[eé]val[\s-]*PRO|Sauvegarde[\s-]*56)/gi;
+const OLD=/(?:SEB[\s-]*[eé]val[\s-]*PRO|Sauvegarde[ \t]+56)/gi;
 function textBrand(x){return String(x).replace(OLD,'KALONÉO');}
 function transform(html){
   let out=html;
