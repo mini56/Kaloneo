@@ -3,6 +3,7 @@
 
   const Core = window.KaloneoBuilderCore;
   const Workflow = window.KaloneoBuilderWorkflow;
+  const Supplementary = window.KaloneoSupplementaryBuilder;
   if (!Core || !Workflow) throw new Error('KALONÉO Builder Core / Workflow absent.');
 
   const DRAFT_KEY = 'kaloneo_test_builder_v2';
@@ -10,6 +11,7 @@
     idLocked: false,
     sourceDefinition: null,
     blocks: [],
+    supplementaryWindows: [],
     imageLibraryTargetUid: null,
     imageLibraryItems: [],
     sourceProtectedVersion: false,
@@ -83,7 +85,8 @@
         bilan: $('toggle-contract-section')?.getAttribute('aria-expanded')==='true',
         icones: $('toggle-icon-library')?.getAttribute('aria-expanded')==='true',
         style: $('toggle-page-style')?.getAttribute('aria-expanded')==='true',
-        controle: $('toggle-validation-section')?.getAttribute('aria-expanded')==='true'
+        controle: $('toggle-validation-section')?.getAttribute('aria-expanded')==='true',
+        exercice: $('toggle-exercise-section')?.getAttribute('aria-expanded')==='true'
       }
     };
     try{sessionStorage.setItem(PREVIEW_FOLD_KEY,JSON.stringify(snapshot));}catch(_){}
@@ -109,6 +112,8 @@
       setSectionExpanded('toggle-page-style',snapshot.sections.style);
     if(typeof snapshot.sections?.controle==='boolean')
       setSectionExpanded('toggle-validation-section',snapshot.sections.controle);
+    if(typeof snapshot.sections?.exercice==='boolean')
+      setSectionExpanded('toggle-exercise-section',snapshot.sections.exercice);
     return true;
   }
 
@@ -124,7 +129,7 @@
     const button=$(buttonId);
     const content=$(button?.getAttribute('aria-controls'));
     if(!button||!content)return;
-    const section=button.closest('.icon-library-panel,.builder-contract-section,.page-style-panel,.validation-box');
+    const section=button.closest('.icon-library-panel,.builder-contract-section,.page-style-panel,.validation-box,.builder-exercise-section');
     content.hidden=!expanded;
     section?.classList.toggle('is-collapsed',!expanded);
     button.textContent=expanded?'−':'+';
@@ -133,7 +138,8 @@
       'toggle-icon-library':'la bibliothèque d’icônes',
       'toggle-contract-section':'Sorties et Bilan',
       'toggle-page-style':'Style de la page',
-      'toggle-validation-section':'Contrôle avant génération'
+      'toggle-validation-section':'Contrôle avant génération',
+      'toggle-exercise-section':'Bloc Exercice'
     };
     const name=sectionNames[buttonId]||'la section';
     button.title=(expanded?'Réduire ':'Déployer ')+name;
@@ -529,7 +535,8 @@
       sourceDefinition:state.sourceDefinition ? Core.clone(state.sourceDefinition) : null,
       sourceProtectedVersion:state.sourceProtectedVersion===true,
       meta:collectMeta(),
-      blocks:Core.clone(state.blocks)
+      blocks:Core.clone(state.blocks),
+      supplementaryWindows:Core.clone(state.supplementaryWindows)
     };
   }
 
@@ -550,7 +557,8 @@
       sourceDefinition:state.sourceDefinition,
       sourceProtectedVersion:state.sourceProtectedVersion===true,
       meta:collectMeta(),
-      blocks:state.blocks
+      blocks:state.blocks,
+      supplementaryWindows:state.supplementaryWindows
     },(key,value)=>
       typeof value==='string'&&/^data:(?:image|audio|video)\//i.test(value)
         ?historyMediaToken(value):value);
@@ -729,6 +737,8 @@
       state.sourceDefinition=model.sourceDefinition||null;
       state.sourceProtectedVersion=model.sourceProtectedVersion===true;
       state.blocks=Array.isArray(model.blocks)?model.blocks:[];
+      state.supplementaryWindows=Array.isArray(model.supplementaryWindows)?model.supplementaryWindows:[];
+      if(Supplementary)Supplementary.reset();
       applyMeta(model.meta||defaultMeta());
       syncProtectedVersionUi();
       renderIconPicker();
@@ -768,7 +778,8 @@
         sourceDefinition:state.sourceDefinition,
         sourceProtectedVersion:state.sourceProtectedVersion===true,
         meta:collectMeta(),
-        blocks:state.blocks
+        blocks:state.blocks,
+        supplementaryWindows:state.supplementaryWindows
       }));
       draftPersistenceFailed=false;
       if(showStatus)transientStatus('Brouillon local sauvegardé',1200);
@@ -792,6 +803,7 @@
       state.sourceDefinition=data.sourceDefinition||null;
       state.sourceProtectedVersion=data.sourceProtectedVersion===true;
       state.blocks=Array.isArray(data.blocks)?data.blocks:[];
+      state.supplementaryWindows=Array.isArray(data.supplementaryWindows)?data.supplementaryWindows:[];
       collapsedBlockUids.clear();
       state.blocks.forEach(block=>{if(block?.uid)collapsedBlockUids.add(block.uid);});
       applyMeta(data.meta);
@@ -1565,6 +1577,12 @@
       return true;
     }
 
+    if(String(state.imageLibraryTargetUid||'').startsWith('__supplementary__:')){
+      const id=String(state.imageLibraryTargetUid).slice('__supplementary__:'.length);
+      if(!Supplementary?.setImage(id,result.image))return false;
+      $('image-library-dialog')?.close();
+      return true;
+    }
     if(String(state.imageLibraryTargetUid||'').startsWith('__block_background__:')){
       const uidValue=String(state.imageLibraryTargetUid).slice('__block_background__:'.length);
       const block=blockByUid(uidValue);
@@ -2143,6 +2161,7 @@
   function renderBlockBody(block,body,index) {
     body.innerHTML='';
     renderBlockStyleEditor(block,body);
+    Supplementary?.addBlockControls(block,body);
     if(block.type==='text') {
       const field=inputField('Texte',block.text,value=>{block.text=value;changed({typing:true});},{
         multiline:true,
@@ -2808,10 +2827,12 @@
   }
 
   function scheduleMiniPreviewCapture(delay=MINI_PREVIEW_IDLE_MS) {
+    if(Supplementary?.isEditing())return;
     if(miniPreviewTimer)clearTimeout(miniPreviewTimer);
     miniPreviewTimer=setTimeout(async()=>{
       miniPreviewTimer=null;
       const revision=miniPreviewRevision;
+      if(Supplementary?.isEditing())return;
       if(miniPreviewRunning) {
         // Une capture est déjà en cours : garder seulement la dernière demande.
         miniPreviewDeferredRevision=revision;
@@ -2828,7 +2849,7 @@
       miniPreviewRunning=true;
       try {
         const result=await bridge.kaloneoRenderMiniPreview(Core.modelToDefinition(currentModel()));
-        if(revision!==miniPreviewRevision)return; // Capture obsolète : aucun affichage.
+        if(revision!==miniPreviewRevision||Supplementary?.isEditing())return; // Capture obsolète : aucun affichage.
         if(!result?.ok||!result.image) {
           if(status)status.textContent='Capture Electron indisponible : '+String(result?.error||'rendu absent');
           if(warning)warning.textContent='Aperçu direct affiché ; contrôle Electron indisponible.';
@@ -2872,6 +2893,7 @@
   }
 
   function refreshRealMiniPreview() {
+    if(Supplementary?.isEditing())return;
     // La saisie reste immédiatement visible dans le DOM du Builder.
     // Après une pause, présenter la véritable page du moteur candidat :
     // toutes les mises en page, y compris les renderers historiques.
@@ -2902,6 +2924,7 @@
   }
 
   function refreshTypingPreview() {
+    if(Supplementary?.isEditing())return;
     const field=document.activeElement;
     const uid=field?.closest?.('.exercise-block')?.dataset?.uid;
     if(uid) {
@@ -2929,6 +2952,7 @@
   }
 
   function refreshPreview(options={}) {
+    if(Supplementary?.isEditing())return;
     const m=collectMeta();
     $('preview-title').textContent=m.title||'Nouveau test';
     $('preview-version').textContent='v'+m.version;
@@ -3005,6 +3029,18 @@
     }
     if(m.adminIntervention) add(Boolean(m.adminInstructions),'Intervention Administrateur : besoin décrit');
     if(m.externalMaterial) add(Boolean(m.externalMaterialText),'Matériel extérieur : matériel décrit');
+
+    const docIds=new Set(state.supplementaryWindows.map(w=>w.id));
+    for(const entry of state.supplementaryWindows){
+      add(Boolean(String(entry.title||'').trim()),'Fenêtre complémentaire : titre');
+      add(['text','list','table','image'].includes(entry.type||'text'),'Fenêtre complémentaire : type');
+      add(entry.type==='image'?/^data:image\//i.test(String(entry.imageData||'')):
+        Boolean(String(entry.text||'').trim()),'Fenêtre « '+(entry.title||entry.id)+' » : contenu intégré');
+    }
+    for(const block of state.blocks)for(const button of block.supplementaryButtons||[]){
+      add(docIds.has(button.windowId),'Bouton documentaire : fenêtre existante');
+      add(Boolean(String(button.label||'').trim()),'Bouton documentaire : libellé');
+    }
 
     const editorBlocks=state.blocks.filter(b=>b.type==='text-editor');
     if(editorBlocks.length) {
@@ -3245,6 +3281,8 @@
     state.sourceDefinition=model.sourceDefinition;
     state.sourceProtectedVersion=options.protectedVersion===true;
     state.blocks=model.blocks;
+    state.supplementaryWindows=Array.isArray(model.supplementaryWindows)?model.supplementaryWindows:[];
+    Supplementary?.reset();
     // L'ouverture d'un test attend sa première image candidate fidèle.
     // Le rendu de frappe reste instantané une fois ce premier affichage fait.
     $('candidate-preview-viewport')?.setAttribute('data-preview-loading','true');
@@ -3610,6 +3648,8 @@
     state.sourceDefinition=null;
     state.sourceProtectedVersion=false;
     state.blocks=[baseBlock('text')];
+    state.supplementaryWindows=[];
+    Supplementary?.reset();
     collapsedBlockUids.clear();
     state.blocks.forEach(block=>{if(block?.uid)collapsedBlockUids.add(block.uid);});
     ['toggle-icon-library','toggle-contract-section','toggle-page-style',
@@ -3693,6 +3733,7 @@
       state.sourceDefinition=null;
       state.sourceProtectedVersion=false;
       state.blocks=[baseBlock('text')];
+      state.supplementaryWindows=[];
       applyMeta(defaultMeta());
       syncProtectedVersionUi();
     }
@@ -3705,9 +3746,27 @@
     initSectionFold('toggle-contract-section');
     initSectionFold('toggle-page-style');
     initSectionFold('toggle-validation-section');
+    initSectionFold('toggle-exercise-section');
+    Supplementary?.install({
+      state,
+      openImage:openImageLibrary,
+      documentChanged:()=>{
+        // Mise à jour documentaire sans IPC, rendu ni capture de l'aperçu.
+        saveDraft(false);
+        builderDirty=true;
+        updateDirtyIndicator();
+        scheduleHistorySnapshot();
+      },
+      blockChanged:()=>changed(),
+      blockTyping:()=>changed({typing:true}),
+      renderBlocks,
+      freeze:()=>invalidateMiniPreview(),
+      resume:()=>refreshPreview()
+    });
     if(!resumeFromPreview){
       ['toggle-icon-library','toggle-contract-section','toggle-page-style',
         'toggle-validation-section'].forEach(id=>setSectionExpanded(id,false));
+      setSectionExpanded('toggle-exercise-section',true);
       collapsedBlockUids.clear();
       state.blocks.forEach(block=>{if(block?.uid)collapsedBlockUids.add(block.uid);});
     }
@@ -3925,6 +3984,7 @@
     }
 
     syncProtectedVersionUi();
+    Supplementary?.render();
     renderBlocks();
     refreshPreview();
     if(!restored)resetHistory({markSaved:true});
