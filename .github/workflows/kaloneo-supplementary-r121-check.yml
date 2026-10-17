@@ -40,6 +40,7 @@ jobs:
           node --check source/js/kaltest-pilot2-runtime.js
           node --check scripts/kaloneo-supplementary-windows-smoke.js
           node --check scripts/kaloneo-supplementary-electron-smoke-main.js
+          node --check scripts/kaloneo-supplementary-builder-electron-smoke-main.js
           npm run prepare:web
       - name: Vérifier documentation, JSON et conservation de la V1 (strict)
         shell: bash
@@ -52,6 +53,8 @@ jobs:
         env:
           ELECTRON_DISABLE_SECURITY_WARNINGS: 'true'
         run: npx electron --no-sandbox scripts/kaloneo-supplementary-electron-smoke-main.js
+      - name: Vérifier la création des fenêtres dans le véritable Builder Electron
+        run: npx electron --no-sandbox scripts/kaloneo-supplementary-builder-electron-smoke-main.js
       - name: Garantir les V1 validées intactes
         shell: pwsh
         run: |
