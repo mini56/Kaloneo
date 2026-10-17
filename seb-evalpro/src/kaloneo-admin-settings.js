@@ -9,7 +9,9 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
   const icon=document.createElement('img');
   icon.className='seb-admin-settings-icon';icon.src=iconUrl;icon.width=28;icon.height=28;icon.alt='';
   icon.setAttribute('aria-hidden','true');button.appendChild(icon);
-  button.title='Réglages internes de KALONÉO';
+  // L'aide au survol est gérée par l'infobulle uniforme de la barre Admin.
+  // Le title natif affichait une deuxième bulle au style Windows.
+  button.removeAttribute('title');
   function close(){if(layer){layer.remove();layer=null;}}
   async function countLibraries(){
     const target=layer?.querySelector('#kaloneo-setting-count');

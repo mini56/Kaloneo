@@ -1111,7 +1111,7 @@ function injectAdminBar() {
   const bar = document.createElement('div');
   bar.id = 'seb-evalpro-topbar';
   bar.innerHTML = `
-    <button id="seb-evalpro-settings" type="button" hidden title="Réglages internes de KALONÉO" aria-label="Réglages internes de KALONÉO">⚙</button>
+    <button id="seb-evalpro-settings" type="button" hidden aria-label="Réglages internes de KALONÉO">⚙</button>
     <div class="seb-evalpro-name">SEB EvalPro</div>
     <div id="seb-evalpro-build" class="seb-evalpro-build">${APP_BUILD_LABEL}</div>
     <div id="seb-evalpro-candidate-badge" class="seb-evalpro-candidate-badge" hidden></div>
@@ -1309,6 +1309,7 @@ function injectAdminBar() {
     if (!button) return '';
     const id = String(button.id || '');
     const help = {
+      'seb-evalpro-settings': 'Ouvre les réglages internes de KALONÉO : mots de passe, aides du programme et du Builder, informations de version.',
       'seb-evalpro-open-candidate': 'Ouvre la liste des candidats enregistrés pour consulter leurs résultats, Replay ou bilan.',
       'seb-evalpro-bilan': 'Ouvre le bilan du candidat sélectionné.',
       'seb-evalpro-return': 'Ferme cette consultation et revient au dossier candidat.',
