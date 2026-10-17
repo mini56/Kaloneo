@@ -1,4 +1,4 @@
-name: "KALONÉO R122 - Ergonomie Builder et fenêtres, contrôles sans Setup"
+name: "KALONÉO R123 - Réponses libres et boutons compacts : tests sans Setup"
 on:
   push:
     branches:
@@ -42,14 +42,16 @@ jobs:
           node --check scripts/kaloneo-supplementary-electron-smoke-main.js
           node --check scripts/kaloneo-supplementary-builder-electron-smoke-main.js
           node --check scripts/kaloneo-r122-ergonomics-smoke.js
+          node --check scripts/kaloneo-free-text-height-r123-smoke.js
           npm run prepare:web
-      - name: Vérifier strictement la documentation et les nouveautés R122
+      - name: Vérifier strictement les fenêtres et les nouvelles hauteurs R123
         shell: bash
         run: |
           set -e
           node scripts/kaloneo-builder-help-guard.js
           node scripts/kaloneo-supplementary-windows-smoke.js
           node scripts/kaloneo-r122-ergonomics-smoke.js
+          node scripts/kaloneo-free-text-height-r123-smoke.js
           node scripts/kaloneo-builder-future-roundtrip-smoke.js
       - name: Tester la fenêtre superposée sur Windows Electron réel
         env:
