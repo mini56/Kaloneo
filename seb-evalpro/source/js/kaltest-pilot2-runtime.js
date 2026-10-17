@@ -3328,12 +3328,110 @@
     return wrap;
   }
 
+
+  // Une fenêtre documentaire est un <dialog> de la page Electron actuelle :
+  // jamais de nouvelle BrowserWindow, pas d'accès web ni de score candidat.
+  let supplementaryReturnFocus=null;
+  function supplementaryWindowsFor(test){
+    const values=test?.presentation?.supplementaryWindows;
+    return Array.isArray(values)?values.filter(w=>w&&typeof w.id==='string'):[];
+  }
+  function openSupplementaryWindow(test,windowId){
+    const windows=supplementaryWindowsFor(test);
+    let index=windows.findIndex(w=>w.id===windowId);
+    const dialog=document.getElementById('kaltest-supplementary-dialog');
+    if(index<0||!dialog)return;
+    supplementaryReturnFocus=document.activeElement;
+    const title=document.getElementById('kaltest-supplementary-title');
+    const content=document.getElementById('kaltest-supplementary-content');
+    const counter=document.getElementById('kaltest-supplementary-count');
+    const back=document.getElementById('kaltest-supplementary-previous');
+    const next=document.getElementById('kaltest-supplementary-next');
+    const draw=()=>{
+      const entry=windows[index];
+      title.textContent=String(entry.title||'Document complémentaire');
+      content.replaceChildren();
+      const type=String(entry.type||'text');
+      if(type==='image'&&/^(?:data:image\/|(?:\.\/)?(?:imageqcm|assets)\/)/i.test(String(entry.imageData||''))){
+        const image=document.createElement('img');
+        image.src=String(entry.imageData);
+        image.alt=String(entry.imageAlt||entry.title||'Document');
+        image.className='kaltest-supplementary-picture';
+        content.appendChild(image);
+      }else if(type==='table'){
+        const table=document.createElement('table');
+        table.className='kaltest-supplementary-table';
+        for(const line of String(entry.text||'').split(/\r?\n/).filter(x=>x.trim())){
+          const tr=document.createElement('tr');
+          for(const cell of line.split(/[|;]/)){
+            const td=document.createElement('td');td.textContent=cell.trim();tr.appendChild(td);
+          }
+          table.appendChild(tr);
+        }
+        content.appendChild(table);
+      }else if(type==='list'){
+        const list=document.createElement('ul');
+        for(const line of String(entry.text||'').split(/\r?\n/).filter(x=>x.trim())){
+          const li=document.createElement('li');li.textContent=line.trim();list.appendChild(li);
+        }
+        content.appendChild(list);
+      }else {
+        const text=document.createElement('div');
+        text.className='kaltest-supplementary-text';
+        text.textContent=String(entry.text||'');
+        content.appendChild(text);
+      }
+      counter.textContent=(index+1)+' / '+windows.length;
+      back.disabled=index===0;
+      next.disabled=index===windows.length-1;
+    };
+    back.onclick=()=>{if(index>0){index--;draw();}};
+    next.onclick=()=>{if(index<windows.length-1){index++;draw();}};
+    const close=document.getElementById('kaltest-supplementary-close');
+    close.onclick=()=>dialog.close();
+    dialog.onclose=()=>{
+      if(supplementaryReturnFocus?.isConnected)supplementaryReturnFocus.focus();
+      supplementaryReturnFocus=null;
+    };
+    draw();
+    if(!dialog.open)dialog.showModal();
+  }
+
+  function renderBuilderContentWithDocuments(test,item){
+    const node=renderBuilderContentItem(test,item);
+    const entries=supplementaryWindowsFor(test);
+    const buttons=Array.isArray(item?.supplementaryButtons)?item.supplementaryButtons
+      .filter(b=>entries.some(w=>w.id===b?.windowId)):[];
+    if(!buttons.length)return node; // V1 : DOM inchangé.
+    const shell=document.createElement('section');
+    shell.className='kaltest-supplementary-block';
+    const addButtons=position=>{
+      const subset=buttons.filter(b=>(b.position==='before'?'before':'after')===position);
+      if(!subset.length)return;
+      const bar=document.createElement('div');
+      bar.className='kaltest-supplementary-buttons';
+      for(const button of subset){
+        const control=document.createElement('button');
+        control.type='button';
+        control.className='seb-action-btn kaltest-supplementary-trigger';
+        control.textContent=String(button.label||'Consulter le document');
+        control.addEventListener('click',()=>openSupplementaryWindow(test,button.windowId));
+        bar.appendChild(control);
+      }
+      shell.appendChild(bar);
+    };
+    addButtons('before');
+    shell.appendChild(node);
+    addButtons('after');
+    return shell;
+  }
+
   function renderBuilderContent(test, host) {
     const content = test.presentation?.builderContent;
     if (!Array.isArray(content)) return false;
 
     if (test.presentation?.legacyFullPage === true && content.length === 1) {
-      host.appendChild(renderBuilderContentItem(test, content[0]));
+      host.appendChild(renderBuilderContentWithDocuments(test, content[0]));
       return true;
     }
 
@@ -3344,7 +3442,7 @@
       host:shell,items:content,layout,
       blockSizing:test.presentation?.blockSizing,
       zoneClass:'kaltest-builder-runtime-zone',
-      renderItem:item=>renderBuilderContentItem(test,item)
+      renderItem:item=>renderBuilderContentWithDocuments(test,item)
     });
     host.appendChild(shell);
     return true;

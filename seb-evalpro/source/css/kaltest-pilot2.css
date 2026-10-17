@@ -3620,3 +3620,36 @@ body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2 .kaltest-
 .kaloneo-shared-question[data-kaloneo-answer-layout="below"]>.kaloneo-answer-with-suffix{
   flex:0 1 auto;
 }
+
+
+/* Fenêtres complémentaires KALTEST : modal locale, limitée à 80 % de l'écran. */
+.kaltest-supplementary-dialog{
+  box-sizing:border-box;width:80vw;max-width:80vw;height:80vh;max-height:80vh;
+  margin:auto;padding:0;border:1px solid #b6cadb;border-radius:13px;
+  background:#fff;color:#163f57;box-shadow:0 18px 55px rgba(4,30,48,.25);
+  flex-direction:column;overflow:hidden;
+}
+.kaltest-supplementary-dialog[open]{display:flex}
+.kaltest-supplementary-dialog::backdrop{background:rgba(7,27,43,.58)}
+.kaltest-supplementary-header,.kaltest-supplementary-footer{
+  display:flex;gap:12px;align-items:center;justify-content:space-between;
+  padding:13px 18px;background:#edf5fa;flex:0 0 auto;
+}
+.kaltest-supplementary-header h2{font-size:19px;color:#004e70;margin:0}
+.kaltest-supplementary-content{
+  flex:1 1 auto;min-height:0;overflow:auto;padding:20px 24px;
+  background:#fff;overscroll-behavior:contain;
+}
+.kaltest-supplementary-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:18px;line-height:1.6}
+.kaltest-supplementary-picture{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;margin:auto}
+.kaltest-supplementary-table{border-collapse:collapse;width:100%}
+.kaltest-supplementary-table td{padding:9px 12px;border:1px solid #b6cadb;white-space:pre-wrap}
+.kaltest-supplementary-content li{margin:8px 0;font-size:18px}
+.kaltest-supplementary-buttons{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.kaltest-supplementary-trigger{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:700px){
+ .kaltest-supplementary-dialog{width:80vw;max-width:80vw;height:80vh;max-height:80vh}
+ .kaltest-supplementary-header,.kaltest-supplementary-footer{padding:8px;gap:5px}
+ .kaltest-supplementary-header h2{font-size:16px}
+ .kaltest-supplementary-content{padding:12px}
+}

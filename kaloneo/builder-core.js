@@ -236,6 +236,7 @@
 
   function withBuilderStyle(block,item){
     const style=item?.style||{};
+    if(Array.isArray(item?.supplementaryButtons)&&item.supplementaryButtons.length)block.supplementaryButtons=clone(item.supplementaryButtons);
     block.fontSize=Number(style.fontSize)||'';
     if(block.type==='image'){
       block.imageScale=Number.isFinite(Number(style.imageScale))&&Number(style.imageScale)>=10&&Number(style.imageScale)<=100?Number(style.imageScale):100;
@@ -410,7 +411,8 @@
         pageBackgroundImage:String(def.presentation?.pageStyle?.backgroundImage||''),
         pageBackgroundName:String(def.presentation?.pageStyle?.backgroundName||'')
       },
-      blocks
+      blocks,
+      supplementaryWindows:clone(def.presentation?.supplementaryWindows||[])
     };
   }
 
@@ -572,6 +574,8 @@
   function genericPresentation(model){
     const m=model.meta||{};
     const styled=(item,block)=>{
+      if(Array.isArray(block?.supplementaryButtons)&&block.supplementaryButtons.length)
+        item.supplementaryButtons=clone(block.supplementaryButtons);
       const style=builderItemStyle(block);
       if(style)item.style=style;
       return item;
@@ -623,6 +627,7 @@
         ]
       }:undefined,
       pageStyle:pageStyleFromMeta(m),
+      ...(Array.isArray(model.supplementaryWindows)&&model.supplementaryWindows.length?{supplementaryWindows:clone(model.supplementaryWindows)}:{}),
       builderContent:content
     };
   }
@@ -783,6 +788,10 @@
       if(Array.isArray(m.bilanContributions)) def.bilanContributions=clone(m.bilanContributions);
       def.presentation=Object.assign({},def.presentation||{});
       const pageStyle=pageStyleFromMeta(m);
+      if(Array.isArray(model.supplementaryWindows)){
+        if(model.supplementaryWindows.length)def.presentation.supplementaryWindows=clone(model.supplementaryWindows);
+        else delete def.presentation.supplementaryWindows;
+      }
       if(pageStyle) def.presentation.pageStyle=pageStyle;
       else if(Object.prototype.hasOwnProperty.call(def.presentation,'pageStyle')) delete def.presentation.pageStyle;
       const usesTextEditor=(model.blocks||[]).some(block=>block.type==='text-editor');
