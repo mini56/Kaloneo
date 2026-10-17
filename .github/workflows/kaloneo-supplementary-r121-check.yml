@@ -1,0 +1,62 @@
+name: "KALONÉO - Fenêtres complémentaires R121: contrôles sans Setup"
+on:
+  push:
+    branches:
+      - fix-r60-tri-rearm-only-20261011
+    paths:
+      - '.github/workflows/kaloneo-supplementary-r121-check.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: kaloneo-r121-documents-check-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  documents:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - name: Checkout branche habituelle
+        uses: actions/checkout@v4
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Installer
+        run: npm install --no-audit --no-fund
+      - name: Vérifier syntaxe et construire la véritable application
+        run: |
+          node --check ../kaloneo/builder-core.js
+          node --check ../kaloneo/test-builder.js
+          node --check ../kaloneo/supplementary-builder.js
+          node --check source/js/kaltest-pilot2-runtime.js
+          node --check scripts/kaloneo-supplementary-windows-smoke.js
+          node --check scripts/kaloneo-supplementary-electron-smoke-main.js
+          npm run prepare:web
+      - name: Vérifier documentation et modèle JSON documentaire inédit
+        run: |
+          node scripts/kaloneo-builder-help-guard.js
+          node scripts/kaloneo-supplementary-windows-smoke.js
+          node scripts/kaloneo-builder-future-roundtrip-smoke.js
+      - name: Tester la fenêtre superposée sur Windows Electron réel
+        env:
+          ELECTRON_DISABLE_SECURITY_WARNINGS: 'true'
+        run: npx electron --no-sandbox scripts/kaloneo-supplementary-electron-smoke-main.js
+      - name: Garantir les V1 validées intactes
+        shell: pwsh
+        run: |
+          git fetch --depth=1 origin tag seb-kaloneo-r120-admin-home-layout-test
+          if ($LASTEXITCODE -ne 0) { throw 'R120 secours introuvable' }
+          $files=git diff --name-only 'seb-kaloneo-r120-admin-home-layout-test' HEAD
+          foreach ($file in $files) {
+            if ($file -match '^(TESTS_VALIDES/|VALID2/|seb-evalpro/source/kaltest/tests/|images_tests/)') {
+              throw "V1 ou image modifiée: $file"
+            }
+          }
+          Write-Host 'Tests validés et images inchangés.'
