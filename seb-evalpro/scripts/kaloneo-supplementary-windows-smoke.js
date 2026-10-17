@@ -17,7 +17,7 @@ const windows=[
 ];
 const blockButtons=[
  {label:'Voir le plan',windowId:'f_plan_1',position:'before'},
- {label:'Consulter la liste',windowId:'f_liste_2',position:'after'},
+ {id:'docbtn_liste9',label:'Consulter la liste',windowId:'f_liste_2',position:'inline'},
  {label:'Consulter l’inventaire',windowId:'f_table_3',position:'after'},
  {label:'Lire la procédure',windowId:'f_texte_4',position:'after'}
 ];
@@ -26,7 +26,7 @@ const model={
    version:'1.0.0',category:'organisation',layout:'single',scored:true,
    scenario:'Situation fictive',instruction:'Répondre à la question'},
  blocks:[
-  {uid:'bloc_alpha',type:'text',zone:'left',text:'Consultez le document.',
+  {uid:'bloc_alpha',type:'text',zone:'left',text:'Consultez [b]le document [doc:docbtn_liste9][/b].',
    supplementaryButtons:blockButtons},
   {uid:'bloc_beta',type:'question',zone:'left',
    question:{id:'rep_inedite',prompt:'Quel colis ranger ?',responseType:'text',
@@ -39,6 +39,8 @@ const created=Core.modelToDefinition(model);
 assert(Core.analyzeDefinition(created).ok,JSON.stringify(Core.analyzeDefinition(created).errors));
 assert.deepEqual(created.presentation.supplementaryWindows,windows);
 assert.deepEqual(created.presentation.builderContent[0].supplementaryButtons,blockButtons);
+assert.equal(created.presentation.builderContent[0].text,model.blocks[0].text,
+  'Le repère dans le texte enrichi doit survivre à l’enregistrement');
 assert.equal(created.presentation.builderContent[1].supplementaryButtons[0].windowId,'f_plan_1');
 assert.equal(created.questions[0].id,'rep_inedite');
 assert.equal(created.questions[0].points,2);

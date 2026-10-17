@@ -19,8 +19,11 @@ const definition=Core.modelToDefinition({
    version:'1.0.0',category:'organisation',scored:false,layout:'single',
    scenario:'Situation inventée',instruction:'Consulter puis répondre'},
  blocks:[
-  {uid:'new_intro',type:'text',zone:'left',text:'Début de mission',
+  {uid:'new_intro',type:'text',zone:'left',text:'[b][u]Question :[/u][/b]',
    supplementaryButtons:[{label:'Voir le plan',windowId:'doc-plan',position:'after'}]},
+  {uid:'new_inline',type:'text',zone:'left',
+   text:'Vérifier [b]la liste [doc:docbtn_liste9][/b] avant de répondre.',
+   supplementaryButtons:[{id:'docbtn_liste9',label:'Ouvrir la liste',windowId:'doc-liste',position:'inline'}]},
   {uid:'new_question',type:'question',zone:'left',
    question:{id:'question_document_1',prompt:'Numéro du colis ?',responseType:'text',
     points:1,acceptedAnswers:'12'}}
@@ -68,6 +71,13 @@ async function candidateCheck(){
   const trigger=host?.querySelector('.kaltest-supplementary-trigger');
   const input=host?.querySelector('input');
   if(!dialog||!trigger||!input)return {error:'contrôle ou réponse absent'};
+  const texts=[...host.querySelectorAll('.kaltest-builder-content-item')];
+  const afterInline=texts[0]?.lastElementChild===trigger
+    &&texts[0]?.querySelector('strong u')?.textContent==='Question :'
+    &&!texts[0]?.closest('.kaltest-supplementary-block');
+  const nested=texts[1]?.querySelector('strong .kaltest-supplementary-trigger');
+  const markerResolved=!!nested&&nested.textContent==='Ouvrir la liste'
+    &&!texts[1].textContent.includes('[doc:');
   input.value='Réponse conservée 2026';
   trigger.focus(); // Simule la vraie activation clavier/souris avant showModal().
   trigger.click();
@@ -96,7 +106,8 @@ async function candidateCheck(){
   const focusRestored=document.activeElement===trigger;
   return {open,first,within,imageReady,firstBackDisabled,second,
     listText,tableCells,fourth,lastNextDisabled,close,answerPreserved,
-    focusRestored,triggerCount:host.querySelectorAll('.kaltest-supplementary-trigger').length};
+    focusRestored,afterInline,markerResolved,
+    triggerCount:host.querySelectorAll('.kaltest-supplementary-trigger').length};
 }
 app.whenReady().then(async()=>{
  try{
@@ -121,7 +132,9 @@ app.whenReady().then(async()=>{
   assert.equal(got.close,true);
   assert.equal(got.answerPreserved,true,'Saisie candidat perdue après fermeture');
   assert.equal(got.focusRestored,true,'Focus non restitué au bouton initial');
-  assert.equal(got.triggerCount,1);
+  assert.equal(got.triggerCount,2);
+  assert.equal(got.afterInline,true,'Après le contenu doit rester sur la même ligne dans le bloc Texte');
+  assert.equal(got.markerResolved,true,'Bouton au curseur doit conserver le gras et remplacer son marqueur');
   assert.equal(saves,0,'L’aperçu écrit des données candidat');
   assert.equal(replays,0,'Replay non sollicité');
   const capture=await win.webContents.capturePage();

@@ -47,9 +47,22 @@ async function uiAction(){
   details.open=true;
   details.querySelector('button').click();
   const created=!!get('blocks-editor').querySelector('.builder-supplementary-button-row');
+  const firstBlock=get('blocks-editor').querySelector('.exercise-block');
+  const textarea=firstBlock.querySelector('.block-body textarea');
+  textarea.value='Question : demande';
+  textarea.dispatchEvent(new Event('input',{bubbles:true}));
+  textarea.focus();
+  textarea.setSelectionRange('Question :'.length,'Question :'.length);
+  const position=firstBlock.querySelector('.builder-supplementary-button-row select[title="Position du bouton dans le bloc"]');
+  position.value='inline';
+  position.dispatchEvent(new Event('change',{bubbles:true}));
+  const afterTextarea=get('blocks-editor').querySelector('.exercise-block .block-body textarea');
+  const insertion=afterTextarea.value;
+  const insertedAtCursor=insertion.startsWith('Question :[doc:')&&insertion.endsWith('] demande');
+  const inlineSelected=get('blocks-editor').querySelector('.builder-supplementary-button-row select[title="Position du bouton dans le bloc"]')?.value==='inline';
   const thumbTitle=get('supplementary-thumbnails').querySelector('.supplementary-thumbnail span:last-child')?.textContent;
   return {foldedBefore,foldClosed,foldOpen,previewHidden,thumbCount,created,thumbTitle,
-    screenshotHidden:get('candidate-preview-snapshot').hidden};
+    insertedAtCursor,inlineSelected,screenshotHidden:get('candidate-preview-snapshot').hidden};
 }
 async function uiCheck(){
   const get=id=>document.getElementById(id);
@@ -73,6 +86,8 @@ app.whenReady().then(async()=>{
   assert.equal(result.previewHidden,true,'Miniature non masquée en mode document');
   assert.equal(result.thumbCount,1,'Miniature de document absente');
   assert.equal(result.created,true,'Bouton de bloc absent');
+  assert.equal(result.insertedAtCursor,true,'Le bouton n’est pas inséré au curseur du texte');
+  assert.equal(result.inlineSelected,true,'Le mode au curseur n’est pas conservé');
   assert.equal(result.thumbTitle,'Plan de stockage inédit');
   const initialCalls=calls;
   await wait(1650);
