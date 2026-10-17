@@ -1643,7 +1643,23 @@ ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition) => {
       const table=content?.querySelector('.kaltest-builder-grid');
       const overflowing=zones.filter(z=>z.scrollWidth>z.clientWidth+2 ||
         z.scrollHeight>z.clientHeight+2).length;
+      // Lire les rectangles sur la page DÉJÀ peinte. Aucun second rendu,
+      // screenshot ou IPC n'est lancé pour les bulles de la miniature.
+      const miniBlocks=[...content?.querySelectorAll('[data-kaloneo-mini-block-index]')||[]]
+        .map(node=>{
+          const index=Number(node.dataset.kaloneoMiniBlockIndex);
+          const box=node.getBoundingClientRect();
+          const clipped=node.closest('.kaltest-builder-runtime-zone')?.getBoundingClientRect();
+          const left=Math.max(0,box.left,clipped?.left??0);
+          const top=Math.max(0,box.top,clipped?.top??0);
+          const right=Math.min(innerWidth,box.right,clipped?.right??innerWidth);
+          const bottom=Math.min(innerHeight,box.bottom,clipped?.bottom??innerHeight);
+          if(!Number.isInteger(index)||index<0||right-left<4||bottom-top<4)return null;
+          return {index,x:Math.round(left),y:Math.round(top),
+            width:Math.round(right-left),height:Math.round(bottom-top)};
+        }).filter(Boolean);
       return {
+        miniBlocks,
         ready:document.body.classList.contains('kaloneo-real-candidate-preview') &&
           Boolean(document.querySelector('#page-exercise.visible')),
         width:innerWidth,height:innerHeight,
