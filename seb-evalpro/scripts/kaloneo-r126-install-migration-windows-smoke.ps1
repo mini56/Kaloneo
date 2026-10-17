@@ -62,8 +62,8 @@ $profile=Join-Path $env:APPDATA 'SEB EvalPro Kaloneo PILOTE 21'
 New-Item -ItemType Directory -Force -Path $profile | Out-Null
 $sentinel=Join-Path $profile 'kaloneo-upgrade-candidate-data-preserved.txt'
 [IO.File]::WriteAllText($sentinel,'preserve-candidate-files-and-local-keys')
-$treeFile=Join-Path $legacy 'kaloneo-existing-install-preservation.txt'
-[IO.File]::WriteAllText($treeFile,'do-not-delete-on-migration')
+# Installed binaries are deliberately uninstalled/replaced during an update.
+# Only persistent userData (separate from the program directory) must survive.
 
 Invoke-Setup $Setup '/S /currentuser'
 Test-PathAndShortcuts 'UPGRADE_R125_TO_R126'
@@ -72,16 +72,30 @@ if(-not(Test-Path $sentinel -PathType Leaf) -or
    [IO.File]::ReadAllText($sentinel) -ne 'preserve-candidate-files-and-local-keys'){
   throw 'Candidate profile corrupted or lost after installation update.'
 }
-$treeMoved=Join-Path $target 'kaloneo-existing-install-preservation.txt'
-if(-not(Test-Path $treeMoved -PathType Leaf) -or
-  [IO.File]::ReadAllText($treeMoved) -ne 'do-not-delete-on-migration'){
-  throw 'Original application folder not migrated atomically.'
-}
-Write-Host 'CANDIDATE_PROFILE_R126=OK — untouched original profile and preserved file tree'
+Write-Host 'CANDIDATE_PROFILE_R126=OK — original encrypted candidate storage location and data marker preserved'
 
 # One final uninstall: no copy left under the old name, but userData stays.
 Invoke-Setup $uninstaller '/S /currentuser'
 Start-Sleep -Seconds 2
 if(Test-Path $exe){throw 'Upgraded installation could not be uninstalled from new path.'}
 if(-not(Test-Path $sentinel)){throw 'Uninstall unexpectedly deleted candidate profile'}
+
+# A chosen CUSTOM install directory must never be migrated.
+$custom=Join-Path $env:RUNNER_TEMP 'kaloneo-custom-install-test'
+if(Test-Path $custom){throw 'Custom installation test directory unexpectedly exists'}
+Invoke-Setup $PreviousSetup ('/S /currentuser /D='+$custom)
+if(-not(Test-Path (Join-Path $custom 'KALONÉO.exe'))){
+  throw 'Old R125 did not install into the requested custom folder'
+}
+Invoke-Setup $Setup '/S /currentuser'
+if(-not(Test-Path (Join-Path $custom 'KALONEO.exe'))){
+  throw 'R126 improperly relocated the chosen custom installation folder'
+}
+if(Test-Path $target){throw 'R126 created a competing default installation beside the custom folder'}
+if(-not(Test-Path $sentinel)){throw 'Candidate profile was lost after custom-folder update'}
+$customUninstaller=Join-Path $custom 'Uninstall KALONEO.exe'
+if(-not(Test-Path $customUninstaller)){throw 'Custom-folder upgraded uninstaller is missing'}
+Invoke-Setup $customUninstaller '/S /currentuser'
+Write-Host 'CUSTOM_INSTALL_R126=OK — user-chosen location preserved, no duplicate app and data retained'
+
 Write-Host 'KALONEO_R126_WINDOWS_INSTALL_AND_MIGRATION=OK'
