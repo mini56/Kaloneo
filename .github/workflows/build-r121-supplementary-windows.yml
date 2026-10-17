@@ -1,4 +1,4 @@
-name: "KALONÉO R121 - Correction des aides réelles depuis accueil Admin - Build 126"
+name: "KALONÉO R121 - Fenêtres complémentaires - Build 126"
 on:
   push:
     branches:
@@ -31,7 +31,7 @@ jobs:
           $nsis=Get-Content -Raw -Encoding UTF8 build/installer.nsh
           if ([int]$p.sebBuildNumber -ne 126) { throw 'Build #126 requis.' }
           if ($nsis -notmatch '!define SEB_BUILD_NUMBER "126"') { throw 'Numéro NSIS incoherent.' }
-          if ($cfg -notmatch 'version: 0\.0\.149' -or $cfg -notmatch 'PILOTE-22-R121-0\.0\.149-Windows-Setup') { throw 'Version R121 incoherente.' }
+          if ($cfg -notmatch 'version: 0\.0\.150' -or $cfg -notmatch 'PILOTE-22-R121-0\.0\.150-Windows-Setup') { throw 'Version R121 incoherente.' }
           git fetch --depth=1 origin tag seb-kaloneo-r120-admin-home-layout-test
           if ($LASTEXITCODE -ne 0) { throw 'Tag de la version test R120 absent.' }
           $oldJson=(git show 'seb-kaloneo-r120-admin-home-layout-test:seb-evalpro/package.json') -join [Environment]::NewLine
