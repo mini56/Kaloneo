@@ -20,12 +20,13 @@ if(!installer.includes('!define SEB_BUILD_NUMBER "'+build+'"'))
 // Ne jamais vérifier une ancienne configuration R121 quand le Builder évolue.
 const buildDir=path.join(root,'build');
 const compatible=fs.readdirSync(buildDir)
-  .filter(file=>/^kaloneo-v1-fixes-r\d+.*\.yml$/i.test(file))
+  .filter(file=>/^(?:kaloneo-v1-fixes-r\d+.*|kaloneo-r\d+-identity)\.yml$/i.test(file))
   .filter(file=>{
     const release=fs.readFileSync(path.join(buildDir,file),'utf8');
     return release.includes('version: '+version) &&
       release.includes('artifactName: ') &&
-      release.includes('-'+version+'-Windows-Setup');
+      (release.includes('-'+version+'-Windows-Setup') ||
+       release.includes('KALONEO-Setup-'+version));
   });
 if(compatible.length!==1)fail('Configuration unique du Setup '+version+' introuvable ou ambiguë.');
 console.log('KALONÉO barre Admin = version '+version+' ; Build #'+build+' (compilation) — OK.');
