@@ -62,12 +62,12 @@ Var SebBrandingFinishHandle
   # first by electron-builder. When complete, move the whole installed tree.
   # No arbitrary customized directory, candidate profile, or external data moves.
   ${If} $installMode == "all"
-    StrCpy $R0 "$PROGRAMFILES64\\seb-evalpro"
-    StrCpy $R1 "$PROGRAMFILES64\\KALONEO"
+    StrCpy $R0 "$PROGRAMFILES64\seb-evalpro"
+    StrCpy $R1 "$PROGRAMFILES64\KALONEO"
     StrCpy $R2 "/allusers"
   ${Else}
-    StrCpy $R0 "$LOCALAPPDATA\\Programs\\seb-evalpro"
-    StrCpy $R1 "$LOCALAPPDATA\\Programs\\KALONEO"
+    StrCpy $R0 "$LOCALAPPDATA\Programs\seb-evalpro"
+    StrCpy $R1 "$LOCALAPPDATA\Programs\KALONEO"
     StrCpy $R2 "/currentuser"
   ${EndIf}
 
@@ -88,12 +88,12 @@ Var SebBrandingFinishHandle
     ${EndIf}
 
     StrCpy $INSTDIR "$R1"
-    StrCpy $appExe "$INSTDIR\\${APP_EXECUTABLE_FILENAME}"
+    StrCpy $appExe "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
     # Registered install path and uninstaller MUST follow the successful move.
     WriteRegStr SHELL_CONTEXT "${INSTALL_REGISTRY_KEY}" "InstallLocation" "$INSTDIR"
-    WriteRegStr SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "UninstallString" '"$INSTDIR\\${UNINSTALL_FILENAME}" $R2'
-    WriteRegStr SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "QuietUninstallString" '"$INSTDIR\\${UNINSTALL_FILENAME}" $R2 /S'
-    WriteRegStr SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "DisplayIcon" "$INSTDIR\\uninstallerIcon.ico"
+    WriteRegStr SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "UninstallString" '"$INSTDIR\${UNINSTALL_FILENAME}" $R2'
+    WriteRegStr SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "QuietUninstallString" '"$INSTDIR\${UNINSTALL_FILENAME}" $R2 /S'
+    WriteRegStr SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "DisplayIcon" "$INSTDIR\uninstallerIcon.ico"
 
     # The default shortcut paths have already been created by electron-builder;
     # recreate their targets so none points to the removed seb-evalpro folder.
@@ -105,7 +105,7 @@ Var SebBrandingFinishHandle
       CreateShortCut "$newDesktopLink" "$appExe" "" "$appExe" 0 "" "" "${APP_DESCRIPTION}"
       WinShell::SetLnkAUMI "$newDesktopLink" "${APP_ID}"
     ${EndIf}
-    ${If} $launchLink == "$R0\\${APP_EXECUTABLE_FILENAME}"
+    ${If} $launchLink == "$R0\${APP_EXECUTABLE_FILENAME}"
       StrCpy $launchLink "$appExe"
     ${EndIf}
     DetailPrint "KALONÉO : migration du dossier Windows terminée."
