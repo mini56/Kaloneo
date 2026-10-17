@@ -1772,3 +1772,10 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 .builder-preview[data-supplementary-mode="true"] .supplementary-workspace{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
 .builder-preview[data-supplementary-mode="true"] .supplementary-editor{flex:1 1 auto;max-height:none;min-height:0}
 @media(max-width:1300px){.builder-supplementary-button-row{grid-template-columns:1fr 1fr}.builder-supplementary-button-row .mini-btn{justify-self:end}}
+
+/* Les liens documentaires rejoignent le texte dans la miniature simplifiée. */
+.preview-document-inline{
+ display:inline-flex;align-items:center;vertical-align:middle;max-width:100%;
+ margin:1px 3px;padding:3px 7px;white-space:normal;
+}
+.builder-supplementary-button-row select{height:36px}

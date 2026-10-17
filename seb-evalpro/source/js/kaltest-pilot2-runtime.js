@@ -3397,12 +3397,36 @@
     if(!dialog.open)dialog.showModal();
   }
 
+  function makeSupplementaryTrigger(test,button){
+    const control=document.createElement('button');
+    control.type='button';
+    control.className='seb-action-btn kaltest-supplementary-trigger kaltest-supplementary-inline-trigger';
+    control.textContent=String(button.label||'Consulter le document');
+    control.addEventListener('click',()=>openSupplementaryWindow(test,button.windowId));
+    return control;
+  }
+
   function renderBuilderContentWithDocuments(test,item){
     const node=renderBuilderContentItem(test,item);
     const entries=supplementaryWindowsFor(test);
     const buttons=Array.isArray(item?.supplementaryButtons)?item.supplementaryButtons
       .filter(b=>entries.some(w=>w.id===b?.windowId)):[];
     if(!buttons.length)return node; // V1 : DOM inchangé.
+    if(item.type==='text'){
+      // Avant/Après restent dans le même noeud que « Question : »,
+      // et le placement au curseur garde les styles [b]/[u] du texte.
+      window.KaloneoSharedPresentation.placeDocumentButtons(node,buttons,
+        button=>makeSupplementaryTrigger(test,button));
+      const before=buttons.filter(b=>b.position==='before');
+      const after=buttons.filter(b=>b.position==='after'||!b.position);
+      for(let i=before.length-1;i>=0;i--){
+        node.prepend(makeSupplementaryTrigger(test,before[i]),document.createTextNode(' '));
+      }
+      for(const button of after){
+        node.append(document.createTextNode(' '),makeSupplementaryTrigger(test,button));
+      }
+      return node;
+    }
     const shell=document.createElement('section');
     shell.className='kaltest-supplementary-block';
     const addButtons=position=>{

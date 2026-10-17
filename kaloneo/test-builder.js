@@ -2749,6 +2749,22 @@
 
     if(block.type==='text') {
       renderRichContext(wrap,block.text||'Bloc texte vide');
+      const docIds=new Set(state.supplementaryWindows.map(entry=>entry.id));
+      const buttons=(block.supplementaryButtons||[]).filter(button=>docIds.has(button.windowId));
+      const draw=button=>{
+        const node=document.createElement('button');
+        node.type='button';node.className='mini-btn preview-document-inline';
+        node.textContent=String(button.label||'Consulter le document');
+        node.title='Bouton documentaire : à essayer avec Aperçu Electron';
+        return node;
+      };
+      window.KaloneoSharedPresentation.placeDocumentButtons(wrap,buttons,draw);
+      for(const button of buttons.filter(b=>b.position==='before').reverse()){
+        wrap.prepend(draw(button),document.createTextNode(' '));
+      }
+      for(const button of buttons.filter(b=>b.position==='after'||!b.position)){
+        wrap.append(document.createTextNode(' '),draw(button));
+      }
     } else if(block.type==='html'||block.type==='html-js') {
       wrap.appendChild(window.KaloneoSharedPresentation.renderHtmlFrame({
         doc:document,block,className:'preview-html-frame'

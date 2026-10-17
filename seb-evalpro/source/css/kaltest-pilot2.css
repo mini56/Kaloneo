@@ -3653,3 +3653,10 @@ body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2 .kaltest-
  .kaltest-supplementary-header h2{font-size:16px}
  .kaltest-supplementary-content{padding:12px}
 }
+
+/* Le bouton documentaire est DANS le bloc texte et suit la même ligne. */
+.kaltest-builder-content-item .kaltest-supplementary-inline-trigger{
+  display:inline-flex;align-items:center;vertical-align:middle;
+  max-width:100%;margin:2px 4px;padding:5px 10px;
+  white-space:normal;line-height:1.2;
+}

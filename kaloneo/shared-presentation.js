@@ -176,6 +176,46 @@
     appendText(source.slice(cursor));
   }
 
+  // Insérer des boutons au sein du TEXTE réellement rendu, sans toucher au
+  // parseur du balisage [b]/[u] ni transformer le bloc en bloc supplémentaire.
+  // Les tests V1 sans jeton documentaire conservent un DOM inchangé.
+  function placeDocumentButtons(host,buttons,makeButton){
+    if(!host||!Array.isArray(buttons)||typeof makeButton!=='function')return 0;
+    const byId=new Map(buttons.filter(button=>button?.position==='inline'&&
+      /^[a-z0-9_-]{6,64}$/i.test(String(button.id||'')))
+      .map(button=>[button.id,button]));
+    if(!byId.size)return 0;
+    const doc=host.ownerDocument;
+    const iterator=doc.createTreeWalker(host,4); // NodeFilter.SHOW_TEXT
+    const texts=[];
+    let textNode;
+    while((textNode=iterator.nextNode())){
+      if(textNode.nodeValue?.includes('[doc:'))texts.push(textNode);
+    }
+    let placed=0;
+    for(const node of texts){
+      const source=node.nodeValue||'';
+      const pattern=/\[doc:([a-z0-9_-]{6,64})\]/gi;
+      const fragment=doc.createDocumentFragment();
+      let index=0,matched=false,match;
+      while((match=pattern.exec(source))){
+        const button=byId.get(match[1]);
+        if(!button)continue;
+        if(match.index>index)fragment.appendChild(doc.createTextNode(source.slice(index,match.index)));
+        const element=makeButton(button);
+        if(element){fragment.appendChild(element);placed++;}
+        else fragment.appendChild(doc.createTextNode(match[0]));
+        index=pattern.lastIndex;
+        matched=true;
+      }
+      if(matched){
+        if(index<source.length)fragment.appendChild(doc.createTextNode(source.slice(index)));
+        node.replaceWith(fragment);
+      }
+    }
+    return placed;
+  }
+
   function renderQuestion({doc,question,makeAnswer,example=false,className='',rowTag='label',captionClassName=''}) {
     if(!doc||typeof makeAnswer!=='function')throw new TypeError('Question sans moteur de réponse.');
     const row=doc.createElement(rowTag);
@@ -842,6 +882,6 @@
     return outer;
   }
 
-  return Object.freeze({installFractionCloud,renderImageSelection,columns,renderZones,alignCompactQuestionColumns,renderRichContext,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderQuestionTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup,
+  return Object.freeze({installFractionCloud,renderImageSelection,columns,renderZones,alignCompactQuestionColumns,renderRichContext,placeDocumentButtons,renderQuestion,renderMedia,renderHtmlFrame,renderInlineFlow,renderResponseTable,renderQuestionTable,renderGridTable,equalAutomaticColumns,applyColumn,addEqualColGroup,
     normalizeGridColor,gridCellBackground,gridCellTextColor,gridSelectQuestion});
 });
