@@ -65,7 +65,7 @@ assert.equal(Object.prototype.hasOwnProperty.call(oldDef.presentation,'supplemen
 assert(oldDef.presentation.builderContent.every(b=>!b.supplementaryButtons),
   'Un test ancien a reçu des boutons documentaires');
 const builder=fs.readFileSync(path.join(ROOT,'kaloneo','test-builder.js'),'utf8');
-const module=fs.readFileSync(path.join(ROOT,'kaloneo','supplementary-builder.js'),'utf8');
+const builderModule=fs.readFileSync(path.join(ROOT,'kaloneo','supplementary-builder.js'),'utf8');
 const html=fs.readFileSync(path.join(ROOT,'kaloneo','test-builder.html'),'utf8');
 const candidate=fs.readFileSync(path.join(ROOT,'seb-evalpro','source','js','kaltest-pilot2-runtime.js'),'utf8');
 for(const id of ['supplementary-main','supplementary-add','supplementary-thumbnails','supplementary-editor',
@@ -81,7 +81,7 @@ for(const token of ['supplementaryWindows:state.supplementaryWindows','supplemen
 }
 for(const token of ['function select(id){','function setImage(id,image){','addBlockControls',
   'hooks.documentChanged()','hooks.blockChanged()','window.KaloneoSupplementaryBuilder']){
- assert(module.includes(token),'Gestionnaire documentaire absent: '+token);
+ assert(builderModule.includes(token),'Gestionnaire documentaire absent: '+token);
 }
 for(const token of ['dialog.showModal()','dialog.close()','supplementaryReturnFocus','renderBuilderContentWithDocuments',
   "windowId","kaltest-supplementary-dialog"]){

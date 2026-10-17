@@ -69,6 +69,7 @@ async function candidateCheck(){
   const input=host?.querySelector('input');
   if(!dialog||!trigger||!input)return {error:'contrôle ou réponse absent'};
   input.value='Réponse conservée 2026';
+  trigger.focus(); // Simule la vraie activation clavier/souris avant showModal().
   trigger.click();
   const open=dialog.open,first=document.getElementById('kaltest-supplementary-title').textContent;
   const bounds=dialog.getBoundingClientRect();

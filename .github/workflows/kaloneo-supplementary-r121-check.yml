@@ -31,7 +31,9 @@ jobs:
       - name: Installer
         run: npm install --no-audit --no-fund
       - name: Vérifier syntaxe et construire la véritable application
+        shell: bash
         run: |
+          set -e
           node --check ../kaloneo/builder-core.js
           node --check ../kaloneo/test-builder.js
           node --check ../kaloneo/supplementary-builder.js
@@ -40,7 +42,9 @@ jobs:
           node --check scripts/kaloneo-supplementary-electron-smoke-main.js
           npm run prepare:web
       - name: Vérifier documentation et modèle JSON documentaire inédit
+        shell: bash
         run: |
+          set -e
           node scripts/kaloneo-builder-help-guard.js
           node scripts/kaloneo-supplementary-windows-smoke.js
           node scripts/kaloneo-builder-future-roundtrip-smoke.js
