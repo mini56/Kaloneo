@@ -55,7 +55,7 @@ Var SebBrandingFinishHandle
   Delete "$INSTDIR\edition-admin.flag"
   Delete "$INSTDIR\edition-candidate.flag"
   Delete "$INSTDIR\edition.json"
-  DeleteRegValue HKCU "Software\\SEB EvalPro" "Edition"
+  DeleteRegValue HKCU "Software\SEB EvalPro" "Edition"
 
   # R126: automatic, SAFE one-time migration ONLY for the default old folder.
   # The previous R125 version is upgraded normally in its original directory
