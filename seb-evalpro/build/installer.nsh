@@ -79,6 +79,9 @@ Var SebBrandingFinishHandle
       Quit
     ${EndIf}
 
+    # NSIS's SetOutPath points into the old installed directory after extraction.
+    # A Windows directory cannot be renamed while the installer itself keeps it as CWD.
+    SetOutPath "$TEMP"
     ClearErrors
     Rename "$INSTDIR" "$R1"
     ${If} ${Errors}
@@ -88,6 +91,7 @@ Var SebBrandingFinishHandle
     ${EndIf}
 
     StrCpy $INSTDIR "$R1"
+    SetOutPath "$INSTDIR"
     StrCpy $appExe "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
     # Registered install path and uninstaller MUST follow the successful move.
     WriteRegStr SHELL_CONTEXT "${INSTALL_REGISTRY_KEY}" "InstallLocation" "$INSTDIR"
