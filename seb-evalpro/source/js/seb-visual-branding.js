@@ -1,6 +1,6 @@
 (function(){
   'use strict';
-  const APP_NAME = 'SEB-éval-PRO';
+  const APP_NAME = 'KALONÉO';
 
   function applyBranding(){
     if (document.title !== APP_NAME) document.title = APP_NAME;
