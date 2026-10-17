@@ -70,7 +70,7 @@ jobs:
           node --check source/js/admin-bilan-kaloneo.js
           node --check scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
           node --check scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
-      - name: Vérifier les accès, réglages, aide et version
+      - name: Vérifier les accès, réglages, aide et version (garde-fous génériques)
         run: |
           node --check src/kaloneo-passwords.js
           node --check src/kaloneo-admin-settings.js

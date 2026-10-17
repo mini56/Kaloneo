@@ -44,7 +44,9 @@ try {
   assert((manual.match(/<article /g)||[]).length>=10,'première version du manuel Admin');
   assert(fs.existsSync(path.join(repo,'kaloneo','admin-help','help.js')));
   const p=require('../package.json');
-  assert.strictEqual(p.sebBuildNumber,125);
-  assert.strictEqual(p.sebReleaseVersion,'0.0.149');
+  assert(Number.isInteger(p.sebBuildNumber)&&p.sebBuildNumber>=125,
+    'Numéro de Build progressif obligatoire');
+  assert(/^\d+\.\d+\.\d+$/.test(String(p.sebReleaseVersion)),
+    'Version de distribution manquante');
   console.log('KALONEO_R118_SETTINGS=OK password persistence, legacy access, UI, help, version');
 }finally{fs.rmSync(directory,{recursive:true,force:true});}
