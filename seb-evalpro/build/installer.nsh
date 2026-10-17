@@ -2,7 +2,7 @@
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
 
-!define SEB_BUILD_NUMBER "130"
+!define SEB_BUILD_NUMBER "131"
 !define SEB_BUILD_LABEL "Build #${SEB_BUILD_NUMBER}"
 
 # Désinstallation/mise à jour sûre.
@@ -64,7 +64,6 @@ Var SebBrandingFinishHandle
   # sont placés temporairement dans LocalAppData, hors des anciens dossiers
   # susceptibles d'être nettoyés par leur désinstalleur.
   SetShellVarContext current
-  CreateDirectory "$DOCUMENTS\SEB EvalPro"
   CreateDirectory "$LOCALAPPDATA\SEB EvalPro Recovery"
 
   IfFileExists "$LOCALAPPDATA\SEB EvalPro Recovery\candidate-local-key.sebkey" seb_key_recovery_done 0
