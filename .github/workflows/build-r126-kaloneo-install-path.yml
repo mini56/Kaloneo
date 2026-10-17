@@ -100,6 +100,7 @@ jobs:
       # R126 Windows migration: release NSIS working directory before moving program folder.
       - name: Build R126 Windows install only after all smoke tests pass
         run: npx electron-builder --win nsis --config build/kaloneo-r126-install-path.yml --publish never
+      # Test the actual persistent profile, and preserve any pre-existing custom installation directory.
       - name: Verify clean installation, actual R125 folder migration, shortcuts, registry, and uninstall
         shell: pwsh
         env:
