@@ -2956,8 +2956,8 @@
         // modifiant silencieusement sa disposition.
         $('candidate-preview-viewport')?.removeAttribute('data-preview-loading');
         const warnings=[];
-        if(result.report?.overflowZones)warnings.push('débordement de bloc');
-        if(result.report?.tableHorizontalOverflow)warnings.push('tableau trop large');
+        if(result.report?.overflowZones)warnings.push('contenu coupé ou inaccessible');
+        if(result.report?.tableHorizontalOverflow)warnings.push('défilement horizontal du tableau inaccessible');
         if(result.report?.brokenImages?.length)warnings.push('image introuvable');
         if(warning)warning.textContent=warnings.length?
           'À corriger dans le rendu candidat : '+warnings.join(', ')+'.':
