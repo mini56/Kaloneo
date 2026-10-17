@@ -17,6 +17,7 @@ const { internalStorageRoot, documentsWordRoot, migrateLegacyDocumentsStorage } 
 const kaloneoFullParcoursRoute = require('./kaloneo-full-parcours-route');
 const { buildBilanDocxBuffer } = require('./bilan-docx-main');
 const { createPasswordStore } = require('./kaloneo-passwords');
+const { inspectCandidateOverflow } = require('./kaloneo-layout-diagnostics');
 
 const ADMIN_PASSWORD_SHA256 = 'c800892ba3f11b33d36eedf7d3c4297f2b6c02e2c347dda8954b4c577f6666b5';
 // Mot de passe développeur défini par le responsable KALONÉO.
@@ -1639,10 +1640,9 @@ ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition) => {
         })));
       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
       const content=document.getElementById('kaltest-content');
-      const zones=[...content?.querySelectorAll('.kaltest-builder-runtime-zone')||[]];
-      const table=content?.querySelector('.kaltest-builder-grid');
-      const overflowing=zones.filter(z=>z.scrollWidth>z.clientWidth+2 ||
-        z.scrollHeight>z.clientHeight+2).length;
+      // Contrôle strict : le défilement autorisé n'est jamais un débordement.
+      // Même logique pour tout KALTEST, quelle que soit sa définition.
+      const overflowAudit=(${inspectCandidateOverflow.toString()})(document);
       // Lire les rectangles sur la page DÉJÀ peinte. Aucun second rendu,
       // screenshot ou IPC n'est lancé pour les bulles de la miniature.
       const miniBlocks=[...content?.querySelectorAll('[data-kaloneo-mini-block-index]')||[]]
@@ -1664,8 +1664,7 @@ ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition) => {
           Boolean(document.querySelector('#page-exercise.visible')),
         width:innerWidth,height:innerHeight,
         questionCount:content?.querySelectorAll('[data-question-id]').length||0,
-        overflowZones:overflowing,
-        tableHorizontalOverflow:!!table && table.scrollWidth>table.clientWidth+2,
+        ...overflowAudit,
         brokenImages:[...document.images].filter(img=>!img.complete||!img.naturalWidth)
           .map(img=>img.getAttribute('src')).filter(Boolean)
       };
