@@ -251,7 +251,7 @@
     // La même règle de hauteur s'applique au rendu simplifié Builder et
     // au véritable moteur Electron. Absent => comportement V1 inchangé.
     const visibleLines=Number(question?.answerHeightLines);
-    if(answer?.tagName==='TEXTAREA'&&question?.response?.type==='free-text'&&
+    if(answer?.tagName==='TEXTAREA'&&(question?.response?.type==='free-text'||question?.responseType==='free-text')&&
        question.answerHeightLines!==''&&question.answerHeightLines!=null&&
        Number.isInteger(visibleLines)&&visibleLines>=1&&visibleLines<=20){
       answer.rows=visibleLines;
