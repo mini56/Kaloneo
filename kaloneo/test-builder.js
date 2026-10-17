@@ -2170,6 +2170,9 @@
       });
       body.appendChild(field);
       const textarea=field.querySelector('textarea');
+      // Mémoriser si un véritable curseur a été placé par l'utilisateur.
+      // Sinon, « Dans le texte » insère le bouton à la fin du contenu.
+      textarea.addEventListener('focus',()=>{textarea.dataset.documentCaretReady='1';});
       body.appendChild(createTextFormatToolbar(textarea,value=>{block.text=value;}));
       const insert=document.createElement('button');
       insert.type='button';
@@ -3053,9 +3056,23 @@
       add(entry.type==='image'?/^data:image\//i.test(String(entry.imageData||'')):
         Boolean(String(entry.text||'').trim()),'Fenêtre « '+(entry.title||entry.id)+' » : contenu intégré');
     }
-    for(const block of state.blocks)for(const button of block.supplementaryButtons||[]){
-      add(docIds.has(button.windowId),'Bouton documentaire : fenêtre existante');
-      add(Boolean(String(button.label||'').trim()),'Bouton documentaire : libellé');
+    for(const block of state.blocks){
+      const links=Array.isArray(block.supplementaryButtons)?block.supplementaryButtons:[];
+      for(const button of links){
+        add(docIds.has(button.windowId),'Bouton documentaire : fenêtre existante');
+        add(Boolean(String(button.label||'').trim()),'Bouton documentaire : libellé');
+        if(button.position==='inline'){
+          add(block.type==='text'&&Boolean(button.id)&&
+            String(block.text||'').includes('[doc:'+button.id+']'),
+            'Bouton documentaire au curseur : repère présent dans le bloc Texte');
+        }
+      }
+      if(block.type==='text'){
+        const ids=new Set(links.filter(link=>link.position==='inline').map(link=>link.id));
+        for(const match of String(block.text||'').matchAll(/\[doc:([a-z0-9_-]{6,64})\]/gi)){
+          add(ids.has(match[1]),'Texte : bouton documentaire lié au repère '+match[1]);
+        }
+      }
     }
 
     const editorBlocks=state.blocks.filter(b=>b.type==='text-editor');
