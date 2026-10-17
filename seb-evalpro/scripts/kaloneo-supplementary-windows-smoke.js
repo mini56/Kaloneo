@@ -56,8 +56,10 @@ assert.deepEqual(portable.definition.presentation.supplementaryWindows,windows);
 assert.equal(portable.definition.presentation.supplementaryWindows[0].imageData,image);
 const standalone=JSON.parse(JSON.stringify(portable.definition));
 assert(Core.analyzeDefinition(standalone).ok,'JSON autonome non valide');
+// Un vrai ancien test n'a jamais reçu de propriété documentaire dans sa source.
 const oldModel=Core.definitionToModel(created);
-delete oldModel.supplementaryWindows;
+oldModel.sourceDefinition=null;
+oldModel.supplementaryWindows=[];
 oldModel.blocks.forEach(block=>delete block.supplementaryButtons);
 const oldDef=Core.modelToDefinition(oldModel);
 assert.equal(Object.prototype.hasOwnProperty.call(oldDef.presentation,'supplementaryWindows'),false,
