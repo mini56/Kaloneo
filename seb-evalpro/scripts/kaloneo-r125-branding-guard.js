@@ -3,10 +3,11 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const root=path.resolve(__dirname,'..');
 const rd=p=>fs.readFileSync(path.join(root,p),'utf8');
 const pkg=JSON.parse(rd('package.json'));
-assert.equal(pkg.sebBuildNumber,130);
-assert.equal(pkg.sebReleaseVersion,'0.0.154');
-const build=rd('build/kaloneo-r125-identity.yml');
+assert.equal(pkg.sebBuildNumber,131);
+assert.equal(pkg.sebReleaseVersion,'0.0.155');
+const build=rd('build/kaloneo-r126-install-path.yml');
 assert.match(build,/productName: "KALONÉO"/);
+assert.match(build,/executableName: KALONEO/);
 assert.match(build,/shortcutName: "KALONÉO"/);
 assert.match(build,/include: build\/installer\.nsh/);
 assert.match(build,/installerIcon: build\/pilot-resources\/kaloneo\.ico/);
@@ -16,7 +17,7 @@ const pilot=rd('src/kaltest-pilot21-main.js');
 assert.match(pilot,/APP_NAME = 'KALONÉO'/);
 assert.match(pilot,/SEB EvalPro Kaloneo PILOTE 21/,'Preserve historic userData location');
 const nsh=rd('build/installer.nsh');
-assert.match(nsh,/SEB_BUILD_NUMBER "130"/);
+assert.match(nsh,/SEB_BUILD_NUMBER "131"/);
 assert.match(nsh,/KALONÉO — \$\{SEB_BUILD_LABEL\}/);
 assert.match(nsh,/kaloneo-branding\.bmp/);
 assert.match(rd('src/splash.html'),/src="\.\.\/app\/web\/assets\/kaloneo-logo-app\.png"/);
@@ -42,4 +43,4 @@ for(const file of scan(generated)){
 }
 assert(scanned>=15,'Missing generated candidate/admin screens');
 assert(fs.existsSync(path.join(generated,'assets/kaloneo-logo-app.png')));
-console.log('KALONEO_R125_BRANDING=OK — '+scanned+' pages HTML, logos, UI titles, update ID and candidate userData intact');
+console.log('KALONEO_R126_BRANDING=OK — '+scanned+' pages HTML, logos, UI titles, update ID and candidate userData intact');
