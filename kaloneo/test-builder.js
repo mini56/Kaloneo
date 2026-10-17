@@ -1901,12 +1901,18 @@
       body.appendChild(label);
     }
 
+    // Présentation uniquement : les actions et leurs gestionnaires restent inchangés.
+    // La même ligne contient Choisir/Changer, le nom et Retirer l'image.
+    let imageActionRow=null;
     if(block.type==='image'){
+      imageActionRow=document.createElement('div');
+      imageActionRow.className='builder-image-action-row';
       const choose=document.createElement('button');
       choose.type='button';choose.className='mini-btn choose-library-image';
       choose.textContent=block.mediaData?'Changer l’image':'Choisir une image';
       choose.addEventListener('click',()=>openImageLibrary(block.uid).catch(error=>alert('Bibliothèque d’images inaccessible : '+String(error?.message||error))));
-      body.appendChild(choose);
+      imageActionRow.appendChild(choose);
+      body.appendChild(imageActionRow);
       appendImageScaleControls(body,block,'imageScale','Taille de l’image dans le bloc');
       body.appendChild(selectField('Alignement de l’image',String(block.imageAlign||'center'),[
         ['center','Centré'],['left','Gauche'],['right','Droite']
@@ -1918,9 +1924,17 @@
     name.className='file-preview-name';
     const feminine=block.type!=='audio';
     name.textContent=block.mediaData
-      ?kindLabel.charAt(0).toUpperCase()+kindLabel.slice(1)+' sélectionné'+(feminine?'e':'')+' : '+(block.mediaName||kindLabel+' intégré'+(feminine?'e':''))
+      ?(block.type==='image'
+        ?(block.mediaName||'Image intégrée')
+        :kindLabel.charAt(0).toUpperCase()+kindLabel.slice(1)+' sélectionné'+(feminine?'e':'')+' : '+(block.mediaName||kindLabel+' intégré'+(feminine?'e':''))
+      )
       :(block.mediaPlaceholder||'Aucun fichier sélectionné');
-    body.appendChild(name);
+    if(imageActionRow){
+      name.title=name.textContent;
+      imageActionRow.appendChild(name);
+    } else {
+      body.appendChild(name);
+    }
 
     const remove=document.createElement('button');
     remove.type='button';
@@ -1934,7 +1948,8 @@
       changed();
       renderBlocks();
     });
-    body.appendChild(remove);
+    if(imageActionRow)imageActionRow.appendChild(remove);
+    else body.appendChild(remove);
   }
 
   function insertQuestionAtCursor(block,index,textarea) {
