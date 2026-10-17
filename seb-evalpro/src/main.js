@@ -575,7 +575,7 @@ function createSplashWindow() {
   splashWindow.once('ready-to-show', () => {
     if (!splashWindow || splashWindow.isDestroyed()) return;
     splashWindow.show();
-    setSplashProgress(12, 'Initialisation de SEB EvalPro…');
+    setSplashProgress(12, 'Initialisation de KALONÉO…');
   });
 
   splashWindow.on('closed', () => {
@@ -621,7 +621,7 @@ function createWindow() {
   adminSessionUnlocked = false;
 
   mainWindow = new BrowserWindow({
-    title: 'SEB EvalPro',
+    title: 'KALONÉO',
     show: false,
     fullscreen: true,
     kiosk: true,
@@ -791,7 +791,7 @@ function showStartupSecurityError(error) {
     center: true,
     resizable: true,
     backgroundColor: '#ffffff',
-    title: 'SEB EvalPro - Démarrage impossible',
+    title: 'KALONÉO - Démarrage impossible',
     autoHideMenuBar: true,
     webPreferences: {
       contextIsolation: true,
@@ -809,7 +809,7 @@ function showStartupSecurityError(error) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 
-  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>SEB EvalPro</title>
+  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>KALONÉO</title>
   <style>
     body{font-family:Arial,sans-serif;margin:0;background:#f5f7fa;color:#222}
     .card{max-width:760px;margin:60px auto;background:#fff;border:1px solid #ccd6e0;border-radius:10px;padding:28px 32px;box-shadow:0 8px 28px rgba(0,0,0,.12)}
