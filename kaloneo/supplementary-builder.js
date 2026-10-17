@@ -224,7 +224,7 @@ function install(bridge){
 }
 function reset(){
   activeId=null;
-  render();
+  if(state)render(); // L'ouverture de retour Aperçu précède parfois install().
 }
 window.KaloneoSupplementaryBuilder=Object.freeze({
   install,render,reset,isEditing:()=>Boolean(activeId),
