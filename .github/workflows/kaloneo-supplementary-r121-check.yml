@@ -44,7 +44,7 @@ jobs:
           node --check scripts/kaloneo-r122-ergonomics-smoke.js
           node --check scripts/kaloneo-free-text-height-r123-smoke.js
           npm run prepare:web
-      - name: Vérifier strictement les fenêtres et les nouvelles hauteurs R123
+      - name: Revalider R123 avec le bouton compact dans le vrai moteur Electron
         shell: bash
         run: |
           set -e
