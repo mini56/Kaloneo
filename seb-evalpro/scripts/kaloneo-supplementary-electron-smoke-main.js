@@ -139,6 +139,19 @@ app.whenReady().then(async()=>{
   assert.equal(replays,0,'Replay non sollicité');
   const capture=await win.webContents.capturePage();
   assert(!capture.isEmpty(),'Capture Electron vide');
+  const candidateFile=path.join(root,'app','web','kaltest-pilot2.html');
+  runtime.runtime.builderMiniPreview=true;
+  await win.loadFile(candidateFile,{query:{kaloneoPreview:'1'}});
+  await wait(900);
+  const miniMarkers=await win.webContents.executeJavaScript(
+    "[...document.querySelectorAll('[data-kaloneo-mini-block-index]')].map(x=>Number(x.dataset.kaloneoMiniBlockIndex))");
+  assert.deepEqual(miniMarkers,[0,1,2],'La capture miniature doit produire les trois blocs aux bons numéros');
+  runtime.runtime.builderMiniPreview=false;
+  await win.loadFile(candidateFile,{query:{kaloneoPreview:'1'}});
+  await wait(900);
+  const genuineMarkers=await win.webContents.executeJavaScript(
+    "document.querySelectorAll('[data-kaloneo-mini-block-index]').length");
+  assert.equal(genuineMarkers,0,'Le vrai aperçu candidat ne doit comporter aucun repère Builder');
   console.log('SUPPLEMENTARY_ELECTRON: OK',JSON.stringify({id:definition.id,results:got,screenshot:capture.getSize()}));
   clearTimeout(timer);win.destroy();app.quit();
  }catch(e){fail(e);}
