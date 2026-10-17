@@ -14,7 +14,7 @@ OUT.mkdir(parents=True,exist_ok=True)
 LOGO=Image.open(SOURCE).convert("RGBA")
 assert LOGO.size==(300,188),f"Official KALONÉO logo changed; inspect first: {LOGO.size}"
 VERSION=json.loads((ROOT/"package.json").read_text(encoding="utf-8"))
-assert VERSION["sebBuildNumber"]==130, "R125 branding must never reuse Build #129"
+assert VERSION["sebBuildNumber"]==131, "R126 must use new Build #131"
 BLUE="#004e70"
 ORANGE="#f58422"
 
@@ -61,4 +61,4 @@ sidebar.save(OUT/"installerSidebar.bmp",format="BMP")
 for p in ("kaloneo.ico","installerBranding.bmp","installerHeader.bmp","installerSidebar.bmp"):
     asset=OUT/p
     assert asset.is_file() and asset.stat().st_size>1000,asset
-print("KALONEO_BRANDING_R125=OK — icon multi-résolution + NSIS accueil, en-tête, volet, fin")
+print("KALONEO_BRANDING_R126=OK — icon multi-résolution + NSIS accueil, en-tête, volet, fin")
