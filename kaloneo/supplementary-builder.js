@@ -81,6 +81,39 @@ function setImage(id,image){
   notify();
   return true;
 }
+// Marqueur placé dans le texte existant : il n'ajoute jamais de bloc KALTEST.
+function documentToken(button){
+  return button?.id?'[doc:'+button.id+']':'';
+}
+function removeToken(block,button){
+  const token=documentToken(button);
+  if(token)block.text=String(block.text||'').split(token).join('');
+}
+function setDocumentPosition(block,button,position,body){
+  const textarea=block.type==='text'?body.querySelector('textarea'):null;
+  // Supprimer l'ancien repère AVANT de placer le nouveau.
+  const source=String(block.text||'');
+  const old=documentToken(button);
+  let caret=textarea?.dataset.documentCaretReady==='1'&&Number.isInteger(textarea.selectionStart)
+    ?textarea.selectionStart:source.length;
+  if(old){
+    const index=source.indexOf(old);
+    if(index>=0&&index<caret)caret-=Math.min(old.length,caret-index);
+  }
+  removeToken(block,button);
+  if(position==='inline'&&textarea){
+    if(!button.id)button.id='docbtn_'+Math.random().toString(36).slice(2,12);
+    const marker=documentToken(button);
+    const value=String(block.text||'');
+    caret=Math.max(0,Math.min(value.length,caret));
+    block.text=value.slice(0,caret)+marker+value.slice(caret);
+    button.position='inline';
+    textarea.value=block.text;
+  }else{
+    button.position=position==='before'?'before':'after';
+    if(textarea)textarea.value=block.text||'';
+  }
+}
 function addBlockControls(block,body){
   const details=document.createElement('details');
   details.className='builder-supplementary-button-panel';
@@ -141,19 +174,25 @@ function addBlockControls(block,body){
     });
     const position=document.createElement('select');
     position.title='Position du bouton dans le bloc';
-    for(const [value,text] of [['after','Après le contenu'],['before','Avant le contenu']]){
+    const positions=block.type==='text'
+      ?[['after','À la suite du texte (même ligne)'],['before','Avant le texte (même ligne)'],
+        ['inline','Dans le texte (au curseur)']]
+      :[['after','Après le contenu'],['before','Avant le contenu']];
+    for(const [value,text] of positions){
       const option=document.createElement('option');
       option.value=value;option.textContent=text;position.appendChild(option);
     }
-    position.value=button.position==='before'?'before':'after';
+    position.value=['after','before','inline'].includes(button.position)?button.position:'after';
     position.addEventListener('change',()=>{
-      button.position=position.value;
+      setDocumentPosition(block,button,position.value,body);
       hooks.blockChanged();
+      hooks.renderBlocks();
     });
     const remove=document.createElement('button');
     remove.type='button';remove.className='mini-btn danger';
     remove.textContent='Retirer ce bouton';
     remove.addEventListener('click',()=>{
+      if(block.type==='text')removeToken(block,button);
       block.supplementaryButtons.splice(index,1);
       hooks.blockChanged();
       hooks.renderBlocks();
@@ -210,8 +249,12 @@ function install(bridge){
     if(!confirm('Supprimer « '+item.title+' » ?'+
        (linked?'\n'+linked+' bouton(s) lié(s) seront retirés.':'')))return;
     state.supplementaryWindows=state.supplementaryWindows.filter(other=>other.id!==item.id);
-    for(const block of state.blocks)if(Array.isArray(block.supplementaryButtons))
+    for(const block of state.blocks)if(Array.isArray(block.supplementaryButtons)){
+      for(const button of block.supplementaryButtons.filter(button=>button.windowId===item.id)){
+        if(block.type==='text')removeToken(block,button);
+      }
       block.supplementaryButtons=block.supplementaryButtons.filter(button=>button.windowId!==item.id);
+    }
     if(state.supplementaryWindows.length){
       select(state.supplementaryWindows[0].id);
     } else {
