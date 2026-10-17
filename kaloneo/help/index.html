@@ -257,6 +257,30 @@
         <p>Essayez un mot plus court (par exemple « image », « tableau » ou « bilan »).</p>
         <button id="reset-search" type="button">Afficher toutes les rubriques</button>
       </div>
+
+      <article id="fenetres-complementaires" data-group="Composer une page"
+        data-tags="documents annexes fenêtres superposées plan liste tableau texte long consulter bouton bloc miniature aperçu ralentissement suspendre"
+        data-controls="toggle-exercise-section supplementary-main supplementary-add supplementary-return supplementary-select-image supplementary-clear-image supplementary-delete">
+        <h2>Fenêtres complémentaires — consulter un document sans quitter le test</h2>
+        <p>Créez une fenêtre dans la colonne droite, sous la miniature du candidat, avec <strong>+ Fenêtre</strong>.
+        Choisissez un titre et son contenu : texte long, liste (une ligne par élément), tableau (une ligne par rangée et
+        des colonnes séparées par un point-virgule) ou image/plan issue de la bibliothèque KALONÉO.</p>
+        <p>Les très petites miniatures du bas permettent de retrouver les fenêtres existantes.
+        Pendant leur modification, <strong>l'aperçu principal Electron est masqué et ses nouvelles captures sont suspendues</strong>.
+        Le bouton <strong>Test principal</strong> relance une seule actualisation si nécessaire.</p>
+        <p>Dans le <strong>Bloc Exercice</strong> voulu, déployez les réglages « Fenêtres complémentaires » puis
+        utilisez <strong>Ajouter un bouton documentaire</strong>. Renseignez son texte, sélectionnez la fenêtre
+        à ouvrir et placez le bouton avant ou après le contenu du bloc. Vous pouvez choisir plusieurs boutons
+        pour un même test, ou rattacher une fenêtre à plusieurs blocs.</p>
+        <p>En mode candidat, un clic ouvre un <strong>dialogue superposé dans la même application Electron</strong>,
+        limité à 80 % de l'écran. Précédent et Suivant parcourent les documents du test ; Fermer rend
+        exactement la page d'exercice précédente sans effacer la saisie.</p>
+        <p>Les documents et leurs images sont intégrés au fichier KALTEST lors de l'enregistrement
+        et accompagnent le test lors de l'import/export hors ligne. Le <strong>Contrôle avant génération</strong>
+        vérifie notamment qu'aucun document ne soit vide et que chaque bouton renvoie vers un document existant.</p>
+        <p class="tip">Pour réduire temporairement la liste des blocs, utilisez le bouton bleu + / − à droite
+        de « Bloc Exercice ». Le repli ne supprime rien.</p>
+      </article>
     </main>
   </div>
 </body>
