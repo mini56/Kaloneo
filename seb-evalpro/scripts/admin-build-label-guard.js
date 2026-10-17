@@ -17,6 +17,6 @@ if(!preload.includes('APP_BUILD_LABEL')||!preload.includes('${APP_BUILD_LABEL}')
   fail('Version absente de la barre Admin.');
 if(!installer.includes('!define SEB_BUILD_NUMBER "'+build+'"'))
   fail('Numéro NSIS et package.json incohérents.');
-const release=fs.readFileSync(path.join(root,'build','kaloneo-v1-fixes-r120-admin-home-layout.yml'),'utf8');
+const release=fs.readFileSync(path.join(root,'build','kaloneo-v1-fixes-r121-supplementary-windows.yml'),'utf8');
 if(!release.includes('version: '+version))fail('La version installateur diffère de la barre Admin.');
 console.log('KALONÉO barre Admin = version '+version+' ; Build #'+build+' (compilation) — OK.');
