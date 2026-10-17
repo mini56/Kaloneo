@@ -13,7 +13,7 @@ function transform(html){
     'assets/kaloneo-logo-app.png');
   // The original V1 entry screen embeds the old institution's vector logo
   // directly in its HTML. Replace ONLY the generated copy, never the V1 source.
-  out=out.replace(/<svg\\b(?=[^>]*\\bid=["']Calque_1["'])[^>]*>[\\s\\S]*?<\\/svg>/gi,
+  out=out.replace(/<svg\b(?=[^>]*\bid=["']Calque_1["'])[^>]*>[\s\S]*?<\/svg>/gi,
     '<img class="icon-svg" src="assets/kaloneo-logo-app.png" '+
     'alt="KALONÉO — Au cœur d’un nouvel élan." '+
     'style="width:165px;height:104px;object-fit:contain">');
