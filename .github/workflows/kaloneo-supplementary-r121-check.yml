@@ -41,7 +41,7 @@ jobs:
           node --check scripts/kaloneo-supplementary-windows-smoke.js
           node --check scripts/kaloneo-supplementary-electron-smoke-main.js
           npm run prepare:web
-      - name: Vérifier documentation et modèle JSON documentaire inédit
+      - name: Vérifier documentation, JSON et conservation de la V1 (strict)
         shell: bash
         run: |
           set -e
