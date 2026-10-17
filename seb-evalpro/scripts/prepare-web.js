@@ -68,6 +68,7 @@ writeOfficialSeedOverrides({
 });
 if (!fs.existsSync(kaloneoBuilderDir)) fail('générateur KALONÉO canonique absent: kaloneo/');
 copyTree(kaloneoBuilderDir,path.join(outputDir,'kaloneo-builder'));
+require('./kaloneo-r125-visible-branding').brandGeneratedWeb(outputDir);
 assertCleanHtml(outputDir,'app/web');
 
 console.log('SEB EvalPro: app/web reconstruit par copie des sources canoniques + générateur KALONÉO compilé, sans patch fonctionnel.');
