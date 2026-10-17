@@ -740,7 +740,7 @@
       const input = document.createElement('textarea');
       input.className = 'step kaltest-free-text-answer';
       input.dataset.questionId = question.id;
-      input.rows = 6;
+      input.rows = 6; // Le moteur partagé applique la hauteur personnalisée, si présente.
       input.value = String(testState.answers[question.id] ?? '');
       input.placeholder = 'Votre réponse';
       input.addEventListener('input', () => saveAnswer(test, question.id, input.value));

@@ -65,6 +65,9 @@
         answerWidthChars:Number(q.answerWidthChars)>=6&&Number(q.answerWidthChars)<=30
           ?Number(q.answerWidthChars):'',
         answerSuffix:typeof q.answerSuffix==='string'?q.answerSuffix:'',
+        // Hauteur explicite uniquement : aucune propriété nouvelle sur une V1.
+        answerHeightLines:Number.isInteger(q.answerHeightLines)&&q.answerHeightLines>=1&&q.answerHeightLines<=20
+          ?q.answerHeightLines:'',
         manualEvaluation:Boolean(q.manualEvaluation)||String(q.response?.type||'')==='free-text',
         normalizer:q.response?.normalizer||'',
         acceptedAnswers:q.response?.type==='multiple-choice'
@@ -438,6 +441,10 @@
        Number.isInteger(answerWidth)&&answerWidth>=6&&answerWidth<=30){
       out.answerWidthChars=answerWidth;
     }
+    const answerRows=Number(q.answerHeightLines);
+    if(response.type==='free-text'&&q.answerHeightLines!==''&&q.answerHeightLines!=null&&
+       Number.isInteger(answerRows)&&answerRows>=1&&answerRows<=20)
+      out.answerHeightLines=answerRows;
     // Champ d'affichage uniquement : aucune incidence sur les règles de score
     // et aucun nouveau champ de saisie côté candidat.
     if(typeof q.answerSuffix==='string'&&q.answerSuffix.length)
@@ -542,6 +549,8 @@
       target.response=built.response;
       if(Object.prototype.hasOwnProperty.call(built,'answerSuffix'))target.answerSuffix=built.answerSuffix;
       else if(Object.prototype.hasOwnProperty.call(target,'answerSuffix'))delete target.answerSuffix;
+      if(Object.prototype.hasOwnProperty.call(built,'answerHeightLines'))target.answerHeightLines=built.answerHeightLines;
+      else if(Object.prototype.hasOwnProperty.call(target,'answerHeightLines'))delete target.answerHeightLines;
       if(built.response?.type==='duration'){
         target.acceptedMinutes=built.acceptedMinutes;
         if(Object.prototype.hasOwnProperty.call(target,'acceptedAnswers')) delete target.acceptedAnswers;
@@ -711,6 +720,8 @@
         // Ne concerne que le bloc Question explicite, pas les V1 ou grilles.
         if(explicitIds.has(String(q.id))&&!Object.prototype.hasOwnProperty.call(q,'answerSuffix'))
           delete merged.answerSuffix;
+        if(explicitIds.has(String(q.id))&&!Object.prototype.hasOwnProperty.call(q,'answerHeightLines'))
+          delete merged.answerHeightLines;
         return merged;
       });
     }else if(Object.prototype.hasOwnProperty.call(def,'questions')){

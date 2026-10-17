@@ -248,6 +248,16 @@
       caption.appendChild(tag);
     }
     const answer=makeAnswer(question);
+    // La même règle de hauteur s'applique au rendu simplifié Builder et
+    // au véritable moteur Electron. Absent => comportement V1 inchangé.
+    const visibleLines=Number(question?.answerHeightLines);
+    if(answer?.tagName==='TEXTAREA'&&question?.response?.type==='free-text'&&
+       question.answerHeightLines!==''&&question.answerHeightLines!=null&&
+       Number.isInteger(visibleLines)&&visibleLines>=1&&visibleLines<=20){
+      answer.rows=visibleLines;
+      answer.dataset.kaloneoAnswerHeight='custom';
+      answer.style.setProperty('--kaloneo-answer-lines',String(visibleLines));
+    }
     const suffix=typeof question?.answerSuffix==='string'?question.answerSuffix:'';
     if(answer&&suffix){
       // Uniquement pour les nouveaux réglages explicites : ne pas modifier le

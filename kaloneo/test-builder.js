@@ -164,6 +164,7 @@
       responseType: 'text',
       answerLayout: 'column',
       answerWidthChars: '',
+      answerHeightLines: '',
       answerSuffix: '',
       manualEvaluation: false,
       normalizer: '',
@@ -991,22 +992,35 @@
         ['inline','Réponse juste après la question'],
         ['below','Réponse sous la question']
       ],value=>{q.answerLayout=value;changed();}),
-      inputField('Largeur de la réponse (caractères)',q.answerWidthChars||'',value=>{
-        if(value===''){q.answerWidthChars='';changed();return;}
-        const n=Number(value);
-        // Une valeur incomplète n'est pas appliquée pendant la saisie.
-        if(!Number.isInteger(n)||n<6||n>30)return;
-        q.answerWidthChars=n;changed();
-      },{type:'number',min:6,max:30,placeholder:'Auto (largeur par défaut)',
-        title:'Entre 6 et 30 caractères. Laisser vide pour la largeur automatique.'})
     );
     body.appendChild(answerDisplay);
-    // Texte purement affiché à la suite du contrôle candidat.
-    // Contrairement au champ « Unité », il n'est ni saisi ni noté.
-    body.appendChild(inputField('Texte fixe après la réponse (ex. m²)',q.answerSuffix||'',value=>{
+    // Réduire l'emprise du champ suffixe, puis aligner largeur et hauteur.
+    // La hauteur concerne exclusivement les réponses libres multilignes.
+    const suffixField=inputField('Texte fixe après la réponse (ex. m²)',q.answerSuffix||'',value=>{
       q.answerSuffix=value;changed({typing:true});
     },{placeholder:'m², €, %, cm… (facultatif)',
-      title:'Ce texte apparaît juste après la zone de réponse. Le candidat ne le saisit pas et il ne compte jamais dans le barème.'}));
+      title:'Ce texte apparaît juste après la zone de réponse. Le candidat ne le saisit pas et il ne compte jamais dans le barème.'});
+    suffixField.classList.add('builder-answer-suffix-field');
+    body.appendChild(suffixField);
+    const answerDimensions=document.createElement('div');
+    answerDimensions.className='field-row cols-2 builder-answer-dimensions';
+    answerDimensions.appendChild(inputField('Largeur de la réponse (caractères)',q.answerWidthChars||'',value=>{
+      if(value===''){q.answerWidthChars='';changed();return;}
+      const n=Number(value);
+      if(!Number.isInteger(n)||n<6||n>30)return;
+      q.answerWidthChars=n;changed();
+    },{type:'number',min:6,max:30,placeholder:'Auto (largeur par défaut)',
+      title:'Entre 6 et 30 caractères. Laisser vide pour la largeur automatique.'}));
+    if(q.responseType==='free-text'){
+      answerDimensions.appendChild(inputField('Hauteur de la réponse (lignes)',q.answerHeightLines??'',value=>{
+        if(value===''){q.answerHeightLines='';changed();return;}
+        const n=Number(value);
+        if(!Number.isInteger(n)||n<1||n>20)return;
+        q.answerHeightLines=n;changed();
+      },{type:'number',min:1,max:20,placeholder:'Auto (hauteur actuelle)',
+        title:'Entre 1 et 20 lignes visibles. Au-delà, le candidat fait défiler le contenu sans perdre sa réponse.'}));
+    }
+    body.appendChild(answerDimensions);
 
     const row3=document.createElement('div');
     row3.className='field-row cols-3';

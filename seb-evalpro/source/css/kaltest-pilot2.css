@@ -3660,3 +3660,20 @@ body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2 .kaltest-
   max-width:100%;margin:2px 4px;padding:5px 10px;
   white-space:normal;line-height:1.2;
 }
+
+/* Ne pas épaissir une ligne de texte pour le petit bouton documentaire. */
+.kaltest-builder-content-item .kaltest-supplementary-inline-trigger{
+  min-height:0!important;height:auto!important;
+  padding:2px 6px!important;margin:0 3px!important;
+  font-size:12px!important;line-height:1.1!important;
+  vertical-align:baseline;box-shadow:none!important;
+}
+
+/* Réponses libres nouvelles uniquement : la hauteur explicite prime sur les
+   anciens min-height/max-height. La saisie excédentaire défile en interne. */
+.kaloneo-shared-question textarea[data-kaloneo-answer-height="custom"]{
+  box-sizing:border-box!important;
+  height:calc(var(--kaloneo-answer-lines) * 1lh + 22px)!important;
+  min-height:0!important;max-height:none!important;
+  resize:none!important;overflow-y:auto!important;
+}

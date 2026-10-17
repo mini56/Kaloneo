@@ -1809,3 +1809,24 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 .mini-block-hover-target[data-tooltip-side="top"]:hover::after{
   top:auto;bottom:100%;margin-top:0;margin-bottom:4px;
 }
+
+/* La zone "Texte fixe après la réponse" n'occupe plus toute la largeur du Builder. */
+.block-body .builder-answer-suffix-field{width:56%;max-width:100%;min-width:0}
+.block-body .builder-answer-dimensions{margin-top:8px}
+@media(max-width:730px){.block-body .builder-answer-suffix-field{width:100%}}
+/* Boutons de documents plus fins, sur la même ligne que leur texte. */
+.preview-document-inline{
+  min-height:0!important;height:auto!important;
+  padding:2px 6px!important;margin:0 3px!important;
+  font-size:12px!important;line-height:1.1!important;
+  vertical-align:baseline;box-shadow:none!important;
+}
+
+/* Réponses libres nouvelles uniquement : la hauteur explicite prime sur les
+   anciens min-height/max-height. La saisie excédentaire défile en interne. */
+.kaloneo-shared-question textarea[data-kaloneo-answer-height="custom"]{
+  box-sizing:border-box!important;
+  height:calc(var(--kaloneo-answer-lines) * 1lh + 22px)!important;
+  min-height:0!important;max-height:none!important;
+  resize:none!important;overflow-y:auto!important;
+}
