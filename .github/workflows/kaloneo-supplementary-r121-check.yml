@@ -1,4 +1,4 @@
-name: "KALONÉO - Fenêtres complémentaires R121: contrôles sans Setup"
+name: "KALONÉO R122 - Ergonomie Builder et fenêtres, contrôles sans Setup"
 on:
   push:
     branches:
@@ -41,6 +41,7 @@ jobs:
           node --check scripts/kaloneo-supplementary-windows-smoke.js
           node --check scripts/kaloneo-supplementary-electron-smoke-main.js
           node --check scripts/kaloneo-supplementary-builder-electron-smoke-main.js
+          node --check scripts/kaloneo-r122-ergonomics-smoke.js
           npm run prepare:web
       - name: Vérifier documentation, JSON et conservation de la V1 (strict)
         shell: bash
@@ -48,6 +49,7 @@ jobs:
           set -e
           node scripts/kaloneo-builder-help-guard.js
           node scripts/kaloneo-supplementary-windows-smoke.js
+          node scripts/kaloneo-r122-ergonomics-smoke.js
           node scripts/kaloneo-builder-future-roundtrip-smoke.js
       - name: Tester la fenêtre superposée sur Windows Electron réel
         env:
@@ -55,6 +57,8 @@ jobs:
         run: npx electron --no-sandbox scripts/kaloneo-supplementary-electron-smoke-main.js
       - name: Vérifier l'insertion du bouton dans le texte au curseur sous Electron
         run: npx electron --no-sandbox scripts/kaloneo-supplementary-builder-electron-smoke-main.js
+      - name: Vérifier l'infobulle de la roue dentée sur la page Admin Electron
+        run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
       - name: Garantir les V1 validées intactes
         shell: pwsh
         run: |
