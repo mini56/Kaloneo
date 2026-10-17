@@ -17,7 +17,7 @@
     const message = queue.shift();
     const layer = document.createElement('div');
     layer.id = 'seb-evalpro-alert-layer';
-    layer.innerHTML = '<div id="seb-evalpro-alert-box" role="alertdialog" aria-modal="true"><div id="seb-evalpro-alert-title">SEB EvalPro</div><div id="seb-evalpro-alert-message"></div><div id="seb-evalpro-alert-actions"><button id="seb-evalpro-alert-ok" type="button">OK</button></div></div>';
+    layer.innerHTML = '<div id="seb-evalpro-alert-box" role="alertdialog" aria-modal="true"><div id="seb-evalpro-alert-title">KALONÉO</div><div id="seb-evalpro-alert-message"></div><div id="seb-evalpro-alert-actions"><button id="seb-evalpro-alert-ok" type="button">OK</button></div></div>';
     layer.querySelector('#seb-evalpro-alert-message').textContent = String(message == null ? '' : message);
 
     const close = function(){
