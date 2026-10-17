@@ -206,6 +206,16 @@ app.whenReady().then(async()=>{
        panes.about?.aboutCards!==7||!realAdmin.closed)
       return fail('R120: Réglages non lisibles sur accueil Admin réel (régression R119)',realAdmin);
     console.log('KALONEO_R120_REAL_ADMIN_HOME_LAYOUT=OK',JSON.stringify(realAdmin));
+
+    // R122 : la roue dentée doit afficher la même infobulle stylée que les
+    // autres commandes de la barre, sans double tooltip natif Windows.
+    const tooltipAudit=await win.webContents.executeJavaScript("(async()=>{\nconst wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));\nconst gear=document.getElementById('seb-evalpro-settings');\nconst settingsTitle=gear?.getAttribute('title');\nconst admin=document.getElementById('seb-evalpro-admin');\nif(!gear||!admin)return {error:'Boutons Admin absents'};\ngear.dispatchEvent(new MouseEvent('mouseover',{bubbles:true}));\nawait wait(780);\nconst bubble=document.getElementById('seb-evalpro-admin-help');\nconst first={visible:!!bubble&&!bubble.hidden,text:bubble?.textContent,css:bubble?getComputedStyle(bubble).borderRadius:''};\nadmin.dispatchEvent(new MouseEvent('mouseover',{bubbles:true}));\nawait wait(780);\nconst second={visible:!!bubble&&!bubble.hidden,text:bubble?.textContent,css:bubble?getComputedStyle(bubble).borderRadius:''};\nreturn {settingsTitle,first,second};\n})()",true);
+    if(tooltipAudit.error||tooltipAudit.settingsTitle!==null||
+      !tooltipAudit.first?.visible||!tooltipAudit.first?.text?.includes('réglages internes')||
+      !tooltipAudit.second?.visible||tooltipAudit.first.css!==tooltipAudit.second.css)
+      return fail('R122: infobulle de la roue dentée différente des autres',tooltipAudit);
+    console.log('KALONEO_R122_UNIFIED_GEAR_TOOLTIP=OK',JSON.stringify(tooltipAudit));
+
     win.setSize(1366,768);
 
     await win.loadFile(builder);

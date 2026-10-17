@@ -13,7 +13,8 @@ ipcMain.on('state:save-sync',event=>event.returnValue=ok);
 ipcMain.on('candidate-catalog:workspace-load-sync',event=>event.returnValue={ok:false});
 ipcMain.on('candidate-catalog:workspace-save-sync',event=>event.returnValue=ok);
 ipcMain.on('candidate-catalog:results-workspace-load-sync',event=>event.returnValue={ok:false});
-ipcMain.handle('kaloneo-builder:render-mini-preview',()=>{calls++;return {ok:true,image:icon,report:{overflowZones:0,brokenImages:[],tableHorizontalOverflow:false}};});
+ipcMain.handle('kaloneo-builder:render-mini-preview',()=>{calls++;return {ok:true,image:icon,report:{overflowZones:0,brokenImages:[],tableHorizontalOverflow:false,
+  miniBlocks:[{index:0,x:96,y:247,width:530,height:140}]}};});
 ipcMain.handle('kaloneo-library:list-images',()=>({ok:true,images:[]}));
 ipcMain.handle('kaloneo-library:get-image',()=>({ok:false}));
 ipcMain.handle('admin:status',()=>true);
@@ -70,7 +71,11 @@ async function uiCheck(){
     snapshotHidden:get('candidate-preview-snapshot').hidden,
     mode:get('candidate-preview-viewport').closest('.builder-preview').dataset.supplementaryMode,
     draftStatus:get('draft-status').textContent,
-    buttons:get('blocks-editor').querySelectorAll('.builder-supplementary-button-row').length};
+    buttons:get('blocks-editor').querySelectorAll('.builder-supplementary-button-row').length,
+    hoverLabels:[...get('mini-block-hover-layer')?.querySelectorAll('.mini-block-hover-target')||[]].map(n=>n.dataset.label),
+    hoverVisible:!get('mini-block-hover-layer')?.hidden,
+    hoverInMiniOnly:!document.querySelector('#candidate-preview .mini-block-hover-target')
+  };
 }
 app.whenReady().then(async()=>{
  try{
@@ -100,6 +105,9 @@ app.whenReady().then(async()=>{
   const after=await win.webContents.executeJavaScript('('+uiCheck.toString()+')()');
   assert.notEqual(after.mode,'true','Mode documentaire non quitté');
   assert.equal(calls,initialCalls+1,'Retour au test : exactement une capture attendue');
+  assert.deepEqual(after.hoverLabels,['Bloc n°1 — Texte'],'Repère du bloc 1 absent de la vraie miniature');
+  assert.equal(after.hoverVisible,true,'Infobulle absente de la miniature Electron');
+  assert.equal(after.hoverInMiniOnly,true,'Un repère ne doit pas être inséré dans le rendu candidat');
   assert(after.draftStatus,'État du brouillon absent');
   console.log('BUILDER_DOCUMENT_UI: OK',JSON.stringify({result,stationary,after,capturesDuringEditing:0,capturesAfterReturn:calls-initialCalls}));
   clearTimeout(timeout);win.destroy();app.quit();
