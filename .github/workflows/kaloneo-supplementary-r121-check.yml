@@ -53,7 +53,7 @@ jobs:
         env:
           ELECTRON_DISABLE_SECURITY_WARNINGS: 'true'
         run: npx electron --no-sandbox scripts/kaloneo-supplementary-electron-smoke-main.js
-      - name: Vérifier la création des fenêtres dans le véritable Builder Electron
+      - name: Vérifier l'insertion du bouton dans le texte au curseur sous Electron
         run: npx electron --no-sandbox scripts/kaloneo-supplementary-builder-electron-smoke-main.js
       - name: Garantir les V1 validées intactes
         shell: pwsh
