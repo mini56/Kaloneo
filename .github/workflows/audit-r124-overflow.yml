@@ -61,6 +61,8 @@ jobs:
           node scripts/kaloneo-units-score-audit-smoke.js
           node scripts/kaloneo-catalog-roundtrip-score-guard.js
           node scripts/kaloneo-free-text-height-r123-smoke.js
+      - name: Generate historical KALTEST pilot data for complete journey
+        run: node scripts/build-kaltest-pilot2-data.js
       - name: Build candidate web application without Setup
         run: npm run prepare:web
       - name: Verify image transfer, import/export and existing tests
