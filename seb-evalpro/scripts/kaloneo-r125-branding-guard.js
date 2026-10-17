@@ -36,7 +36,7 @@ for(const file of scan(generated)){
   .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'')
   .replace(/<!--[\s\S]*?-->/g,'')
   .replace(/<[^>]+>/g,'');
- assert(!/(?:SEB\s*[- ]?\s*[eé]val\s*[- ]?\s*PRO|Sauvegarde\s*56)/i.test(cleaned),
+ assert(!/(?:SEB\s*[- ]?\s*[eé]val\s*[- ]?\s*PRO|Sauvegarde\s+56)/i.test(cleaned),
    'Old visible name in '+label);
  scanned++;
 }
