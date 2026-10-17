@@ -31,7 +31,7 @@ jobs:
           $nsis=Get-Content -Raw -Encoding UTF8 build/installer.nsh
           if ([int]$p.sebBuildNumber -ne 127) { throw 'Build #127 requis.' }
           if ($nsis -notmatch '!define SEB_BUILD_NUMBER "127"') { throw 'Numéro NSIS incoherent.' }
-          if ($cfg -notmatch 'version: 0\.0\.150' -or $cfg -notmatch 'PILOTE-22-R122-0\.0\.150-Windows-Setup') { throw 'Version R122 incoherente.' }
+          if ($cfg -notmatch 'version: 0\.0\.151' -or $cfg -notmatch 'PILOTE-22-R122-0\.0\.151-Windows-Setup') { throw 'Version R122 incoherente.' }
           git fetch --depth=1 origin tag seb-kaloneo-r121-supplementary-windows-test
           if ($LASTEXITCODE -ne 0) { throw 'Tag de la version test R121 absent.' }
           $oldJson=(git show 'seb-kaloneo-r121-supplementary-windows-test:seb-evalpro/package.json') -join [Environment]::NewLine
