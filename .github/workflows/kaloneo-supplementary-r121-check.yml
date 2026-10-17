@@ -43,7 +43,7 @@ jobs:
           node --check scripts/kaloneo-supplementary-builder-electron-smoke-main.js
           node --check scripts/kaloneo-r122-ergonomics-smoke.js
           npm run prepare:web
-      - name: Vérifier documentation, JSON et conservation de la V1 (strict)
+      - name: Vérifier strictement la documentation et les nouveautés R122
         shell: bash
         run: |
           set -e

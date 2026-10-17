@@ -41,7 +41,10 @@ assert.match(support,/function setDocumentPosition\(/);
 assert.match(html,/id="toggle-exercise-section"/);
 assert.match(css,/\.builder-image-action-row/);
 // Vérifier le garde-fou de toutes les V1 sans toucher aux fichiers validés.
-const mini=builder.match(/function miniBlockDefinition\([\s\S]+?return definition;\n  \}/);
-assert(mini&&mini[0].includes('Core.modelToDefinition(currentModel())'));
-assert(!mini[0].includes('state.blocks.push('));
+const start=builder.indexOf('function miniBlockDefinition()');
+const end=builder.indexOf('function renderMiniBlockHoverLayer(',start);
+assert(start>=0&&end>start,'Fonction de numérotation de la miniature absente');
+const mini=builder.slice(start,end);
+assert(mini.includes('Core.modelToDefinition(currentModel())'));
+assert(!mini.includes('state.blocks.push('));
 console.log('KALONEO_R122_ERGONOMICS=OK — roue dentée homogène, une seule capture Electron, survol miniature seul, blocs et V1 isolés');
