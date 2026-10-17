@@ -1,7 +1,7 @@
 {
   "name": "seb-evalpro",
   "version": "0.3.10",
-  "description": "SEB EvalPro - un seul Setup, modes Candidat verrouillé et Administrateur",
+  "description": "KALONÉO - évaluation locale des compétences",
   "main": "src/main.js",
   "author": "Sauvegarde 56",
   "license": "UNLICENSED",
@@ -72,7 +72,7 @@
   },
   "build": {
     "appId": "fr.sauvegarde56.sebevalpro",
-    "productName": "SEB-éval-PRO",
+    "productName": "KALONÉO",
     "asar": true,
     "compression": "store",
     "files": [
@@ -97,7 +97,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
-      "shortcutName": "SEB-éval-PRO",
+      "shortcutName": "KALONÉO",
       "installerIcon": "build/app-icon.ico",
       "uninstallerIcon": "build/app-icon.ico",
       "installerHeader": "build/installerHeader.bmp",
@@ -113,6 +113,6 @@
       "artifactName": "SEB-eval-PRO-${version}-Linux.${ext}"
     }
   },
-  "sebBuildNumber": 129,
-  "sebReleaseVersion": "0.0.153"
+  "sebBuildNumber": 130,
+  "sebReleaseVersion": "0.0.154"
 }
