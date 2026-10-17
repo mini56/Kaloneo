@@ -112,6 +112,19 @@ Var SebBrandingFinishHandle
   ${EndIf}
 !macroend
 
+# Screen shown BEFORE installation: if upgrading an original default install,
+# present the safe destination path, not the old seb-evalpro directory.
+# Only the text of the already-registered legacy path is adjusted here;
+# the actual, validated move occurs in customInstall after the upgrade.
+!macro customInstallMode
+  ${If} $perUserInstallationFolder == "$LOCALAPPDATA\Programs\seb-evalpro"
+    StrCpy $perUserInstallationFolder "$LOCALAPPDATA\Programs\KALONEO"
+  ${EndIf}
+  ${If} $perMachineInstallationFolder == "$PROGRAMFILES64\seb-evalpro"
+    StrCpy $perMachineInstallationFolder "$PROGRAMFILES64\KALONEO"
+  ${EndIf}
+!macroend
+
 !macro preInit
   # 0.3.8 : ne plus utiliser Documents pour les sauvegardes techniques.
   # Avant une mise à jour, les fichiers de récupération des anciennes versions
