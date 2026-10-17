@@ -26,7 +26,10 @@ const definition=Core.modelToDefinition({
    supplementaryButtons:[{id:'docbtn_liste9',label:'Ouvrir la liste',windowId:'doc-liste',position:'inline'}]},
   {uid:'new_question',type:'question',zone:'left',
    question:{id:'question_document_1',prompt:'Numéro du colis ?',responseType:'text',
-    points:1,acceptedAnswers:'12'}}
+    points:1,acceptedAnswers:'12'}},
+  {uid:'new_free_text',type:'question',zone:'left',
+   question:{id:'question_libre_lignes',prompt:'Expliquez votre réponse :',responseType:'free-text',
+    answerHeightLines:2,points:0}}
  ],supplementaryWindows:windows
 });
 assert(Core.analyzeDefinition(definition).ok);
@@ -78,6 +81,17 @@ async function candidateCheck(){
   const nested=texts[1]?.querySelector('strong .kaltest-supplementary-trigger');
   const markerResolved=!!nested&&nested.textContent==='Ouvrir la liste'
     &&!texts[1].textContent.includes('[doc:');
+  const compactButtonStyle=getComputedStyle(trigger);
+  const compactButton={height:trigger.getBoundingClientRect().height,
+    fontSize:compactButtonStyle.fontSize,paddingTop:compactButtonStyle.paddingTop};
+  const free=host.querySelector('textarea.kaltest-free-text-answer');
+  if(!free)return {error:'Réponse libre absente du test inédit'};
+  const freeHeight=free.getBoundingClientRect().height;
+  const freeStyle=getComputedStyle(free);
+  const freeRows=free.rows;
+  free.value=Array.from({length:18},(_,i)=>'Détail '+(i+1)+' : consigne écrite longue.').join('\n');
+  const scrolled=free.scrollHeight>free.clientHeight+12;
+  const preservedText=free.value.includes('Détail 18');
   input.value='Réponse conservée 2026';
   trigger.focus(); // Simule la vraie activation clavier/souris avant showModal().
   trigger.click();
@@ -107,6 +121,8 @@ async function candidateCheck(){
   return {open,first,within,imageReady,firstBackDisabled,second,
     listText,tableCells,fourth,lastNextDisabled,close,answerPreserved,
     focusRestored,afterInline,markerResolved,
+    compactButton,freeRows,freeHeight,freeOverflow:freeStyle.overflowY,
+    freeMinHeight:freeStyle.minHeight,scrolled,preservedText,
     triggerCount:host.querySelectorAll('.kaltest-supplementary-trigger').length};
 }
 app.whenReady().then(async()=>{
@@ -135,6 +151,13 @@ app.whenReady().then(async()=>{
   assert.equal(got.triggerCount,2);
   assert.equal(got.afterInline,true,'Après le contenu doit rester sur la même ligne dans le bloc Texte');
   assert.equal(got.markerResolved,true,'Bouton au curseur doit conserver le gras et remplacer son marqueur');
+  assert.equal(got.freeRows,2,'La réponse libre doit afficher deux lignes');
+  assert(got.freeHeight>=50&&got.freeHeight<=90,'Hauteur deux lignes incorrecte : '+got.freeHeight);
+  assert.equal(got.freeOverflow,'auto','Le défilement interne de la réponse manque');
+  assert.equal(got.scrolled,true,'Une réponse longue devrait défiler dans deux lignes');
+  assert.equal(got.preservedText,true,'Une réponse longue est tronquée');
+  assert(got.compactButton.height<=29,'Le bouton documentaire agrandit encore la ligne : '+got.compactButton.height);
+  assert.equal(got.compactButton.fontSize,'12px');
   assert.equal(saves,0,'L’aperçu écrit des données candidat');
   assert.equal(replays,0,'Replay non sollicité');
   const capture=await win.webContents.capturePage();
@@ -145,7 +168,7 @@ app.whenReady().then(async()=>{
   await wait(900);
   const miniMarkers=await win.webContents.executeJavaScript(
     "[...document.querySelectorAll('[data-kaloneo-mini-block-index]')].map(x=>Number(x.dataset.kaloneoMiniBlockIndex))");
-  assert.deepEqual(miniMarkers,[0,1,2],'La capture miniature doit produire les trois blocs aux bons numéros');
+  assert.deepEqual(miniMarkers,[0,1,2,3],'La capture miniature doit produire les quatre blocs aux bons numéros');
   runtime.runtime.builderMiniPreview=false;
   await win.loadFile(candidateFile,{query:{kaloneoPreview:'1'}});
   await wait(900);
