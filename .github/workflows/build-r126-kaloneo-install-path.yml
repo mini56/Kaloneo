@@ -97,6 +97,7 @@ jobs:
         run: npx electron --no-sandbox scripts/full-pilot-journey-smoke-main.js
       - name: Candidate security, persistence and import/export
         run: npm run test:security
+      # R126 Windows migration: release NSIS working directory before moving program folder.
       - name: Build R126 Windows install only after all smoke tests pass
         run: npx electron-builder --win nsis --config build/kaloneo-r126-install-path.yml --publish never
       - name: Verify clean installation, actual R125 folder migration, shortcuts, registry, and uninstall
