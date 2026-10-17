@@ -1779,3 +1779,33 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
  margin:1px 3px;padding:3px 7px;white-space:normal;
 }
 .builder-supplementary-button-row select{height:36px}
+
+
+/* Aide au survol : réservée à l'image miniature réellement capturée par Electron.
+   Les zones n'interceptent aucun clic et ne sont jamais injectées côté candidat. */
+.mini-block-hover-layer{
+  position:absolute;inset:0;z-index:5;pointer-events:none;
+  overflow:visible;
+}
+.mini-block-hover-layer[hidden]{display:none!important}
+.mini-block-hover-target{
+  position:absolute;box-sizing:border-box;pointer-events:auto;cursor:help;
+  outline:2px solid transparent;outline-offset:-2px;
+  background:transparent;border-radius:3px;
+}
+.mini-block-hover-target:hover{
+  outline-color:#168aca;background:rgba(23,138,202,.075);
+}
+.mini-block-hover-target:hover::after{
+  content:attr(data-label);
+  position:absolute;left:0;top:100%;margin-top:4px;
+  z-index:10;pointer-events:none;
+  display:block;max-width:220px;min-width:max-content;
+  box-sizing:border-box;padding:6px 10px;border-radius:6px;
+  border:1px solid #8aa8bb;background:#fff;color:#174762;
+  box-shadow:0 3px 9px rgba(8,48,79,.2);
+  font:600 12px/1.3 "Segoe UI",Arial,sans-serif;
+}
+.mini-block-hover-target[data-tooltip-side="top"]:hover::after{
+  top:auto;bottom:100%;margin-top:0;margin-bottom:4px;
+}

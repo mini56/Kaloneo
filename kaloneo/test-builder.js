@@ -2832,6 +2832,58 @@
   let miniPreviewRunning=false;
   let miniPreviewDeferredRevision=null;
 
+  const miniBlockTypeNames=Object.freeze({
+    text:'Texte',question:'Question',image:'Image',audio:'Audio',video:'Vidéo',
+    'table-grid':'Tableau structuré','response-table':'Tableau de réponses',
+    'multiple-tables':'Tableaux','image-selection':'Sélection d’images',
+    'text-editor':'Éditeur de texte','inline-flow':'Texte à trous',
+    html:'HTML','html-js':'HTML/JS'
+  });
+
+  function miniBlockDefinition(){
+    const definition=Core.modelToDefinition(currentModel());
+    const items=definition.presentation?.builderContent;
+    if(!Array.isArray(items))return definition;
+    const indexes=state.blocks.map((block,index)=>({block,index}))
+      .filter(({block})=>!['image','audio','video'].includes(block.type)||
+        Boolean(block.mediaData||block.mediaName||block.mediaPlaceholder));
+    // Un décalage entre blocs locaux et éléments du moteur ne doit jamais
+    // donner une numérotation erronée. Dans le doute, aucun repère.
+    if(indexes.length===items.length && indexes.every(({block},i)=>
+      block.type===items[i].type ||
+      (block.type==='multiple-tables'&&items[i].type==='table-definition'))){
+      items.forEach((item,i)=>{item.__kaloneoMiniSourceIndex=indexes[i].index;});
+    }
+    return definition;
+  }
+
+  function renderMiniBlockHoverLayer(report){
+    const layer=$('mini-block-hover-layer');
+    if(!layer)return;
+    layer.replaceChildren();
+    const seen=new Set();
+    for(const box of Array.isArray(report?.miniBlocks)?report.miniBlocks:[]){
+      const index=Number(box?.index);
+      if(!Number.isInteger(index)||index<0||index>=state.blocks.length||seen.has(index))continue;
+      const x=Number(box.x),y=Number(box.y),w=Number(box.width),h=Number(box.height);
+      if(![x,y,w,h].every(Number.isFinite)||w<4||h<4||x>=1366||y>=768)continue;
+      seen.add(index);
+      const hit=document.createElement('div');
+      hit.className='mini-block-hover-target';
+      hit.style.left=(Math.max(0,x)/1366*100)+'%';
+      hit.style.top=(Math.max(0,y)/768*100)+'%';
+      hit.style.width=(Math.max(0,Math.min(1366-x,w))/1366*100)+'%';
+      hit.style.height=(Math.max(0,Math.min(768-y,h))/768*100)+'%';
+      const block=state.blocks[index];
+      const label='Bloc n°'+(index+1)+' — '+(miniBlockTypeNames[block.type]||block.type);
+      hit.dataset.label=label;
+      hit.setAttribute('aria-label',label);
+      hit.dataset.tooltipSide=y>580?'top':'bottom';
+      layer.appendChild(hit);
+    }
+    layer.hidden=!layer.childElementCount;
+  }
+
   function invalidateMiniPreview() {
     ++miniPreviewRevision;
     if(miniPreviewTimer)clearTimeout(miniPreviewTimer);
@@ -2839,6 +2891,8 @@
     miniPreviewDeferredRevision=null;
     const image=$('candidate-preview-snapshot');
     if(image)image.hidden=true; // Ne jamais recouvrir le texte courant par une ancienne capture.
+    const hover=$('mini-block-hover-layer');
+    if(hover){hover.hidden=true;hover.replaceChildren();}
     const status=$('candidate-preview-status');
     if(status)status.hidden=true; // Aucun écran intermédiaire sur le rendu direct.
     const warning=$('candidate-preview-warning');
@@ -2867,7 +2921,7 @@
       }
       miniPreviewRunning=true;
       try {
-        const result=await bridge.kaloneoRenderMiniPreview(Core.modelToDefinition(currentModel()));
+        const result=await bridge.kaloneoRenderMiniPreview(miniBlockDefinition());
         if(revision!==miniPreviewRevision||Supplementary?.isEditing())return; // Capture obsolète : aucun affichage.
         if(!result?.ok||!result.image) {
           if(status)status.textContent='Capture Electron indisponible : '+String(result?.error||'rendu absent');
@@ -2880,6 +2934,9 @@
         }
         if(revision!==miniPreviewRevision)return;
         image.hidden=false;
+        // La géométrie est retournée avec la capture : aucune IPC ni capture
+        // supplémentaire n'est lancée pour les infobulles.
+        renderMiniBlockHoverLayer(result.report);
         // La première vue d'un test ouvert est désormais toujours celle du
         // moteur candidat : pas d'aperçu simplifié montrant ses réponses puis
         // modifiant silencieusement sa disposition.

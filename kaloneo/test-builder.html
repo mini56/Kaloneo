@@ -332,6 +332,8 @@
 
       <div id="candidate-preview-viewport" class="candidate-preview-viewport">
         <img id="candidate-preview-snapshot" class="candidate-preview-snapshot" alt="Rendu réel de la page candidat, réduit proportionnellement" hidden>
+        <!-- Aide aux blocs uniquement sur la miniature Electron, jamais dans le vrai aperçu. -->
+        <div id="mini-block-hover-layer" class="mini-block-hover-layer" aria-hidden="true" hidden></div>
         <div id="candidate-preview-status" class="candidate-preview-status" role="status" hidden></div>
       <div id="candidate-preview" class="candidate-preview">
         <div class="preview-heading">
