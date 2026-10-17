@@ -3455,7 +3455,10 @@
     if (!Array.isArray(content)) return false;
 
     if (test.presentation?.legacyFullPage === true && content.length === 1) {
-      host.appendChild(renderBuilderContentWithDocuments(test, content[0]));
+      const node=renderBuilderContentWithDocuments(test,content[0]);
+      if (BUILDER_MINI_PREVIEW_MODE && node)
+        node.dataset.kaloneoMiniBlockIndex=String(content[0].__kaloneoMiniSourceIndex??0);
+      host.appendChild(node);
       return true;
     }
 
@@ -3466,7 +3469,16 @@
       host:shell,items:content,layout,
       blockSizing:test.presentation?.blockSizing,
       zoneClass:'kaltest-builder-runtime-zone',
-      renderItem:item=>renderBuilderContentWithDocuments(test,item)
+      renderItem:item=>{
+        const node=renderBuilderContentWithDocuments(test,item);
+        // Invisible pour le candidat et le vrai Aperçu Electron. Seulement
+        // le worker de capture miniature expose les positions au Builder.
+        if(BUILDER_MINI_PREVIEW_MODE && node) {
+          node.dataset.kaloneoMiniBlockIndex=String(
+            item.__kaloneoMiniSourceIndex??content.indexOf(item));
+        }
+        return node;
+      }
     });
     host.appendChild(shell);
     return true;
