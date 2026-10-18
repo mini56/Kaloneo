@@ -3,9 +3,9 @@ const assert=require('node:assert/strict'), fs=require('node:fs'),path=require('
 const root=path.resolve(__dirname,'..');
 const load=p=>fs.readFileSync(path.join(root,p),'utf8');
 const pkg=JSON.parse(load('package.json'));
-assert.equal(pkg.sebBuildNumber,133);
+assert.equal(pkg.sebBuildNumber,134);
 assert.equal(pkg.author,'KALONÉO','Windows Publisher must show the new brand');
-assert.equal(pkg.sebReleaseVersion,'0.0.157');
+assert.equal(pkg.sebReleaseVersion,'0.0.158');
 const preload=load('src/preload.js');
 assert(!preload.includes('SEB EvalPro'),'Electron dynamically generated text still contains the old name.');
 assert(preload.includes('<div class="seb-evalpro-name">KALONÉO</div>'));
@@ -25,9 +25,9 @@ assert(nsis.includes('!define MUI_PAGE_CUSTOMFUNCTION_SHOW KaloneoDirectoryShow'
 assert(nsis.includes('Page custom KaloneoDirectoryPostPage'));
 assert(nsis.includes('StrCpy $INSTDIR "$R5"'));
 assert(nsis.includes('Rename "$INSTDIR" "$R1"'));
-assert(nsis.includes('!define SEB_BUILD_NUMBER "133"'));
-const config=load('build/kaloneo-r128-taskbar-icon.yml');
-assert(config.includes('version: 0.0.157'));
+assert(nsis.includes('!define SEB_BUILD_NUMBER "134"'));
+const config=load('build/kaloneo-r129-taskbar-icon.yml');
+assert(config.includes('version: 0.0.158'));
 assert(config.includes('executableName: KALONEO'));
 assert(config.includes('productName: "KALONÉO"'));
 console.log('KALONEO_R127_UI_BRANDING=OK — candidate topbar, dialogs, calculator, settings, install page and historical data');
