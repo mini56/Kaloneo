@@ -52,7 +52,6 @@ Var SebBrandingFinishHandle
 # R127: During an upgrade display the FINAL installation path.
 # Keep previous binaries at the registered location until their uninstaller runs.
 !ifndef BUILD_UNINSTALLER
-!define MUI_PAGE_CUSTOMFUNCTION_SHOW KaloneoDirectoryShow
 
 Function KaloneoDirectoryShow
   # The install-mode variable belongs to NSIS multiUser.nsh (declared later).
@@ -177,6 +176,13 @@ FunctionEnd
 # Only the text of the already-registered legacy path is adjusted here;
 # the actual, validated move occurs in customInstall after the upgrade.
 !macro customInstallMode
+  # Hook is defined here, DURING PAGE_INSTALL_MODE macro expansion and AFTER
+  # welcome page has consumed its own ModernUI callbacks, immediately BEFORE
+  # assistedInstaller.nsh expands MUI_PAGE_DIRECTORY.
+  # Defining it globally was silently consumed by the welcome page.
+  !ifndef MUI_PAGE_CUSTOMFUNCTION_SHOW
+    !define MUI_PAGE_CUSTOMFUNCTION_SHOW KaloneoDirectoryShow
+  !endif
   ${If} $perUserInstallationFolder == "$LOCALAPPDATA\Programs\seb-evalpro"
     StrCpy $perUserInstallationFolder "$LOCALAPPDATA\Programs\KALONEO"
   ${EndIf}
