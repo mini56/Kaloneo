@@ -4,6 +4,7 @@ const root=path.resolve(__dirname,'..');
 const load=p=>fs.readFileSync(path.join(root,p),'utf8');
 const pkg=JSON.parse(load('package.json'));
 assert.equal(pkg.sebBuildNumber,132);
+assert.equal(pkg.author,'KALONÉO','Windows Publisher must show the new brand');
 assert.equal(pkg.sebReleaseVersion,'0.0.156');
 const preload=load('src/preload.js');
 assert(!preload.includes('SEB EvalPro'),'Electron dynamically generated text still contains the old name.');
