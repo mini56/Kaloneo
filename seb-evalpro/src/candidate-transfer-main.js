@@ -326,8 +326,8 @@ function createCandidateTransfer(options = {}) {
   function decryptTransferPayload(text, password) {
     let envelope;
     try { envelope = JSON.parse(String(text || '')); }
-    catch (_) { throw new Error('Fichier de transfert SEB EvalPro invalide.'); }
-    if (!envelope || envelope.format !== 'SEB-EVALPRO-USB-1') throw new Error('Format de transfert SEB EvalPro non reconnu.');
+    catch (_) { throw new Error('Fichier de transfert KALONÉO invalide.'); }
+    if (!envelope || envelope.format !== 'SEB-EVALPRO-USB-1') throw new Error('Format de transfert KALONÉO non reconnu.');
     try {
       const salt = Buffer.from(String(envelope.salt || ''), 'base64');
       const iv = Buffer.from(String(envelope.iv || ''), 'base64');
