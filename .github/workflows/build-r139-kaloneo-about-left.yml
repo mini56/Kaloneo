@@ -80,6 +80,7 @@ jobs:
       - name: Build candidate and admin HTML with original KALONÉO branding
         run: npm run prepare:web
       # Generic installer/version audits now accept the dedicated About credits configuration.
+      # The Admin build-number guard now recognizes the R139 About-left Setup config.
       - name: Check all candidate/admin screens and consistency of Admin build label
         shell: pwsh
         run: |
