@@ -23,8 +23,11 @@
     !include StrContains.nsh
 
     !insertmacro skipPageIfUpdated
-    # Official KALONÉO R132: the hook must be defined immediately before
-    # the directory page macro; a global definition attaches to the wrong page.
+    # Replace the generic PRE callback with a scoped one which keeps the
+    # existing skip-if-updated behaviour and supplies the FINAL directory
+    # before NSIS instantiates the text field, not after the dialog is drawn.
+    !undef MUI_PAGE_CUSTOMFUNCTION_PRE
+    !define MUI_PAGE_CUSTOMFUNCTION_PRE KaloneoDirectoryPre
     !define MUI_PAGE_CUSTOMFUNCTION_SHOW KaloneoDirectoryShow
     !insertmacro MUI_PAGE_DIRECTORY
     !ifdef MUI_PAGE_CUSTOMFUNCTION_SHOW
