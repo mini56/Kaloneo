@@ -403,7 +403,7 @@ function openEditor(filename, archive) {
           info.textContent = `Aucune modification : révision ${result.revision} inchangée.`;
         } else {
           const wordFilename = exportHistoricalWord(card, candidate, archive.originalBuild, currentRevision);
-          info.textContent = `Révision ${result.revision} enregistrée. Word mis à jour automatiquement : ${wordFilename} dans Documents\\SEB EvalPro\\Bilans. L'ancienne version est conservée.`;
+          info.textContent = `Révision ${result.revision} enregistrée. Word mis à jour automatiquement : ${wordFilename} dans le dossier des bilans KALONÉO. L'ancienne version est conservée.`;
         }
       } else info.textContent = `Erreur : ${(result && result.error) || 'enregistrement impossible'}`;
     } finally {
@@ -414,7 +414,7 @@ function openEditor(filename, archive) {
   overlay.querySelector('#seb-bh-export').addEventListener('click', () => {
     const info = overlay.querySelector('#seb-bh-editor-info');
     const wordFilename = exportHistoricalWord(card, candidate, archive.originalBuild, currentRevision);
-    if (info) info.textContent = `Word mis à jour : ${wordFilename} dans Documents\\SEB EvalPro\\Bilans.`;
+    if (info) info.textContent = `Word mis à jour : ${wordFilename} dans le dossier des bilans KALONÉO.`;
   });
 }
 
