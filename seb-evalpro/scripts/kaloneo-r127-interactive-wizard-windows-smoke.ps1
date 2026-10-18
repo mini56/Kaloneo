@@ -55,6 +55,9 @@ try {
     if($paths.Count -gt 0){
       $value=[string]$paths[0]
       Write-Host "WIZARD_DIRECTORY_FIELD: $value"
+      $trace=Join-Path $env:TEMP 'kaloneo-r131-dirshow.txt'
+      if(Test-Path $trace){Write-Host "R131_NSIS_DIAGNOSTIC: $([IO.File]::ReadAllText($trace))"}
+      else{Write-Host 'R131_NSIS_DIAGNOSTIC: NO SHOW CALLBACK FILE — callback was not executed'}
       if($value -match '(?i)[\\/]seb-evalpro(?:[\\/]|$)'){throw "Old visible installation path: $value"}
       if($value -notmatch '(?i)[\\/]KALONEO(?:[\\/]|$)'){throw "Wrong final installation directory: $value"}
       $seen=$true
