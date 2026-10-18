@@ -203,7 +203,7 @@ app.whenReady().then(async()=>{
     if(!realAdmin.ok||realAdmin.mainTag!=='DIV'||realAdmin.homeMainDisplay!=='flex'||
        panelWidth<900||realAdmin.nav?.w<190||!largeDocs||!activeBlue||
        panes.passwords?.passwordFields!==3||!panes.passwords?.blankStatusHidden||
-       panes.about?.aboutCards!==7||!realAdmin.closed)
+       panes.about?.aboutCards!==8||!realAdmin.closed)
       return fail('R120: Réglages non lisibles sur accueil Admin réel (régression R119)',realAdmin);
     console.log('KALONEO_R120_REAL_ADMIN_HOME_LAYOUT=OK',JSON.stringify(realAdmin));
 
