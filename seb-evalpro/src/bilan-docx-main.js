@@ -216,9 +216,9 @@ function buildBilanDocx(payload) {
   }
 
   return new Document({
-    creator:'SEB EvalPro',
+    creator:'KALONÉO',
     title:'Bilan d’évaluation',
-    description:'Bilan institutionnel SEB EvalPro',
+    description:'Bilan institutionnel KALONÉO',
     sections:[{
       properties:{
         page:{
