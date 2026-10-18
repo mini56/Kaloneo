@@ -19,6 +19,18 @@ const { buildBilanDocxBuffer } = require('./bilan-docx-main');
 const { createPasswordStore } = require('./kaloneo-passwords');
 const { inspectCandidateOverflow } = require('./kaloneo-layout-diagnostics');
 
+// The taskbar must show exactly the same chameleon as the candidate's left bar.
+// Electron-builder embeds this icon into KALONEO.exe; extraResources also
+// supplies the identical icon to Electron for every BrowserWindow.
+const KALONEO_WINDOWS_APP_ID = 'fr.sauvegarde56.sebevalpro.kaloneo.pilot22';
+function kaloneoWindowsWindowIcon() {
+  if (process.platform !== 'win32') return undefined;
+  const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'kaloneo-taskbar.ico')
+    : path.join(__dirname, '..', 'build', 'pilot-resources', 'kaloneo.ico');
+  return fs.existsSync(iconPath) ? iconPath : undefined;
+}
+
 const ADMIN_PASSWORD_SHA256 = 'c800892ba3f11b33d36eedf7d3c4297f2b6c02e2c347dda8954b4c577f6666b5';
 // Mot de passe développeur défini par le responsable KALONÉO.
 // Le hash ne protège pas contre l'analyse d'un programme local ; le contrôle
@@ -552,6 +564,7 @@ function createSplashWindow() {
   splashWindow = new BrowserWindow({
     width: 640,
     height: 390,
+    icon: kaloneoWindowsWindowIcon(),
     show: false,
     frame: false,
     resizable: false,
@@ -621,6 +634,7 @@ function createWindow() {
   adminSessionUnlocked = false;
 
   mainWindow = new BrowserWindow({
+    icon: kaloneoWindowsWindowIcon(),
     title: 'KALONÉO',
     show: false,
     fullscreen: true,
@@ -791,6 +805,7 @@ function showStartupSecurityError(error) {
     center: true,
     resizable: true,
     backgroundColor: '#ffffff',
+    icon: kaloneoWindowsWindowIcon(),
     title: 'KALONÉO - Démarrage impossible',
     autoHideMenuBar: true,
     webPreferences: {
@@ -1834,6 +1849,7 @@ require('./session-close')({
 });
 
 app.whenReady().then(() => {
+  if (process.platform === 'win32') app.setAppUserModelId(KALONEO_WINDOWS_APP_ID);
   installCandidateWindowsReturnGuard();
   startApplication();
 });
