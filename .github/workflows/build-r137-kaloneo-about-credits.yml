@@ -100,6 +100,7 @@ jobs:
           node scripts/kaloneo-edit-existing-test-smoke.js
       - name: Electron real candidate render across five resolutions
         run: npx electron --no-sandbox scripts/kaloneo-responsive-overflow-electron-smoke-main.js
+      # About now has 8 credit/info cards; the original seven-card smoke was adjusted.
       - name: Electron Builder fidelity and focus
         run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
       - name: Electron candidate new questions, columns and table
