@@ -65,7 +65,16 @@ Function KaloneoDirectoryShow
     StrCpy $R6 "$PROGRAMFILES64\KALONEO"
   ${EndIf}
   ${If} $INSTDIR == $R5
-    GetDlgItem $R8 $HWNDPARENT 1019
+    # MUI's directory page is a nested #32770 dialog. Its edit control is
+    # NOT a direct child of $HWNDPARENT; the previous handler did nothing.
+    # Setting $INSTDIR covers MUI implementations that initialize the field
+    # after the SHOW callback.
+    StrCpy $INSTDIR "$R6"
+    FindWindow $R9 "#32770" "" $HWNDPARENT
+    GetDlgItem $R8 $R9 1019
+    ${If} $R8 == 0
+      GetDlgItem $R8 $HWNDPARENT 1019
+    ${EndIf}
     ${If} $R8 != 0
       SendMessage $R8 ${WM_SETTEXT} 0 "STR:$R6"
     ${EndIf}
