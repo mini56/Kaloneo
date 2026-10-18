@@ -37,7 +37,7 @@ Var oldMenuDirectory
 !ifdef ONE_CLICK
   !include "oneClick.nsh"
 !else
-  !include "kaloneo-assisted-installer.nsh"
+  !include "${PROJECT_DIR}\build\kaloneo-assisted-installer.nsh"
 !endif
 
 !insertmacro addLangs
