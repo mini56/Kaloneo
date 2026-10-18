@@ -58,9 +58,6 @@ Var SebBrandingFinishHandle
 # Only the exact original default folder is adjusted. The custom invisible
 # page restores the previous path before the built-in updater operates.
 Function KaloneoDirectoryPre
-  ${if} ${isUpdated}
-    Abort
-  ${endif}
   StrCpy $R5 "$LOCALAPPDATA\Programs\seb-evalpro"
   StrCpy $R6 "$LOCALAPPDATA\Programs\KALONEO"
   ${If} $INSTDIR != $R5
