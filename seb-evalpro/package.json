@@ -3,7 +3,7 @@
   "version": "0.3.10",
   "description": "KALONÉO - évaluation locale des compétences",
   "main": "src/main.js",
-  "author": "Sauvegarde 56",
+  "author": "KALONÉO",
   "license": "UNLICENSED",
   "scripts": {
     "prepare:web": "node scripts/prepare-web.js && node scripts/kaloneo-builder-parity-guard.js && node scripts/source-html-architecture-guard.js && node scripts/kaloneo-context-guard.js && node scripts/kaloneo-navigation-guard.js && node scripts/build-number-consistency-guard.js && node scripts/build159-clean-regression-guard.js && node scripts/build161-regression-guard.js && node scripts/nwtexte-architecture-guard.js && node scripts/parcours-registry-guard.js && node scripts/nvmail-architecture-guard.js && node scripts/autoeval2-architecture-guard.js && node scripts/paronymes-architecture-guard.js && node scripts/carre-architecture-guard.js && node scripts/tri-architecture-guard.js && node scripts/autoeval1-architecture-guard.js && node scripts/brique-architecture-guard.js && node scripts/stock-architecture-guard.js && node scripts/planning-architecture-guard.js && node scripts/genrenombres-architecture-guard.js && node scripts/dictee-architecture-guard.js && node scripts/qcm-final-architecture-guard.js && node scripts/qcm-page2-architecture-guard.js && node scripts/qcm-page2-1-architecture-guard.js && node scripts/qcm-page3-architecture-guard.js && node scripts/qcm-texte-trous-architecture-guard.js && node scripts/qcm-page4-architecture-guard.js && node scripts/qcm-page5-architecture-guard.js && node scripts/qcm-page5-1-architecture-guard.js && node scripts/qcm-page6-architecture-guard.js && node scripts/unified-setup-guard.js && node scripts/build21-admin-foundation-guard.js",
