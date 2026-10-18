@@ -26,11 +26,15 @@ async function run(){
    assert.equal(got.sectionVisible,true);
    assert.equal(got.passwordPanelCanOpen,true);
    assert.equal(got.imageOverflow,false);
-   for(const key of ['header','primary','secondary'])assert.equal(got[key].ready,true,'Logo absent en Electron: '+key+' — '+JSON.stringify(got));
+   assert.equal(got.header.ready,false,'No logo should remain in top-right corner of settings');
+   for(const key of ['primary','secondary'])assert.equal(got[key].ready,true,'Logo absent en Electron: '+key+' — '+JSON.stringify(got));
    assert.match(got.primary.src,/kaloneo-logo-app\.png/);
    assert.match(got.secondary.src,/sauvegarde56-logo\.svg/);
    assert.equal(got.structureCount,1,'Exactly one associated structure in the shipped About page.');
-   const layout=await win.webContents.executeJavaScript("(()=>{const section=document.querySelector('[data-section=about]'),banner=section.querySelector('.settings-about-brand'),photo=banner.querySelector('img'),list=section.querySelector('.settings-structure-list'),entry=list.querySelector('li'),name=entry.querySelector('strong'),logo=entry.querySelector('img');const b=banner.getBoundingClientRect(),p=photo.getBoundingClientRect(),n=name.getBoundingClientRect(),l=logo.getBoundingClientRect();return {bannerWidth:b.width,imageWidth:p.width,bannerWithinContent:b.width<=section.clientWidth,nameBeforeLogo:n.bottom<l.top,firstChildIsName:entry.firstElementChild===name,secondChildIsLogo:entry.children[1]===logo,logoWithinCard:l.right<=entry.getBoundingClientRect().right+1}})()");
+   const layout=await win.webContents.executeJavaScript("(()=>{const section=document.querySelector('[data-section=about]'),banner=section.querySelector('.settings-about-brand'),photo=banner.querySelector('img'),list=section.querySelector('.settings-structure-list'),entry=list.querySelector('li'),name=entry.querySelector('strong'),logo=entry.querySelector('img');const b=banner.getBoundingClientRect(),p=photo.getBoundingClientRect(),n=name.getBoundingClientRect(),l=logo.getBoundingClientRect();return {bannerWidth:b.width,imageWidth:p.width,bannerWithinContent:b.width<=section.clientWidth,logoAlignedLeft:Math.abs(p.left-b.left-16)<4,logoBelowTitle:p.top>section.querySelector('.settings-intro h3').getBoundingClientRect().bottom,headerLogoAbsent:!document.querySelector('[data-kaloneo-header-logo]'),nameBeforeLogo:n.bottom<l.top,firstChildIsName:entry.firstElementChild===name,secondChildIsLogo:entry.children[1]===logo,logoWithinCard:l.right<=entry.getBoundingClientRect().right+1}})()");
+   assert.equal(layout.logoAlignedLeft,true,'KALONÉO logo must begin at LEFT inside À propos: '+JSON.stringify(layout));
+   assert.equal(layout.logoBelowTitle,true,'KALONÉO logo must appear UNDER À propos');
+   assert.equal(layout.headerLogoAbsent,true,'Redundant logo remains in upper-right header');
    assert.equal(layout.bannerWithinContent,true,'About logo container overflows panel');
    assert.ok(layout.bannerWidth>=600,'Full-width About banner is too narrow: '+JSON.stringify(layout));
    assert.ok(layout.imageWidth>=layout.bannerWidth*.76,'KALONÉO logo is not using the banner width: '+JSON.stringify(layout));
