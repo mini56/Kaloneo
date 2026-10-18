@@ -1,4 +1,4 @@
-name: "KALONÉO R138 - Logo À propos pleine largeur et structures associées évolutives"
+name: "KALONÉO R138 - Logo à gauche sous À propos, structures extensibles"
 on:
   push:
     branches: [fix-r60-tri-rearm-only-20261011]
@@ -88,7 +88,7 @@ jobs:
           node --check scripts/kaloneo-r128-taskbar-icon-guard.js
           node scripts/kaloneo-r128-taskbar-icon-guard.js
           node scripts/admin-build-label-guard.js
-      # The SVG of each partner is asserted through its new list-entry image element.
+      # Explicit check: large official logo LEFT, below the About title; no redundant top-right logo.
       - name: Actual Electron About full-width banner, vertical structures and multi-viewport check
         run: npx electron --no-sandbox scripts/kaloneo-r138-about-responsive-electron-smoke-main.js
       - name: Check candidate scoring, image library, import/export and V1
@@ -182,12 +182,13 @@ jobs:
           $title='KALONÉO — R138 / Build #143 — Mise en page À propos à tester'
           $notes=@"
           Version 0.0.167 — Build #143 — POUR TESTS WINDOWS.
-          - Logo KALONÉO sur la largeur du bloc principal À propos (adaptatif, jamais coupé).
+          - Logo KALONÉO agrandi, aligné à GAUCHE immédiatement sous À propos, jamais dans le coin supérieur droit.
+          - Le logo occupe la zone de largeur du bloc principal sans débordement (1366/1200/1024).
           - Structure associée : chaque entrée affiche son nom puis son logo dessous, avec une liste évolutive.
           - Retour automatique en haut de la rubrique À propos à chaque ouverture pour montrer le logo.
           - Contrôles Electron 1366×768, 1200×800, 1024×768 et ajout simulé d'une seconde structure.
           - Crédits À propos : Claude LESPAGNOL, créateur et développeur ; Sauvegarde 56, structure associée.
-          - Logo KALONÉO dans les réglages et À propos ; logo Sauvegarde 56 réservé à À propos.
+          - Logo KALONÉO uniquement sous À propos ; logo Sauvegarde 56 réservé au bloc Structure associée.
           - Vérification Electron réelle du chargement local des trois images et du nom du créateur.
           - EXACT même caméléon transparent de la barre candidat (40x40), converti en ICO multirésolution.
           - KALONEO.exe, Windows barre des tâches, fenêtres Electron, raccourcis et Setup partagent cette même icône.
