@@ -47,7 +47,7 @@ icon.save(OUT/"kaloneo.ico",format="ICO",
 # single multi-size asset. Never use the complete logo in the taskbar again.
 with Image.open(OUT/"kaloneo.ico") as check:
     assert check.getpixel((0,0))[3]==0, "Generated Windows icon lost alpha transparency."
-    assert len(check.info.get("sizes",[]))>=5, "Windows icon must include multiple sizes."
+    assert len(check.ico.sizes())>=5, "Windows icon must include multiple sizes."
 print("KALONEO_CHAMELEON_ICON_R128=OK — official candidate icon extracted byte-for-byte.")
 
 # NSIS custom full wizard welcome/finish panel.
