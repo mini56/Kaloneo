@@ -56,6 +56,10 @@ if(Test-Path $target){throw 'R125 has unexpected KALONEO folder: cannot validate
 $legacyUninstall=(Get-ChildItem $legacy -Filter 'Uninstall*.exe' -File | Select-Object -First 1)
 if(-not $legacyUninstall){throw 'Original R125 uninstaller missing'}
 Write-Host "BASELINE_R125=OK — legacy folder: $legacy"
+# R127: inspect the actual interactive NSIS directory page before the migration.
+& ./scripts/kaloneo-r127-interactive-wizard-windows-smoke.ps1 -Setup $Setup
+if($LASTEXITCODE -ne 0){throw 'Old installation path is still visible in the interactive installer'}
+
 
 # Add both a persisted profile marker and a file physically inside install tree.
 $profile=Join-Path $env:APPDATA 'SEB EvalPro Kaloneo PILOTE 21'
