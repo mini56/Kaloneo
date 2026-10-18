@@ -20,7 +20,9 @@ assert(settings.includes('Structure associée'));
 assert(settings.includes('settings-about-brand'));
 assert(settings.includes('settings-structure-credit'));
 assert(settings.includes("layer.querySelector('#kaloneo-setting-author').textContent=author||'Non renseigné'"));
-assert(preload.includes('author:appPackage.author'));
-assert(typeof p.author==='string'&&p.author.trim()&&p.author.trim()!=='KALONÉO',
-  'Public creator first and last name must be confirmed by user, not guessed.');
+assert(preload.includes('author:appPackage.kaloneoCreator'));
+assert.equal(p.kaloneoCreator,'Claude LESPAGNOL','Creator must display the user-confirmed exact name');
+assert.equal(p.author,'KALONÉO','Keep historical package publisher brand unchanged');
+assert(!/Claude LESPAGNOL/.test(read('src/kaltest-pilot21-main.js')),
+  'Personal creator name belongs only in About, not candidate screen');
 console.log('KALONEO_ABOUT_CREDITS=OK — 2 logos, personal creator credit, source assets, no candidate data changed');
