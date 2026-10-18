@@ -88,6 +88,7 @@ jobs:
           node --check scripts/kaloneo-r128-taskbar-icon-guard.js
           node scripts/kaloneo-r128-taskbar-icon-guard.js
           node scripts/admin-build-label-guard.js
+      # The SVG of each partner is asserted through its new list-entry image element.
       - name: Actual Electron About full-width banner, vertical structures and multi-viewport check
         run: npx electron --no-sandbox scripts/kaloneo-r138-about-responsive-electron-smoke-main.js
       - name: Check candidate scoring, image library, import/export and V1
