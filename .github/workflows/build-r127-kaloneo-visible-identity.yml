@@ -72,6 +72,7 @@ jobs:
           node scripts/kaloneo-catalog-roundtrip-score-guard.js
       - name: Generate original complete candidate parcours data
         run: node scripts/build-kaltest-pilot2-data.js
+      # The 2021 bilan module retains its original SHA after exactly two visible wording changes.
       - name: Build candidate and admin HTML with original KALONÉO branding
         run: npm run prepare:web
       - name: Check all candidate/admin screens and consistency of Admin build label
