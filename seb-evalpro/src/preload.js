@@ -1252,7 +1252,7 @@ function injectAdminBar() {
   document.body.prepend(bar);
   document.body.prepend(hotzone);
 
-  installAdminSettings({ipcRenderer,bar,button:bar.querySelector('#seb-evalpro-settings'),buildNumber:APP_BUILD_NUMBER,releaseVersion:APP_RELEASE_VERSION,author:appPackage.author});
+  installAdminSettings({ipcRenderer,bar,button:bar.querySelector('#seb-evalpro-settings'),buildNumber:APP_BUILD_NUMBER,releaseVersion:APP_RELEASE_VERSION,author:appPackage.kaloneoCreator});
   const adminButton = bar.querySelector('#seb-evalpro-admin');
   const candidateBadge = bar.querySelector('#seb-evalpro-candidate-badge');
   const bilanButton = bar.querySelector('#seb-evalpro-bilan');
