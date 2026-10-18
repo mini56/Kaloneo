@@ -9,7 +9,7 @@ assert.equal(builder.version,'26.15.3','NSIS template changed: audit it before s
 const target=path.join(root,'node_modules','app-builder-lib','templates','nsis','assistedInstaller.nsh');
 let source=fs.readFileSync(target,'utf8');
 const before='    !insertmacro skipPageIfUpdated\n    !insertmacro MUI_PAGE_DIRECTORY';
-const after='    !insertmacro skipPageIfUpdated\n    !undef MUI_PAGE_CUSTOMFUNCTION_PRE\n    !define MUI_PAGE_CUSTOMFUNCTION_PRE KaloneoDirectoryPre\n    !define MUI_PAGE_CUSTOMFUNCTION_SHOW KaloneoDirectoryShow\n    !insertmacro MUI_PAGE_DIRECTORY';
+const after="    !define MUI_PAGE_CUSTOMFUNCTION_PRE KaloneoDirectoryPre\n    !define MUI_PAGE_CUSTOMFUNCTION_SHOW KaloneoDirectoryShow\n    !insertmacro MUI_PAGE_DIRECTORY";
 if(source.includes(after)) {
  console.log('KALONEO_NSIS_DIRECTORY_PATCH=ALREADY_APPLIED');
 } else {
