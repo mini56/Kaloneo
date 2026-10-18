@@ -79,7 +79,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
       '<section class="settings-help" data-section="builder" hidden><div class="settings-help-head"><h3>Aide du Builder KALONÉO</h3><p>Mode d’emploi illustré de la création de tests</p></div>'+
       '<iframe title="Manuel du Builder" loading="lazy"></iframe></section>'+
       '<section data-section="about" hidden><div class="settings-intro"><h3>À propos de KALONÉO</h3><p>Informations sur la version installée et les ressources du programme.</p></div><dl class="settings-about">'+
-      '<div class="settings-property"><dt>Application</dt><dd>KALONÉO — SEB EvalPro</dd></div>'+ 
+      '<div class="settings-property"><dt>Application</dt><dd>KALONÉO</dd></div>'+ 
       '<div class="settings-property"><dt>Développeur</dt><dd id="kaloneo-setting-author"></dd></div>'+ 
       '<div class="settings-property"><dt>Version installée</dt><dd id="kaloneo-setting-version"></dd></div>'+ 
       '<div class="settings-property"><dt>Compilation</dt><dd id="kaloneo-setting-build"></dd></div>'+ 
