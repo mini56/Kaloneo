@@ -19,6 +19,7 @@ jobs:
     steps:
       - name: Checkout the original work branch only
         uses: actions/checkout@v4
+      # The corrected v0.0.156 package.json is parsed and validated before build.
       - name: R127 Build 132 is unique, R126 backup preserved and V1 unchanged
         shell: pwsh
         run: |
