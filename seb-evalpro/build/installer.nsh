@@ -53,6 +53,25 @@ Var SebBrandingFinishHandle
 # Keep previous binaries at the registered location until their uninstaller runs.
 !ifndef BUILD_UNINSTALLER
 
+# R133: This PRE callback runs BEFORE the standard NSIS directory text box
+# is created. A SHOW handler alone cannot reliably replace its initial text.
+# Only the exact original default folder is adjusted. The custom invisible
+# page restores the previous path before the built-in updater operates.
+Function KaloneoDirectoryPre
+  ${if} ${isUpdated}
+    Abort
+  ${endif}
+  StrCpy $R5 "$LOCALAPPDATA\Programs\seb-evalpro"
+  StrCpy $R6 "$LOCALAPPDATA\Programs\KALONEO"
+  ${If} $INSTDIR != $R5
+    StrCpy $R5 "$PROGRAMFILES64\seb-evalpro"
+    StrCpy $R6 "$PROGRAMFILES64\KALONEO"
+  ${EndIf}
+  ${If} $INSTDIR == $R5
+    StrCpy $INSTDIR "$R6"
+  ${EndIf}
+FunctionEnd
+
 Function KaloneoDirectoryShow
   # The install-mode variable belongs to NSIS multiUser.nsh (declared later).
   # Resolve the registered location directly to avoid forward-variable warnings.
