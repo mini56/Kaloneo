@@ -14,7 +14,7 @@ assert.match(cfg,/productName: "KALONÉO"/);
 assert.match(cfg,/appId: fr\.sauvegarde56\.sebevalpro\.kaloneo\.pilot22/);
 assert.match(cfg,/executableName: KALONEO/);
 assert.match(cfg,/shortcutName: "KALONÉO"/);
-assert.match(cfg,/artifactName: "KALONEO-Setup-0\.0\.155\.\$\{ext\}"/);
+assert.match(cfg,/artifactName: "KALONEO-Setup-0\.0\.157\.\$\{ext\}"/);
 assert.match(nsis,/!define SEB_BUILD_NUMBER "133"/);
 assert.match(nsis,/StrCpy \$R0 "\$LOCALAPPDATA\\Programs\\seb-evalpro"/);
 assert.match(nsis,/StrCpy \$R1 "\$LOCALAPPDATA\\Programs\\KALONEO"/);
