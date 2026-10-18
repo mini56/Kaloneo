@@ -206,7 +206,7 @@ function handleSaveResult(result) {
   if (document && document.body) {
     showTransferMessage(
       'Attention — sauvegarde',
-      message + '\n\nLes données déjà enregistrées restent conservées. SEB EvalPro réessaiera automatiquement.',
+      message + '\n\nLes données déjà enregistrées restent conservées. KALONÉO réessaiera automatiquement.',
       true
     ).catch(() => {});
   }
@@ -352,14 +352,14 @@ function createApplicationQuitDialog(activeCandidate) {
   return new Promise((resolve) => {
     const hasActiveCandidate = Boolean(activeCandidate);
     const message = hasActiveCandidate
-      ? 'Le parcours candidat en cours sera sauvegardé et restera actif. Au prochain démarrage, SEB EvalPro reprendra exactement sur la page du candidat en cours.'
-      : 'Aucun parcours candidat n’est en cours. SEB EvalPro va se fermer.';
+      ? 'Le parcours candidat en cours sera sauvegardé et restera actif. Au prochain démarrage, KALONÉO reprendra exactement sur la page du candidat en cours.'
+      : 'Aucun parcours candidat n’est en cours. KALONÉO va se fermer.';
 
     const backdrop = document.createElement('div');
     backdrop.id = 'seb-evalpro-quit-application-dialog';
     backdrop.innerHTML = `
-      <div class="seb-session-close-card" role="dialog" aria-modal="true" aria-label="Quitter SEB EvalPro">
-        <div class="seb-session-close-title">Quitter SEB EvalPro ?</div>
+      <div class="seb-session-close-card" role="dialog" aria-modal="true" aria-label="Quitter KALONÉO">
+        <div class="seb-session-close-title">Quitter KALONÉO ?</div>
         <div class="seb-session-close-text">${message}</div>
         <div class="seb-session-close-actions">
           <button type="button" id="seb-quit-application-cancel">Annuler</button>
@@ -402,7 +402,7 @@ function createSessionCloseDialog() {
       <div class="seb-session-close-card" role="dialog" aria-modal="true" aria-label="Fermer la session active">
         <div class="seb-session-close-title">Fermer la session active ?</div>
         <div class="seb-session-close-text">
-          SEB EvalPro va sauvegarder les données, finaliser le Replay et terminer définitivement le parcours candidat en cours. Le programme restera ouvert dans l’espace Administrateur.
+          KALONÉO va sauvegarder les données, finaliser le Replay et terminer définitivement le parcours candidat en cours. Le programme restera ouvert dans l’espace Administrateur.
         </div>
         <div class="seb-session-close-warning">Le parcours en cours ne pourra plus être repris. Son dossier et ses données restent conservés pour le bilan et l’export.</div>
         <div class="seb-session-close-actions">
@@ -801,7 +801,7 @@ function showTransferProgress(mode = 'export') {
   backdrop.id = 'seb-evalpro-transfer-progress';
   backdrop.innerHTML = `
     <div class="seb-transfer-progress-card" role="dialog" aria-modal="true" aria-label="${mode === 'import' ? 'Import en cours' : 'Export en cours'}">
-      <img class="seb-transfer-progress-brand" src="branding/seb-eval-pro-installer.png" alt="SEB EvalPro - Sauvegarde 56" />
+      <img class="seb-transfer-progress-brand" src="assets/kaloneo-logo-app.png" alt="KALONÉO — Au cœur d’un nouvel élan." />
       <div class="seb-transfer-progress-title">${mode === 'import' ? 'Import en cours depuis la clé USB…' : 'Export en cours vers la clé USB…'}</div>
       <div class="seb-transfer-progress-text">Merci de patienter.</div>
       <div class="seb-transfer-progress-track" aria-hidden="true">
@@ -1112,7 +1112,7 @@ function injectAdminBar() {
   bar.id = 'seb-evalpro-topbar';
   bar.innerHTML = `
     <button id="seb-evalpro-settings" type="button" hidden aria-label="Réglages internes de KALONÉO">⚙</button>
-    <div class="seb-evalpro-name">SEB EvalPro</div>
+    <div class="seb-evalpro-name">KALONÉO</div>
     <div id="seb-evalpro-build" class="seb-evalpro-build">${APP_BUILD_LABEL}</div>
     <div id="seb-evalpro-candidate-badge" class="seb-evalpro-candidate-badge" hidden></div>
     <div class="seb-evalpro-spacer"></div>
@@ -1314,12 +1314,12 @@ function injectAdminBar() {
       'seb-evalpro-bilan': 'Ouvre le bilan du candidat sélectionné.',
       'seb-evalpro-return': 'Ferme cette consultation et revient au dossier candidat.',
       'seb-evalpro-export-candidates': 'Copie les dossiers candidats vers une clé USB ou un dossier.',
-      'seb-evalpro-import-candidates': 'Importe dans SEB EvalPro des dossiers candidats provenant d’un autre poste.',
+      'seb-evalpro-import-candidates': 'Importe dans KALONÉO des dossiers candidats provenant d’un autre poste.',
       'seb-evalpro-tests-parcours': 'Ouvre la page de gestion des tests et des parcours KALONÉO.',
       'seb-evalpro-choose-parcours': 'Ouvre la bibliothèque des parcours, affiche leur contenu et choisit celui du prochain candidat.',
-      'seb-evalpro-show-privacy': 'Affiche l’écran d’accueil SEB EvalPro afin de masquer temporairement les informations affichées.',
+      'seb-evalpro-show-privacy': 'Affiche l’écran d’accueil KALONÉO afin de masquer temporairement les informations affichées.',
       'seb-evalpro-close-session': 'Termine définitivement le parcours candidat en cours et revient à l’espace Administrateur.',
-      'seb-evalpro-quit-application': 'Ferme SEB EvalPro. Un parcours encore actif est sauvegardé pour pouvoir être repris.',
+      'seb-evalpro-quit-application': 'Ferme KALONÉO. Un parcours encore actif est sauvegardé pour pouvoir être repris.',
       'seb-evalpro-replay': 'Ouvre le Replay du candidat sélectionné.',
       'seb-evalpro-results': 'Ouvre les résultats du candidat sélectionné.'
     };
@@ -1762,7 +1762,7 @@ function injectAdminBar() {
       }
       await showTransferMessage(
         'Import terminé',
-        `${result.total} dossier(s) candidat(s) détecté(s).\n${result.added} ajouté(s), ${result.updated || 0} mis à jour, ${result.skipped || 0} déjà présent(s) et ignoré(s).${result.trashSkipped ? `\n${result.trashSkipped} évaluation(s) déjà présente(s) dans la Corbeille : non réimportée(s). Restaurez-les depuis la Corbeille si nécessaire.` : ''}\n${result.verifiedFiles || 0} fichier(s) vérifié(s).\n\nDossier SEB EvalPro : ${result.destinationRoot}`
+        `${result.total} dossier(s) candidat(s) détecté(s).\n${result.added} ajouté(s), ${result.updated || 0} mis à jour, ${result.skipped || 0} déjà présent(s) et ignoré(s).${result.trashSkipped ? `\n${result.trashSkipped} évaluation(s) déjà présente(s) dans la Corbeille : non réimportée(s). Restaurez-les depuis la Corbeille si nécessaire.` : ''}\n${result.verifiedFiles || 0} fichier(s) vérifié(s).\n\nDossier KALONÉO : ${result.destinationRoot}`
       );
       return true;
     } catch (error) {
@@ -1832,7 +1832,7 @@ function injectAdminBar() {
       if (saved && saved.ok === false) {
         await showTransferMessage(
           'Fermeture impossible',
-          'La sauvegarde du parcours en cours n’a pas pu être confirmée. SEB EvalPro reste ouvert afin de ne perdre aucune donnée.',
+          'La sauvegarde du parcours en cours n’a pas pu être confirmée. KALONÉO reste ouvert afin de ne perdre aucune donnée.',
           true
         );
         scheduleHideBar();
@@ -1857,7 +1857,7 @@ function injectAdminBar() {
       scheduleSave();
       await showTransferMessage(
         'Fermeture impossible',
-        'SEB EvalPro n’a pas pu quitter. Le parcours reste ouvert et conservé.',
+        'KALONÉO n’a pas pu quitter. Le parcours reste ouvert et conservé.',
         true
       );
       scheduleHideBar();
@@ -1938,7 +1938,7 @@ function injectAdminBar() {
       return;
     }
 
-    // Fermer la session active termine le parcours candidat mais ne ferme jamais SEB EvalPro.
+    // Fermer la session active termine le parcours candidat mais ne ferme jamais KALONÉO.
     adminNavigationLeaving = true;
     await ipcRenderer.invoke('admin:open-candidate-browser').catch(() => false);
   });
@@ -2574,7 +2574,7 @@ function sebLocalAiEnsureAdminBar() {
   try {
     if (document.body) injectAdminBar();
   } catch (error) {
-    console.error('SEB EvalPro: impossible d’injecter la barre Administrateur', error);
+    console.error('KALONÉO: impossible d’injecter la barre Administrateur', error);
   }
 }
 
