@@ -55,22 +55,22 @@ Var SebBrandingFinishHandle
 !define MUI_PAGE_CUSTOMFUNCTION_SHOW KaloneoDirectoryShow
 
 Function KaloneoDirectoryShow
-  \${If} $installMode == "all"
+  ${If} $installMode == "all"
     StrCpy $R5 "$PROGRAMFILES64\seb-evalpro"
     StrCpy $R6 "$PROGRAMFILES64\KALONEO"
-    ReadRegStr $R7 HKLM "\${INSTALL_REGISTRY_KEY}" "InstallLocation"
-  \${Else}
+    ReadRegStr $R7 HKLM "${INSTALL_REGISTRY_KEY}" "InstallLocation"
+  ${Else}
     StrCpy $R5 "$LOCALAPPDATA\Programs\seb-evalpro"
     StrCpy $R6 "$LOCALAPPDATA\Programs\KALONEO"
-    ReadRegStr $R7 HKCU "\${INSTALL_REGISTRY_KEY}" "InstallLocation"
-  \${EndIf}
-  \${If} $R7 == $R5
-  \${AndIf} $INSTDIR == $R5
+    ReadRegStr $R7 HKCU "${INSTALL_REGISTRY_KEY}" "InstallLocation"
+  ${EndIf}
+  ${If} $R7 == $R5
+  ${AndIf} $INSTDIR == $R5
     GetDlgItem $R8 $HWNDPARENT 1019
-    \${If} $R8 != 0
-      SendMessage $R8 \${WM_SETTEXT} 0 "STR:$R6"
-    \${EndIf}
-  \${EndIf}
+    ${If} $R8 != 0
+      SendMessage $R8 ${WM_SETTEXT} 0 "STR:$R6"
+    ${EndIf}
+  ${EndIf}
 FunctionEnd
 
 !macro customPageAfterChangeDir
@@ -79,21 +79,21 @@ FunctionEnd
 
 Function KaloneoDirectoryPostPage
   # Invisible custom page after directory selection, before InstFiles.
-  \${If} $installMode == "all"
+  ${If} $installMode == "all"
     StrCpy $R5 "$PROGRAMFILES64\seb-evalpro"
     StrCpy $R6 "$PROGRAMFILES64\KALONEO"
-    ReadRegStr $R7 HKLM "\${INSTALL_REGISTRY_KEY}" "InstallLocation"
-  \${Else}
+    ReadRegStr $R7 HKLM "${INSTALL_REGISTRY_KEY}" "InstallLocation"
+  ${Else}
     StrCpy $R5 "$LOCALAPPDATA\Programs\seb-evalpro"
     StrCpy $R6 "$LOCALAPPDATA\Programs\KALONEO"
-    ReadRegStr $R7 HKCU "\${INSTALL_REGISTRY_KEY}" "InstallLocation"
-  \${EndIf}
-  \${If} $R7 == $R5
-  \${AndIf} $INSTDIR == $R6
+    ReadRegStr $R7 HKCU "${INSTALL_REGISTRY_KEY}" "InstallLocation"
+  ${EndIf}
+  ${If} $R7 == $R5
+  ${AndIf} $INSTDIR == $R6
     # The visible path is the final one; safely upgrade via the old
     # registered directory, then relocate it after the extraction.
     StrCpy $INSTDIR "$R5"
-  \${EndIf}
+  ${EndIf}
   Abort
 FunctionEnd
 !endif
