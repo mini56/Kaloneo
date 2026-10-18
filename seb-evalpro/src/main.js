@@ -241,7 +241,7 @@ function getKaloneoLibrary() {
       dataRoot: sebInternalRoot(),
       seedTestsRoot: path.join(__dirname, '..', 'app', 'web', 'kaltest', 'tests'),
       seedImageRoots:[
-        { root:path.join(__dirname, '..', 'app', 'web', 'imageqcm'), category:'Images exercices SEB EvalPro' },
+        { root:path.join(__dirname, '..', 'app', 'web', 'imageqcm'), category:'Images exercices KALONÉO' },
         { root:path.join(__dirname, '..', 'app', 'web', 'flacon'), category:'Images Stock' },
         { root:path.join(__dirname, '..', 'app', 'web', 'assets'), category:'Images KALONÉO' }
       ]
@@ -818,7 +818,7 @@ function showStartupSecurityError(error) {
     .msg{margin:18px 0;padding:14px;background:#fff5f5;border-left:4px solid #c00000;white-space:pre-wrap}
     .note{color:#555;font-size:14px}
   </style></head><body><div class="card">
-    <h1>SEB EvalPro ne peut pas accéder aux données sécurisées</h1>
+    <h1>KALONÉO ne peut pas accéder aux données sécurisées</h1>
     <p>Le programme a bien démarré, mais la protection générale des données candidat n'a pas pu être initialisée.</p>
     <div class="msg">${safeMessage}</div>
     <p><strong>Aucun dossier candidat n'a été supprimé ni remplacé.</strong></p>
