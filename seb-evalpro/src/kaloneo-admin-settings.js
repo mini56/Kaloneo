@@ -8,6 +8,8 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
   // Official assets shipped with the application. S56 credit is exclusive to À propos.
   const kaloneoLogoUrl=new URL('assets/kaloneo-logo-app.png',webRoot()).href;
   const sauvegarde56LogoUrl=new URL('sauvegarde56-logo.svg',webRoot()).href;
+  // Future structures can be added as records without changing the page layout.
+  const associatedStructures=[{name:'Sauvegarde 56',logo:sauvegarde56LogoUrl,alt:'Logo de Sauvegarde 56'}];
   button.textContent='';
   const icon=document.createElement('img');
   icon.className='seb-admin-settings-icon';icon.src=iconUrl;icon.width=28;icon.height=28;icon.alt='';
@@ -52,7 +54,11 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
           frame.src=new URL('kaloneo-builder/'+(tab==='admin'?'admin-help/':'help/')+'index.html?settings=1',webRoot()).href;
       }
     }
-    if(tab==='about')countLibraries();
+    if(tab==='about'){
+      const aboutSection=layer.querySelector('[data-section="about"]');
+      if(aboutSection)aboutSection.scrollTop=0;
+      countLibraries();
+    }
   }
   async function open(){
     if(layer||!await ipcRenderer.invoke('admin:status').catch(()=>false))return;
@@ -84,7 +90,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
       '<section data-section="about" hidden><div class="settings-intro"><h3>À propos de KALONÉO</h3><p>Informations sur la version installée et les ressources du programme.</p></div><div class="settings-about-brand"><img data-kaloneo-about-logo alt="KALONÉO — Au cœur d’un nouvel élan."></div><dl class="settings-about">'+
       '<div class="settings-property"><dt>Application</dt><dd>KALONÉO</dd></div>'+ 
       '<div class="settings-property"><dt>Créateur et développeur</dt><dd id="kaloneo-setting-author"></dd></div>'+
-      '<div class="settings-property settings-wide"><dt>Structure associée</dt><dd class="settings-structure-credit"><img data-sauvegarde56-about-logo alt="Logo de Sauvegarde 56"><span>Sauvegarde 56</span></dd></div>'+ 
+      '<div class="settings-property settings-wide"><dt>Structure associée :</dt><dd><ul class="settings-structure-list" data-associated-structures></ul></dd></div>'+ 
       '<div class="settings-property"><dt>Version installée</dt><dd id="kaloneo-setting-version"></dd></div>'+ 
       '<div class="settings-property"><dt>Compilation</dt><dd id="kaloneo-setting-build"></dd></div>'+ 
       '<div class="settings-property settings-wide"><dt>Fonctions incluses</dt><dd>Tests KALTEST, images, icônes, parcours, saisie candidat, notation, Résultats, Bilan, import et export.</dd></div>'+ 
@@ -97,12 +103,14 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
     style.textContent += `
 #seb-evalpro-settings-dialog .settings-header-actions{display:flex;align-items:center;gap:18px;flex:none}
 #seb-evalpro-settings-dialog .settings-header-logo{display:block;width:91px;height:57px;object-fit:contain}
-#seb-evalpro-settings-dialog .settings-about-brand{display:flex;justify-content:center;align-items:center;margin:0 0 24px;padding:0 12px}
-#seb-evalpro-settings-dialog .settings-about-brand img{display:block;width:min(270px,100%);height:auto;max-height:174px;object-fit:contain}
-#seb-evalpro-settings-dialog .settings-structure-credit{display:flex;align-items:center;flex-wrap:wrap;gap:18px}
-#seb-evalpro-settings-dialog .settings-structure-credit img{display:block;width:min(230px,100%);max-height:82px;object-fit:contain;object-position:left center;border-radius:6px}
-#seb-evalpro-settings-dialog .settings-structure-credit span{font-weight:600}
-@media(max-width:680px){#seb-evalpro-settings-dialog .settings-header-logo{width:64px;height:41px}#seb-evalpro-settings-dialog .settings-header-actions{gap:8px}#seb-evalpro-settings-dialog .settings-about-brand img{max-height:130px}}
+#seb-evalpro-settings-dialog .settings-about-brand{display:flex;justify-content:center;align-items:center;width:100%;max-width:940px;min-width:0;margin:0 0 22px;padding:14px 16px;background:#f3f8fb;border:1px solid #d6e7ef;border-radius:12px}
+#seb-evalpro-settings-dialog .settings-about-brand img{display:block;width:100%;height:auto;max-width:820px;max-height:320px;object-fit:contain}
+#seb-evalpro-settings-dialog .settings-structure-list{display:flex;flex-direction:column;gap:16px;list-style:none;margin:0;padding:0}
+#seb-evalpro-settings-dialog .settings-structure-item{display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0}
+#seb-evalpro-settings-dialog .settings-structure-item+.settings-structure-item{border-top:1px solid #d6e7ef;padding-top:16px}
+#seb-evalpro-settings-dialog .settings-structure-name{display:block;font-size:16px;font-weight:700;color:#1b4b65}
+#seb-evalpro-settings-dialog .settings-structure-item img{display:block;width:auto;height:auto;max-width:100%;max-height:90px;object-fit:contain;object-position:left center}
+@media(max-width:680px){#seb-evalpro-settings-dialog .settings-header-logo{width:64px;height:41px}#seb-evalpro-settings-dialog .settings-header-actions{gap:8px}#seb-evalpro-settings-dialog .settings-about-brand{padding:10px}#seb-evalpro-settings-dialog .settings-about-brand img{max-height:220px}}
 @media(max-width:520px){#seb-evalpro-settings-dialog .settings-header-logo{display:none}}
 `;
     layer.appendChild(style);
@@ -110,7 +118,19 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
     layer.querySelector('[data-settings-header-icon]').src=iconUrl;
     layer.querySelector('[data-kaloneo-header-logo]').src=kaloneoLogoUrl;
     layer.querySelector('[data-kaloneo-about-logo]').src=kaloneoLogoUrl;
-    layer.querySelector('[data-sauvegarde56-about-logo]').src=sauvegarde56LogoUrl;
+    const structureList=layer.querySelector('[data-associated-structures]');
+    for(const structure of associatedStructures){
+      const item=document.createElement('li');
+      item.className='settings-structure-item';
+      const name=document.createElement('strong');
+      name.className='settings-structure-name';
+      name.textContent=structure.name;
+      const image=document.createElement('img');
+      image.src=structure.logo;
+      image.alt=structure.alt;
+      item.append(name,image);
+      structureList.appendChild(item);
+    }
     layer.querySelector('#kaloneo-setting-author').textContent=author||'Non renseigné';
     layer.querySelector('#kaloneo-setting-version').textContent=releaseVersion||'Non renseignée';
     layer.querySelector('#kaloneo-setting-build').textContent='Build #'+buildNumber;
