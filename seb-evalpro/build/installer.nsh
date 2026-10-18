@@ -55,14 +55,15 @@ Var SebBrandingFinishHandle
 !define MUI_PAGE_CUSTOMFUNCTION_SHOW KaloneoDirectoryShow
 
 Function KaloneoDirectoryShow
-  ${If} $installMode == "all"
+  # The install-mode variable belongs to NSIS multiUser.nsh (declared later).
+  # Resolve the registered location directly to avoid forward-variable warnings.
+  StrCpy $R5 "$LOCALAPPDATA\Programs\seb-evalpro"
+  StrCpy $R6 "$LOCALAPPDATA\Programs\KALONEO"
+  ReadRegStr $R7 HKCU "${INSTALL_REGISTRY_KEY}" "InstallLocation"
+  ${If} $R7 != $R5
     StrCpy $R5 "$PROGRAMFILES64\seb-evalpro"
     StrCpy $R6 "$PROGRAMFILES64\KALONEO"
     ReadRegStr $R7 HKLM "${INSTALL_REGISTRY_KEY}" "InstallLocation"
-  ${Else}
-    StrCpy $R5 "$LOCALAPPDATA\Programs\seb-evalpro"
-    StrCpy $R6 "$LOCALAPPDATA\Programs\KALONEO"
-    ReadRegStr $R7 HKCU "${INSTALL_REGISTRY_KEY}" "InstallLocation"
   ${EndIf}
   ${If} $R7 == $R5
   ${AndIf} $INSTDIR == $R5
@@ -79,14 +80,15 @@ FunctionEnd
 
 Function KaloneoDirectoryPostPage
   # Invisible custom page after directory selection, before InstFiles.
-  ${If} $installMode == "all"
+  # The install-mode variable belongs to NSIS multiUser.nsh (declared later).
+  # Resolve the registered location directly to avoid forward-variable warnings.
+  StrCpy $R5 "$LOCALAPPDATA\Programs\seb-evalpro"
+  StrCpy $R6 "$LOCALAPPDATA\Programs\KALONEO"
+  ReadRegStr $R7 HKCU "${INSTALL_REGISTRY_KEY}" "InstallLocation"
+  ${If} $R7 != $R5
     StrCpy $R5 "$PROGRAMFILES64\seb-evalpro"
     StrCpy $R6 "$PROGRAMFILES64\KALONEO"
     ReadRegStr $R7 HKLM "${INSTALL_REGISTRY_KEY}" "InstallLocation"
-  ${Else}
-    StrCpy $R5 "$LOCALAPPDATA\Programs\seb-evalpro"
-    StrCpy $R6 "$LOCALAPPDATA\Programs\KALONEO"
-    ReadRegStr $R7 HKCU "${INSTALL_REGISTRY_KEY}" "InstallLocation"
   ${EndIf}
   ${If} $R7 == $R5
   ${AndIf} $INSTDIR == $R6
