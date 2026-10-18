@@ -54,6 +54,10 @@ Var SebBrandingFinishHandle
 !ifndef BUILD_UNINSTALLER
 
 Function KaloneoDirectoryShow
+  # R131 DIAGNOSTIC ONLY: prove whether Modern UI executes this callback.
+  FileOpen $R4 "$TEMP\kaloneo-r131-dirshow.txt" w
+  FileWrite $R4 "HOOK_ENTER: $INSTDIR$\r$\n"
+  FileClose $R4
   # The install-mode variable belongs to NSIS multiUser.nsh (declared later).
   # Resolve the registered location directly to avoid forward-variable warnings.
   StrCpy $R5 "$LOCALAPPDATA\Programs\seb-evalpro"
@@ -74,6 +78,9 @@ Function KaloneoDirectoryShow
     ${If} $R8 == 0
       GetDlgItem $R8 $HWNDPARENT 1019
     ${EndIf}
+    FileOpen $R4 "$TEMP\kaloneo-r131-dirshow.txt" a
+    FileWrite $R4 "MAPPING: old=$R5 new=$R6 hwnd=$R8 instdir=$INSTDIR$\r$\n"
+    FileClose $R4
     ${If} $R8 != 0
       SendMessage $R8 ${WM_SETTEXT} 0 "STR:$R6"
     ${EndIf}
@@ -182,6 +189,7 @@ FunctionEnd
   # Defining it globally was silently consumed by the welcome page.
   !ifndef MUI_PAGE_CUSTOMFUNCTION_SHOW
     !define MUI_PAGE_CUSTOMFUNCTION_SHOW KaloneoDirectoryShow
+    !echo "KALONEO_R131_MUI_DIRECTORY_SHOW_CALLBACK_ATTACHED"
   !endif
   ${If} $perUserInstallationFolder == "$LOCALAPPDATA\Programs\seb-evalpro"
     StrCpy $perUserInstallationFolder "$LOCALAPPDATA\Programs\KALONEO"
