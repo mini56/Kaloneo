@@ -104,6 +104,7 @@ jobs:
       - name: Candidate security, persistence and import/export
         run: npm run test:security
       # Interactive NSIS wizard must visibly show KALONEO during a real R125 upgrade.
+      # The UI callback detects the original installation through HKCU/HKLM before the NSIS mode variable is declared.
       - name: Build R127 Windows install only after all smoke tests pass
         run: npx electron-builder --win nsis --config build/kaloneo-r127-install-path.yml --publish never
       # Test the actual persistent profile, and preserve any pre-existing custom installation directory.
