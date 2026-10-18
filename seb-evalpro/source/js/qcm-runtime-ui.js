@@ -15,7 +15,7 @@
   if (!brand) {
     brand = document.createElement('div');
     brand.className = 'seb-calc-brand';
-    brand.textContent = 'Sauvegarde 56';
+    brand.textContent = 'KALONÉO';
     container.appendChild(brand);
   }
 
@@ -92,7 +92,7 @@
       requestAnimationFrame(placeInitial);
     };
   } else {
-    console.error('SEB EvalPro: fonction openCalculator absente au moment du patch flottant.');
+    console.error('KALONÉO : fonction openCalculator absente au moment du patch flottant.');
   }
 })();
 
