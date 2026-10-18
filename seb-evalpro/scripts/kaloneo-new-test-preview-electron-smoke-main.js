@@ -141,11 +141,15 @@ app.whenReady().then(async()=>{
       editableInputs:host?.querySelectorAll('input,select,textarea').length||0,
       historicalQuestion:host?.textContent.includes('Question beta')||false,
       imageLoaded:!!(image?.complete&&image.naturalWidth>0),
-      imageAlt:image?.alt||''
+      imageAlt:image?.alt||'',
+      candidateBrand:document.querySelector('#seb-evalpro-topbar .seb-evalpro-name')?.textContent?.trim()||'',
+      hasOldBrand:(document.body.innerText||'').includes('SEB EvalPro')
     };
   };
   const candidate=await win.webContents.executeJavaScript('('+candidateCheck.toString()+')()');
   assert.equal(candidate.id,definition.id,'Le candidat ne charge pas le test fictif');
+  assert.equal(candidate.candidateBrand,'KALONÉO','Barre candidat non renommée dans le vrai Electron');
+  assert.equal(candidate.hasOldBrand,false,'Ancienne marque encore visible dans le parcours');
   assert.equal(candidate.visible,true,'Écran candidat non visible');
   assert.equal(candidate.zoneCount,observed.zoneCount,'Les zones du candidat diffèrent de l’aperçu');
   assert.equal(candidate.horizontal,observed.horizontal,'Colonnes alignées différemment');
