@@ -357,7 +357,7 @@ function createReplayChooserDialog() {
           <div class="seb-replay-readonly">LECTURE SEULE · AUCUN RECALCUL</div>
         </div>
         <div class="seb-replay-body">
-          <div class="seb-replay-path">Documents\\SEB EvalPro\\parcours — les nouveaux parcours contiennent leurs propres diapositives figées et ne dépendent pas de la version actuelle.</div>
+          <div class="seb-replay-path">les archives locales des parcours — les nouveaux parcours contiennent leurs propres diapositives figées et ne dépendent pas de la version actuelle.</div>
           <div id="seb-replay-list">Chargement…</div>
         </div>
         <div class="seb-replay-actions"><button type="button" id="seb-replay-close">Fermer</button></div>
