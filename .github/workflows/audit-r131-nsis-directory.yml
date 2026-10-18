@@ -1,0 +1,60 @@
+name: "KALONÉO R131 - Diagnostic Windows NSIS sans publication"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/audit-r131-nsis-directory.yml'
+concurrency:
+  group: kaloneo-r131-nsis-diagnostic-${{ github.ref }}
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  diagnostic-only:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate the exact candidate chameleon Windows ICO
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check Pillow==11.3.0
+          python scripts/kaloneo-r125-branding.py
+      - name: Install app dependencies
+        run: npm install --no-audit --no-fund
+      - name: Prepare original web application with no tests modified
+        shell: pwsh
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          npm run prepare:web
+      - name: Compile unique diagnostic Windows #136 Setup without releasing
+        run: npx electron-builder --win nsis --config build/kaloneo-r131-nsis-diagnostic.yml --publish never
+      - name: Windows GUI trace - previous R125 directory to new KALONEO
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $install=Join-Path (Resolve-Path dist) 'KALONEO-Setup-0.0.160.exe'
+          if(-not(Test-Path $install)){throw 'Diagnostic installer missing'}
+          $previous=Join-Path $env:RUNNER_TEMP 'r125-existing'
+          New-Item -ItemType Directory -Force -Path $previous | Out-Null
+          gh release download seb-kaloneo-r125-identity-test --dir $previous --pattern 'KALONEO-Setup-0.0.154.exe'
+          if($LASTEXITCODE -ne 0){throw 'R125 unavailable'}
+          $old=Join-Path $previous 'KALONEO-Setup-0.0.154.exe'
+          $oldProc=Start-Process -FilePath $old -ArgumentList '/S /currentuser' -Wait -PassThru
+          if($oldProc.ExitCode -ne 0){throw 'Cannot establish genuine previous installation'}
+          $legacy=Join-Path $env:LOCALAPPDATA 'Programs\seb-evalpro'
+          if(-not(Test-Path $legacy)){throw 'Baseline old path absent'}
+          Write-Host "DIAGNOSTIC_OLD_INSTALL=$legacy"
+          & ./scripts/kaloneo-r127-interactive-wizard-windows-smoke.ps1 -Setup $install
+          if($LASTEXITCODE -ne 0){throw 'Interactive Windows installer must not show old path'}
+          Write-Host 'R131_DIRECTORY_CALLBACK=SUCCESS; no release published'
