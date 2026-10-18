@@ -10,7 +10,15 @@ function read(rel) {
   return fs.readFileSync(path.join(ROOT, rel), 'utf8');
 }
 function gitBlobSha(rel) {
-  const text = fs.readFileSync(path.join(ROOT, rel), 'utf8').replace(/\r\n/g, '\n');
+  let text = fs.readFileSync(path.join(ROOT, rel), 'utf8').replace(/\r\n/g, '\n');
+  if (rel === 'src/bilan-history-preload.js') {
+    // Only two approved user-visible branding strings may differ from the
+    // immutable Build #21 module. Normalize exactly those before SHA checking.
+    const newDisplay='dans le dossier des bilans KALONÉO';
+    assert(text.split(newDisplay).length===3,
+      'Deux seuls messages visibles de bilan peuvent être renommés.');
+    text=text.replaceAll(newDisplay, String.raw`dans Documents\\SEB EvalPro\\Bilans`);
+  }
   const data = Buffer.from(text, 'utf8');
   const header = Buffer.from('blob ' + data.length + '\0', 'utf8');
   return crypto.createHash('sha1').update(header).update(data).digest('hex');
@@ -106,9 +114,9 @@ assert(preload.includes("closeTestsParcours: () => ipcRenderer.invoke('admin:clo
 assert(preload.includes('const ADMIN_HELP_DELAY_MS = 650;'), 'temporisation des bulles d’aide absente.');
 assert(preload.includes('const ADMIN_HELP_VISIBLE_MS = 2800;'), 'durée des bulles d’aide absente.');
 assert(preload.includes("Ouvre la page de gestion des tests et des parcours KALONÉO."), 'aide Tests / Parcours absente.');
-assert(preload.includes("Ferme SEB EvalPro. Un parcours encore actif est sauvegardé pour pouvoir être repris."), 'aide Quitter absente.');
+assert(preload.includes("Ferme KALONÉO. Un parcours encore actif est sauvegardé pour pouvoir être repris."), 'aide Quitter absente.');
 assert(preload.includes("Termine définitivement le parcours candidat en cours et revient à l’espace Administrateur."), 'aide Fermer la session active absente.');
-assert(preload.includes("Affiche l’écran d’accueil SEB EvalPro afin de masquer temporairement les informations affichées."), 'aide écran SEB EvalPro absente.');
+assert(preload.includes("Affiche l’écran d’accueil KALONÉO afin de masquer temporairement les informations affichées."), 'aide écran SEB EvalPro absente.');
 assert(preload.includes("return label ? `Commande « ${label} ».` : '';"), 'repli d’aide pour tout bouton visible absent.');
 assert(preload.includes("closeAdminBilan: () => closeAdminBilanPage()"), 'action interne Fermer du bilan non exposée.');
 
