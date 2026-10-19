@@ -15,5 +15,15 @@
   }
   input.addEventListener('input',search);
   document.getElementById('help-print').addEventListener('click',()=>window.print());
+  const zoom=document.getElementById('help-image-dialog');
+  const large=document.getElementById('help-image-large');
+  document.getElementById('close-image-dialog').addEventListener('click',()=>zoom.close());
+  document.querySelectorAll('figure.admin-photo img').forEach(img=>{
+    img.tabIndex=0;img.setAttribute('role','button');
+    img.setAttribute('aria-label',img.alt+' — agrandir');
+    const open=()=>{large.src=img.currentSrc||img.src;large.alt=img.alt;zoom.showModal();};
+    img.addEventListener('click',open);
+    img.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();open();}});
+  });
   search();
 }());

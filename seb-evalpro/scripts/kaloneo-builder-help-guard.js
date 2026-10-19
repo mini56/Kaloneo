@@ -73,15 +73,19 @@ for(const label of optionLabels){
   if(!normalized.includes(normalize(stem)))
     fail('Nouveau type de bloc sans explication : '+label);
 }
-// Des schémas locaux, lisibles hors ligne, accompagnent les manipulations.
-const diagrams=[...page.matchAll(/<img\b[^>]*src="(figures\/[^"]+\.svg)"[^>]*>/g)];
-if(diagrams.length<6)fail('Manuel non illustré');
-for(const [,relative] of diagrams){
-  const file=path.resolve(help,relative);
-  if(!file.startsWith(path.resolve(help)+path.sep))fail('Lien image hors du dossier aide');
-  const xml=present(file);
-  if(!xml.includes('<svg ')||!xml.includes('viewBox=')||!xml.includes('</svg>'))
-    fail('Schéma SVG invalide : '+relative);
+// Les 12 captures validées doivent exister et rester hors ligne.
+const screenshots=[...page.matchAll(/<img\b[^>]*src="(captures\/B\d{2}\.png)"[^>]*>/g)];
+const unique=new Set(screenshots.map(m=>m[1]));
+for(let i=1;i<=12;i++){
+ const name='captures/B'+String(i).padStart(2,'0')+'.png';
+ if(!unique.has(name))fail('Capture Builder absente : '+name);
+}
+for(const name of unique){
+ const file=path.resolve(help,name);
+ if(!file.startsWith(path.resolve(help)+path.sep))fail('Capture hors dossier');
+ const png=fs.readFileSync(file);
+ if(png.length<1000||!png.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))
+   fail('Capture PNG invalide : '+name);
 }
 if(!page.includes('link rel="stylesheet" href="help.css"')||
    !page.includes('src="help.js"')||css.length<1200)
@@ -92,4 +96,4 @@ const compiled=path.join(root,'seb-evalpro','app','web','kaloneo-builder','help'
 if(fs.existsSync(path.join(root,'seb-evalpro','app','web','kaloneo-builder','test-builder.html'))&&
    !fs.existsSync(compiled))fail('Guide absent du Builder compilé');
 console.log('KALONEO_BUILDER_HELP: OK — '+articles.length+' rubriques, '+
-  documentedControls.size+' commandes documentées, '+diagrams.length+' schémas hors ligne');
+  documentedControls.size+' commandes documentées, '+unique.size+' captures réelles hors ligne');

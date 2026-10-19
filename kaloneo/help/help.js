@@ -89,6 +89,16 @@
     if(document.getElementById(id)?.hidden){search.value='';update();}
     selectActive(id);
   });
+  const zoom=document.getElementById('help-image-dialog');
+  const zoomImage=document.getElementById('help-image-large');
+  document.getElementById('close-image-dialog').addEventListener('click',()=>zoom.close());
+  document.querySelectorAll('figure.help-photo img').forEach(img=>{
+    img.setAttribute('tabindex','0');img.setAttribute('role','button');
+    img.setAttribute('aria-label',img.alt+' — agrandir');
+    const open=()=>{zoomImage.src=img.currentSrc||img.src;zoomImage.alt=img.alt;zoom.showModal();};
+    img.addEventListener('click',open);
+    img.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open();}});
+  });
   update();
   if(location.hash){
     const id=decodeURIComponent(location.hash.slice(1));
