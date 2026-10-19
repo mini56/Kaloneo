@@ -71,7 +71,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
       '<button type="button" data-tab="passwords" aria-selected="true">Mots de passe</button>'+
       '<button type="button" data-tab="admin">Aide du programme</button>'+
       '<button type="button" data-tab="builder">Aide du Builder</button>'+
-      '<button type="button" data-tab="about">À propos</button></nav>'+
+      '<button type="button" data-tab="about">À propos</button><div class="settings-nav-brand"><img data-kaloneo-about-logo alt="Logo KALONÉO"></div></nav>'+
       '<div class="settings-main" role="region" aria-label="Contenu des réglages">'+
       '<section data-section="passwords"><div class="settings-intro"><h3>Gestion des accès</h3>'+
       '<p>Modifiez séparément le mot de passe Administrateur ou Développeur, après vérification de celui actuellement utilisé.</p></div>'+
@@ -87,7 +87,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
       '<iframe title="Manuel administrateur" loading="lazy"></iframe></section>'+
       '<section class="settings-help" data-section="builder" hidden><div class="settings-help-head"><h3>Aide du Builder KALONÉO</h3><p>Mode d’emploi illustré de la création de tests</p></div>'+
       '<iframe title="Manuel du Builder" loading="lazy"></iframe></section>'+
-      '<section data-section="about" hidden><div class="settings-intro"><h3>À propos de KALONÉO</h3><p>Informations sur la version installée et les ressources du programme.</p></div><div class="settings-about-brand"><img data-kaloneo-about-logo alt="KALONÉO — Au cœur d’un nouvel élan."></div><dl class="settings-about">'+
+      '<section data-section="about" hidden><div class="settings-intro"><h3>À propos de KALONÉO</h3><p>Informations sur la version installée et les ressources du programme.</p></div><dl class="settings-about">'+
       '<div class="settings-property"><dt>Application</dt><dd>KALONÉO</dd></div>'+ 
       '<div class="settings-property"><dt>Créateur et développeur</dt><dd id="kaloneo-setting-author"></dd></div>'+
       '<div class="settings-property settings-wide"><dt>Structure associée :</dt><dd><ul class="settings-structure-list" data-associated-structures></ul></dd></div>'+ 
@@ -102,14 +102,27 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
     style.textContent += "\n/* R120: isolation of the settings panel from global Admin main styles. */\n#seb-evalpro-settings-dialog .settings-main{display:block;flex:1 1 0%;width:auto;max-width:none;min-width:0;min-height:0;padding:0;margin:0;align-self:stretch;align-items:stretch;justify-content:flex-start;text-align:left;border:0;box-shadow:none;border-radius:0;background:#fff}\n#seb-evalpro-settings-dialog .settings-main>section{width:100%;max-width:none;min-width:0;align-items:stretch;justify-content:flex-start;text-align:left}\n#seb-evalpro-settings-dialog .settings-main>section.settings-help{display:flex;align-items:stretch;width:100%;max-width:none}\n#seb-evalpro-settings-dialog .settings-help iframe{width:100%;max-width:none;min-width:0;align-self:stretch}\n#seb-evalpro-settings-dialog .settings-intro{max-width:850px;margin:0 0 25px;padding-bottom:18px;border-bottom:1px solid #dbe7ee;text-align:left}\n#seb-evalpro-settings-dialog .settings-intro h3{text-align:left;margin:0 0 12px;font-size:24px}\n#seb-evalpro-settings-dialog .settings-intro p{margin:0;color:#52738a;font-size:15px;line-height:1.6;text-align:left}\n#seb-evalpro-settings-dialog form{max-width:850px;margin:0;text-align:left}\n#seb-evalpro-settings-dialog form label{text-align:left}\n#seb-evalpro-settings-dialog form p.settings-note{margin:0;padding:13px 17px;background:#edf6fa;border-left:4px solid #2181a9;border-radius:6px;text-align:left}\n#seb-evalpro-settings-dialog #kaloneo-setting-status:empty{display:none}\n#seb-evalpro-settings-dialog #kaloneo-setting-status:not(:empty){background:#eaf7f1;color:#185b43;border-radius:7px;padding:12px 16px}\n#seb-evalpro-settings-dialog .settings-about{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;max-width:940px;width:100%;margin:0}\n#seb-evalpro-settings-dialog .settings-property{display:block;min-width:0;background:#f3f8fb;border:1px solid #d6e7ef;border-radius:12px;padding:18px 20px;text-align:left}\n#seb-evalpro-settings-dialog .settings-property.settings-wide{grid-column:1/-1}\n#seb-evalpro-settings-dialog .settings-property dt{margin:0 0 8px;text-align:left;font-weight:800;font-size:12px;letter-spacing:.06em;color:#578096}\n#seb-evalpro-settings-dialog .settings-property dd{margin:0;text-align:left;font-size:16px;line-height:1.55;color:#1b4b65}\n#seb-evalpro-settings-dialog .settings-nav button{transition:none!important}\n#seb-evalpro-settings-dialog .settings-nav button[aria-selected=true]{background:#0571a6!important;color:#fff!important;border-color:#0571a6!important}\n@media(max-width:680px){#seb-evalpro-settings-dialog .settings-about{grid-template-columns:1fr}#seb-evalpro-settings-dialog .settings-property.settings-wide{grid-column:1}}\n";
     style.textContent += `
 #seb-evalpro-settings-dialog .settings-header-actions{display:flex;align-items:center;gap:18px;flex:none}
-#seb-evalpro-settings-dialog .settings-about-brand{display:flex;justify-content:flex-start;align-items:center;width:100%;max-width:940px;min-width:0;margin:0 0 22px;padding:14px 16px;background:#f3f8fb;border:1px solid #d6e7ef;border-radius:12px}
-#seb-evalpro-settings-dialog .settings-about-brand img{display:block;width:100%;height:auto;max-width:820px;max-height:320px;object-fit:contain;object-position:left center}
+#seb-evalpro-settings-dialog .settings-nav-brand{flex:0 0 auto;width:100%;min-width:0;padding:10px 5px 8px;text-align:center}
+#seb-evalpro-settings-dialog .settings-nav-brand img{display:block;width:100%;height:auto;max-height:200px;object-fit:contain;object-position:center top}
 #seb-evalpro-settings-dialog .settings-structure-list{display:flex;flex-direction:column;gap:16px;list-style:none;margin:0;padding:0}
 #seb-evalpro-settings-dialog .settings-structure-item{display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0}
 #seb-evalpro-settings-dialog .settings-structure-item+.settings-structure-item{border-top:1px solid #d6e7ef;padding-top:16px}
 #seb-evalpro-settings-dialog .settings-structure-name{display:block;font-size:16px;font-weight:700;color:#1b4b65}
 #seb-evalpro-settings-dialog .settings-structure-item img{display:block;width:auto;height:auto;max-width:100%;max-height:90px;object-fit:contain;object-position:left center}
-@media(max-width:680px){#seb-evalpro-settings-dialog .settings-header-actions{gap:8px}#seb-evalpro-settings-dialog .settings-about-brand{padding:10px}#seb-evalpro-settings-dialog .settings-about-brand img{max-height:220px}}
+@media(max-width:680px){#seb-evalpro-settings-dialog .settings-header-actions{gap:8px}#seb-evalpro-settings-dialog .settings-nav-brand{padding:8px 4px}}
+/* R140: this logo is a real child of the LEFT navigation, even on narrow windows. */
+@media(max-width:850px){
+#seb-evalpro-settings-dialog .settings-layout{flex-direction:row}
+#seb-evalpro-settings-dialog .settings-nav{width:190px;flex:0 0 190px;flex-direction:column;flex-wrap:nowrap;border-right:1px solid #d0e0e9;border-bottom:0;padding:12px 8px;gap:6px}
+#seb-evalpro-settings-dialog .settings-nav-caption{display:block;margin:0 6px 6px}
+#seb-evalpro-settings-dialog .settings-nav button{font-size:13px;padding:11px}
+#seb-evalpro-settings-dialog .settings-main{min-width:0}
+}
+@media(max-width:520px){
+#seb-evalpro-settings-dialog .settings-nav{width:140px;flex-basis:140px;padding:9px 5px}
+#seb-evalpro-settings-dialog .settings-nav button{font-size:12px;padding:9px 6px}
+#seb-evalpro-settings-dialog .settings-main>section{padding:16px}
+}
 
 `;
     layer.appendChild(style);
