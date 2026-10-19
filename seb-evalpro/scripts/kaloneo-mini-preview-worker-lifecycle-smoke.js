@@ -2,6 +2,8 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+// Fournir au handler extrait la même dépendance que main.js en production.
+const {inspectCandidateOverflow}=require('../src/kaloneo-layout-diagnostics');
 // Exécuter le vrai handler IPC de main.js avec des moteurs Electron simulés
 // sur des définitions inédites (ni ID ni V1 du catalogue utilisés).
 const main=fs.readFileSync(path.join(__dirname,'..','src','main.js'),'utf8');
@@ -31,7 +33,7 @@ const harness=[
   '  getCurrentDefinition:()=>kaloneoMiniPreviewDefinition',
   '};'
 ].join('\n');
-const build=new Function('path','directory','makeWorker',harness);
+const build=new Function('path','directory','makeWorker','inspectCandidateOverflow',harness);
 let working=0,maximum=0;
 const workers=[];
 const makeWorker=()=>{
@@ -68,7 +70,7 @@ const makeWorker=()=>{
   workers.push(worker);
   return worker;
 };
-const engine=build(path,path.join(__dirname,'..','src'),makeWorker);
+const engine=build(path,path.join(__dirname,'..','src'),makeWorker,inspectCandidateOverflow);
 (async()=>{
   const fixtures=[0,1,2,3].map(i=>({
     id:'future-test-'+i,title:'Test inédit '+i,presentation:{layout:'50-50'}
