@@ -15,7 +15,7 @@ OUT.mkdir(parents=True,exist_ok=True)
 LOGO=Image.open(SOURCE).convert("RGBA")
 assert LOGO.size==(300,188),f"Official KALONÉO logo changed; inspect first: {LOGO.size}"
 VERSION=json.loads((ROOT/"package.json").read_text(encoding="utf-8"))
-assert VERSION["sebBuildNumber"]==145, "R140 Build #145 is the unique checked release number"
+assert VERSION["sebBuildNumber"]==146, "R140 Build #146 is the unique checked release number"
 BLUE="#004e70"
 ORANGE="#f58422"
 
