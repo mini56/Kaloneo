@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Checkout the original work branch only
         uses: actions/checkout@v4
-      # The corrected v0.0.156 package.json is parsed and validated before build.
+      # Revalidate current Build #145 and the permanent Windows identity before production of installer.
       - name: R140 Build 145 is unique, R139 fallback preserved and V1 unchanged
         shell: pwsh
         run: |
@@ -82,7 +82,7 @@ jobs:
       - name: Build candidate and admin HTML with original KALONÉO branding
         run: npm run prepare:web
       # Generic installer/version audits now accept the dedicated About credits configuration.
-      # The Admin build-number guard now recognizes the R140 About-left Setup config.
+      # R140 source and static guards must pass before launching the exact Electron DOM check.
       - name: Check all candidate/admin screens and consistency of Admin build label
         shell: pwsh
         run: |
