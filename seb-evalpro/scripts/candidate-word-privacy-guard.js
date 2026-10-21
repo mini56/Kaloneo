@@ -18,5 +18,11 @@ const open=catalog.slice(catalog.indexOf("ipcMain.handle('candidate-catalog:open
   catalog.indexOf("ipcMain.handle('candidate-catalog:sync'"));
 assert(!open.includes("fs.writeFileSync(temp,plain)"),
   'Copie de Word dechiffre dans TEMP Windows toujours autorisee.');
+assert(catalog.includes("if (/\\.sebdoc$/i.test(safe))"),
+  'Le catalogue administrateur ne sait pas ouvrir les Word historiques chiffres.');
+assert(catalog.includes('decryptLocalFileBuffer(protectedHtml)'),
+  'Le bilan ancien n est pas dechiffre seulement en memoire.');
+assert(catalog.includes('protectPlainBilanDocxBuffer(decryptLocalFileBuffer(sealed),password)'),
+  'Les DOCX historiques ne sont pas protegés avant ouverture Word.');
 console.log('PRIVATE_WORD_FILENAME=OK');
 console.log('NO_DECRYPTED_WORD_TEMP_ON_OPEN=OK');

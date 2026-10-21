@@ -243,6 +243,13 @@ async function buildBilanDocxBuffer(payload, password = '') {
   return Buffer.from(encrypted);
 }
 
+async function protectPlainBilanDocxBuffer(buffer,password) {
+  const secret=String(password||'');
+  if(!secret)throw new Error('Mot de passe administrateur indispensable.');
+  const { encryptOoxmlPackage }=await officeCrypto();
+  return Buffer.from(await encryptOoxmlPackage(new Uint8Array(buffer),secret));
+}
+
 async function decryptBilanDocxBuffer(buffer, password) {
   const { decryptOoxmlPackage }=await officeCrypto();
   const plain=await decryptOoxmlPackage(new Uint8Array(buffer),String(password||''));
@@ -262,6 +269,7 @@ async function verifyBilanDocxPassword(buffer, password) {
 module.exports={
   buildBilanDocx,
   buildBilanDocxBuffer,
+  protectPlainBilanDocxBuffer,
   decryptBilanDocxBuffer,
   isEncryptedBilanDocxBuffer,
   verifyBilanDocxPassword

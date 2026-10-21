@@ -3,8 +3,8 @@ const path = require('path');
 const crypto = require('crypto');
 const { shell } = require('electron');
 const { getEditionCapabilities } = require('./edition');
-const { encodeJson } = require('./candidate-data-crypto');
-const { verifyBilanDocxPassword, isEncryptedBilanDocxBuffer } = require('./bilan-docx-main');
+const { encodeJson, isEncryptedLocalFileBuffer, decryptLocalFileBuffer } = require('./candidate-data-crypto');
+const { verifyBilanDocxPassword, isEncryptedBilanDocxBuffer, protectPlainBilanDocxBuffer } = require('./bilan-docx-main');
 const {
   readJson,
   ensureDir,
@@ -587,7 +587,8 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     if (!fs.existsSync(dir)) return [];
     cleanupDuplicateWordExports(candidateDir);
     return fs.readdirSync(dir, { withFileTypes:true })
-      .filter((e) => e.isFile() && /^Evaluation_.+\.docx?$/i.test(e.name))
+      .filter((e) => e.isFile() && /^Evaluation_.+\.(?:docx?|sebdoc|sebword)$/i.test(e.name))
+      .filter((e) => !/\.sebword$/i.test(e.name) || !fs.existsSync(path.join(dir,e.name.replace(/\.sebword$/i,'.docx'))))
       .map((e) => e.name)
       .sort((a,b) => a.localeCompare(b, 'fr', { sensitivity:'base' }));
   }
@@ -1122,11 +1123,39 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     const record = findById(candidateId);
     if (!record) return { ok:false, error:'Candidat introuvable.' };
     const safe = path.basename(String(filename || ''));
-    if (!/^Evaluation_.+\.docx?$/i.test(safe)) return { ok:false, error:'Type de fichier non autorisé.' };
+    if (!/^Evaluation_.+\.(?:docx?|sebdoc|sebword)$/i.test(safe)) return { ok:false, error:'Type de fichier non autorisé.' };
     const full = path.join(record.candidateDir, 'bilan', 'exports', safe);
     if (!fs.existsSync(full)) return { ok:false, error:'Fichier résultat introuvable.' };
 
     try {
+      if (/\.sebdoc$/i.test(safe)) {
+        const protectedHtml=fs.readFileSync(full);
+        if(!isEncryptedLocalFileBuffer(protectedHtml))return {ok:false,error:'Bilan non chiffre : ouverture refusee.'};
+        const html=decryptLocalFileBuffer(protectedHtml).toString('utf8');
+        if(!html.includes('<table'))return {ok:false,error:'Bilan historique invalide.'};
+        return {ok:true,protected:true,inApp:true,html};
+      }
+      if (/\.sebword$/i.test(safe)) {
+        const sealed=fs.readFileSync(full);
+        if(!isEncryptedLocalFileBuffer(sealed))return {ok:false,error:'Word ancien non chiffre : ouverture refusee.'};
+        const password=String(typeof getAdminDocumentPassword==='function' ? getAdminDocumentPassword() : '');
+        if(!password)return {ok:false,error:'Mot de passe administrateur indispensable pour convertir ce Word.'};
+        const outName=safe.replace(/\.sebword$/i,'.docx');
+        const outPath=path.join(record.candidateDir,'bilan','exports',outName);
+        if(!fs.existsSync(outPath)) {
+          const protectedDocx=await protectPlainBilanDocxBuffer(decryptLocalFileBuffer(sealed),password);
+          if(!await verifyBilanDocxPassword(protectedDocx,password))
+            throw new Error('Verification du Word protege impossible.');
+          const temp=outPath+'.'+process.pid+'.tmp';
+          try{fs.writeFileSync(temp,protectedDocx,{flag:'wx'});fs.renameSync(temp,outPath)}
+          finally{try{fs.rmSync(temp,{force:true})}catch(_){}}
+        }
+        const existing=fs.readFileSync(outPath);
+        if(!await verifyBilanDocxPassword(existing,password))
+          return {ok:false,error:'Le mot de passe du Word est different du mot de passe administrateur actuel.'};
+        const error=await shell.openPath(outPath);
+        return error?{ok:false,error}:{ok:true,protected:true};
+      }
       if (/\.docx$/i.test(safe)) {
         const encrypted=fs.readFileSync(full);
         if (await isEncryptedBilanDocxBuffer(encrypted)) {
@@ -1141,8 +1170,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
           return error ? {ok:false,error} : {ok:true,protected:true};
         }
       }
-      const error = await shell.openPath(full);
-      return error ? { ok:false, error } : { ok:true, protected:false };
+      return {ok:false,error:'Ancien document non protege : migration de confidentialite requise.'};
     } catch (error) {
       return {ok:false,error:'Ouverture du document Word impossible : '+String(error&&error.message?error.message:error)};
     }

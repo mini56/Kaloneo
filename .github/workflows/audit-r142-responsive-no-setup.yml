@@ -19,6 +19,8 @@ on:
       - 'seb-evalpro/scripts/candidate-word-privacy-guard.js'
       - 'seb-evalpro/src/candidate-private-documents.js'
       - 'seb-evalpro/src/bilan-history-main.js'
+      - 'seb-evalpro/src/bilan-docx-main.js'
+      - 'seb-evalpro/src/candidate-catalog-preload.js'
       - 'seb-evalpro/scripts/candidate-historical-privacy-smoke.js'
       - 'seb-evalpro/scripts/candidate-private-transfer-smoke.js'
       - 'seb-evalpro/scripts/build21-admin-foundation-guard.js'

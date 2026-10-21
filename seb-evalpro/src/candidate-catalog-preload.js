@@ -185,6 +185,29 @@ function confirmCandidateDelete(item) {
   });
 }
 
+function showProtectedLegacyWord(html) {
+  document.getElementById('seb-cc-private-word')?.remove();
+  const overlay=document.createElement('div');
+  overlay.id='seb-cc-private-word';
+  overlay.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.7);display:flex;justify-content:center;align-items:center;padding:16px';
+  const panel=document.createElement('section');
+  panel.style.cssText='background:#fff;width:min(1200px,98vw);height:min(900px,95vh);display:flex;flex-direction:column;border-radius:10px;overflow:hidden';
+  const header=document.createElement('div');
+  header.style.cssText='padding:10px 16px;display:flex;justify-content:space-between;align-items:center;color:#123047';
+  header.textContent='Bilan historique — consultation protegee dans KALONEO';
+  const close=document.createElement('button');
+  close.type='button';close.textContent='Fermer';close.addEventListener('click',()=>overlay.remove());
+  header.appendChild(close);
+  const viewer=document.createElement('iframe');
+  // Iframe sans scripts ni meme origine : le contenu Word HTML reste isole.
+  viewer.setAttribute('sandbox','');
+  viewer.setAttribute('title','Bilan historique en lecture seule');
+  viewer.style.cssText='width:100%;flex:1;border:0;background:#fff';
+  viewer.srcdoc=String(html||'');
+  panel.appendChild(header);panel.appendChild(viewer);overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+}
+
 async function openCandidateDetail(candidateId, onChanged) {
   const old = document.getElementById('seb-candidate-detail');
   if (old) old.remove();
@@ -314,6 +337,7 @@ async function openCandidateDetail(candidateId, onChanged) {
       open.addEventListener('click', async () => {
         const opened = await ipcRenderer.invoke('candidate-catalog:open-export', candidateId, filename);
         if (!opened || !opened.ok) alert((opened && opened.error) || 'Ouverture du fichier impossible.');
+        else if(opened.inApp && opened.html)showProtectedLegacyWord(opened.html);
       });
       row.lastElementChild.appendChild(open);
       exports.appendChild(row);
