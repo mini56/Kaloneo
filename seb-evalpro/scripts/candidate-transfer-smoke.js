@@ -158,6 +158,11 @@ try {
 
   const importedCandidate1 = records.find((record) => String(record.candidateId) === 'candidate-1');
   assert(importedCandidate1, 'Le candidat 1 importé est introuvable.');
+  const {isEncryptedLocalFileBuffer:secureFile,decryptLocalFileBuffer:restoreFile}=
+    require('../src/candidate-data-crypto');
+  const importedAttachment=fs.readFileSync(path.join(importedCandidate1.candidateDir,'replay','probe.txt'));
+  assert(secureFile(importedAttachment),'Les pieces jointes candidates ne doivent pas rester en clair.');
+  assert.strictEqual(restoreFile(importedAttachment).toString('utf8'),'replay');
   const histories=fs.readdirSync(path.join(importedCandidate1.candidateDir,'bilan','historique'));
   assert(histories.length===1 && /^BILAN_CAND-[A-F0-9]{32}\.json$/.test(histories[0]),
     'Les noms des anciens bilans doivent etre rendus opaques au moment de l import.');

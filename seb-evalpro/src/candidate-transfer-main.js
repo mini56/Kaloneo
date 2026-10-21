@@ -780,7 +780,10 @@ function createCandidateTransfer(options = {}) {
           }else if(inReplayImages){
             fs.writeFileSync(target,encryptLocalFileBuffer(data));
           }else{
-            fs.writeFileSync(target, data);
+            // Un fichier non classe peut contenir du texte libre candidat :
+            // il reste transportable par .seb mais ne sera jamais lisible
+            // directement dans l'Explorateur sur le PC destinataire.
+            fs.writeFileSync(target,encryptLocalFileBuffer(data));
           }
         } else {
           throw new Error('Type de fichier de transfert invalide.');
