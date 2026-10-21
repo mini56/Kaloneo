@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Checkout the original work branch only
         uses: actions/checkout@v4
-      # Revalidate current Build #146 and the permanent Windows identity before production of installer.
+      # Revalidate current Build #147 and the permanent Windows identity before production of installer.
       - name: R142 Build 147 unique; R141 fallback and V1 protected
         shell: pwsh
         run: |
@@ -164,7 +164,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $setup=Join-Path (Resolve-Path dist) 'KALONEO-Setup-0.0.171.exe'
-          if(-not(Test-Path $setup)){throw 'Expected R141 installer missing'}
+          if(-not(Test-Path $setup)){throw 'Expected R142 installer missing'}
           $backupDir=Join-Path $env:RUNNER_TEMP 'r125-setup'
           New-Item -ItemType Directory -Force -Path $backupDir | Out-Null
           gh release download seb-kaloneo-r125-identity-test --dir $backupDir --pattern 'KALONEO-Setup-0.0.154.exe'
