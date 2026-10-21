@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const zlib = require('zlib');
 const { encodeJson, encryptLocalFileBuffer, decryptLocalFileBuffer, isEncryptedLocalFileBuffer } = require('./candidate-data-crypto');
+const { computeArchiveIntegrity } = require('./replay-archive-integrity');
 const {
   readJson,
   ensureDir,
@@ -705,6 +706,34 @@ function createCandidateTransfer(options = {}) {
     return exportCandidates(selectedUsbPath, password, candidateIds);
   }
 
+
+  function repairLocallyReencryptedReplayFiles(rootDir) {
+    const stack = [path.join(rootDir,'replay')];
+    while (stack.length) {
+      const folder = stack.pop();
+      if (!fs.existsSync(folder)) continue;
+      for (const entry of fs.readdirSync(folder,{withFileTypes:true})) {
+        if (entry.isDirectory()) stack.push(path.join(folder,entry.name));
+      }
+      const file = path.join(folder,'manifest.json');
+      if (!fs.existsSync(file)) continue;
+      const manifest = readJson(file);
+      if (!manifest || manifest.type !== 'SEB_EVALPRO_PARCOURS_ARCHIVE' ||
+          !Array.isArray(manifest.slides) || Number(manifest.schemaVersion) !== 2) continue;
+      for (const slide of manifest.slides) {
+        const name = path.basename(String(slide.file||''));
+        if (!name || name !== slide.file) throw new Error('Nom Replay importe invalide.');
+        const image = fs.readFileSync(path.join(folder,'slides',name));
+        if (/\.sebimg$/i.test(name) && !isEncryptedLocalFileBuffer(image)) {
+          throw new Error('Image Replay importee non protegee : '+name);
+        }
+        slide.sha256 = crypto.createHash('sha256').update(image).digest('hex');
+      }
+      manifest.integritySha256 = computeArchiveIntegrity(manifest);
+      writeJson(file,manifest);
+    }
+  }
+
   function unpackCandidatePayload(payload, targetDir) {
     const temp = targetDir + '.seb-import-' + process.pid + '-' + Date.now();
     if (fs.existsSync(temp)) fs.rmSync(temp, { recursive:true, force:true });
@@ -733,6 +762,7 @@ function createCandidateTransfer(options = {}) {
         }
       }
       ensureCandidateShape(temp);
+      repairLocallyReencryptedReplayFiles(temp);
       const manifest = readJson(path.join(temp, 'manifest.json'));
       if (!manifest || String(manifest.candidateId || '') !== String(payload.candidateId || '')) {
         throw new Error('Identité technique du candidat incohérente dans le transfert.');

@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { listCandidateDirs, selectCandidate } = require('./candidate-folder-utils');
 const { readJsonFile, encodeJson, encryptLocalFileBuffer, decryptLocalFileBuffer, isEncryptedLocalFileBuffer } = require('./candidate-data-crypto');
+const { computeArchiveIntegrity } = require('./replay-archive-integrity');
 
 module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlocked, getActiveCandidate = null, buildNumber, dataRoot = null }) {
   const BUILD = String(buildNumber || 'DEV');
@@ -235,34 +236,6 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
         } catch (_) {}
       }
     } catch (_) {}
-  }
-
-  function archiveIntegrityPayload(manifest) {
-    return {
-      schemaVersion: manifest.schemaVersion,
-      type: manifest.type,
-      readOnly: manifest.readOnly,
-      archiveMode: manifest.archiveMode,
-      futureVersionIndependent: manifest.futureVersionIndependent,
-      build: manifest.build,
-      archivedAt: manifest.archivedAt,
-      candidate: manifest.candidate,
-      snapshot: manifest.snapshot,
-      slides: (manifest.slides || []).map((slide) => ({
-        order: slide.order,
-        pageKey: slide.pageKey,
-        title: slide.title,
-        file: slide.file,
-        capturedAt: slide.capturedAt,
-        width: slide.width,
-        height: slide.height,
-        sha256: slide.sha256
-      }))
-    };
-  }
-
-  function computeArchiveIntegrity(manifest) {
-    return sha256Json(archiveIntegrityPayload(manifest));
   }
 
   function readManifest(folderPath) {

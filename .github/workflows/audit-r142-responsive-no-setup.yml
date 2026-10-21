@@ -11,6 +11,11 @@ on:
       - 'seb-evalpro/build/kaloneo-r142-responsive.yml'
       - '.github/workflows/build-r142-kaloneo-responsive.yml'
       - 'seb-evalpro/src/main.js'
+      - 'seb-evalpro/src/replay-main.js'
+      - 'seb-evalpro/src/replay-archive-integrity.js'
+      - 'seb-evalpro/src/candidate-data-crypto.js'
+      - 'seb-evalpro/src/candidate-transfer-main.js'
+      - 'seb-evalpro/scripts/candidate-private-transfer-smoke.js'
       - 'seb-evalpro/src/preload.js'
       - 'seb-evalpro/scripts/kaloneo-preview-resolution-r142-smoke.js'
       - 'seb-evalpro/scripts/kaloneo-builder-preview-electron-smoke-main.js'
@@ -105,7 +110,10 @@ jobs:
           npx electron --no-sandbox scripts/full-pilot-journey-smoke-main.js
           if($LASTEXITCODE -ne 0){throw 'Full candidate journey failed'}
       - name: Security, candidate data, import and export
-        run: npm run test:security
+        run: |
+          npm run test:security
+          node scripts/candidate-private-transfer-smoke.js
+          node scripts/replay-direct-candidate-storage-smoke.js
       - name: No installer published
         shell: pwsh
         run: |

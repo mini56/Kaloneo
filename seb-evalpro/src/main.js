@@ -1129,7 +1129,9 @@ ipcMain.handle('admin:import-candidates', async (_event, password) => {
     }
     try { _event.sender.send('admin:import-progress', { state:'started' }); } catch (_) {}
     const result = getCandidateTransfer().importAll(selection.filePaths[0], password);
-    return { ok: true, ...result };
+    const privacy = candidateReplayHandlers.migrateStoredReplayImages();
+    if (privacy.errors.length) console.warn('KALONEO : Replay importes a proteger :', privacy.errors.length);
+    return { ok: true, ...result, replayPrivacy:privacy };
   } catch (error) {
     return { ok: false, error: error && error.message ? error.message : String(error) };
   }
