@@ -3,9 +3,11 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const registerCandidateReplay = require('../src/replay-main');
+const { configureLocalKey, readJsonFile, isEncryptedLocalFileBuffer, decryptLocalFileBuffer, clearLocalKey } = require('../src/candidate-data-crypto');
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'seb-evalpro-replay-direct-'));
 const userData = path.join(root, 'userData');
+configureLocalKey(Buffer.alloc(32,23));
 const storageRoot = path.join(userData, 'storage');
 const candidateDir = path.join(storageRoot, 'Candidats', 'CAND-TESTREPLAY18');
 fs.mkdirSync(path.join(candidateDir, 'donnees'), { recursive:true });
@@ -109,10 +111,14 @@ const token = '12345678-1234-1234-1234-123456789018';
     assert(fs.existsSync(manifestPath), 'manifest.json Replay absent après la capture.');
     assert(fs.existsSync(slidesDir), 'Dossier slides absent après la capture.');
 
-    let manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    let manifest = readJsonFile(manifestPath);
     assert.strictEqual(manifest.replayStatus, 'EN_COURS', 'Le Replay doit être marqué EN_COURS pendant le parcours.');
     assert.strictEqual(manifest.slides.length, 1, 'Une diapositive doit être enregistrée.');
-    assert(fs.existsSync(path.join(slidesDir, manifest.slides[0].file)), 'PNG Replay absent du dossier candidat.');
+    assert(fs.existsSync(path.join(slidesDir, manifest.slides[0].file)), 'Image Replay absente du dossier candidat.');
+    assert(/\.sebimg$/i.test(manifest.slides[0].file),'Le nom du replay doit utiliser .sebimg.');
+    const encryptedImage=fs.readFileSync(path.join(slidesDir,manifest.slides[0].file));
+    assert(isEncryptedLocalFileBuffer(encryptedImage),'Le replay ne doit pas etre lisible dans Explorer.');
+    assert(decryptLocalFileBuffer(encryptedImage).equals(png),'Le replay chiffre doit rester lisible dans KALONEO.');
 
     const second = await captureHandler({ sender }, {
       token,
@@ -122,7 +128,7 @@ const token = '12345678-1234-1234-1234-123456789018';
       viewport:{ width:1200, height:800 }
     });
     assert(second && second.ok, 'Deuxième capture Replay refusée.');
-    manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    manifest = readJsonFile(manifestPath);
     assert.strictEqual(manifest.slides.length, 2, 'Le Replay doit s’enrichir au fur et à mesure.');
 
     const pendingRoot = path.join(userData, 'replay-pending');
@@ -139,7 +145,7 @@ const token = '12345678-1234-1234-1234-123456789018';
     assert(finalResult && finalResult.ok, 'La mise à jour finale du Replay doit réussir sans déplacer les images.');
     assert.strictEqual(finalResult.filename, replayDirs[0], 'La fin du parcours doit conserver le même dossier Replay.');
 
-    manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    manifest = readJsonFile(manifestPath);
     assert.strictEqual(manifest.replayStatus, 'TERMINE', 'Le manifeste peut être marqué TERMINE à la fin.');
     assert.strictEqual(manifest.slides.length, 2, 'Aucune image Replay ne doit être perdue à la fin.');
 
@@ -157,6 +163,7 @@ const token = '12345678-1234-1234-1234-123456789018';
     console.log('REPLAY_GROWS_AS_PAGES_ARE_CAPTURED: OK');
     console.log('REPLAY_NEVER_BLOCKS_PARCOURS_CLOSE: OK');
   } finally {
+    clearLocalKey();
     fs.rmSync(root, { recursive:true, force:true });
   }
 })().catch((error) => {

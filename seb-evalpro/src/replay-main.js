@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { listCandidateDirs, selectCandidate } = require('./candidate-folder-utils');
-const { readJsonFile, encodeJson } = require('./candidate-data-crypto');
+const { readJsonFile, encodeJson, encryptLocalFileBuffer, decryptLocalFileBuffer, isEncryptedLocalFileBuffer } = require('./candidate-data-crypto');
 
 module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlocked, getActiveCandidate = null, buildNumber, dataRoot = null }) {
   const BUILD = String(buildNumber || 'DEV');
@@ -275,7 +275,7 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
       if (computeArchiveIntegrity(manifest) !== String(manifest.integritySha256 || '')) return false;
       for (const slide of manifest.slides || []) {
         const name = path.basename(String(slide.file || ''));
-        if (!name || name !== slide.file || !name.toLowerCase().endsWith('.png')) return false;
+        if (!name || name !== slide.file || !/\.(png|sebimg)$/i.test(name)) return false;
         const full = path.join(folderPath, 'slides', name);
         if (!fs.existsSync(full)) return false;
         const actual = sha256Buffer(fs.readFileSync(full));
@@ -367,14 +367,16 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
       const order = existing && Number.isFinite(Number(existing.order))
         ? Number(existing.order)
         : (manifest.slides || []).length + 1;
-      const file = existing && existing.file
-        ? path.basename(existing.file)
-        : `${String(order).padStart(3, '0')}_${safePart(pageKey, 'PAGE').slice(0, 70)}.png`;
+      const previousFile = existing && existing.file ? path.basename(existing.file) : '';
+      const file = previousFile && /\.sebimg$/i.test(previousFile)
+        ? previousFile
+        : `${String(order).padStart(3, '0')}_${safePart(pageKey, 'PAGE').slice(0, 70)}.sebimg`;
 
       const replayFolder = liveReplayFolder(candidateDir, token);
       const slidesDir = path.join(replayFolder, 'slides');
       ensureDir(slidesDir);
-      atomicWriteReplayFile(path.join(slidesDir, file), png);
+      const protectedImage = encryptLocalFileBuffer(png);
+      atomicWriteReplayFile(path.join(slidesDir, file), protectedImage);
 
       const slide = {
         order,
@@ -384,7 +386,7 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
         capturedAt: new Date().toISOString(),
         width: Number(size.width || 0),
         height: Number(size.height || 0),
-        sha256: sha256Buffer(png)
+        sha256: sha256Buffer(protectedImage)
       };
       const slides = Array.isArray(manifest.slides) ? manifest.slides.slice() : [];
       const existingIndex = slides.findIndex((item) => String(item.pageKey || '') === pageKey);
@@ -398,6 +400,9 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
       manifest.slides = slides;
       manifest.replayStatus = 'EN_COURS';
       const written = writeLiveReplayManifest(candidateDir, token, manifest);
+      if (previousFile && previousFile !== file && /\.png$/i.test(previousFile)) {
+        try { fs.rmSync(path.join(slidesDir, previousFile), { force:true }); } catch (_) {}
+      }
 
       return { ok:true, pageKey, order, file, filename:written.folderName, storedInCandidate:true };
     } catch (error) {
@@ -498,8 +503,9 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
         const src = path.join(pendingDir(token), srcName);
         if (!srcName || !fs.existsSync(src)) continue;
         const buffer = fs.readFileSync(src);
-        const outName = `${String(slides.length + 1).padStart(3, '0')}_${safePart(source.pageKey, 'PAGE').slice(0, 70)}.png`;
-        fs.writeFileSync(path.join(slidesDir, outName), buffer);
+        const outName = `${String(slides.length + 1).padStart(3, '0')}_${safePart(source.pageKey, 'PAGE').slice(0, 70)}.sebimg`;
+        const protectedImage = encryptLocalFileBuffer(buffer);
+        fs.writeFileSync(path.join(slidesDir, outName), protectedImage);
         slides.push({
           order: slides.length + 1,
           pageKey: String(source.pageKey || ''),
@@ -508,7 +514,7 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
           capturedAt: String(source.capturedAt || new Date().toISOString()),
           width: Number(source.width || 0),
           height: Number(source.height || 0),
-          sha256: sha256Buffer(buffer)
+          sha256: sha256Buffer(protectedImage)
         });
       }
       if (!slides.length) {
@@ -615,7 +621,7 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
     const record = candidateRecordById(candidateId);
     const name = path.basename(String(requestedName || ''));
     const file = path.basename(String(requestedFile || ''));
-    if (!record || !name || !file || !file.toLowerCase().endsWith('.png')) return { ok:false, error:'Diapositive invalide.' };
+    if (!record || !name || !file || !/\.(png|sebimg)$/i.test(file)) return { ok:false, error:'Diapositive invalide.' };
     try {
       const folder = path.join(record.candidateDir, 'replay', name);
       const manifest = readManifest(folder);
@@ -625,7 +631,8 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
       if (!slide) return { ok:false, error:'Diapositive absente du manifeste.' };
       const buffer = fs.readFileSync(path.join(folder, 'slides', file));
       if (sha256Buffer(buffer) !== String(slide.sha256 || '')) return { ok:false, corruption:true, error:'ATTENTION : diapositive corrompue.' };
-      return { ok:true, dataUrl:`data:image/png;base64,${buffer.toString('base64')}`, slide };
+      const shown = isEncryptedLocalFileBuffer(buffer) ? decryptLocalFileBuffer(buffer) : buffer;
+      return { ok:true, dataUrl:`data:image/png;base64,${shown.toString('base64')}`, slide };
     } catch (error) {
       return { ok:false, error:error && error.message ? error.message : String(error) };
     }
@@ -735,7 +742,7 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
     if (!getAdminUnlocked()) return { ok: false, error: 'Accès administrateur requis.' };
     const name = path.basename(String(requestedName || ''));
     const file = path.basename(String(requestedFile || ''));
-    if (!name || !file || !file.toLowerCase().endsWith('.png')) return { ok: false, error: 'Diapositive invalide.' };
+    if (!name || !file || !/\.(png|sebimg)$/i.test(file)) return { ok: false, error: 'Diapositive invalide.' };
     try {
       const folder = path.join(parcoursDir(), name);
       const manifest = readManifest(folder);
@@ -746,7 +753,7 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
       if (sha256Buffer(buffer) !== String(slide.sha256 || '')) return { ok: false, error: 'Diapositive corrompue.' };
       return {
         ok: true,
-        dataUrl: `data:image/png;base64,${buffer.toString('base64')}`,
+        dataUrl: `data:image/png;base64,${(isEncryptedLocalFileBuffer(buffer) ? decryptLocalFileBuffer(buffer) : buffer).toString('base64')}`,
         slide
       };
     } catch (error) {
@@ -754,5 +761,71 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
     }
   });
 
+
+  // Migration des replays historiques sans perdre les archives existantes.
+  // Ne jamais ecraser un PNG ancien avant verification de l'image protegee.
+  function migrateStoredReplayImages() {
+    const report = { migrated:0, archives:0, errors:[] };
+    const roots = [path.join(storageRoot, 'Candidats'),path.join(storageRoot, 'Corbeille'),
+      path.join(storageRoot, 'Admin'),path.join(storageRoot, 'parcours')];
+    const stack = roots.filter(dir => fs.existsSync(dir));
+    while (stack.length) {
+      const folder = stack.pop();
+      let entries;
+      try { entries = fs.readdirSync(folder, { withFileTypes:true }); }
+      catch (error) { report.errors.push({folder,error:String(error.message||error)}); continue; }
+      const manifestPath = path.join(folder,'manifest.json');
+      if (fs.existsSync(manifestPath)) {
+        const manifest = readJsonFile(manifestPath);
+        if (manifest && manifest.type === TYPE && Array.isArray(manifest.slides)) {
+          report.archives++;
+          const oldSlides = manifest.slides.filter(slide => /\.png$/i.test(String(slide.file||'')));
+          if (oldSlides.length) {
+            try {
+              if (!verifyArchiveDirectory(folder,manifest)) throw new Error('Archive Replay invalide avant migration.');
+              const slides = manifest.slides.map(slide => ({...slide}));
+              const obsolete = [];
+              for (const slide of slides) {
+                if (!/\.png$/i.test(String(slide.file||''))) continue;
+                const previous = path.join(folder,'slides',slide.file);
+                const original = fs.readFileSync(previous);
+                const plain = isEncryptedLocalFileBuffer(original) ? decryptLocalFileBuffer(original) : original;
+                const name = slide.file.replace(/\.png$/i,'.sebimg');
+                const target = path.join(folder,'slides',name);
+                let protectedImage;
+                if (fs.existsSync(target)) {
+                  protectedImage = fs.readFileSync(target);
+                  if (!isEncryptedLocalFileBuffer(protectedImage) ||
+                      !decryptLocalFileBuffer(protectedImage).equals(plain)) throw new Error('Conflit Replay : '+name);
+                } else {
+                  protectedImage = encryptLocalFileBuffer(plain);
+                  atomicWriteReplayFile(target,protectedImage);
+                  if (!decryptLocalFileBuffer(fs.readFileSync(target)).equals(plain)) throw new Error('Controle de chiffrement Replay echoue.');
+                }
+                slide.file = name;
+                slide.sha256 = sha256Buffer(protectedImage);
+                obsolete.push(previous);
+              }
+              const next = {...manifest,slides};
+              next.integritySha256 = computeArchiveIntegrity(next);
+              atomicWriteReplayFile(manifestPath,encodeJson(next),'utf8');
+              if (!verifyArchiveDirectory(folder,readManifest(folder))) throw new Error('Archive Replay invalide apres migration.');
+              for (const file of obsolete) {
+                try { fs.rmSync(file,{force:true}); }
+                catch (error) { report.errors.push({folder,error:'PNG original non retire : '+String(error.message||error)}); }
+              }
+              report.migrated += obsolete.length;
+            } catch (error) {
+              report.errors.push({folder,error:String(error.message||error)});
+            }
+          }
+        }
+      }
+      for (const entry of entries) if (entry.isDirectory() && !entry.isSymbolicLink()) stack.push(path.join(folder,entry.name));
+    }
+    return report;
+  }
+
   cleanupOldPending();
+  return { migrateStoredReplayImages };
 };

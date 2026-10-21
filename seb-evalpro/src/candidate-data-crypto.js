@@ -4,6 +4,8 @@ const crypto = require('crypto');
 
 const LOCAL_PREFIX = 'SEBLOCAL1:';
 const LOCAL_AAD = Buffer.from('SEB-EvalPro/local-json/v1', 'utf8');
+const FILE_AAD = Buffer.from('SEB-EvalPro/local-file/v1', 'utf8');
+const FILE_MAGIC = Buffer.from('SEBLOCALFILE1:', 'ascii');
 let localKey = null;
 
 function configureLocalKey(key) {
@@ -27,17 +29,17 @@ function requireLocalKey() {
   return localKey;
 }
 
-function encryptLocalBuffer(plain) {
+function encryptLocalBuffer(plain, aad = LOCAL_AAD) {
   const key = requireLocalKey();
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-  cipher.setAAD(LOCAL_AAD);
+  cipher.setAAD(aad);
   const encrypted = Buffer.concat([cipher.update(Buffer.from(plain)), cipher.final()]);
   const tag = cipher.getAuthTag();
   return Buffer.concat([iv, tag, encrypted]);
 }
 
-function decryptLocalBuffer(payload) {
+function decryptLocalBuffer(payload, aad = LOCAL_AAD) {
   const key = requireLocalKey();
   const buffer = Buffer.from(payload);
   if (buffer.length < 29) throw new Error('Donnée candidat chiffrée invalide.');
@@ -45,14 +47,28 @@ function decryptLocalBuffer(payload) {
   const tag = buffer.subarray(12, 28);
   const encrypted = buffer.subarray(28);
   const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
-  decipher.setAAD(LOCAL_AAD);
+  decipher.setAAD(aad);
   decipher.setAuthTag(tag);
   return Buffer.concat([decipher.update(encrypted), decipher.final()]);
 }
 
+// Protection des fichiers binaires candidats, avec une cle Windows propre au PC.
+function encryptLocalFileBuffer(value) {
+  return Buffer.concat([FILE_MAGIC, encryptLocalBuffer(Buffer.from(value), FILE_AAD)]);
+}
+function isEncryptedLocalFileBuffer(value) {
+  const buffer = Buffer.from(value);
+  return buffer.length >= FILE_MAGIC.length && buffer.subarray(0, FILE_MAGIC.length).equals(FILE_MAGIC);
+}
+function decryptLocalFileBuffer(value) {
+  const buffer = Buffer.from(value);
+  if (!isEncryptedLocalFileBuffer(buffer)) throw new Error('Fichier candidat non chiffre.');
+  return decryptLocalBuffer(buffer.subarray(FILE_MAGIC.length), FILE_AAD);
+}
+
 function encodeJson(value) {
   const plain = Buffer.from(JSON.stringify(value, null, 2), 'utf8');
-  if (!hasLocalKey()) return plain.toString('utf8');
+  if (!hasLocalKey()) throw new Error('Enregistrement candidat refuse : cle locale indisponible.');
   return LOCAL_PREFIX + encryptLocalBuffer(plain).toString('base64');
 }
 
@@ -121,6 +137,10 @@ function migrateJsonTree(root) {
 
 module.exports = {
   LOCAL_PREFIX,
+  FILE_MAGIC,
+  encryptLocalFileBuffer,
+  decryptLocalFileBuffer,
+  isEncryptedLocalFileBuffer,
   configureLocalKey,
   clearLocalKey,
   hasLocalKey,

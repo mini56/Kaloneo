@@ -649,6 +649,8 @@ function createWindow() {
     backgroundColor: '#ffffff',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      // Partition sans persist: empêche le stockage Chromium candidat sur disque.
+      partition: 'kaloneo-private-session',
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
@@ -873,6 +875,9 @@ function startApplication() {
 
     setSplashProgress(16, 'Vérification de la protection des données…');
     initializeCandidateSecurity();
+    const replayProtection = candidateReplayHandlers.migrateStoredReplayImages();
+    if (replayProtection.errors.length) console.warn('KALONEO : migration Replay incomplete :', replayProtection.errors.length);
+    else console.log('KALONEO : images Replay protegees :', replayProtection.migrated);
     ensureSebDocumentsFolders();
   } catch (error) {
     showStartupSecurityError(error);
@@ -1602,6 +1607,7 @@ function getKaloneoMiniPreviewWorker() {
     backgroundColor:'#ffffff',
     webPreferences:{
       preload:path.join(__dirname,'preload.js'),
+      partition:'kaloneo-private-preview',
       contextIsolation:true,nodeIntegration:false,sandbox:false,
       backgroundThrottling:false,devTools:false,
       offscreen:true
@@ -1837,7 +1843,7 @@ ipcMain.handle('ai:rewrite-synthesis', async () => {
 ipcMain.handle('ai:cancel-current', () => ({ ok:true, cancelled:false, offline:true, integrated:true }));
 
 // SEB_CANDIDATE_REPLAY_PROTO_MAIN
-require('./replay-main')({
+const candidateReplayHandlers = require('./replay-main')({
   app,
   ipcMain,
   getAdminUnlocked: () => adminSessionUnlocked,

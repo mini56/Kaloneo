@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const zlib = require('zlib');
-const { encodeJson } = require('./candidate-data-crypto');
+const { encodeJson, encryptLocalFileBuffer, decryptLocalFileBuffer, isEncryptedLocalFileBuffer } = require('./candidate-data-crypto');
 const {
   readJson,
   ensureDir,
@@ -377,7 +377,15 @@ function createCandidateTransfer(options = {}) {
           if (value == null) throw new Error('Fichier candidat JSON illisible : ' + rel);
           entries.push({ type:'json', rel, data:Buffer.from(JSON.stringify(value), 'utf8').toString('base64') });
         } else {
-          entries.push({ type:'file', rel, data:fs.readFileSync(full).toString('base64') });
+          const raw = fs.readFileSync(full);
+          if (isEncryptedLocalFileBuffer(raw)) {
+            // La cle Windows reste sur le poste. Le clair n'existe qu'en memoire,
+            // puis est chiffre dans l'enveloppe USB protegee par mot de passe.
+            const plain = decryptLocalFileBuffer(raw);
+            entries.push({ type:'secure-file', rel, data:plain.toString('base64') });
+          } else {
+            entries.push({ type:'file', rel, data:raw.toString('base64') });
+          }
         }
       }
     };
@@ -557,7 +565,7 @@ function createCandidateTransfer(options = {}) {
     for (const item of payload.entries) {
       const rel = safeTransferRelative(item && item.rel);
       if (item.type === 'dir') continue;
-      if (!['json','file'].includes(item.type)) throw new Error('Type de fichier de transfert invalide.');
+      if (!['json','file','secure-file'].includes(item.type)) throw new Error('Type de fichier de transfert invalide.');
       if (files.has(rel)) throw new Error('Fichier dupliqué dans le transfert : ' + rel);
       files.set(rel, item);
       if (item.type === 'json') {
@@ -716,6 +724,8 @@ function createCandidateTransfer(options = {}) {
           try { value = JSON.parse(data.toString('utf8')); }
           catch (_) { throw new Error('JSON de transfert invalide : ' + rel); }
           writeJson(target, value);
+        } else if (item.type === 'secure-file') {
+          fs.writeFileSync(target, encryptLocalFileBuffer(data));
         } else if (item.type === 'file') {
           fs.writeFileSync(target, data);
         } else {
