@@ -6,7 +6,7 @@ const path=require('path');
 const {configureLocalKey,clearLocalKey,writeJsonFile,readJsonFile,
   isEncryptedLocalFileBuffer,decryptLocalFileBuffer}=require('../src/candidate-data-crypto');
 const {createCandidateTransfer}=require('../src/candidate-transfer-main');
-const {ensurePortableCandidateWords}=require('../src/candidate-word-portability');
+const {ensurePortableCandidateWords,persistSealedSidecar}=require('../src/candidate-word-portability');
 const {buildBilanDocxBuffer,protectPlainBilanDocxBuffer,decryptBilanDocxBuffer,
   isEncryptedBilanDocxBuffer,verifyBilanDocxPassword}=require('../src/bilan-docx-main');
 const root=fs.mkdtempSync(path.join(os.tmpdir(),'kaloneo-word-cross-pc-'));
@@ -44,6 +44,11 @@ const root=fs.mkdtempSync(path.join(os.tmpdir(),'kaloneo-word-cross-pc-'));
   const sidecarPath=docxPath.replace(/\.docx$/i,'.sebword');
   const sidecarA=fs.readFileSync(sidecarPath);
   assert(isEncryptedLocalFileBuffer(sidecarA));
+  // Le deuxieme enregistrement d'un bilan sur Windows doit remplacer l'ancien
+  // compagnon sans laisser de copie en clair et en conservant les donnees.
+  persistSealedSidecar(sidecarPath,decryptLocalFileBuffer(sidecarA));
+  assert(isEncryptedLocalFileBuffer(fs.readFileSync(sidecarPath)));
+  assert(decryptLocalFileBuffer(fs.readFileSync(sidecarPath)).equals(decryptLocalFileBuffer(sidecarA)));
   const plainA=decryptLocalFileBuffer(sidecarA);
   assert(plainA.subarray(0,2).toString()==='PK');
   const exporter=createCandidateTransfer({dataRoot:a,documentsPath:path.join(root,'PC-A','Documents')});

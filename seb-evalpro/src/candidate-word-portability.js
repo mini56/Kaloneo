@@ -23,10 +23,23 @@ function persistSealedSidecar(target,plaintext){
     const verified=fs.readFileSync(target);
     if(!isEncryptedLocalFileBuffer(verified)||!decryptLocalFileBuffer(verified).equals(Buffer.from(plaintext)))
       throw new Error('Verification de la sauvegarde Word portable impossible.');
-    if(hasBackup){fs.rmSync(backup,{force:true});hasBackup=false}
+    if(hasBackup) {
+      try{fs.rmSync(backup,{force:true})}catch(_){/* Archive deja protegee, nettoyer a la prochaine maintenance. */}
+      hasBackup=false;
+    }
+  } catch(error) {
+    if(hasBackup&&fs.existsSync(backup)){
+      try {
+        if(fs.existsSync(target))fs.rmSync(target,{force:true});
+        fs.renameSync(backup,target);
+        hasBackup=false;
+      } catch(restoreError) {
+        error.message+=' (sauvegarde de recuperation preservee : '+path.basename(backup)+')';
+      }
+    }
+    throw error;
   } finally {
     try{fs.rmSync(temp,{force:true})}catch(_){}
-    if(hasBackup&&!fs.existsSync(target)){try{fs.renameSync(backup,target)}catch(_){}}
   }
   const raw=fs.readFileSync(target);
   if(!isEncryptedLocalFileBuffer(raw)||!decryptLocalFileBuffer(raw).equals(Buffer.from(plaintext)))
