@@ -27,8 +27,10 @@ const imageLibraryData = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns=
 const imageLibraryAlternativeData = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120"><rect width="180" height="120" fill="#e67e22"/></svg>').toString('base64');
 let win = null;
 let miniRenderCalls = 0;
-ipcMain.handle('kaloneo-builder:render-mini-preview',()=>{
+const miniRenderModes=[];
+ipcMain.handle('kaloneo-builder:render-mini-preview',(_event,_definition,mode='reference')=>{
   miniRenderCalls++;
+  miniRenderModes.push(mode);
   return {ok:true,image:imageLibraryData,report:{overflowZones:0,tableHorizontalOverflow:false,brokenImages:[]}};
 });
 
@@ -614,6 +616,29 @@ app.whenReady().then(async()=>{
        !idleRealPreview.updated||miniRenderCalls<=miniBeforeTyping)
       return fail('Capture fidèle inactive ou perte de focus dans le Builder',idleRealPreview);
     console.log('KALONEO_BUILDER_REAL_AFTER_IDLE_STABLE_FOCUS=OK');
+    // R142 : un choix ponctuel de résolution lance UNE nouvelle image, sans
+    // sauvegarder ni modifier la définition du test ou son historique.
+    const resolutionControl=await win.webContents.executeJavaScript(`(()=>{
+      const select=document.getElementById('candidate-preview-resolution');
+      if(!select)return {present:false};
+      const options=[...select.options].map(option=>option.value);
+      const initial=select.value;
+      select.value='1200x800';
+      select.dispatchEvent(new Event('change',{bubbles:true}));
+      return {present:true,initial,options,selected:select.value};
+    })()`);
+    if(!resolutionControl.present||resolutionControl.initial!=='reference'||
+       resolutionControl.selected!=='1200x800'||
+       !['1280x720','1366x768','1600x900','1920x1080'].every(
+         value=>resolutionControl.options.includes(value))){
+      return fail('R142 : choix de résolution du Builder inaccessible',resolutionControl);
+    }
+    await wait(1450);
+    if(!miniRenderModes.includes('1200x800'))
+      return fail('R142 : résolution non transmise à Electron',miniRenderModes);
+    await win.webContents.executeJavaScript(
+      "document.getElementById('candidate-preview-resolution').value='reference'; true");
+    console.log('KALONEO_R142_MANUAL_RESOLUTION_SELECTION=OK');
     const inputUndo=await win.webContents.executeJavaScript(`(()=>{
       const input=document.getElementById('test-title');
       input.focus();
