@@ -41,19 +41,36 @@ function section(text, start, end) {
 // commit ff12d5a7a1f51a68d336cc165d1583876b373275
 
 const exactBuild21 = {
-  'src/replay-main.js': '004baf83051d805bdd47c3fe865d5ffd6175f38c',
+  // Replay evolue uniquement pour chiffrer les captures et gerer les cles Windows des imports.
   'src/bilan-history-preload.js': '7f53efab6addbf19a1cb8b42aff5233ff4db5416',
   'src/bilan-history-main.js': '2e5f549fa0623c64029eb0e6f29cb6af5a9c6848',
   // candidate-store-main.js a volontairement évolué après le Build #21
   // (protection des reprises puis modèle R36 personne -> évaluations).
   // Il est donc contrôlé structurellement ci-dessous plutôt que par SHA figé.
-  'src/candidate-data-crypto.js': '7344aee00420552443543fd03ac33f85dc987fdb',
+  // JSON reste AES-256-GCM, les images sont chiffrees et aucune ecriture candidate en clair.
   'src/candidate-folder-utils.js': 'bd3c06186a83384552416d5a1f9126f036935c2f'
 };
 
 for (const [rel, expected] of Object.entries(exactBuild21)) {
   assert(gitBlobSha(rel) === expected, rel + ' ne correspond plus au module de référence Build #21.');
 }
+
+// Les modules historiques Replay et chiffrement ne sont plus figes au SHA du Build #21,
+// puisque la confidentialite des fichiers candidat doit s'appliquer generiquement.
+const replayCore = read('src/replay-main.js');
+const cryptoCore = read('src/candidate-data-crypto.js');
+const archiveIntegrityCore = read('src/replay-archive-integrity.js');
+assert(replayCore.includes("ipcMain.handle('replay:capture-page'"), 'Replay : capture candidat historique absente.');
+assert(replayCore.includes("ipcMain.handle('admin:get-candidate-parcours-slide'"), 'Replay : visionneuse admin historique absente.');
+assert(replayCore.includes('function migrateStoredReplayImages()'), 'Replay : migration de captation PNG existante absente.');
+assert(replayCore.includes('encryptLocalFileBuffer(png)'), 'Replay : image brute ecrite sur disque.');
+assert(replayCore.includes('decryptLocalFileBuffer(buffer)'), 'Replay : ouverture admin du contenu protege absente.');
+assert(replayCore.includes('return { migrateStoredReplayImages };'), 'Replay : raccordement de la migration absent.');
+assert(cryptoCore.includes("createCipheriv('aes-256-gcm'"), 'Chiffrement AES-256-GCM candidat absent.');
+assert(cryptoCore.includes('FILE_AAD') && cryptoCore.includes('encryptLocalFileBuffer'), 'Chiffrement des images candidat absent.');
+assert(cryptoCore.includes('decryptLocalFileBuffer'), 'Decryptage en memoire des fichiers candidats absent.');
+assert(cryptoCore.includes("if (!hasLocalKey()) throw new Error("), 'Sauvegarde candidate en clair sans cle possible.');
+assert(archiveIntegrityCore.includes('function computeArchiveIntegrity(manifest)'), 'Hachage des archives Replay inter-postes absent.');
 
 // candidate-store-main.js conserve les protections historiques tout en étant
 // autorisé à évoluer pour les fonctions candidat validées après le Build #21.
