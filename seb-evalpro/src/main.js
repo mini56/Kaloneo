@@ -220,6 +220,12 @@ function initializeCandidateSecurity() {
   const store = getCandidateStore();
   const folders = store.migrateCandidateFolderNames();
   const migrated = migrateJsonTree(store.paths.candidatesRoot);
+  // Chiffrer egalement les copies JSON historiques et les dossiers en corbeille.
+  // Ne pas toucher au catalogue KALONEO (tests, images, parcours de conception).
+  for (const relative of ['Corbeille', 'Bilans/Historique', 'parcours']) {
+    const historical = migrateJsonTree(path.join(sebInternalRoot(), ...relative.split('/')));
+    migrated.files += historical.files;
+  }
   migrateJsonFile(stateFilePath());
   protection.backupState();
   console.log('SEB EvalPro confidentialité candidat: clé locale Windows protégée et sauvegardée, dossiers codés=' + folders.renamed + ', JSON chiffrés=' + migrated.files + '.');
@@ -1787,8 +1793,12 @@ ipcMain.handle('admin:export-bilan-docx', async (_event, payload) => {
   try {
     ensureSebDocumentsFolders();
     const requested = path.basename(String(payload?.filename || 'Evaluation.docx'));
-    const filename = /\.docx$/i.test(requested) ? requested : requested.replace(/\.[^.]+$/,'') + '.docx';
     const targetDirectory = adminExportCandidateDir || getCandidateStore().getActiveExportDir() || internalBilanExportsDir();
+    // Le nom/prenom du candidat ne doit jamais figurer dans le nom du Word sur disque.
+    const opaqueWordId = crypto.createHash('sha256')
+      .update('KALONEO/PRIVATE-WORD/v1\0' + targetDirectory + '\0' + requested, 'utf8')
+      .digest('hex').slice(0, 24).toUpperCase();
+    const filename = 'Evaluation_CAND-' + opaqueWordId + '.docx';
     fs.mkdirSync(targetDirectory, { recursive:true });
     const target = path.join(targetDirectory, filename);
     if (!adminSessionDocumentPassword) {

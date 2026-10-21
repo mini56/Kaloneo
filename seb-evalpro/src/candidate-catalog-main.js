@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const { shell } = require('electron');
 const { getEditionCapabilities } = require('./edition');
 const { encodeJson } = require('./candidate-data-crypto');
-const { decryptBilanDocxBuffer, isEncryptedBilanDocxBuffer } = require('./bilan-docx-main');
+const { verifyBilanDocxPassword, isEncryptedBilanDocxBuffer } = require('./bilan-docx-main');
 const {
   readJson,
   ensureDir,
@@ -39,7 +39,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   let adminResultsWorkspace = null;
 
   const wordTempRoot = path.join(app.getPath('temp'), 'SEB EvalPro', 'Word');
-  function cleanupWordTemp(maxAgeMs = 24 * 60 * 60 * 1000) {
+  function cleanupWordTemp(maxAgeMs = 0) {
     try {
       if (!fs.existsSync(wordTempRoot)) return;
       const now=Date.now();
@@ -1132,17 +1132,13 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
         if (await isEncryptedBilanDocxBuffer(encrypted)) {
           const password=String(typeof getAdminDocumentPassword==='function' ? getAdminDocumentPassword() : '');
           if(!password) return {ok:false,error:'Mot de passe administrateur indisponible pour ouvrir ce document Word.'};
-          const plain=await decryptBilanDocxBuffer(encrypted,password);
-          ensureDir(wordTempRoot);
-          const temp=path.join(wordTempRoot,Date.now()+'-'+crypto.randomBytes(4).toString('hex')+'-'+safe);
-          fs.writeFileSync(temp,plain);
-          const error=await shell.openPath(temp);
-          if(error){
-            try{fs.rmSync(temp,{force:true})}catch(_){}
-            return {ok:false,error};
+          if (!(await verifyBilanDocxPassword(encrypted,password))) {
+            return {ok:false,error:'Le mot de passe administrateur ne permet pas de verifier ce Word.'};
           }
-          scheduleWordTempCleanup(temp);
-          return {ok:true,protected:true};
+          // Ouvrir le Word chiffre directement. Word demandera son mot de passe,
+          // aucune copie DOCX en clair n'est creee dans le dossier TEMP Windows.
+          const error=await shell.openPath(full);
+          return error ? {ok:false,error} : {ok:true,protected:true};
         }
       }
       const error = await shell.openPath(full);
