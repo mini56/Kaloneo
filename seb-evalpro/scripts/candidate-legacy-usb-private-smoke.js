@@ -61,13 +61,13 @@ try{
     shortId:'LEGACY',status:'TERMINE',exportedAt:'2026-10-21T12:00:00.000Z',entries};
   const {createCipheriv,randomBytes,scryptSync}=crypto;
   const zlib=require('zlib');
-  const salt=randomBytes(16),iv=randomBytes(12),key=scryptSync(password,salt,32,{N:32768,r:8,p:1});
+  const salt=randomBytes(16),iv=randomBytes(12),key=scryptSync(password,salt,32,{N:32768,r:8,p:1,maxmem:64*1024*1024});
   const encrypted=zlib.gzipSync(Buffer.from(JSON.stringify(payload),'utf8'));
   const cipher=createCipheriv('aes-256-gcm',key,iv);
-  const aad=Buffer.from('SEB-EvalPro/candidate-transfer/v1','utf8');
+  const aad=Buffer.from('SEB-EvalPro/usb-transfer/v1','utf8');
   cipher.setAAD(aad);
   const encryptedBody=Buffer.concat([cipher.update(encrypted),cipher.final()]);
-  const packet={format:'SEB-EVALPRO-USB-1',kdf:'scrypt',cipher:'aes-256-gcm',
+  const packet={format:'SEB-EVALPRO-USB-1',kdf:'scrypt-N32768-r8-p1',cipher:'aes-256-gcm',
     salt:salt.toString('base64'),iv:iv.toString('base64'),tag:cipher.getAuthTag().toString('base64'),
     data:encryptedBody.toString('base64')};
   fs.writeFileSync(path.join(usb,'CAND-LEGACY.seb'),JSON.stringify(packet));
