@@ -7,6 +7,9 @@ on:
       - 'kaloneo/test-builder.js'
       - 'kaloneo/test-builder.html'
       - 'kaloneo/test-builder.css'
+      - 'seb-evalpro/package.json'
+      - 'seb-evalpro/build/kaloneo-r142-responsive.yml'
+      - '.github/workflows/build-r142-kaloneo-responsive.yml'
       - 'seb-evalpro/src/main.js'
       - 'seb-evalpro/src/preload.js'
       - 'seb-evalpro/scripts/kaloneo-preview-resolution-r142-smoke.js'
@@ -35,7 +38,7 @@ jobs:
           git fetch --depth=1 origin tag seb-kaloneo-r141-help-guides-test
           if($LASTEXITCODE -ne 0){throw 'R141 reference tag missing'}
           $p=Get-Content -Raw -Encoding UTF8 package.json | ConvertFrom-Json
-          if([int]$p.sebBuildNumber -ne 146 -or $p.sebReleaseVersion -ne '0.0.170'){
+          if([int]$p.sebBuildNumber -ne 147 -or $p.sebReleaseVersion -ne '0.0.171'){
             throw 'The audit must not publish or change a setup version'
           }
           foreach($file in (git diff --name-only seb-kaloneo-r141-help-guides-test HEAD)){
@@ -43,7 +46,7 @@ jobs:
               throw "Protected V1 or image changed: $file"
             }
           }
-          Write-Host 'R141 version 0.0.170 Build #146 and validated V1 are intact'
+          Write-Host 'R141 rollback remains; R142 version 0.0.171 Build #147 and validated V1 are intact'
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -106,4 +109,4 @@ jobs:
       - name: No installer published
         shell: pwsh
         run: |
-          Write-Host 'Audit completed; 0.0.170 and Build #146 remain the reference.'
+          Write-Host 'Audit completed; 0.0.170 Build #146 stays available as rollback; R142 is only a test build.'
