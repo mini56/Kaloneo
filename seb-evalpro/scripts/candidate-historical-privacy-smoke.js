@@ -45,11 +45,29 @@ try{
   const legacyGlobal=path.join(docs,'SEB EvalPro','Evaluation_'+name+'_GLOBAL.doc');
   fs.mkdirSync(path.dirname(legacyGlobal),{recursive:true});
   fs.writeFileSync(legacyGlobal,html,'utf8');
+  // Ancien dossier de corbeille avec nom/prenom dans le chemin ET JSON bruts.
+  const legacyCandidateDir=path.join(dataRoot,'Corbeille','Candidats',name+'_PRENOM_TEST_CONFIDENTIEL_LORIENT');
+  fs.mkdirSync(legacyCandidateDir,{recursive:true});
+  fs.writeFileSync(path.join(legacyCandidateDir,'manifest.json'),JSON.stringify({
+    schemaVersion:1,candidateId:'privacy-old-345',status:'TERMINE',
+    folderName:path.basename(legacyCandidateDir),candidat:candidate
+  }));
+  fs.writeFileSync(path.join(legacyCandidateDir,'trash-meta.json'),
+    JSON.stringify({originalFolderName:path.basename(legacyCandidateDir)}));
   const report=migrateCandidatePrivateDocuments({dataRoot,documentsPath:docs,userDataPath:path.join(root,'userData')});
   assert.strictEqual(report.errors.length,0,JSON.stringify(report.errors));
   assert.strictEqual(report.encryptedLegacyDocs,2);
   assert.strictEqual(report.encryptedLegacyDocx,1);
   assert.strictEqual(report.renamedBilanArchives,1);
+  assert.strictEqual(report.renamedCandidateFolders,1);
+  assert(report.encryptedLegacyCandidateJson>=2);
+  assert(!fs.existsSync(legacyCandidateDir));
+  const trashRoot=path.join(dataRoot,'Corbeille','Candidats');
+  const migratedTrash=path.join(trashRoot,fs.readdirSync(trashRoot)[0]);
+  assert(/^CAND-/.test(path.basename(migratedTrash)));
+  assert(fs.readFileSync(path.join(migratedTrash,'manifest.json'),'utf8').startsWith('SEBLOCAL1:'));
+  assert.strictEqual(readJsonFile(path.join(migratedTrash,'trash-meta.json')).originalFolderName,
+    path.basename(migratedTrash));
   assert(!fs.existsSync(legacyDoc) && !fs.existsSync(legacyDocx) && !fs.existsSync(legacyJson));
   const entries=fs.readdirSync(wordDir);
   assert(entries.filter(x=>x.endsWith('.sebdoc')).length===2);
@@ -66,9 +84,11 @@ try{
   assert.strictEqual(repeat.encryptedLegacyDocs,0);
   assert.strictEqual(repeat.encryptedLegacyDocx,0);
   assert.strictEqual(repeat.renamedBilanArchives,0);
+  assert.strictEqual(repeat.renamedCandidateFolders,0);
   console.log('LEGACY_WORD_ENCRYPTED_AND_VERIFIED=OK');
   console.log('NEW_WORD_NO_CLEAR_DISK_FILE=OK');
   console.log('LEGACY_DOCX_PROTECTED_FOR_MIGRATION=OK');
   console.log('HISTORICAL_BILAN_FILENAMES_ANONYMISED=OK');
   console.log('HISTORICAL_MIGRATION_IDEMPOTENT=OK');
+  console.log('LEGACY_TRASH_FOLDER_AND_JSON_PRIVACY=OK');
 }finally{clearLocalKey();fs.rmSync(root,{recursive:true,force:true})}

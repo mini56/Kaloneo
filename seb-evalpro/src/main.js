@@ -224,7 +224,7 @@ function initializeCandidateSecurity() {
   const migrated = migrateJsonTree(store.paths.candidatesRoot);
   // Chiffrer egalement les copies JSON historiques et les dossiers en corbeille.
   // Ne pas toucher au catalogue KALONEO (tests, images, parcours de conception).
-  for (const relative of ['Corbeille', 'Bilans/Historique', 'parcours']) {
+  for (const relative of ['Corbeille', 'Bilans/Historique', 'parcours', 'System']) {
     const historical = migrateJsonTree(path.join(sebInternalRoot(), ...relative.split('/')));
     migrated.files += historical.files;
   }

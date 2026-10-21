@@ -4,7 +4,8 @@
 const fs=require('fs');
 const path=require('path');
 const crypto=require('crypto');
-const {readJsonFile,encryptLocalFileBuffer,decryptLocalFileBuffer}=require('./candidate-data-crypto');
+const {readJsonFile,writeJsonFile,migrateJsonTree,encryptLocalFileBuffer,decryptLocalFileBuffer}=require('./candidate-data-crypto');
+const {codedFolderName}=require('./candidate-folder-utils');
 
 function opaqueCandidateName(extension,prefix='Evaluation_CAND') {
   return prefix+'-'+crypto.randomBytes(16).toString('hex').toUpperCase()+extension;
@@ -38,7 +39,7 @@ function sealWord(source,extension){
 }
 function migrateCandidatePrivateDocuments({dataRoot,documentsPath,userDataPath}){
   if(!dataRoot)throw new Error('Racine du stockage interne absente.');
-  const report={encryptedLegacyDocs:0,encryptedLegacyDocx:0,renamedProtectedDocs:0,renamedBilanArchives:0,errors:[]};
+  const report={encryptedLegacyDocs:0,encryptedLegacyDocx:0,renamedProtectedDocs:0,renamedBilanArchives:0,renamedCandidateFolders:0,encryptedLegacyCandidateJson:0,errors:[]};
   const roots=[
     path.join(dataRoot,'Candidats'),path.join(dataRoot,'Corbeille'),
     path.join(dataRoot,'Admin'),path.join(dataRoot,'Bilans'),
@@ -48,7 +49,37 @@ function migrateCandidatePrivateDocuments({dataRoot,documentsPath,userDataPath})
   ].filter(Boolean);
   const stack=roots.filter(p=>fs.existsSync(p)),seen=new Set();
   while(stack.length){
-    const folder=stack.pop();
+    let folder=stack.pop();
+    // Seuls les dossiers reconnus par un manifest candidat sont modifies.
+    // Le Builder, les tests et les images systeme n'ont pas de manifest candidat.
+    const candidateManifest=path.join(folder,'manifest.json');
+    if(fs.existsSync(candidateManifest)){
+      try {
+        const manifest=readJsonFile(candidateManifest);
+        if(manifest && typeof manifest.candidateId==='string' && manifest.candidateId.trim()){
+          report.encryptedLegacyCandidateJson+=migrateJsonTree(folder).files;
+          const oldName=path.basename(folder);
+          if(!/^CAND-/i.test(oldName)){
+            const coded=codedFolderName(manifest.candidateId,manifest.shortId);
+            let dest=path.join(path.dirname(folder),coded),number=2;
+            while(fs.existsSync(dest)){
+              dest=path.join(path.dirname(folder),coded+'_'+number++);
+            }
+            fs.renameSync(folder,dest);
+            folder=dest;
+            writeJsonFile(path.join(folder,'manifest.json'),{...manifest,folderName:path.basename(folder)});
+            const trashMeta=path.join(folder,'trash-meta.json');
+            if(fs.existsSync(trashMeta)){
+              const metadata=readJsonFile(trashMeta);
+              if(metadata)writeJsonFile(trashMeta,{...metadata,originalFolderName:path.basename(folder)});
+            }
+            report.renamedCandidateFolders++;
+          }
+        }
+      } catch(error){
+        report.errors.push({file:candidateManifest,error:String(error.message||error)});
+      }
+    }
     let canonical;
     try{canonical=fs.realpathSync(folder)}catch(_){continue}
     if(seen.has(canonical))continue;
