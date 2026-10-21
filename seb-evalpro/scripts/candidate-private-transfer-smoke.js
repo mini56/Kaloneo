@@ -76,11 +76,37 @@ let handlers=new Map();
   assert.strictEqual(importedManifest.slides[0].sha256,
     crypto.createHash('sha256').update(importedSlide).digest('hex'));
   const ipc={handle(n,fn){handlers.set(n,fn)}};
-  registerReplay({app:{getPath(name){if(name==='userData')return B;throw Error('Unknown '+name)}},
+  const replayModule=registerReplay({app:{getPath(name){if(name==='userData')return B;throw Error('Unknown '+name)}},
     ipcMain:ipc,getAdminUnlocked:()=>true,buildNumber:147,dataRoot:bRoot});
   const shown=await handlers.get('admin:get-candidate-parcours-slide')(null,id,'REPLAY-TEST','001_TEST.sebimg');
   assert(shown.ok,'Imported Replay must open for admin: '+JSON.stringify(shown));
   assert.strictEqual(shown.dataUrl,'data:image/png;base64,'+png.toString('base64'));
+  // Ancien PNG : migration verifiee avant retrait de l'original.
+  const legacyFolder=path.join(restoredDir,'replay','REPLAY-LEGACY');
+  fs.mkdirSync(path.join(legacyFolder,'slides'),{recursive:true});
+  fs.writeFileSync(path.join(legacyFolder,'slides','001_ANCIEN.png'),png);
+  const legacy={...importedManifest,slides:[{
+    ...importedManifest.slides[0],
+    file:'001_ANCIEN.png',
+    sha256:crypto.createHash('sha256').update(png).digest('hex')
+  }]};
+  legacy.integritySha256=computeArchiveIntegrity(legacy);
+  writeJsonFile(path.join(legacyFolder,'manifest.json'),legacy);
+  const migrated=replayModule.migrateStoredReplayImages();
+  assert.strictEqual(migrated.errors.length,0,JSON.stringify(migrated.errors));
+  assert.strictEqual(migrated.migrated,1);
+  const migratedManifest=readJsonFile(path.join(legacyFolder,'manifest.json'));
+  assert(/\.sebimg$/i.test(migratedManifest.slides[0].file));
+  assert(!fs.existsSync(path.join(legacyFolder,'slides','001_ANCIEN.png')),
+    'Le vieux PNG ne doit plus etre lisible depuis Explorer.');
+  assert.strictEqual(migratedManifest.integritySha256,computeArchiveIntegrity(migratedManifest));
+  const migratedBytes=fs.readFileSync(path.join(legacyFolder,'slides',migratedManifest.slides[0].file));
+  assert(isEncryptedLocalFileBuffer(migratedBytes));
+  assert(decryptLocalFileBuffer(migratedBytes).equals(png));
+  const migratedShown=await handlers.get('admin:get-candidate-parcours-slide')(
+    null,id,'REPLAY-LEGACY',migratedManifest.slides[0].file);
+  assert(migratedShown.ok && migratedShown.dataUrl==='data:image/png;base64,'+png.toString('base64'));
+  console.log('LEGACY_PNG_MIGRATION_WITHOUT_LOSS=OK');
   console.log('PRIVATE_CANDIDATE_JSON=OK');
   console.log('PRIVATE_REPLAY_IMAGE=OK');
   console.log('USB_PASSWORD_TWO_WINDOWS_KEYS=OK');
