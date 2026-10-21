@@ -553,7 +553,7 @@ function createExportDestinationModeDialog() {
         <div class="seb-transfer-title">Où exporter les candidats ?</div>
         <div class="seb-transfer-text">
           Vous pouvez ajouter les fichiers à un dossier déjà présent sur la clé USB,
-          ou créer un nouveau dossier pour cette série d’exports.
+          ou créer un nouveau dossier. Pour protéger les candidats, KALONÉO lui donnera automatiquement un nom codé sans nom ni prénom.
         </div>
         <div class="seb-transfer-actions export-choice">
           <button type="button" id="seb-export-existing">Choisir un dossier existant</button>
@@ -589,64 +589,6 @@ function createExportDestinationModeDialog() {
   });
 }
 
-
-function createTransferNameDialog() {
-  return new Promise((resolve) => {
-    const backdrop = document.createElement('div');
-    backdrop.id = 'seb-evalpro-transfer-dialog';
-    backdrop.innerHTML = `
-      <div class="seb-transfer-card" role="dialog" aria-modal="true" aria-label="Nom du regroupement">
-        <div class="seb-transfer-title">Créer un dossier d’export</div>
-        <div class="seb-transfer-text">Saisissez le nom du nouveau dossier à créer sur la clé USB.</div>
-        <label class="seb-transfer-label" for="seb-transfer-name">Nom du dossier</label>
-        <input id="seb-transfer-name" class="seb-transfer-input" type="text" autocomplete="off" placeholder="Ex. Lorient, Groupe A, Session septembre" />
-        <div id="seb-transfer-error" class="seb-transfer-error" aria-live="polite"></div>
-        <div class="seb-transfer-actions">
-          <button type="button" id="seb-transfer-cancel">Annuler</button>
-          <button type="button" id="seb-transfer-ok">Continuer</button>
-        </div>
-      </div>`;
-
-    const style = document.createElement('style');
-    style.textContent = `
-      #seb-evalpro-transfer-dialog{position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif}
-      #seb-evalpro-transfer-dialog .seb-transfer-card{width:470px;max-width:calc(100vw - 40px);background:#fff;border:1px solid #aaa;border-radius:8px;padding:20px;box-shadow:0 10px 35px rgba(0,0,0,.3);box-sizing:border-box}
-      #seb-evalpro-transfer-dialog .seb-transfer-title{font-size:20px;font-weight:700;color:#0070c0;margin-bottom:10px}
-      #seb-evalpro-transfer-dialog .seb-transfer-text{font-size:14px;line-height:1.45;color:#222;margin-bottom:14px}
-      #seb-evalpro-transfer-dialog .seb-transfer-label{display:block;font-size:14px;font-weight:700;color:#222;margin-bottom:6px}
-      #seb-evalpro-transfer-dialog .seb-transfer-input{width:100%;font-size:17px;padding:9px 10px;border:1px solid #999;border-radius:4px;box-sizing:border-box}
-      #seb-evalpro-transfer-dialog .seb-transfer-error{min-height:20px;color:#c00000;font-size:13px;margin-top:6px}
-      #seb-evalpro-transfer-dialog .seb-transfer-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
-      #seb-evalpro-transfer-dialog button{font-family:Arial,sans-serif;font-size:14px;padding:8px 14px;border:2px solid #0070c0;border-radius:6px;background:#fff;color:#0070c0;font-weight:700;cursor:pointer}
-    `;
-    backdrop.appendChild(style);
-    document.body.appendChild(backdrop);
-
-    const input = backdrop.querySelector('#seb-transfer-name');
-    const error = backdrop.querySelector('#seb-transfer-error');
-    const finish = (value) => {
-      backdrop.remove();
-      resolve(value);
-    };
-    const accept = () => {
-      const value = String(input.value || '').trim();
-      if (!value) {
-        error.textContent = 'Saisissez un nom de dossier.';
-        input.focus();
-        return;
-      }
-      finish(value);
-    };
-
-    backdrop.querySelector('#seb-transfer-cancel').addEventListener('click', () => finish(null));
-    backdrop.querySelector('#seb-transfer-ok').addEventListener('click', accept);
-    input.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') accept();
-      if (event.key === 'Escape') finish(null);
-    });
-    input.focus();
-  });
-}
 
 function createTransferPasswordDialog(mode) {
   const isExport = mode === 'export';
@@ -1686,12 +1628,6 @@ function injectAdminBar() {
       const destinationMode = await createExportDestinationModeDialog();
       if (!destinationMode) return false;
 
-      let newFolderName = '';
-      if (destinationMode === 'create') {
-        newFolderName = await createTransferNameDialog();
-        if (!newFolderName) return false;
-      }
-
       let progress = null;
       const onExportProgress = (_event, payload = {}) => {
         if (payload && payload.state === 'started' && !progress) progress = showTransferProgress();
@@ -1701,7 +1637,6 @@ function injectAdminBar() {
       try {
         result = await ipcRenderer.invoke('admin:export-candidates', password, {
           mode:destinationMode,
-          folderName:newFolderName,
           candidateIds:selectedCandidateIds
         });
       } finally {
