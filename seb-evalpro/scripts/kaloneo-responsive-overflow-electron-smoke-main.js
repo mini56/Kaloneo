@@ -111,6 +111,54 @@ app.whenReady().then(async()=>{
       console.log('R124 RESOLUTION '+width+'x'+height+
         (needsScroll?' : OK, défilement valide':' : OK, tout tient sans défilement'));
     }
+    // R142 : reproduire physiquement le zoom candidat, et pas seulement
+    // changer les métriques CSS dans l'outil de développement Chromium.
+    for(const [width,height] of [[1200,800],[1280,720],[1366,768],[1600,900],[1920,1080]]){
+      const candidateZoom=Math.max(0.60,
+        Math.round(Math.min(1,width/1600,height/900)*100)/100);
+      const native=new BrowserWindow({
+        show:false,focusable:false,width:1366,height:768,useContentSize:true,
+        frame:false,skipTaskbar:true,paintWhenInitiallyHidden:true,
+        webPreferences:{preload:path.join(root,'src','preload.js'),
+          contextIsolation:true,nodeIntegration:false,sandbox:false,
+          offscreen:true,backgroundThrottling:false}
+      });
+      try{
+        const bounds=native.getContentBounds();
+        const scale=Math.min(1,bounds.width/width,bounds.height/height);
+        assert.ok(scale>0.25,'Hidden capture window too small');
+        native.webContents.setZoomFactor(scale*candidateZoom);
+        native.setContentSize(Math.round(width*scale),Math.round(height*scale));
+        await native.loadFile(path.join(root,'app','web','kaltest-pilot2.html'),
+          {query:{kaloneoPreview:'1'}});
+        native.webContents.setZoomFactor(scale*candidateZoom);
+        const geometry=await native.webContents.executeJavaScript(
+          '(async()=>{await document.fonts.ready;'+
+          'await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));'+
+          'const root=document.getElementById("kaltest-content");'+
+          'const zone=root?.querySelector(".kaltest-builder-runtime-zone");'+
+          'if(zone)zone.scrollTop=zone.scrollHeight;'+
+          'await new Promise(r=>requestAnimationFrame(r));'+
+          'const end=zone?.querySelector("[data-question-id=novel_question_19]");'+
+          'const a=zone?.getBoundingClientRect(),b=end?.getBoundingClientRect();'+
+          'return {width:innerWidth,height:innerHeight,'+
+          'id:document.body.dataset.sebKaltestId,'+
+          'lastAccessible:!!(a&&b&&b.bottom<=a.bottom+3&&b.top>=a.top-3),'+
+          'audit:('+inspectCandidateOverflow.toString()+')(document)};})()');
+        assert.ok(Math.abs(geometry.width-width/candidateZoom)<=5,
+          'CSS candidate viewport width mismatch '+width+'x'+height+': '+JSON.stringify(geometry));
+        assert.ok(Math.abs(geometry.height-height/candidateZoom)<=5,
+          'CSS candidate viewport height mismatch '+width+'x'+height+': '+JSON.stringify(geometry));
+        assert.equal(geometry.id,definition.id);
+        assert.equal(geometry.lastAccessible,true,
+          'Final response not accessible at native zoom '+width+'x'+height);
+        assert.equal(geometry.audit.overflowZones,0,
+          'False clipping at native zoom '+width+'x'+height+': '+JSON.stringify(geometry.audit));
+        console.log('R142 NATIVE_ELECTRON_ZOOM '+width+'x'+height+' factor='+candidateZoom+' OK');
+      }finally{
+        if(!native.isDestroyed())native.destroy();
+      }
+    }
     // Un bloc tronqué sans scroll doit rester signalé comme défaut.
     const cut=await win.webContents.executeJavaScript(
       '(()=>{const zone=document.querySelector(".kaltest-builder-runtime-zone");'+

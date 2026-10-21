@@ -11,6 +11,7 @@ on:
       - 'seb-evalpro/src/preload.js'
       - 'seb-evalpro/scripts/kaloneo-preview-resolution-r142-smoke.js'
       - 'seb-evalpro/scripts/kaloneo-builder-preview-electron-smoke-main.js'
+      - 'seb-evalpro/scripts/kaloneo-responsive-overflow-electron-smoke-main.js'
       - 'seb-evalpro/scripts/kaloneo-layout-diagnostics-unit-smoke.js'
       - '.github/workflows/audit-r142-responsive-no-setup.yml'
   workflow_dispatch:
