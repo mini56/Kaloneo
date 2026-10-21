@@ -67,7 +67,7 @@ assert(replayCore.includes("ipcMain.handle('admin:get-candidate-parcours-slide'"
 assert(replayCore.includes('function migrateStoredReplayImages()'), 'Replay : migration de captation PNG existante absente.');
 assert(replayCore.includes('encryptLocalFileBuffer(png)'), 'Replay : image brute ecrite sur disque.');
 assert(replayCore.includes('decryptLocalFileBuffer(buffer)'), 'Replay : ouverture admin du contenu protege absente.');
-assert(replayCore.includes('return { migrateStoredReplayImages };'), 'Replay : raccordement de la migration absent.');
+assert(replayCore.includes('return { migrateStoredReplayImages, migrateStoredPending };'), 'Replay : raccordement des migrations absent.');
 assert(cryptoCore.includes("createCipheriv('aes-256-gcm'"), 'Chiffrement AES-256-GCM candidat absent.');
 assert(cryptoCore.includes('FILE_AAD') && cryptoCore.includes('encryptLocalFileBuffer'), 'Chiffrement des images candidat absent.');
 assert(cryptoCore.includes('decryptLocalFileBuffer'), 'Decryptage en memoire des fichiers candidats absent.');
