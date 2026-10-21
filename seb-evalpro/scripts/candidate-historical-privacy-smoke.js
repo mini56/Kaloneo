@@ -45,7 +45,7 @@ try{
   fs.writeFileSync(protectedExisting,protectedOle);
   const legacyJson=path.join(histDir,name+'_BILAN_R00.json');
   writeJsonFile(legacyJson,{type:'SEB_EVALPRO_BILAN_ARCHIVE',candidate});
-  const legacyGlobal=path.join(docs,'SEB EvalPro','Evaluation_'+name+'_GLOBAL.doc');
+  const legacyGlobal=path.join(docs,'SEB EvalPro','Evaluation_'+name+'_'+candidate.prenom+'_GLOBAL.doc');
   fs.mkdirSync(path.dirname(legacyGlobal),{recursive:true});
   fs.writeFileSync(legacyGlobal,html,'utf8');
   // Ancien dossier de corbeille avec nom/prenom dans le chemin ET JSON bruts.
