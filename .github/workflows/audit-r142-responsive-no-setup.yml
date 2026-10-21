@@ -86,4 +86,6 @@ jobs:
       - name: Security, candidate data, import and export
         run: npm run test:security
       - name: No installer published
-        run: echo "Audit completed; 0.0.170 and Build #146 remain the reference."
+        shell: pwsh
+        run: |
+          Write-Host 'Audit completed; 0.0.170 and Build #146 remain the reference.'
