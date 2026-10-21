@@ -210,12 +210,8 @@ jobs:
           $corner=$bitmap.GetPixel(0,0)
           if($corner.A -gt 8){throw 'Windows EXE icon not transparent (the full old wordmark may still be used)'}
           Write-Host "KALONEO_R128_ICON=OK — KALONEO.exe has a transparent chameleon icon and Electron has its matching ICO"
-      - name: Preserve installer test artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: KALONEO-R143-Build-148-Windows-Setup
-          path: seb-evalpro/dist/KALONEO-Setup-0.0.172.exe
-          if-no-files-found: error
+      # Stockage Actions saturé : le Setup Windows déjà validé est publié directement
+      # comme asset de Release, sans duplicata dans les artefacts temporaires.
       - name: Publish unique R143 Windows Setup only after every security and Windows install test
         shell: pwsh
         env:
