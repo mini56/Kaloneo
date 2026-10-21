@@ -48,7 +48,7 @@ const exactBuild21 = {
   // (protection des reprises puis modèle R36 personne -> évaluations).
   // Il est donc contrôlé structurellement ci-dessous plutôt que par SHA figé.
   // JSON reste AES-256-GCM, les images sont chiffrees et aucune ecriture candidate en clair.
-  'src/candidate-folder-utils.js': 'bd3c06186a83384552416d5a1f9126f036935c2f'
+  // candidate-folder-utils.js : index des suppressions maintenant chiffre (controle structurel ci-dessous).
 };
 
 for (const [rel, expected] of Object.entries(exactBuild21)) {
@@ -80,6 +80,14 @@ assert(privateDocumentCore.includes('function migrateCandidatePrivateDocuments('
 
 // candidate-store-main.js conserve les protections historiques tout en étant
 // autorisé à évoluer pour les fonctions candidat validées après le Build #21.
+const candidateFolderCore = read('src/candidate-folder-utils.js');
+assert(candidateFolderCore.includes('function codedFolderName(candidateId, shortId'), 'Dossier candidat code : logique de nommage absente.');
+assert(candidateFolderCore.includes("return 'CAND-' + token;"), 'Dossier candidat code : prefixe opaque absent.');
+assert(candidateFolderCore.includes('function readDeletedIds(documentsPath)'), 'Index de suppression : lecture absente.');
+assert(candidateFolderCore.includes('function writeDeletedIds(documentsPath, ids)'), 'Index de suppression : ecriture absente.');
+assert(candidateFolderCore.includes('encodeJson(Array.from(ids).sort())'), 'Index de suppression candidat en clair.');
+assert(!candidateFolderCore.includes('fs.writeFileSync(temp, JSON.stringify(Array.from(ids)'),
+  'Index de suppression : ecriture JSON en clair interdite.');
 const candidateStoreCore = read('src/candidate-store-main.js');
 assert(candidateStoreCore.includes("const activePointerBackupPath = path.join(systemRoot, 'active-candidate.json');"), 'copie de récupération du pointeur candidat actif absente.');
 assert(candidateStoreCore.includes('function ensureActiveCandidate(state)'), 'allocation/reprise du candidat actif absente.');
