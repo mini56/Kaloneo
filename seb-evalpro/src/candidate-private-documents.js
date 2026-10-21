@@ -5,7 +5,7 @@ const fs=require('fs');
 const path=require('path');
 const crypto=require('crypto');
 const {readJsonFile,writeJsonFile,migrateJsonTree,encryptLocalFileBuffer,decryptLocalFileBuffer}=require('./candidate-data-crypto');
-const {codedFolderName}=require('./candidate-folder-utils');
+const {codedFolderName,listCandidateDirs,selectCandidateFromFilename}=require('./candidate-folder-utils');
 
 function opaqueCandidateName(extension,prefix='Evaluation_CAND') {
   return prefix+'-'+crypto.randomBytes(16).toString('hex').toUpperCase()+extension;
@@ -39,7 +39,7 @@ function sealWord(source,extension){
 }
 function migrateCandidatePrivateDocuments({dataRoot,documentsPath,userDataPath}){
   if(!dataRoot)throw new Error('Racine du stockage interne absente.');
-  const report={encryptedLegacyDocs:0,encryptedLegacyDocx:0,renamedProtectedDocs:0,renamedBilanArchives:0,renamedCandidateFolders:0,encryptedLegacyCandidateJson:0,errors:[]};
+  const report={encryptedLegacyDocs:0,encryptedLegacyDocx:0,renamedProtectedDocs:0,renamedBilanArchives:0,renamedCandidateFolders:0,encryptedLegacyCandidateJson:0,linkedHistoricalWords:0,errors:[]};
   const roots=[
     path.join(dataRoot,'Candidats'),path.join(dataRoot,'Corbeille'),
     path.join(dataRoot,'Admin'),path.join(dataRoot,'Bilans'),
@@ -48,6 +48,30 @@ function migrateCandidatePrivateDocuments({dataRoot,documentsPath,userDataPath})
     userDataPath&&path.join(userDataPath,'Documents','SEB EvalPro')
   ].filter(Boolean);
   const stack=roots.filter(p=>fs.existsSync(p)),seen=new Set();
+  const historicalRoots=[
+    path.join(dataRoot,'Bilans'),
+    documentsPath&&path.join(documentsPath,'SEB EvalPro'),
+    userDataPath&&path.join(userDataPath,'Documents','SEB EvalPro')
+  ].filter(Boolean);
+  const candidateRecords=listCandidateDirs(path.join(dataRoot,'Candidats'),false);
+  function historicLooseDocument(file) {
+    return historicalRoots.some(root=>{
+      const rel=path.relative(root,file);
+      return !!rel && rel!=='..' && !rel.startsWith('..'+path.sep) && !path.isAbsolute(rel);
+    });
+  }
+  function linkToCandidate(oldFilename,securedPath) {
+    if(!historicLooseDocument(securedPath))return;
+    const record=selectCandidateFromFilename(candidateRecords,oldFilename);
+    if(!record)return; // Plusieurs homonymes : ne pas risquer une attribution fausse.
+    const targetDir=path.join(record.candidateDir,'bilan','exports');
+    fs.mkdirSync(targetDir,{recursive:true});
+    const destination=path.join(targetDir,path.basename(securedPath));
+    fs.copyFileSync(securedPath,destination,fs.constants.COPYFILE_EXCL);
+    if(!fs.readFileSync(destination).equals(fs.readFileSync(securedPath)))
+      throw new Error('Controle du Word historique rattache au candidat echoue.');
+    report.linkedHistoricalWords++;
+  }
   while(stack.length){
     let folder=stack.pop();
     // Seuls les dossiers reconnus par un manifest candidat sont modifies.
@@ -94,15 +118,21 @@ function migrateCandidatePrivateDocuments({dataRoot,documentsPath,userDataPath})
       try{
         const name=item.name.toLowerCase();
         if(name.endsWith('.doc')){
-          sealWord(full,'.sebdoc');report.encryptedLegacyDocs++;
+          const sealed=sealWord(full,'.sebdoc');
+          report.encryptedLegacyDocs++;
+          linkToCandidate(item.name,sealed);
         }else if(name.endsWith('.docx')){
           const buffer=fs.readFileSync(full);
           if(buffer.length>=2&&buffer.subarray(0,2).toString('ascii')==='PK'){
             // DOCX non protege : conteneur ZIP, scelle avec la cle locale.
-            sealWord(full,'.sebword');report.encryptedLegacyDocx++;
+            const sealed=sealWord(full,'.sebword');
+            report.encryptedLegacyDocx++;
+            linkToCandidate(item.name,sealed);
           }else if(!/^Evaluation_CAND-[A-F0-9]{24,32}\.docx$/i.test(item.name)){
             // Un DOCX deja chiffre par Word (OLE) conserve son chiffrement.
-            renameOpaque(full);report.renamedProtectedDocs++;
+            const renamed=renameOpaque(full);
+            report.renamedProtectedDocs++;
+            linkToCandidate(item.name,renamed);
           }
         }else if(name.endsWith('.json')&&path.basename(folder).toLowerCase()==='historique'&&
           !/^BILAN_CAND-[A-F0-9]{32}\.json$/i.test(item.name)){

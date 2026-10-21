@@ -61,6 +61,7 @@ try{
   assert.strictEqual(report.errors.length,0,JSON.stringify(report.errors));
   assert.strictEqual(report.encryptedLegacyDocs,2);
   assert.strictEqual(report.encryptedLegacyDocx,1);
+  assert.strictEqual(report.linkedHistoricalWords,1,'Le Word historique global doit rester accessible depuis la fiche administrateur.');
   assert.strictEqual(report.renamedBilanArchives,1);
   assert.strictEqual(report.renamedProtectedDocs,0,'Le Word officiel protege a 24 caracteres ne doit pas etre renomme au demarrage.');
   assert(fs.readFileSync(protectedExisting).equals(protectedOle));
@@ -75,7 +76,7 @@ try{
     path.basename(migratedTrash));
   assert(!fs.existsSync(legacyDoc) && !fs.existsSync(legacyDocx) && !fs.existsSync(legacyJson));
   const entries=fs.readdirSync(wordDir);
-  assert(entries.filter(x=>x.endsWith('.sebdoc')).length===2);
+  assert(entries.filter(x=>x.endsWith('.sebdoc')).length===3);
   assert(entries.some(x=>x.endsWith('.sebword')));
   assert(fs.readdirSync(histDir).every(x=>/^BILAN_CAND-[A-F0-9]{32}\.json$/.test(x)));
   for(const folder of [wordDir,histDir,path.join(docs,'SEB EvalPro')]) {
@@ -90,6 +91,7 @@ try{
   assert.strictEqual(repeat.encryptedLegacyDocx,0);
   assert.strictEqual(repeat.renamedBilanArchives,0);
   assert.strictEqual(repeat.renamedCandidateFolders,0);
+  assert.strictEqual(repeat.linkedHistoricalWords,0);
   console.log('LEGACY_WORD_ENCRYPTED_AND_VERIFIED=OK');
   console.log('NEW_WORD_NO_CLEAR_DISK_FILE=OK');
   console.log('LEGACY_DOCX_PROTECTED_FOR_MIGRATION=OK');
