@@ -16,6 +16,7 @@ on:
       - 'seb-evalpro/src/candidate-data-crypto.js'
       - 'seb-evalpro/src/candidate-transfer-main.js'
       - 'seb-evalpro/scripts/candidate-private-transfer-smoke.js'
+      - 'seb-evalpro/scripts/build21-admin-foundation-guard.js'
       - 'seb-evalpro/src/preload.js'
       - 'seb-evalpro/scripts/kaloneo-preview-resolution-r142-smoke.js'
       - 'seb-evalpro/scripts/kaloneo-builder-preview-electron-smoke-main.js'
