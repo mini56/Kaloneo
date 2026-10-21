@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { listCandidateDirs, selectCandidate } = require('./candidate-folder-utils');
-const { readJsonFile, encodeJson, encryptLocalFileBuffer, decryptLocalFileBuffer, isEncryptedLocalFileBuffer } = require('./candidate-data-crypto');
+const { readJsonFile, encodeJson, migrateJsonTree, encryptLocalFileBuffer, decryptLocalFileBuffer, isEncryptedLocalFileBuffer } = require('./candidate-data-crypto');
 const { computeArchiveIntegrity } = require('./replay-archive-integrity');
 
 module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlocked, getActiveCandidate = null, buildNumber, dataRoot = null }) {
@@ -205,7 +205,7 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
     const file = pendingIndexPath(token);
     if (!fs.existsSync(file)) return { schemaVersion: 1, token, pages: {} };
     try {
-      const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+      const parsed = readJsonFile(file);
       if (!parsed || typeof parsed !== 'object' || !parsed.pages || typeof parsed.pages !== 'object') {
         return { schemaVersion: 1, token, pages: {} };
       }
@@ -219,7 +219,7 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
     const dir = pendingDir(token);
     ensureDir(dir);
     const target = pendingIndexPath(token);
-    atomicWriteReplayFile(target, JSON.stringify(index, null, 2), 'utf8');
+    atomicWriteReplayFile(target, encodeJson(index), 'utf8');
   }
 
   function cleanupOldPending() {
@@ -475,7 +475,8 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
         const srcName = path.basename(String(source.file || ''));
         const src = path.join(pendingDir(token), srcName);
         if (!srcName || !fs.existsSync(src)) continue;
-        const buffer = fs.readFileSync(src);
+        const bytes = fs.readFileSync(src);
+        const buffer = isEncryptedLocalFileBuffer(bytes) ? decryptLocalFileBuffer(bytes) : bytes;
         const outName = `${String(slides.length + 1).padStart(3, '0')}_${safePart(source.pageKey, 'PAGE').slice(0, 70)}.sebimg`;
         const protectedImage = encryptLocalFileBuffer(buffer);
         fs.writeFileSync(path.join(slidesDir, outName), protectedImage);
@@ -799,6 +800,39 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
     return report;
   }
 
+  // Anciennes captures avant le stockage direct dans le dossier candidat.
+  // Rechiffre en place les PNG restes dans replay-pending, sans creer de
+  // fichier temporaire en clair et sans casser l'archivage final historique.
+  function migrateStoredPending() {
+    const root=pendingRoot();
+    const report={protectedImages:0,protectedJson:0,errors:[]};
+    if(!fs.existsSync(root))return report;
+    const history=migrateJsonTree(root);
+    report.protectedJson=history.files;
+    const stack=[root];
+    while(stack.length) {
+      const folder=stack.pop();
+      let entries;
+      try{entries=fs.readdirSync(folder,{withFileTypes:true})}
+      catch(error){report.errors.push({file:folder,error:String(error.message||error)});continue}
+      for(const entry of entries) {
+        const file=path.join(folder,entry.name);
+        if(entry.isDirectory()&&!entry.isSymbolicLink()){stack.push(file);continue}
+        if(!entry.isFile()||!/\.png$/i.test(entry.name))continue;
+        try{
+          const source=fs.readFileSync(file);
+          if(isEncryptedLocalFileBuffer(source))continue;
+          const sealed=encryptLocalFileBuffer(source);
+          atomicWriteReplayFile(file,sealed);
+          if(!decryptLocalFileBuffer(fs.readFileSync(file)).equals(source))
+            throw new Error('Verification de la capture temporaire protegee impossible.');
+          report.protectedImages++;
+        }catch(error){report.errors.push({file,error:String(error.message||error)})}
+      }
+    }
+    return report;
+  }
+
   cleanupOldPending();
-  return { migrateStoredReplayImages };
+  return { migrateStoredReplayImages, migrateStoredPending };
 };

@@ -12,6 +12,7 @@ on:
       - '.github/workflows/build-r142-kaloneo-responsive.yml'
       - 'seb-evalpro/src/main.js'
       - 'seb-evalpro/src/replay-main.js'
+      - 'seb-evalpro/scripts/candidate-private-pending-smoke.js'
       - 'seb-evalpro/src/replay-archive-integrity.js'
       - 'seb-evalpro/src/candidate-data-crypto.js'
       - 'seb-evalpro/src/candidate-transfer-main.js'
@@ -122,6 +123,7 @@ jobs:
           npm run test:security
           node scripts/candidate-private-transfer-smoke.js
           node scripts/replay-direct-candidate-storage-smoke.js
+          node scripts/candidate-private-pending-smoke.js
           node scripts/candidate-word-privacy-guard.js
           node scripts/candidate-historical-privacy-smoke.js
           node scripts/bilan-docx-smoke.js

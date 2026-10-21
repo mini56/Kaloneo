@@ -882,6 +882,8 @@ function startApplication() {
 
     setSplashProgress(16, 'Vérification de la protection des données…');
     initializeCandidateSecurity();
+    const pendingProtection = candidateReplayHandlers.migrateStoredPending();
+    if(pendingProtection.errors.length) console.warn('KALONEO : replay-pending restant a proteger :',pendingProtection.errors.length);
     const replayProtection = candidateReplayHandlers.migrateStoredReplayImages();
     if (replayProtection.errors.length) console.warn('KALONEO : migration Replay incomplete :', replayProtection.errors.length);
     else console.log('KALONEO : images Replay protegees :', replayProtection.migrated);
