@@ -14,6 +14,7 @@ const { embedTestImages, validatePortableTest } = require('./kaloneo-test-portab
 const { configureLocalKey, readJsonFile, encodeJson, migrateJsonFile, migrateJsonTree } = require('./candidate-data-crypto');
 const { createCandidateLocalProtection } = require('./candidate-local-protection');
 const { migrateCandidatePrivateDocuments } = require('./candidate-private-documents');
+const { storeProtectedWordDownload } = require('./candidate-protected-download');
 const { internalStorageRoot, documentsWordRoot, migrateLegacyDocumentsStorage } = require('./storage-layout');
 const kaloneoFullParcoursRoute = require('./kaloneo-full-parcours-route');
 const { buildBilanDocxBuffer } = require('./bilan-docx-main');
@@ -306,22 +307,43 @@ function cleanupNumberedCandidateWordCopies(directory, filename) {
 function installDownloadRouting() {
   if (!mainWindow || mainWindow.isDestroyed() || downloadRoutingInstalled) return;
   downloadRoutingInstalled = true;
-  mainWindow.webContents.session.on('will-download', (_event, item) => {
-    const filename = path.basename(item.getFilename() || 'Evaluation.doc');
-    if (!/\.docx?$/i.test(filename)) return;
-    try {
-      ensureSebDocumentsFolders();
-      const targetDirectory = adminExportCandidateDir || getCandidateStore().getActiveExportDir() || internalBilanExportsDir();
-      fs.mkdirSync(targetDirectory, { recursive:true });
-      const target = /^Evaluation_.+\.docx?$/i.test(filename)
-        ? path.join(targetDirectory, filename)
-        : uniqueOutputPath(targetDirectory, filename);
-      item.setSavePath(target);
-      item.once('done', (_downloadEvent, state) => {
-        if (state !== 'completed') return;
-        cleanupNumberedCandidateWordCopies(targetDirectory, path.basename(target));
+  mainWindow.webContents.session.on('will-download', (_event, item, sourceWebContents) => {
+    const filename=path.basename(item.getFilename()||'Evaluation.doc');
+    if(!/\.docx?$/i.test(filename))return;
+    // Les telechargements natifs de DOC etaient ecrits temporairement en
+    // clair. Interrompre AVANT l'ecriture et lire le Blob en memoire seulement.
+    const url=String(typeof item.getURL==='function'?item.getURL():'');
+    item.cancel();
+    if(!adminSessionUnlocked||!editionCapabilities.canBilan)return;
+    if(!/^(blob:|data:)/i.test(url)){
+      console.warn('KALONEO : telechargement Word refuse (source non locale).');
+      return;
+    }
+    const contents=sourceWebContents||mainWindow.webContents;
+    // fetch + FileReader s'executent dans le contexte createur du Blob.
+    const script=`(async()=> {
+      const response=await fetch(${JSON.stringify(url)});
+      if(!response.ok)throw new Error('Contenu Word inaccessible.');
+      const blob=await response.blob();
+      if(blob.size>25*1024*1024)throw new Error('Document Word trop volumineux.');
+      return await new Promise((resolve,reject)=>{
+        const reader=new FileReader();
+        reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');
+        reader.onerror=()=>reject(new Error('Lecture Word impossible.'));
+        reader.readAsDataURL(blob);
       });
-    } catch (_) {}
+    })()`;
+    void (async()=>{
+      try{
+        const base64=await contents.executeJavaScript(script,true);
+        if(!base64)throw new Error('Contenu Word vide.');
+        const targetDirectory=adminExportCandidateDir||getCandidateStore().getActiveExportDir()||internalBilanExportsDir();
+        const stored=await storeProtectedWordDownload(Buffer.from(base64,'base64'),path.extname(filename),targetDirectory);
+        console.log('KALONEO : Word telecharge protege :',stored.filename);
+      }catch(error){
+        console.error('KALONEO : export Word non enregistre :',String(error.message||error));
+      }
+    })();
   });
 }
 
