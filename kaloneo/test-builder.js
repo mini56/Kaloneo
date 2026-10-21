@@ -2876,18 +2876,23 @@
     if(!layer)return;
     layer.replaceChildren();
     const seen=new Set();
+    const imageWidth=Math.max(1,Number(report?.imageWidth)||1366);
+    const imageHeight=Math.max(1,Number(report?.imageHeight)||768);
+    const imageFit=Math.min(1366/imageWidth,768/imageHeight);
+    const imageOffsetX=(1366-imageWidth*imageFit)/2;
+    const imageOffsetY=(768-imageHeight*imageFit)/2;
     for(const box of Array.isArray(report?.miniBlocks)?report.miniBlocks:[]){
       const index=Number(box?.index);
       if(!Number.isInteger(index)||index<0||index>=state.blocks.length||seen.has(index))continue;
       const x=Number(box.x),y=Number(box.y),w=Number(box.width),h=Number(box.height);
-      if(![x,y,w,h].every(Number.isFinite)||w<4||h<4||x>=1366||y>=768)continue;
+      if(![x,y,w,h].every(Number.isFinite)||w<4||h<4||x>=imageWidth||y>=imageHeight)continue;
       seen.add(index);
       const hit=document.createElement('div');
       hit.className='mini-block-hover-target';
-      hit.style.left=(Math.max(0,x)/1366*100)+'%';
-      hit.style.top=(Math.max(0,y)/768*100)+'%';
-      hit.style.width=(Math.max(0,Math.min(1366-x,w))/1366*100)+'%';
-      hit.style.height=(Math.max(0,Math.min(768-y,h))/768*100)+'%';
+      hit.style.left=((imageOffsetX+Math.max(0,x)*imageFit)/1366*100)+'%';
+      hit.style.top=((imageOffsetY+Math.max(0,y)*imageFit)/768*100)+'%';
+      hit.style.width=(Math.max(0,Math.min(imageWidth-x,w))*imageFit/1366*100)+'%';
+      hit.style.height=(Math.max(0,Math.min(imageHeight-y,h))*imageFit/768*100)+'%';
       const block=state.blocks[index];
       const label='Bloc n°'+(index+1)+' — '+(miniBlockTypeNames[block.type]||block.type);
       hit.dataset.label=label;
@@ -2935,7 +2940,8 @@
       }
       miniPreviewRunning=true;
       try {
-        const result=await bridge.kaloneoRenderMiniPreview(miniBlockDefinition());
+        const mode=$('candidate-preview-resolution')?.value||'reference';
+        const result=await bridge.kaloneoRenderMiniPreview(miniBlockDefinition(),mode);
         if(revision!==miniPreviewRevision||Supplementary?.isEditing())return; // Capture obsolète : aucun affichage.
         if(!result?.ok||!result.image) {
           if(status)status.textContent='Capture Electron indisponible : '+String(result?.error||'rendu absent');
@@ -2970,7 +2976,10 @@
         if(result.report?.brokenImages?.length)warnings.push('image introuvable');
         if(warning)warning.textContent=warnings.length?
           'À corriger dans le rendu candidat : '+warnings.join(', ')+'.':
-          'Rendu réel candidat Electron (1366 × 768) — à comparer visuellement.';
+          (mode==='reference'
+            ? 'Rendu réel candidat Electron (1366 × 768) — à comparer visuellement.'
+            : 'Simulation du PC candidat '+result.report?.imageWidth+' × '+result.report?.imageHeight+
+              ' — zoom automatique identique au parcours.');
       }catch(error) {
         if(revision===miniPreviewRevision) {
           if(status)status.textContent='Impossible de calculer le rendu : '+String(error?.message||error);
@@ -4088,6 +4097,9 @@
       }
     });
 
+    $('candidate-preview-resolution')?.addEventListener('change',()=>{
+      if(!Supplementary?.isEditing())refreshRealMiniPreview();
+    });
     if(typeof ResizeObserver==='function'){
       const observer=new ResizeObserver(()=>fitMiniPreview());
       const viewport=$('candidate-preview-viewport');

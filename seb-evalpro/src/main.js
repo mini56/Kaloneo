@@ -449,15 +449,20 @@ function verifyAdminPassword(password) {
   return passwordStore.verify('admin',password);
 }
 
+// Formule R141 conservée, partagée entre le véritable candidat et sa simulation.
+function adaptiveZoomForDimensions(width,height) {
+  const widthFactor = Number(width || DESIGN_WIDTH) / DESIGN_WIDTH;
+  const heightFactor = Number(height || DESIGN_HEIGHT) / DESIGN_HEIGHT;
+  const factor = Math.min(1, widthFactor, heightFactor);
+  return Math.max(MIN_ZOOM_FACTOR, Math.round(factor * 100) / 100);
+}
 function calculateAdaptiveZoom() {
   if (!mainWindow || mainWindow.isDestroyed()) return 1;
   const bounds = mainWindow.getBounds();
   const display = screen.getDisplayMatching(bounds);
   const size = display && display.size ? display.size : { width: bounds.width, height: bounds.height };
-  const widthFactor = Number(size.width || bounds.width || DESIGN_WIDTH) / DESIGN_WIDTH;
-  const heightFactor = Number(size.height || bounds.height || DESIGN_HEIGHT) / DESIGN_HEIGHT;
-  const factor = Math.min(1, widthFactor, heightFactor);
-  return Math.max(MIN_ZOOM_FACTOR, Math.round(factor * 100) / 100);
+  return adaptiveZoomForDimensions(size.width || bounds.width || DESIGN_WIDTH,
+    size.height || bounds.height || DESIGN_HEIGHT);
 }
 
 function applyAdaptiveZoom() {
@@ -1609,7 +1614,7 @@ function getKaloneoMiniPreviewWorker() {
   return kaloneoMiniPreviewWorker;
 }
 
-ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition) => {
+ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition, viewportMode='reference') => {
   if(!adminSessionUnlocked || !mainWindow || mainWindow.isDestroyed() ||
       event.sender!==mainWindow.webContents ||
       getCandidateStore().getActiveCandidate()) {
@@ -1619,6 +1624,16 @@ ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition) => {
     return {ok:false,error:'Définition du test absente.'};
   }
   const submitted=JSON.parse(JSON.stringify(definition));
+  // Tailles contrôlées : aucun dimensionnement arbitraire du processus caché.
+  // La référence garde rigoureusement le rendu de la R141.
+  const screenPresets=Object.freeze({
+    '1200x800':[1200,800],'1280x720':[1280,720],
+    '1366x768':[1366,768],'1600x900':[1600,900],'1920x1080':[1920,1080]
+  });
+  const requested=screenPresets[String(viewportMode||'reference')]||null;
+  const previewWidth=requested?requested[0]:1366;
+  const previewHeight=requested?requested[1]:768;
+  const candidateZoom=requested?adaptiveZoomForDimensions(previewWidth,previewHeight):1;
   const requestSerial=++kaloneoMiniPreviewRequestSerial;
   // Sérialiser les captures pour éviter qu'un nouveau modèle ne remplace celui
   // d'une image encore en cours de génération.
@@ -1637,15 +1652,18 @@ ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition) => {
     // physique d'une fenêtre cachée. Le zoom crée malgré cela exactement
     // le même viewport CSS qu'un candidat sur 1366×768.
     const bounds=worker.getContentBounds();
-    const factor=Math.min(1,bounds.width/1366,bounds.height/768);
+    const factor=Math.min(1,bounds.width/previewWidth,bounds.height/previewHeight);
     if(!(factor>0.25))return {ok:false,error:'Surface de capture indisponible.'};
-    worker.webContents.setZoomFactor(factor);
-    worker.setContentSize(Math.round(1366*factor),Math.round(768*factor));
+    // Réduire pixels physiques ET zoom en proportions égales conserve le CSS
+    // qu'utiliserait Electron sur l'écran W×H, sans toucher au vrai parcours.
+    const workerZoom=factor*candidateZoom;
+    worker.webContents.setZoomFactor(workerZoom);
+    worker.setContentSize(Math.round(previewWidth*factor),Math.round(previewHeight*factor));
     await worker.loadFile(source,{query:{kaloneoPreview:'1'}});
     if(requestSerial!==kaloneoMiniPreviewRequestSerial)
       return {ok:false,error:'Capture remplacée par une modification plus récente.'};
     // Chromium peut réinitialiser le zoom d'un nouvel URL file://.
-    worker.webContents.setZoomFactor(factor);
+    worker.webContents.setZoomFactor(workerZoom);
     const report=await worker.webContents.executeJavaScript(`(async()=>{
       await document.fonts.ready;
       await Promise.all([...document.images].map(img=>img.complete?
@@ -1670,14 +1688,18 @@ ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition) => {
           const right=Math.min(innerWidth,box.right,clipped?.right??innerWidth);
           const bottom=Math.min(innerHeight,box.bottom,clipped?.bottom??innerHeight);
           if(!Number.isInteger(index)||index<0||right-left<4||bottom-top<4)return null;
-          return {index,x:Math.round(left),y:Math.round(top),
-            width:Math.round(right-left),height:Math.round(bottom-top)};
+          // Coordonnées de l'image finale redimensionnée à l'écran simulé.
+          const screenScale=${candidateZoom};
+          return {index,x:Math.round(left*screenScale),y:Math.round(top*screenScale),
+            width:Math.round((right-left)*screenScale),
+            height:Math.round((bottom-top)*screenScale)};
         }).filter(Boolean);
       return {
         miniBlocks,
         ready:document.body.classList.contains('kaloneo-real-candidate-preview') &&
           Boolean(document.querySelector('#page-exercise.visible')),
         width:innerWidth,height:innerHeight,
+        imageWidth:${previewWidth},imageHeight:${previewHeight},screenZoom:${candidateZoom},
         questionCount:content?.querySelectorAll('[data-question-id]').length||0,
         ...overflowAudit,
         brokenImages:[...document.images].filter(img=>!img.complete||!img.naturalWidth)
@@ -1685,7 +1707,9 @@ ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition) => {
       };
     })()`,true);
     if(!report.ready) return {ok:false,error:'Le moteur candidat n\u0027a pas terminé son affichage.'};
-    if(Math.abs(report.width-1366)>2||Math.abs(report.height-768)>2) {
+    const cssWidth=previewWidth/candidateZoom;
+    const cssHeight=previewHeight/candidateZoom;
+    if(Math.abs(report.width-cssWidth)>4||Math.abs(report.height-cssHeight)>4) {
       return {ok:false,error:'Viewport différent du candidat : '+report.width+' × '+report.height};
     }
     if(requestSerial!==kaloneoMiniPreviewRequestSerial)
@@ -1694,10 +1718,10 @@ ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition) => {
     if(screenshot.isEmpty())return {ok:false,error:'Capture candidat vide.'};
     const size=screenshot.getSize();
     const ratio=size.width/Math.max(1,size.height);
-    if(Math.abs(ratio-1366/768)>0.025) {
+    if(Math.abs(ratio-previewWidth/previewHeight)>0.025) {
       return {ok:false,error:'Capture tronquée : '+size.width+' × '+size.height};
     }
-    return {ok:true,image:screenshot.resize({width:1366,height:768}).toDataURL(),report};
+    return {ok:true,image:screenshot.resize({width:previewWidth,height:previewHeight}).toDataURL(),report};
     } finally {
       // L'image a été copiée : ne laisser aucun moteur candidat caché tourner
       // après la capture, même si la page n'a pas chargé ou une erreur survient.

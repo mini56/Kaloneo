@@ -5,6 +5,11 @@ on:
     paths:
       - 'seb-evalpro/src/kaloneo-layout-diagnostics.js'
       - 'kaloneo/test-builder.js'
+      - 'kaloneo/test-builder.html'
+      - 'kaloneo/test-builder.css'
+      - 'seb-evalpro/src/main.js'
+      - 'seb-evalpro/src/preload.js'
+      - 'seb-evalpro/scripts/kaloneo-preview-resolution-r142-smoke.js'
       - 'seb-evalpro/scripts/kaloneo-layout-diagnostics-unit-smoke.js'
       - '.github/workflows/audit-r142-responsive-no-setup.yml'
   workflow_dispatch:
@@ -51,6 +56,8 @@ jobs:
           node --check ../kaloneo/test-builder.js
           node --check scripts/kaloneo-layout-diagnostics-unit-smoke.js
           node scripts/kaloneo-layout-diagnostics-unit-smoke.js
+          node --check scripts/kaloneo-preview-resolution-r142-smoke.js
+          node scripts/kaloneo-preview-resolution-r142-smoke.js
       - name: New test, questions, scoring, portability and prior templates
         shell: pwsh
         run: |

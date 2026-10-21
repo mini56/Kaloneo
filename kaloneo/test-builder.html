@@ -326,6 +326,16 @@
           <p class="muted">Pendant la saisie : affichage immédiat simplifié. Après une pause : véritable image de l'écran candidat Electron. « Aperçu » ouvre la version interactive en grand.</p>
         </div>
         <div class="preview-toolbar-actions">
+          <label class="candidate-preview-resolution-label" for="candidate-preview-resolution">Résolution simulée
+            <select id="candidate-preview-resolution" aria-label="Résolution du PC candidat à vérifier">
+              <option value="reference">Référence (aperçu actuel)</option>
+              <option value="1200x800">1200 × 800</option>
+              <option value="1280x720">1280 × 720</option>
+              <option value="1366x768">1366 × 768</option>
+              <option value="1600x900">1600 × 900</option>
+              <option value="1920x1080">1920 × 1080</option>
+            </select>
+          </label>
           <button id="open-electron-preview" class="seb-action-btn seb-btn-nav" type="button">Aperçu</button>
         </div>
       </div>
