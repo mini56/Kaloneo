@@ -372,9 +372,11 @@ function createCandidateTransfer(options = {}) {
       if(!freshPrivate)return;
       const folded=String(rel||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
       for(const privateName of identityParts){
-        const escaped=privateName.replace(/[.*+?^$()|[\]{}]/g,'\\  function packCandidate(record) {
-    const entries = [];').replace(/[ -]+/g,'[-_ ]+');
-        if(new RegExp('(^|[^A-Z0-9])'+escaped+'($|[^A-Z0-9])').test(folded))
+        const secretToken=privateName.replace(/[^A-Z0-9]/g,'');
+        const compactPath=folded.replace(/[^A-Z0-9]/g,'');
+        const pathTokens=folded.split(/[^A-Z0-9]+/).filter(Boolean);
+        if((secretToken.length>=4 && compactPath.includes(secretToken)) ||
+            pathTokens.includes(secretToken))
           throw new Error('Export refuse : nom ou prenom lisible dans un chemin candidat : '+rel);
       }
     }
