@@ -49,6 +49,7 @@ function persistSealedSidecar(target,plaintext){
 async function ensurePortableCandidateWords({candidatesRoot,selectedCandidateIds=null,adminPassword}){
   const selected=Array.isArray(selectedCandidateIds)?new Set(selectedCandidateIds.map(String)):null;
   const records=listCandidateDirs(candidatesRoot,false)
+    .filter(item=>['TERMINE','SESSION_FERMEE'].includes(String(item.manifest&&item.manifest.status||'')))
     .filter(item=>!selected||selected.has(String(item.candidateId||'')));
   const report={recovered:0,preserved:0};
   for(const record of records){
