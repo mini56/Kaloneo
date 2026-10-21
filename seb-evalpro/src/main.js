@@ -13,6 +13,7 @@ const { createKaloneoLibrary } = require('./kaloneo-library-main');
 const { embedTestImages, validatePortableTest } = require('./kaloneo-test-portability');
 const { configureLocalKey, readJsonFile, encodeJson, migrateJsonFile, migrateJsonTree } = require('./candidate-data-crypto');
 const { createCandidateLocalProtection } = require('./candidate-local-protection');
+const { migrateCandidatePrivateDocuments } = require('./candidate-private-documents');
 const { internalStorageRoot, documentsWordRoot, migrateLegacyDocumentsStorage } = require('./storage-layout');
 const kaloneoFullParcoursRoute = require('./kaloneo-full-parcours-route');
 const { buildBilanDocxBuffer } = require('./bilan-docx-main');
@@ -884,6 +885,11 @@ function startApplication() {
     const replayProtection = candidateReplayHandlers.migrateStoredReplayImages();
     if (replayProtection.errors.length) console.warn('KALONEO : migration Replay incomplete :', replayProtection.errors.length);
     else console.log('KALONEO : images Replay protegees :', replayProtection.migrated);
+    const privateDocs=migrateCandidatePrivateDocuments({
+      dataRoot:sebInternalRoot(),documentsPath:app.getPath('documents'),userDataPath:app.getPath('userData')
+    });
+    if(privateDocs.errors.length)console.warn('KALONEO : documents historiques restant a verifier :',privateDocs.errors.length);
+    else console.log('KALONEO : archives Word protegees :',privateDocs.encryptedLegacyDocs+privateDocs.encryptedLegacyDocx);
     ensureSebDocumentsFolders();
   } catch (error) {
     showStartupSecurityError(error);

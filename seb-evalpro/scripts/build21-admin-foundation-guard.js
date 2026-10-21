@@ -43,7 +43,7 @@ function section(text, start, end) {
 const exactBuild21 = {
   // Replay evolue uniquement pour chiffrer les captures et gerer les cles Windows des imports.
   'src/bilan-history-preload.js': '7f53efab6addbf19a1cb8b42aff5233ff4db5416',
-  'src/bilan-history-main.js': '2e5f549fa0623c64029eb0e6f29cb6af5a9c6848',
+  // Module bilan historique autorise a securiser la generation des anciens Word.
   // candidate-store-main.js a volontairement évolué après le Build #21
   // (protection des reprises puis modèle R36 personne -> évaluations).
   // Il est donc contrôlé structurellement ci-dessous plutôt que par SHA figé.
@@ -60,6 +60,8 @@ for (const [rel, expected] of Object.entries(exactBuild21)) {
 const replayCore = read('src/replay-main.js');
 const cryptoCore = read('src/candidate-data-crypto.js');
 const archiveIntegrityCore = read('src/replay-archive-integrity.js');
+const privateDocumentCore=read('src/candidate-private-documents.js');
+const privateBilanCore=read('src/bilan-history-main.js');
 assert(replayCore.includes("ipcMain.handle('replay:capture-page'"), 'Replay : capture candidat historique absente.');
 assert(replayCore.includes("ipcMain.handle('admin:get-candidate-parcours-slide'"), 'Replay : visionneuse admin historique absente.');
 assert(replayCore.includes('function migrateStoredReplayImages()'), 'Replay : migration de captation PNG existante absente.');
@@ -71,6 +73,10 @@ assert(cryptoCore.includes('FILE_AAD') && cryptoCore.includes('encryptLocalFileB
 assert(cryptoCore.includes('decryptLocalFileBuffer'), 'Decryptage en memoire des fichiers candidats absent.');
 assert(cryptoCore.includes("if (!hasLocalKey()) throw new Error("), 'Sauvegarde candidate en clair sans cle possible.');
 assert(archiveIntegrityCore.includes('function computeArchiveIntegrity(manifest)'), 'Hachage des archives Replay inter-postes absent.');
+assert(privateBilanCore.includes("ipcMain.on('bilan-history:write-word-sync'"), 'Archivage Word admin historique absent.');
+assert(privateBilanCore.includes('encryptLocalFileBuffer(plain)'), 'Word historique : ecriture potentielle en clair.');
+assert(privateBilanCore.includes("opaqueCandidateName('.json','BILAN_CAND')"), 'Nom du bilan historique non pseudonymise.');
+assert(privateDocumentCore.includes('function migrateCandidatePrivateDocuments('),'Migration historique des Word et des noms absente.');
 
 // candidate-store-main.js conserve les protections historiques tout en étant
 // autorisé à évoluer pour les fonctions candidat validées après le Build #21.

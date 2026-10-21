@@ -17,6 +17,9 @@ on:
       - 'seb-evalpro/src/candidate-transfer-main.js'
       - 'seb-evalpro/src/candidate-catalog-main.js'
       - 'seb-evalpro/scripts/candidate-word-privacy-guard.js'
+      - 'seb-evalpro/src/candidate-private-documents.js'
+      - 'seb-evalpro/src/bilan-history-main.js'
+      - 'seb-evalpro/scripts/candidate-historical-privacy-smoke.js'
       - 'seb-evalpro/scripts/candidate-private-transfer-smoke.js'
       - 'seb-evalpro/scripts/build21-admin-foundation-guard.js'
       - 'seb-evalpro/src/preload.js'
@@ -118,6 +121,7 @@ jobs:
           node scripts/candidate-private-transfer-smoke.js
           node scripts/replay-direct-candidate-storage-smoke.js
           node scripts/candidate-word-privacy-guard.js
+          node scripts/candidate-historical-privacy-smoke.js
           node scripts/bilan-docx-smoke.js
       - name: No installer published
         shell: pwsh

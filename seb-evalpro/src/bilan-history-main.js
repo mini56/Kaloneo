@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { listCandidateDirs, selectCandidate, copyFileIfMissing, ensureDir } = require('./candidate-folder-utils');
-const { readJsonFile, encodeJson } = require('./candidate-data-crypto');
+const { readJsonFile, encodeJson, encryptLocalFileBuffer, decryptLocalFileBuffer } = require('./candidate-data-crypto');
+const { opaqueCandidateName } = require('./candidate-private-documents');
 
 module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked, buildNumber, dataRoot = null }) {
   const CURRENT_BUILD = String(buildNumber || 'DEV');
@@ -219,10 +220,8 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
     body.documentSha256 = sha(document);
     body.integritySha256 = sha(body);
 
-    const datePart = safePart(candidate.date || createdAt.slice(0, 10), 'DATE');
-    const base = [safePart(candidate.nom, 'NOM'), safePart(candidate.prenom, 'PRENOM'), datePart, `BUILD-${safePart(body.originalBuild, 'DEV')}`].join('_');
-    const stamp = createdAt.replace(/[-:.TZ]/g, '').slice(0, 14);
-    const filename = `${base}_BILAN_R${String(revision).padStart(2, '0')}_${stamp}_${body.documentSha256.slice(0, 10)}.json`;
+    // Aucune identite ni date candidat dans le nom d'une archive.
+    const filename = opaqueCandidateName('.json','BILAN_CAND');
     const target = path.join(targetHistory, filename);
     const temp = target + '.tmp';
     fs.writeFileSync(temp, encodeJson(body), 'utf8');
@@ -375,22 +374,18 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
       const html = String((payload && payload.html) || '');
       if (html.length < 100 || !html.includes('<table')) throw new Error('Contenu Word vide ou invalide.');
       const candidate = normalizeCandidate(payload && payload.candidate);
-      cleanupLegacyHistoricalWords(filename);
-      const target = historicalWordPath(filename);
-      const temp = `${target}.tmp`;
-      fs.writeFileSync(temp, '\uFEFF' + html, 'utf8');
-      if (fs.existsSync(target)) fs.rmSync(target, { force: true });
-      fs.renameSync(temp, target);
-      if (!fs.existsSync(target)) throw new Error('Le document Word n’a pas été créé sur le disque.');
-      const size = fs.statSync(target).size;
-      if (size < 100) throw new Error('Le document Word créé est vide.');
-
       const archiveDir = historicalWordArchiveDir(candidate);
-      if (archiveDir) {
-        fs.copyFileSync(target, path.join(archiveDir, path.basename(target)));
-      }
-
-      event.returnValue = { ok: true, filename: path.basename(target), path: target, size };
+      if (!archiveDir) throw new Error('Dossier candidat introuvable : ecriture Word refusee.');
+      const targetName=opaqueCandidateName('.sebdoc');
+      const target=path.join(archiveDir,targetName);
+      const plain=Buffer.from('\uFEFF'+html,'utf8');
+      const sealed=encryptLocalFileBuffer(plain);
+      const temp=target+'.'+process.pid+'.tmp';
+      try{fs.writeFileSync(temp,sealed,{flag:'wx'});fs.renameSync(temp,target)}
+      finally{try{fs.rmSync(temp,{force:true})}catch(_){}}
+      if(!decryptLocalFileBuffer(fs.readFileSync(target)).equals(plain))
+        throw new Error('Verification du bilan Word chiffre impossible.');
+      event.returnValue={ok:true,filename:targetName,path:targetName,size:sealed.length,protected:true};
     } catch (error) {
       event.returnValue = { ok: false, error: error && error.message ? error.message : String(error) };
     }
