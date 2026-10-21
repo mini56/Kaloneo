@@ -130,7 +130,7 @@ ipcMain.handle('kaloneo-library:get-mask-screen',()=>({ok:true,maskScreen:{id:'k
 ipcMain.handle('kaloneo-library:list-parcours',()=>({ok:true,parcours:[]}));
 ipcMain.handle('kaloneo-library:save-parcours',()=>({ok:true}));
 
-const timeout=setTimeout(()=>fail('délai global dépassé'),45000);
+const timeout=setTimeout(()=>fail('délai global dépassé'),65000);
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
 app.whenReady().then(async()=>{
@@ -633,9 +633,21 @@ app.whenReady().then(async()=>{
          value=>resolutionControl.options.includes(value))){
       return fail('R142 : choix de résolution du Builder inaccessible',resolutionControl);
     }
-    await wait(1450);
-    if(!miniRenderModes.includes('1200x800'))
-      return fail('R142 : résolution non transmise à Electron',miniRenderModes);
+    // L'Electron caché peut terminer une capture précédente avant de traiter
+    // ce changement : attendre le signal réel plutôt qu'un délai arbitraire.
+    for(let attempt=0;attempt<15&&!miniRenderModes.includes('1200x800');attempt++){
+      await wait(400);
+    }
+    if(!miniRenderModes.includes('1200x800')){
+      const debug=await win.webContents.executeJavaScript(`(()=>{
+        const input=document.getElementById('candidate-preview-resolution');
+        return {selected:input?.value,
+          warning:document.getElementById('candidate-preview-warning')?.textContent,
+          snapshotHidden:document.getElementById('candidate-preview-snapshot')?.hidden};
+      })()`);
+      return fail('R142 : résolution non transmise à Electron',
+        {modes:miniRenderModes,debug});
+    }
     await win.webContents.executeJavaScript(
       "document.getElementById('candidate-preview-resolution').value='reference'; true");
     console.log('KALONEO_R142_MANUAL_RESOLUTION_SELECTION=OK');

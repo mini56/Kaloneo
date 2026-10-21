@@ -82,16 +82,25 @@ jobs:
       - name: Real Electron render across five sizes and clipping
         run: npx electron --no-sandbox scripts/kaloneo-responsive-overflow-electron-smoke-main.js
       - name: New Builder tests and interactive preview
+        shell: pwsh
         run: |
           npx electron --no-sandbox scripts/kaloneo-new-test-preview-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'New test preview Electron failed'}
           npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Builder preview Electron failed'}
           npx electron --no-sandbox scripts/kaloneo-builder-r48-10-generic-columns-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Shared candidate columns Electron failed'}
       - name: Complete candidate parcours and results
+        shell: pwsh
         run: |
           npx electron --no-sandbox scripts/kaloneo-selected-parcours-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Selected parcours failed'}
           npx electron --no-sandbox scripts/kaloneo-results-strict-isolation-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Results isolation failed'}
           npx electron --no-sandbox scripts/kaloneo-results-readable-formats-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Results formats failed'}
           npx electron --no-sandbox scripts/full-pilot-journey-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Full candidate journey failed'}
       - name: Security, candidate data, import and export
         run: npm run test:security
       - name: No installer published
