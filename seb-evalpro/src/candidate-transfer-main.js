@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const zlib = require('zlib');
 const { encodeJson, encryptLocalFileBuffer, decryptLocalFileBuffer, isEncryptedLocalFileBuffer } = require('./candidate-data-crypto');
+const {createPrivateTransferFilename}=require('./candidate-anonymous-paths');
 const { computeArchiveIntegrity } = require('./replay-archive-integrity');
 const { opaqueCandidateName } = require('./candidate-private-documents');
 const {
@@ -406,16 +407,11 @@ function createCandidateTransfer(options = {}) {
     };
   }
 
-  function portableFileName(record) {
-    const candidateId = String(record && record.candidateId || '').trim();
-    if (!candidateId) return 'CAND-' + crypto.randomBytes(12).toString('hex').toUpperCase() + '.seb';
-    const token = crypto
-      .createHash('sha256')
-      .update('SEB-EvalPro/candidate-transfer-file/v2\0' + candidateId, 'utf8')
-      .digest('hex')
-      .toUpperCase()
-      .slice(0, 24);
-    return 'CAND-' + token + '.seb';
+  function portableFileName(_record) {
+    // Aucun derive, hash ou fragment fixe de candidateId n'apparait sur la cle.
+    // La detection de doublons et la mise a jour se font apres ouverture du
+    // fichier .seb avec son mot de passe (existingTransferCandidates).
+    return createPrivateTransferFilename();
   }
 
   function existingTransferCandidates(destinationRoot, password) {

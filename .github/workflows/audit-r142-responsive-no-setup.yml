@@ -16,6 +16,8 @@ on:
       - 'seb-evalpro/src/replay-archive-integrity.js'
       - 'seb-evalpro/src/candidate-data-crypto.js'
       - 'seb-evalpro/src/candidate-transfer-main.js'
+      - 'seb-evalpro/src/candidate-anonymous-paths.js'
+      - 'seb-evalpro/scripts/candidate-forward-anonymity-smoke.js'
       - 'seb-evalpro/src/candidate-catalog-main.js'
       - 'seb-evalpro/scripts/candidate-word-privacy-guard.js'
       - 'seb-evalpro/src/candidate-private-documents.js'
@@ -128,6 +130,7 @@ jobs:
         run: |
           npm run test:security
           node scripts/candidate-private-transfer-smoke.js
+          node scripts/candidate-forward-anonymity-smoke.js
           node scripts/replay-direct-candidate-storage-smoke.js
           node scripts/candidate-private-pending-smoke.js
           node scripts/candidate-protected-download-smoke.js

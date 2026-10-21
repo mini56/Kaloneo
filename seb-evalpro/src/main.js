@@ -9,6 +9,7 @@ const appPackage = require('../package.json');
 const APP_BUILD_NUMBER = String(appPackage.sebBuildNumber || '').trim() || 'DEV';
 const { createCandidateStore } = require('./candidate-store-main');
 const { createCandidateTransfer } = require('./candidate-transfer-main');
+const { createPrivateExportFolderName } = require('./candidate-anonymous-paths');
 const { createKaloneoLibrary } = require('./kaloneo-library-main');
 const { embedTestImages, validatePortableTest } = require('./kaloneo-test-portability');
 const { configureLocalKey, readJsonFile, encodeJson, migrateJsonFile, migrateJsonTree } = require('./candidate-data-crypto');
@@ -1109,11 +1110,9 @@ ipcMain.handle('admin:export-candidates', async (event, password, destinationOpt
     };
 
     if (mode === 'create') {
-      const rawFolderName = String(destinationOptions && destinationOptions.folderName || '').trim();
-      const folderName = rawFolderName.replace(/[<>:"/\\|?*\u0000-\u001F]/g, '_').replace(/[. ]+$/g, '').trim();
-      if (!folderName || folderName === '.' || folderName === '..') {
-        return { ok:false, error:'Le nom du dossier d’export est invalide.' };
-      }
+      // Confidentialite obligatoire : ignorer tout nom propose susceptible
+      // de contenir le nom/prenom du candidat. Dossier cree par KALONEO = code aleatoire.
+      const folderName = createPrivateExportFolderName();
 
       const selection = await dialog.showOpenDialog(mainWindow, {
         title: 'Choisir la clé USB où créer le nouveau dossier',
