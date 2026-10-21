@@ -21,6 +21,7 @@ on:
       - 'seb-evalpro/src/candidate-private-documents.js'
       - 'seb-evalpro/src/candidate-protected-download.js'
       - 'seb-evalpro/scripts/candidate-protected-download-smoke.js'
+      - 'seb-evalpro/scripts/bilan-docx-smoke.js'
       - 'seb-evalpro/src/bilan-history-main.js'
       - 'seb-evalpro/src/bilan-docx-main.js'
       - 'seb-evalpro/src/candidate-catalog-preload.js'
