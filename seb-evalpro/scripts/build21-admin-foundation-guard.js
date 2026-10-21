@@ -96,6 +96,7 @@ assert(candidateStoreCore.includes("['TERMINE', 'SESSION_FERMEE'].includes(Strin
 assert(candidateStoreCore.includes('recentlyCompleted') && candidateStoreCore.includes('guardUntil'), 'protection contre la sauvegarde tardive après clôture absente.');
 assert(candidateStoreCore.includes('function completeActiveCandidate(state'), 'clôture candidat absente.');
 assert(candidateStoreCore.includes('removeActivePointer();'), 'pointeur actif non supprimé à la clôture.');
+assert(candidateStoreCore.includes('privacyStorageVersion: 1'), 'Nouvelle generation de candidats sans controle de confidentialite.');
 assert(candidateStoreCore.includes('evaluationId:candidateId'), 'R36 : identifiant d’évaluation technique absent à la création.');
 assert(candidateStoreCore.includes('personId:person.personId'), 'R36 : personId interne absent à la création.');
 

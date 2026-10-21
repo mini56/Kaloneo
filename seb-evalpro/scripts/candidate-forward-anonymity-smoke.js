@@ -50,7 +50,7 @@ function audit(rootDir){
   configureLocalKey(Buffer.alloc(32,67));
   const candDir=path.join(a,'storage','Candidats','CAND-10A00B20C30D');
   for(const rel of ['donnees','resultats','replay/slides','bilan/historique','bilan/exports'])fs.mkdirSync(path.join(candDir,rel),{recursive:true});
-  const manifest={schemaVersion:1,candidateId:id,shortId:'TSTPRV1',status:'TERMINE',
+  const manifest={schemaVersion:1,privacyStorageVersion:1,candidateId:id,shortId:'TSTPRV1',status:'TERMINE',
     folderName:path.basename(candDir),candidat:candidate};
   writeJsonFile(path.join(candDir,'manifest.json'),manifest);
   writeJsonFile(path.join(candDir,'donnees','candidat.json'),candidate);
@@ -74,6 +74,18 @@ function audit(rootDir){
   const outer=fs.readFileSync(path.join(usb1,file1),'utf8');
   assert(JSON.parse(outer).format==='SEB-EVALPRO-USB-1');
   for(const secret of [name,first,answer,id])assert(!outer.includes(secret),'Info personnelle en clair sur USB');
+  // Un nouveau dossier ne peut jamais exporter une piece brute.
+  const exposed=path.join(candDir,'resultats','RAPPORT_'+name+'.txt');
+  fs.writeFileSync(exposed,answer,'utf8');
+  const blocked=transfer.exportSelected(usb1,'MOT-DE-PASSE-USB-UNIQUE',[id]);
+  assert.strictEqual(blocked.added+blocked.updated,0);
+  assert.strictEqual(blocked.invalidSkipped,1,'Un nom personnel visible ne doit jamais etre exporte.');
+  fs.rmSync(exposed,{force:true});
+  const rawBinary=path.join(candDir,'resultats','PIECE_SUPPLEMENTAIRE.bin');
+  fs.writeFileSync(rawBinary,Buffer.from(answer));
+  const blockedRaw=transfer.exportSelected(usb1,'MOT-DE-PASSE-USB-UNIQUE',[id]);
+  assert.strictEqual(blockedRaw.invalidSkipped,1,'Un binaire non chiffre doit bloquer l export.');
+  fs.rmSync(rawBinary,{force:true});
   const repeat=transfer.exportSelected(usb1,'MOT-DE-PASSE-USB-UNIQUE',[id]);
   assert.strictEqual(repeat.skipped,1,'Re-export sans modification doit retrouver le candidat en dechiffrant');
   assert.strictEqual(fs.readdirSync(usb1).filter(x=>x.endsWith('.seb')).length,1);
@@ -86,6 +98,7 @@ function audit(rootDir){
   assert.deepStrictEqual(readJsonFile(path.join(dir,'resultats','reponses.json')),{email:answer});
   audit(path.join(b,'storage','Candidats'));
   console.log('NEW_CANDIDATE_PC_NO_PLAINTEXT_IDENTITY_OR_ANSWERS=OK');
+  console.log('NEW_CANDIDATE_EXPORT_FAIL_CLOSED_ON_RAW_FILE_OR_NAME=OK');
   console.log('USB_RANDOM_NAMES_AND_ENCRYPTED_CONTENT=OK');
   console.log('USB_REPEATED_EXPORT_AND_PASSWORD_IMPORT=OK');
   console.log('SECOND_PC_LOCAL_ENCRYPTION_AND_ADMIN_READBACK=OK');

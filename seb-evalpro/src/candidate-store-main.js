@@ -336,6 +336,8 @@ function createCandidateStore(options = {}) {
     };
     const manifest = {
       schemaVersion: 1,
+      // Nouvelle generation : seules des pieces chiffrees peuvent etre exportees.
+      privacyStorageVersion: 1,
       candidateId,
       evaluationId:candidateId,
       personId:person.personId,

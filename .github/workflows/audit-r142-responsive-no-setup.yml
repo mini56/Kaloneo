@@ -17,6 +17,7 @@ on:
       - 'seb-evalpro/src/candidate-data-crypto.js'
       - 'seb-evalpro/src/candidate-transfer-main.js'
       - 'seb-evalpro/src/candidate-folder-utils.js'
+      - 'seb-evalpro/src/candidate-store-main.js'
       - 'seb-evalpro/scripts/candidate-deletion-index-privacy-smoke.js'
       - 'seb-evalpro/src/candidate-anonymous-paths.js'
       - 'seb-evalpro/scripts/candidate-forward-anonymity-smoke.js'

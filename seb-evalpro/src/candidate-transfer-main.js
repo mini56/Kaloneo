@@ -363,11 +363,27 @@ function createCandidateTransfer(options = {}) {
 
   function packCandidate(record) {
     const entries = [];
+    const freshPrivate=Number(record && record.manifest && record.manifest.privacyStorageVersion||0)>=1;
+    const identity=record && record.manifest && record.manifest.candidat||{};
+    const identityParts=[identity.nom,identity.prenom||identity['prénom']]
+      .map(v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim())
+      .filter(Boolean);
+    function verifyOpaqueRelative(rel){
+      if(!freshPrivate)return;
+      const folded=String(rel||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+      for(const privateName of identityParts){
+        const escaped=privateName.replace(/[.*+?^$()|[\]{}]/g,'\\  function packCandidate(record) {
+    const entries = [];').replace(/[ -]+/g,'[-_ ]+');
+        if(new RegExp('(^|[^A-Z0-9])'+escaped+'($|[^A-Z0-9])').test(folded))
+          throw new Error('Export refuse : nom ou prenom lisible dans un chemin candidat : '+rel);
+      }
+    }
     const walk = (dir) => {
       const list = fs.readdirSync(dir, { withFileTypes:true }).sort((a,b) => a.name.localeCompare(b.name));
       for (const entry of list) {
         const full = path.join(dir, entry.name);
         const rel = safeTransferRelative(path.relative(record.candidateDir, full));
+        verifyOpaqueRelative(rel);
         if (entry.isDirectory()) {
           entries.push({ type:'dir', rel });
           walk(full);
@@ -390,6 +406,7 @@ function createCandidateTransfer(options = {}) {
             const plain = decryptLocalFileBuffer(raw);
             entries.push({ type:'secure-file', rel, data:plain.toString('base64') });
           } else {
+            if(freshPrivate)throw new Error('Export refuse : fichier candidat non chiffre : '+rel);
             entries.push({ type:'file', rel, data:raw.toString('base64') });
           }
         }
