@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { readJsonFile } = require('./candidate-data-crypto');
+const { readJsonFile, encodeJson } = require('./candidate-data-crypto');
 
 function readJson(target) {
   return readJsonFile(target);
@@ -204,7 +204,8 @@ function writeDeletedIds(documentsPath, ids) {
   const target = deletionIndexPath(documentsPath);
   ensureDir(path.dirname(target));
   const temp = target + '.tmp';
-  fs.writeFileSync(temp, JSON.stringify(Array.from(ids).sort(), null, 2), 'utf8');
+  // Les identifiants techniques supprimes ne sont plus lisibles dans l'Explorateur.
+  fs.writeFileSync(temp, encodeJson(Array.from(ids).sort()), 'utf8');
   fs.renameSync(temp, target);
 }
 
