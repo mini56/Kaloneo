@@ -5,6 +5,7 @@ const os=require('os');
 const path=require('path');
 const {
   buildBilanDocxBuffer,
+  protectPlainBilanDocxBuffer,
   decryptBilanDocxBuffer,
   isEncryptedBilanDocxBuffer,
   verifyBilanDocxPassword
@@ -50,15 +51,23 @@ const {
   const plain=await decryptBilanDocxBuffer(encrypted,password);
   if(plain[0]!==0x50||plain[1]!==0x4b)throw new Error('Le contenu déchiffré n’est pas un DOCX/ZIP valide.');
 
+  // Un ancien DOCX non protege est rechiffre avant ecriture sur le PC admin.
+  const migrated=await protectPlainBilanDocxBuffer(plain,password);
+  if(!(await isEncryptedBilanDocxBuffer(migrated)))
+    throw new Error('La conversion de l ancien Word n a pas produit un OOXML chiffre.');
+  if(!(await verifyBilanDocxPassword(migrated,password)))
+    throw new Error('Mot de passe du Word migre refuse.');
+  const reloaded=await decryptBilanDocxBuffer(migrated,password);
+  if(!reloaded.equals(plain))throw new Error('Le Word migre a perdu du contenu.');
+  console.log('LEGACY_DOCX_TO_PASSWORD_WORD=OK');
+
   const root=process.env.RUNNER_TEMP||os.tmpdir();
   const target=path.join(root,'seb-evalpro-r17-bilan-smoke-protected.docx');
-  const plainTarget=path.join(root,'seb-evalpro-r17-bilan-smoke-plain.docx');
   fs.writeFileSync(target,encrypted);
-  fs.writeFileSync(plainTarget,plain);
+  // Aucun Word clair n'est jamais ecrit dans TEMP, meme pendant le test.
 
   console.log('BILAN_DOCX_SMOKE=OK');
   console.log('BILAN_DOCX_SMOKE_PATH='+target);
-  console.log('BILAN_DOCX_SMOKE_PLAIN_PATH='+plainTarget);
 })().catch(error=>{
   console.error('BILAN_DOCX_SMOKE=FAIL');
   console.error(error&&error.stack||error);
