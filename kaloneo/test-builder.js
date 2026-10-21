@@ -2956,7 +2956,16 @@
         // modifiant silencieusement sa disposition.
         $('candidate-preview-viewport')?.removeAttribute('data-preview-loading');
         const warnings=[];
-        if(result.report?.overflowZones)warnings.push('contenu coupé ou inaccessible');
+        if(result.report?.overflowZones){
+          const locations=(result.report.clippedAreas||[]).slice(0,3).map(area=>{
+            const index=Number.isInteger(area?.blockIndex)?area.blockIndex:null;
+            const name=index===null?String(area?.target||'zone'):('bloc n°'+(index+1));
+            const axis=area?.axis==='horizontal'?'largeur':'hauteur';
+            return name+' ('+axis+' : '+Number(area?.excess||0)+' px inaccessibles)';
+          });
+          warnings.push('contenu coupé ou inaccessible'+
+            (locations.length?' — '+locations.join(' ; '):''));
+        }
         if(result.report?.tableHorizontalOverflow)warnings.push('défilement horizontal du tableau inaccessible');
         if(result.report?.brokenImages?.length)warnings.push('image introuvable');
         if(warning)warning.textContent=warnings.length?

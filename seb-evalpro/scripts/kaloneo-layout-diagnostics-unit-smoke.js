@@ -36,6 +36,17 @@ const forbidden=makeElement('kaltest-builder-content-item',{
 const blocked=auditCases(forbidden);
 assert.equal(blocked.overflowZones,1);
 assert.equal(blocked.clippedAreas[0].target,'bloc');
+assert.equal(blocked.clippedAreas[0].blockIndex,null);
+assert.equal(blocked.clippedAreas[0].axis,'vertical');
+assert.equal(blocked.clippedAreas[0].excess,350);
+const indexed=makeElement('kaltest-builder-content-item',{
+  scrollHeight:420,clientHeight:120,style:{overflowY:'hidden'}});
+indexed.closest=selector=>selector==='[data-kaloneo-mini-block-index]'?indexed:null;
+indexed.getAttribute=name=>name==='data-kaloneo-mini-block-index'?'7':null;
+const indexedReport=auditCases(indexed);
+assert.equal(indexedReport.overflowZones,1);
+assert.equal(indexedReport.clippedAreas[0].blockIndex,7);
+assert.match(indexedReport.clippedAreas[0].className,/^/);
 const clipped=makeElement('kaltest-builder-grid-wrap',{
  scrollWidth:400,clientWidth:100,style:{overflowX:'hidden'}});
 const scrollWrap=makeElement('kaltest-builder-grid-wrap',{
@@ -47,6 +58,6 @@ const main=fs.readFileSync(path.join(__dirname,'../src/main.js'),'utf8');
 const builder=fs.readFileSync(path.join(__dirname,'../../kaloneo/test-builder.js'),'utf8');
 assert(main.includes('inspectCandidateOverflow.toString()'));
 assert(!main.includes('z.scrollHeight>z.clientHeight+2'));
-assert(builder.includes("warnings.push('contenu coupé ou inaccessible')"));
+assert(builder.includes("warnings.push('contenu coupé ou inaccessible'+"));
 assert(!builder.includes("warnings.push('débordement de bloc')"));
 console.log('KALONEO_LAYOUT_R124=OK : scroll autorisé, contenu coupé, grille inaccessible, Builder');

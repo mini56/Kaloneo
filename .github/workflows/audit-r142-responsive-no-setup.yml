@@ -1,0 +1,89 @@
+name: "KALONÉO R142 - Audit affichage et non-régression (sans Setup)"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - 'seb-evalpro/src/kaloneo-layout-diagnostics.js'
+      - 'kaloneo/test-builder.js'
+      - 'seb-evalpro/scripts/kaloneo-layout-diagnostics-unit-smoke.js'
+      - '.github/workflows/audit-r142-responsive-no-setup.yml'
+  workflow_dispatch:
+concurrency:
+  group: kaloneo-r142-responsive-audit-${{ github.ref }}
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  verify-no-regression:
+    runs-on: windows-latest
+    timeout-minutes: 55
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - name: Guarantee released baseline and protected V1 untouched
+        shell: pwsh
+        run: |
+          git fetch --depth=1 origin tag seb-kaloneo-r141-help-guides-test
+          if($LASTEXITCODE -ne 0){throw 'R141 reference tag missing'}
+          $p=Get-Content -Raw -Encoding UTF8 package.json | ConvertFrom-Json
+          if([int]$p.sebBuildNumber -ne 146 -or $p.sebReleaseVersion -ne '0.0.170'){
+            throw 'The audit must not publish or change a setup version'
+          }
+          foreach($file in (git diff --name-only seb-kaloneo-r141-help-guides-test HEAD)){
+            if($file -match '^(TESTS_VALIDES/|VALID2/|seb-evalpro/source/kaltest/tests/|images_tests/|kaloneo/icons-tests/)'){
+              throw "Protected V1 or image changed: $file"
+            }
+          }
+          Write-Host 'R141 version 0.0.170 Build #146 and validated V1 are intact'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Dependencies
+        run: npm install --no-audit --no-fund
+      - name: Syntax and true/false overflow checks
+        shell: pwsh
+        run: |
+          node --check src/main.js
+          node --check src/kaloneo-layout-diagnostics.js
+          node --check src/preload.js
+          node --check ../kaloneo/test-builder.js
+          node --check scripts/kaloneo-layout-diagnostics-unit-smoke.js
+          node scripts/kaloneo-layout-diagnostics-unit-smoke.js
+      - name: New test, questions, scoring, portability and prior templates
+        shell: pwsh
+        run: |
+          node scripts/kaloneo-builder-future-roundtrip-smoke.js
+          node scripts/kaloneo-answer-layout-roundtrip-smoke.js
+          node scripts/kaloneo-units-score-audit-smoke.js
+          node scripts/kaloneo-catalog-roundtrip-score-guard.js
+          node scripts/kaloneo-free-text-height-r123-smoke.js
+      - name: Prepare real application pages
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          npm run prepare:web
+      - name: Images, edited tests, transfers and V1
+        shell: pwsh
+        run: |
+          node scripts/kaloneo-image-library-smoke.js
+          node scripts/kaloneo-image-export-ui-smoke.js
+          node scripts/kaloneo-export-restaurant-r69-smoke.js
+          node scripts/kaloneo-edit-existing-test-smoke.js
+      - name: Real Electron render across five sizes and clipping
+        run: npx electron --no-sandbox scripts/kaloneo-responsive-overflow-electron-smoke-main.js
+      - name: New Builder tests and interactive preview
+        run: |
+          npx electron --no-sandbox scripts/kaloneo-new-test-preview-electron-smoke-main.js
+          npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
+          npx electron --no-sandbox scripts/kaloneo-builder-r48-10-generic-columns-electron-smoke-main.js
+      - name: Complete candidate parcours and results
+        run: |
+          npx electron --no-sandbox scripts/kaloneo-selected-parcours-electron-smoke-main.js
+          npx electron --no-sandbox scripts/kaloneo-results-strict-isolation-electron-smoke-main.js
+          npx electron --no-sandbox scripts/kaloneo-results-readable-formats-electron-smoke-main.js
+          npx electron --no-sandbox scripts/full-pilot-journey-smoke-main.js
+      - name: Security, candidate data, import and export
+        run: npm run test:security
+      - name: No installer published
+        run: echo "Audit completed; 0.0.170 and Build #146 remain the reference."

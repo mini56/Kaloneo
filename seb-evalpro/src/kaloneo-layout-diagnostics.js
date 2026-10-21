@@ -28,7 +28,17 @@ function inspectCandidateOverflow(doc) {
         node.classList?.contains('kaltest-builder-runtime-layout')?'disposition':
         node.classList?.contains('kaltest-builder-grid-wrap')?'tableau':'bloc');
       if(policy==='hidden'||policy==='clip') {
-        blocked.push({target,axis,excess:Math.ceil(excess)});
+        // Pointer vers le bloc d'origine sans dépendre des tests existants.
+        // Un débordement d'une colonne peut rester sans bloc individuel.
+        const block=node.closest?.('[data-kaloneo-mini-block-index]');
+        const rawIndex=block?.getAttribute?.('data-kaloneo-mini-block-index');
+        const blockIndex=rawIndex!==null && rawIndex!==undefined && String(rawIndex).trim()!==''
+          ? Number(rawIndex):null;
+        blocked.push({
+          target,axis,excess:Math.ceil(excess),
+          blockIndex:Number.isInteger(blockIndex)&&blockIndex>=0?blockIndex:null,
+          className:String(node.className||'').slice(0,100)
+        });
       } else if(policy==='auto'||policy==='scroll') {
         // Le contenu supplémentaire reste accessible via le défilement.
         scrollable.push({target,axis});
