@@ -4,6 +4,7 @@ on:
     branches: [fix-r60-tri-rearm-only-20261011]
     paths:
       - '.github/workflows/build-r143-kaloneo-confidentialite.yml'
+      - 'seb-evalpro/scripts/kaloneo-r125-branding.py'
 concurrency:
   group: kaloneo-r143-privacy-setup-${{ github.ref }}
   cancel-in-progress: false
