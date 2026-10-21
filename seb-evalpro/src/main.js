@@ -12,12 +12,13 @@ const { createCandidateTransfer } = require('./candidate-transfer-main');
 const { createKaloneoLibrary } = require('./kaloneo-library-main');
 const { embedTestImages, validatePortableTest } = require('./kaloneo-test-portability');
 const { configureLocalKey, readJsonFile, encodeJson, migrateJsonFile, migrateJsonTree } = require('./candidate-data-crypto');
+const { persistSealedSidecar, ensurePortableCandidateWords } = require('./candidate-word-portability');
 const { createCandidateLocalProtection } = require('./candidate-local-protection');
 const { migrateCandidatePrivateDocuments } = require('./candidate-private-documents');
 const { storeProtectedWordDownload } = require('./candidate-protected-download');
 const { internalStorageRoot, documentsWordRoot, migrateLegacyDocumentsStorage } = require('./storage-layout');
 const kaloneoFullParcoursRoute = require('./kaloneo-full-parcours-route');
-const { buildBilanDocxBuffer } = require('./bilan-docx-main');
+const { buildBilanDocxBuffer, decryptBilanDocxBuffer } = require('./bilan-docx-main');
 const { createPasswordStore } = require('./kaloneo-passwords');
 const { inspectCandidateOverflow } = require('./kaloneo-layout-diagnostics');
 
@@ -1096,9 +1097,16 @@ ipcMain.handle('admin:export-candidates', async (event, password, destinationOpt
     if (selectedCandidateIds && !selectedCandidateIds.length) {
       return { ok:false, error:'Sélectionnez au moins un candidat à exporter.' };
     }
-    const runExport = (destination) => selectedCandidateIds
-      ? getCandidateTransfer().exportSelected(destination, password, selectedCandidateIds)
-      : getCandidateTransfer().exportAll(destination, password);
+    const runExport = async (destination) => {
+      await ensurePortableCandidateWords({
+        candidatesRoot:getCandidateStore().paths.candidatesRoot,
+        selectedCandidateIds,
+        adminPassword:adminSessionDocumentPassword
+      });
+      return selectedCandidateIds
+        ? getCandidateTransfer().exportSelected(destination, password, selectedCandidateIds)
+        : getCandidateTransfer().exportAll(destination, password);
+    };
 
     if (mode === 'create') {
       const rawFolderName = String(destinationOptions && destinationOptions.folderName || '').trim();
@@ -1126,7 +1134,7 @@ ipcMain.handle('admin:export-candidates', async (event, password, destinationOpt
       }
       fs.mkdirSync(destination, { recursive:false });
       try { event.sender.send('admin:export-progress', { state:'started' }); } catch (_) {}
-      const result = runExport(destination);
+      const result = await runExport(destination);
       return { ok:true, ...result, createdExportFolder:true };
     }
 
@@ -1144,7 +1152,7 @@ ipcMain.handle('admin:export-candidates', async (event, password, destinationOpt
     }
 
     try { event.sender.send('admin:export-progress', { state:'started' }); } catch (_) {}
-    const result = runExport(selection.filePaths[0]);
+    const result = await runExport(selection.filePaths[0]);
     return { ok:true, ...result, createdExportFolder:false };
   } catch (error) {
     return { ok:false, error:error && error.message ? error.message : String(error) };
@@ -1835,6 +1843,11 @@ ipcMain.handle('admin:export-bilan-docx', async (_event, payload) => {
       return { ok:false, error:'Mot de passe administrateur indisponible pour protéger le document Word.' };
     }
     const buffer = await buildBilanDocxBuffer(payload || {}, adminSessionDocumentPassword);
+    // Le DOCX conserve son mot de passe Word sur le PC A. Une seconde copie
+    // locale AES, lisible seulement par KALONEO, garantit la portabilite vers
+    // tout autre PC via l'export USB .seb protege par mot de passe.
+    const portablePlain=await decryptBilanDocxBuffer(buffer,adminSessionDocumentPassword);
+    persistSealedSidecar(target.replace(/\.docx$/i,'.sebword'),portablePlain);
     fs.writeFileSync(target, buffer);
     cleanupNumberedCandidateWordCopies(targetDirectory, filename);
     return { ok:true, filename };

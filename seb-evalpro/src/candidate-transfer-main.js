@@ -373,6 +373,9 @@ function createCandidateTransfer(options = {}) {
         }
         if (!entry.isFile()) continue;
         if (entry.name.endsWith('.tmp') || entry.name.includes('.seb-copy-')) continue;
+        // Sur cle USB, le compagnon AES remplace le Word lie au mot de passe du PC A.
+        // Le PC B le dechiffrera en memoire, puis utilisera son propre mot de passe Admin.
+        if (/\.docx$/i.test(entry.name) && fs.existsSync(full.replace(/\.docx$/i,'.sebword'))) continue;
         if (entry.name.toLowerCase().endsWith('.json')) {
           const value = readJson(full);
           if (value == null) throw new Error('Fichier candidat JSON illisible : ' + rel);
