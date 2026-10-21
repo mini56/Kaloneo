@@ -10,8 +10,24 @@ const {isEncryptedBilanDocxBuffer,decryptBilanDocxBuffer}=require('./bilan-docx-
 function persistSealedSidecar(target,plaintext){
   const sealed=encryptLocalFileBuffer(Buffer.from(plaintext));
   const temp=target+'.'+process.pid+'.'+crypto.randomBytes(6).toString('hex')+'.tmp';
-  try{fs.writeFileSync(temp,sealed,{flag:'wx'});fs.renameSync(temp,target)}
-  finally{try{fs.rmSync(temp,{force:true})}catch(_){}}
+  const backup=target+'.'+process.pid+'.'+crypto.randomBytes(6).toString('hex')+'.backup';
+  let hasBackup=false;
+  try {
+    fs.writeFileSync(temp,sealed,{flag:'wx'});
+    if(fs.existsSync(target)){fs.renameSync(target,backup);hasBackup=true}
+    try { fs.renameSync(temp,target); }
+    catch(error) {
+      if(hasBackup&&!fs.existsSync(target)){fs.renameSync(backup,target);hasBackup=false}
+      throw error;
+    }
+    const verified=fs.readFileSync(target);
+    if(!isEncryptedLocalFileBuffer(verified)||!decryptLocalFileBuffer(verified).equals(Buffer.from(plaintext)))
+      throw new Error('Verification de la sauvegarde Word portable impossible.');
+    if(hasBackup){fs.rmSync(backup,{force:true});hasBackup=false}
+  } finally {
+    try{fs.rmSync(temp,{force:true})}catch(_){}
+    if(hasBackup&&!fs.existsSync(target)){try{fs.renameSync(backup,target)}catch(_){}}
+  }
   const raw=fs.readFileSync(target);
   if(!isEncryptedLocalFileBuffer(raw)||!decryptLocalFileBuffer(raw).equals(Buffer.from(plaintext)))
     throw new Error('Controle de la sauvegarde Word portable echoue.');

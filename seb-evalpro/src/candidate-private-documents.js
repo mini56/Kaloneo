@@ -100,7 +100,7 @@ function migrateCandidatePrivateDocuments({dataRoot,documentsPath,userDataPath})
           if(buffer.length>=2&&buffer.subarray(0,2).toString('ascii')==='PK'){
             // DOCX non protege : conteneur ZIP, scelle avec la cle locale.
             sealWord(full,'.sebword');report.encryptedLegacyDocx++;
-          }else if(!/^Evaluation_CAND-[A-F0-9]{32}\.docx$/i.test(item.name)){
+          }else if(!/^Evaluation_CAND-[A-F0-9]{24,32}\.docx$/i.test(item.name)){
             // Un DOCX deja chiffre par Word (OLE) conserve son chiffrement.
             renameOpaque(full);report.renamedProtectedDocs++;
           }

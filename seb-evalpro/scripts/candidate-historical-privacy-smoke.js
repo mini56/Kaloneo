@@ -40,6 +40,9 @@ try{
   const legacyDocx=path.join(wordDir,'Evaluation_'+name+'_OLD.docx');
   const fakeZip=Buffer.from('504b030400000012341234', 'hex');
   fs.writeFileSync(legacyDocx,fakeZip);
+  const protectedExisting=path.join(wordDir,'Evaluation_CAND-0123456789ABCDEF01234567.docx');
+  const protectedOle=Buffer.from('d0cf11e0a1b11ae10001020304050607','hex');
+  fs.writeFileSync(protectedExisting,protectedOle);
   const legacyJson=path.join(histDir,name+'_BILAN_R00.json');
   writeJsonFile(legacyJson,{type:'SEB_EVALPRO_BILAN_ARCHIVE',candidate});
   const legacyGlobal=path.join(docs,'SEB EvalPro','Evaluation_'+name+'_GLOBAL.doc');
@@ -59,6 +62,8 @@ try{
   assert.strictEqual(report.encryptedLegacyDocs,2);
   assert.strictEqual(report.encryptedLegacyDocx,1);
   assert.strictEqual(report.renamedBilanArchives,1);
+  assert.strictEqual(report.renamedProtectedDocs,0,'Le Word officiel protege a 24 caracteres ne doit pas etre renomme au demarrage.');
+  assert(fs.readFileSync(protectedExisting).equals(protectedOle));
   assert.strictEqual(report.renamedCandidateFolders,1);
   assert(report.encryptedLegacyCandidateJson>=2);
   assert(!fs.existsSync(legacyCandidateDir));
