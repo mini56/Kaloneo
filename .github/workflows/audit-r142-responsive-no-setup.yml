@@ -22,6 +22,7 @@ on:
       - 'seb-evalpro/src/candidate-protected-download.js'
       - 'seb-evalpro/src/candidate-word-portability.js'
       - 'seb-evalpro/scripts/candidate-word-portability-smoke.js'
+      - 'seb-evalpro/scripts/candidate-legacy-usb-private-smoke.js'
       - 'seb-evalpro/scripts/candidate-protected-download-smoke.js'
       - 'seb-evalpro/scripts/bilan-docx-smoke.js'
       - 'seb-evalpro/src/bilan-history-main.js'
@@ -131,6 +132,7 @@ jobs:
           node scripts/candidate-private-pending-smoke.js
           node scripts/candidate-protected-download-smoke.js
           node scripts/candidate-word-portability-smoke.js
+          node scripts/candidate-legacy-usb-private-smoke.js
           node scripts/candidate-word-privacy-guard.js
           node scripts/candidate-historical-privacy-smoke.js
           node scripts/bilan-docx-smoke.js

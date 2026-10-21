@@ -158,10 +158,18 @@ try {
 
   const importedCandidate1 = records.find((record) => String(record.candidateId) === 'candidate-1');
   assert(importedCandidate1, 'Le candidat 1 importé est introuvable.');
-  assert(fs.existsSync(path.join(importedCandidate1.candidateDir, 'bilan', 'historique', 'BILAN_TEST_R00.json')),
-    'Le bilan ajouté après le premier export doit être présent après import.');
-  assert(fs.existsSync(path.join(importedCandidate1.candidateDir, 'bilan', 'exports', 'Evaluation_XX_YY_2026-09-18.doc')),
-    'Le Word ajouté après le premier export doit être présent après import.');
+  const histories=fs.readdirSync(path.join(importedCandidate1.candidateDir,'bilan','historique'));
+  assert(histories.length===1 && /^BILAN_CAND-[A-F0-9]{32}\.json$/.test(histories[0]),
+    'Les noms des anciens bilans doivent etre rendus opaques au moment de l import.');
+  const importedHistory=readJson(path.join(importedCandidate1.candidateDir,'bilan','historique',histories[0]));
+  assert(importedHistory && importedHistory.probe==='bilan-apres-premier-export');
+  const words=fs.readdirSync(path.join(importedCandidate1.candidateDir,'bilan','exports'));
+  assert(words.length===1 && /^Evaluation_CAND-[A-F0-9]{32}\.sebdoc$/.test(words[0]),
+    'Le Word historique doit etre chiffre ET porter un nom opaque des son import.');
+  const {isEncryptedLocalFileBuffer,decryptLocalFileBuffer}=require('../src/candidate-data-crypto');
+  const protectedWord=fs.readFileSync(path.join(importedCandidate1.candidateDir,'bilan','exports',words[0]));
+  assert(isEncryptedLocalFileBuffer(protectedWord));
+  assert.strictEqual(decryptLocalFileBuffer(protectedWord).toString('utf8'),'WORD-BILAN-UPDATED');
 
   const importedAgain = admin.importAll(usbRoot, password);
   assert.strictEqual(importedAgain.added, 0);

@@ -1175,7 +1175,11 @@ ipcMain.handle('admin:import-candidates', async (_event, password) => {
     const result = getCandidateTransfer().importAll(selection.filePaths[0], password);
     const privacy = candidateReplayHandlers.migrateStoredReplayImages();
     if (privacy.errors.length) console.warn('KALONEO : Replay importes a proteger :', privacy.errors.length);
-    return { ok: true, ...result, replayPrivacy:privacy };
+    const legacy=migrateCandidatePrivateDocuments({
+      dataRoot:sebInternalRoot(),documentsPath:app.getPath('documents'),userDataPath:app.getPath('userData')
+    });
+    if(legacy.errors.length)console.warn('KALONEO : anciens dossiers importes a verifier :',legacy.errors.length);
+    return { ok:true, ...result, replayPrivacy:privacy, legacyPrivacyErrors:legacy.errors.length };
   } catch (error) {
     return { ok: false, error: error && error.message ? error.message : String(error) };
   }

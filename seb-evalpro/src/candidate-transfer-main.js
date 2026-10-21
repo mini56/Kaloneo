@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const zlib = require('zlib');
 const { encodeJson, encryptLocalFileBuffer, decryptLocalFileBuffer, isEncryptedLocalFileBuffer } = require('./candidate-data-crypto');
 const { computeArchiveIntegrity } = require('./replay-archive-integrity');
+const { opaqueCandidateName } = require('./candidate-private-documents');
 const {
   readJson,
   ensureDir,
@@ -744,22 +745,43 @@ function createCandidateTransfer(options = {}) {
     try {
       for (const item of payload.entries || []) {
         const rel = safeTransferRelative(item && item.rel);
-        const target = path.join(temp, ...rel.split('/'));
+        let target = path.join(temp, ...rel.split('/'));
         if (item.type === 'dir') {
           ensureDir(target);
           continue;
         }
         ensureDir(path.dirname(target));
         const data = Buffer.from(String(item && item.data || ''), 'base64');
+        const inWordDir = /^bilan\/exports\/[^/]+$/i.test(rel);
+        const inHistoryDir = /^bilan\/historique\/[^/]+\.json$/i.test(rel);
+        const inReplayImages = /^replay\/.+\/slides\/[^/]+\.png$/i.test(rel);
         if (item.type === 'json') {
           let value;
           try { value = JSON.parse(data.toString('utf8')); }
           catch (_) { throw new Error('JSON de transfert invalide : ' + rel); }
+          if(inHistoryDir)target=path.join(path.dirname(target),opaqueCandidateName('.json','BILAN_CAND'));
           writeJson(target, value);
         } else if (item.type === 'secure-file') {
           fs.writeFileSync(target, encryptLocalFileBuffer(data));
         } else if (item.type === 'file') {
-          fs.writeFileSync(target, data);
+          // L'ancien format USB pouvait embarquer des DOC, DOCX et PNG bruts.
+          // Ils ne doivent JAMAIS etre ecrits en clair sur le PC destinataire.
+          if(inWordDir && /\.doc$/i.test(rel)){
+            target=path.join(path.dirname(target),opaqueCandidateName('.sebdoc'));
+            fs.writeFileSync(target,encryptLocalFileBuffer(data));
+          }else if(inWordDir && /\.docx$/i.test(rel)){
+            if(data.subarray(0,2).toString('ascii')==='PK'){
+              target=path.join(path.dirname(target),opaqueCandidateName('.sebword'));
+              fs.writeFileSync(target,encryptLocalFileBuffer(data));
+            }else{
+              target=path.join(path.dirname(target),opaqueCandidateName('.docx'));
+              fs.writeFileSync(target,data); // OOXML deja protege, conserve sans decryption.
+            }
+          }else if(inReplayImages){
+            fs.writeFileSync(target,encryptLocalFileBuffer(data));
+          }else{
+            fs.writeFileSync(target, data);
+          }
         } else {
           throw new Error('Type de fichier de transfert invalide.');
         }
