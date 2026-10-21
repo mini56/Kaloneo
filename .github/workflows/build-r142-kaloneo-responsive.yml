@@ -55,7 +55,7 @@ jobs:
       - name: Install app dependencies
         run: npm install --no-audit --no-fund
       # Verify the actual source of the previously visible name before creating the installer.
-      # Strict Admin label and R128 Setup naming guards corrected before compilation.
+      # R142 : the versioned Setup guard also recognizes the approved responsive config.
       - name: Static audit for true installation folder and guarded migration
         shell: pwsh
         run: |
