@@ -2,7 +2,7 @@ const { ipcRenderer } = require('electron');
 const path = require('path');
 
 let installed = false;
-let savingCurrent = false;
+let savingCurrent = null;
 
 function pageName() {
   try { return path.basename(decodeURIComponent(window.location.pathname)) || ''; }
@@ -32,8 +32,8 @@ function candidateFromPage() {
 }
 
 function currentBuildLabel() {
-  const text = textOf(document.getElementById('seb-evalpro-build'));
-  return text.replace(/^Build\s*#?/i, '').trim() || 'DEV';
+  try { return String(require('../package.json').sebBuildNumber || 'DEV'); }
+  catch (_) { return 'DEV'; }
 }
 
 function captureBilanDocument() {
@@ -88,44 +88,72 @@ function captureBilanDocument() {
 }
 
 async function archiveCurrentBilan() {
-  if (!isBilanPage() || savingCurrent) return;
-  const documentState = captureBilanDocument();
-  if (!documentState) return;
-  savingCurrent = true;
-  try {
-    const selectedCandidate = candidateFromPage();
-    const result = await ipcRenderer.invoke('bilan-history:save-current', {
-      candidateId: selectedCandidate.candidateId,
-      candidate: selectedCandidate,
-      originalBuild: currentBuildLabel(),
-      sessionToken: String(window.sessionStorage.getItem('seb_evalpro_replay_token') || ''),
-      document: documentState
-    });
-    const status = document.getElementById('status');
-    if (result && result.ok) {
-      if (status) status.textContent = result.unchanged
-        ? 'Bilan déjà enregistré (inchangé)'
-        : 'Bilan enregistré ; ancien Word à régénérer';
-      window.sessionStorage.setItem('seb_evalpro_bilan_history_file', String(result.filename || ''));
-    } else if (status && result && result.error) {
-      status.textContent = `Archive bilan : ${result.error}`;
+  if(!isBilanPage())return {ok:false,error:'Page de bilan inactive.'};
+  if(savingCurrent)return savingCurrent;
+  const documentState=captureBilanDocument();
+  if(!documentState)return {ok:false,error:'Contenu du bilan absent.'};
+  savingCurrent=(async()=>{
+    try{
+      const selectedCandidate=candidateFromPage();
+      const result=await ipcRenderer.invoke('bilan-history:save-current',{
+        candidateId:selectedCandidate.candidateId,
+        candidate:selectedCandidate,
+        originalBuild:currentBuildLabel(),
+        sessionToken:String(window.sessionStorage.getItem('seb_evalpro_replay_token')||''),
+        document:documentState
+      });
+      const status=document.getElementById('status');
+      if(result&&result.ok){
+        if(status)status.textContent=result.unchanged
+          ? 'Bilan déjà enregistré (inchangé)' : 'Bilan enregistré ; ancien Word à régénérer';
+        window.sessionStorage.setItem('seb_evalpro_bilan_history_file',String(result.filename||''));
+      }else if(status)status.textContent='Bilan non enregistré : '+String(result&&result.error||'erreur');
+      return result||{ok:false,error:'Enregistrement du bilan impossible.'};
+    }catch(error){
+      const message=String(error&&error.message||error);
+      const status=document.getElementById('status');
+      if(status)status.textContent='Bilan non enregistré : '+message;
+      return {ok:false,error:message};
     }
-  } catch (_) {
-  } finally {
-    savingCurrent = false;
-  }
+  })();
+  try{return await savingCurrent;}finally{savingCurrent=null;}
 }
-
-function installBilanSaveHook() {
-  if (!isBilanPage()) return;
-  const hook = () => {
-    const save = document.getElementById('save');
-    if (!save || save.dataset.sebHistoryHook === '1') return !!save;
-    save.dataset.sebHistoryHook = '1';
-    save.addEventListener('click', () => setTimeout(archiveCurrentBilan, 180));
+function installBilanSaveHook(){
+  if(!isBilanPage())return;
+  const hook=()=>{
+    const save=document.getElementById('save');
+    if(!save)return false;
+    if(save.dataset.sebHistoryHook!=='1'){
+      save.dataset.sebHistoryHook='1';
+      save.addEventListener('click',()=>setTimeout(archiveCurrentBilan,180));
+    }
+    const word=document.getElementById('word');
+    if(word&&word.dataset.sebBilanWordHook!=='1'){
+      word.dataset.sebBilanWordHook='1';
+      word.addEventListener('click',async(event)=>{
+        if(word.dataset.sebBilanValidated==='1')return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        word.disabled=true;
+        try{
+          // Verrouiller la coherence : jamais de Word de donnees non archivees.
+          const stored=await archiveCurrentBilan();
+          if(!stored||!stored.ok)throw new Error(stored&&stored.error||'Enregistrement bilan refuse.');
+          word.dataset.sebBilanValidated='1';
+          word.disabled=false;
+          word.click();
+        }catch(error){
+          const status=document.getElementById('status');
+          if(status)status.textContent='Word non créé : '+String(error&&error.message||error);
+        }finally{
+          word.dataset.sebBilanValidated='';
+          word.disabled=false;
+        }
+      },true);
+    }
     return true;
   };
-  if (!hook()) setTimeout(hook, 300);
+  if(!hook())setTimeout(hook,300);
 }
 
 function addStyle() {
