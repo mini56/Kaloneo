@@ -1023,6 +1023,13 @@ app.whenReady().then(async()=>{
             const setup=await win.webContents.executeJavaScript(`(async()=>{
       document.getElementById('test-title').value='Aperçu Electron Smoke';
       document.getElementById('test-title').dispatchEvent(new Event('input',{bubbles:true}));
+      // Le bouton Nouveau test a vidé la liaison précédente. Depuis R152,
+      // ce test inédit ne peut pas être enregistré sans choix institutionnel.
+      const bilanLine=document.getElementById('bilan-simple-line');
+      const officialLine=[...bilanLine?.options||[]].find(option=>option.value);
+      if(!officialLine)throw new Error('Aucune ligne institutionnelle compatible avec la catégorie.');
+      bilanLine.value=officialLine.value;
+      bilanLine.dispatchEvent(new Event('change',{bubbles:true}));
       const scenario=document.getElementById('test-scenario');
       scenario.value='Scénario plein écran';
       scenario.dispatchEvent(new Event('input',{bubbles:true}));
