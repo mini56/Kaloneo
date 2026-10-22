@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const { listCandidateDirs, selectCandidate, copyFileIfMissing, ensureDir } = require('./candidate-folder-utils');
 const { readJsonFile, encodeJson, encryptLocalFileBuffer, decryptLocalFileBuffer } = require('./candidate-data-crypto');
 const { opaqueCandidateName } = require('./candidate-private-documents');
-const {discardOldWordExports,pruneReplacedBilans}=require('./candidate-bilan-current');
+const {discardOldWordExports,pruneReplacedBilans,hasCurrentOnlyArchive}=require('./candidate-bilan-current');
 
 module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked, buildNumber, dataRoot = null }) {
   const CURRENT_BUILD = String(buildNumber || 'DEV');
@@ -130,6 +130,7 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
     if (!verify(archive)) return { full:legacy, filename:safe, archive, legacy:true, integrityOk:false };
     const candidateDir = findCandidateDirInternal(normalizeCandidate(archive.candidate));
     if (!candidateDir) return { full:legacy, filename:safe, archive, legacy:true, integrityOk:true };
+    if(hasCurrentOnlyArchive(candidateDir))return null;
     const target = path.join(candidateDir, 'bilan', 'historique', safe);
     ensureDir(path.dirname(target));
     copyFileIfMissing(legacy, target);

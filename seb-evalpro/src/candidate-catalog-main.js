@@ -5,6 +5,7 @@ const { shell } = require('electron');
 const { getEditionCapabilities } = require('./edition');
 const { encodeJson, isEncryptedLocalFileBuffer, decryptLocalFileBuffer } = require('./candidate-data-crypto');
 const { verifyBilanDocxPassword, isEncryptedBilanDocxBuffer, protectPlainBilanDocxBuffer } = require('./bilan-docx-main');
+const {hasCurrentOnlyArchive}=require('./candidate-bilan-current');
 const {
   readJson,
   ensureDir,
@@ -486,6 +487,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
       if (!archive || !archive.candidate) continue;
       const match = selectCandidate(records, archive.candidate);
       if (!match) { ambiguous += 1; continue; }
+      if(hasCurrentOnlyArchive(match.candidateDir))continue; // Pas de reimport des anciens bilans.
       const target = path.join(match.candidateDir, 'bilan', 'historique', entry.name);
       if (copyFileIfMissing(source, target)) bilanCopied += 1;
     }
@@ -495,6 +497,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
       if (!entry.isFile() || !/\.(doc|docx)$/i.test(entry.name)) continue;
       const match = selectCandidateFromFilename(records, entry.name);
       if (!match) { ambiguous += 1; continue; }
+      if(hasCurrentOnlyArchive(match.candidateDir))continue; // Pas d'ancien Word remonte.
       if (copyFileIfMissing(
         path.join(globalExportsRoot, entry.name),
         path.join(match.candidateDir, 'bilan', 'exports', entry.name)

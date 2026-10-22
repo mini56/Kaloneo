@@ -6,6 +6,7 @@ const path=require('path');
 const crypto=require('crypto');
 const {readJsonFile,writeJsonFile,migrateJsonTree,encryptLocalFileBuffer,decryptLocalFileBuffer}=require('./candidate-data-crypto');
 const {codedFolderName,listCandidateDirs,selectCandidateFromFilename}=require('./candidate-folder-utils');
+const {hasCurrentOnlyArchive}=require('./candidate-bilan-current');
 
 function opaqueCandidateName(extension,prefix='Evaluation_CAND') {
   return prefix+'-'+crypto.randomBytes(16).toString('hex').toUpperCase()+extension;
@@ -64,6 +65,7 @@ function migrateCandidatePrivateDocuments({dataRoot,documentsPath,userDataPath})
     if(!historicLooseDocument(securedPath))return;
     const record=selectCandidateFromFilename(candidateRecords,oldFilename);
     if(!record)return; // Plusieurs homonymes : ne pas risquer une attribution fausse.
+    if(hasCurrentOnlyArchive(record.candidateDir))return; // Ne pas ressusciter l'ancien Word.
     const targetDir=path.join(record.candidateDir,'bilan','exports');
     fs.mkdirSync(targetDir,{recursive:true});
     const destination=path.join(targetDir,path.basename(securedPath));

@@ -380,6 +380,8 @@ try {
     'Dernier ancien bilan non efface apres changement de jeton.');
   assert.strictEqual(detail(null,'candidate-xx').bilans.length,1);
   assert.strictEqual(detail(null,'candidate-xx').exports.length,0);
+  assert.strictEqual(fs.readdirSync(path.join(newDir,'bilan','historique')).filter(n=>n.endsWith('.json')).length,1,'Migration ancienne ne doit jamais recreer des revisions.');
+  assert.strictEqual(fs.readdirSync(path.join(newDir,'bilan','exports')).filter(n=>/^Evaluation_/i.test(n)).length,0,'Migration ancienne ne doit jamais recreer des Word caducs.');
   assert(fs.existsSync(path.join(newDir,'replay',replayName)),
     'La sauvegarde du bilan ne doit jamais supprimer le Replay.');
   assert(fs.existsSync(path.join(separateDir,'manifest.json')),
