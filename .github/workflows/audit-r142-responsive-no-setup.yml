@@ -43,6 +43,7 @@ on:
       - 'seb-evalpro/src/candidate-catalog-preload.js'
       - 'seb-evalpro/src/general-bilan-aggregation.js'
       - 'seb-evalpro/scripts/general-bilan-aggregation-smoke.js'
+      - 'seb-evalpro/scripts/general-bilan-ipc-smoke.js'
       - 'seb-evalpro/scripts/candidate-historical-privacy-smoke.js'
       - 'seb-evalpro/scripts/candidate-private-transfer-smoke.js'
       - 'seb-evalpro/scripts/build21-admin-foundation-guard.js'
@@ -99,7 +100,9 @@ jobs:
           node --check scripts/kaloneo-preview-resolution-r142-smoke.js
           node scripts/kaloneo-preview-resolution-r142-smoke.js
       - name: General bilan multi-parcours numerators, denominators, categories and missing tests
-        run: node scripts/general-bilan-aggregation-smoke.js
+        run: |
+          node scripts/general-bilan-aggregation-smoke.js
+          node scripts/general-bilan-ipc-smoke.js
       - name: New test, questions, scoring, portability and prior templates
         shell: pwsh
         run: |
