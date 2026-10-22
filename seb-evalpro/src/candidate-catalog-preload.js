@@ -603,47 +603,42 @@ async function openGeneralBilan(personId) {
   const safe=escapeHtml;
   const fmt=p=>p===null||p===undefined?'Non noté':Number(p).toLocaleString('fr-FR',{maximumFractionDigits:2})+' %';
   const badge=level=>'<span class="seb-gb-level seb-gb-'+safe(level||'NE')+'">'+safe(level||'NE')+'</span>';
-  const rows=(general.categories||[]).map(category=>{
-    const tests=(category.tests||[]).map(test=>{
-      const number=test.percent===null?'Non noté':safe(String(test.points))+' / '+safe(String(test.possible))+' ('+fmt(test.percent)+')';
-      const passed=(test.sources||[]).map(src=>
-        '<li>'+safe(src.parcours)+' — '+safe(src.date||'')+
-        (src.scored?' : '+safe(String(src.score))+' / '+safe(String(src.scoreMax)):
-          ' : '+(src.level?'Niveau '+safe(src.level):'sans note numérique')+(src.comment?' — '+safe(src.comment):''))+'</li>').join('');
-      return '<tr><td><strong>'+safe(test.title)+'</strong><details><summary>'+
-        test.passages+' passage(s)</summary><ul>'+passed+'</ul></details></td>'+
-        '<td>'+number+'</td><td>'+badge(test.level)+'</td></tr>';
-    }).join('');
-    return '<tbody><tr class="seb-gb-category"><th colspan="3">'+safe(category.name)+
-      ' — '+(category.percent===null?'Non évalué':fmt(category.percent))+' — '+badge(category.level)+
-      '</th></tr>'+tests+'</tbody>';
+  // Référence institutionnelle : 3 sections, 17 lignes fixes, lecture seule.
+  const lines=Array.isArray(general.institutionalRows)?general.institutionalRows:[];
+  const rows=lines.map(line=>{
+    if(line.kind==='section')
+      return '<tr class="seb-gb-category"><th colspan="6">'+safe(line.label)+'</th></tr>';
+    const level=['NE','I','II','III'].includes(line.level)?line.level:'NE';
+    return '<tr><td>'+safe(line.label)+'</td>'+
+      ['NE','I','II','III'].map(n=>
+        '<td class="seb-gb-grade'+(n===level?' seb-gb-selected seb-gb-'+n:'')+'">'+
+        (n===level?'●':'')+'</td>').join('')+
+      '<td class="seb-gb-pct">'+safe(line.display||'')+'</td></tr>';
   }).join('');
+  const warnings=(general.institutionalWarnings||[]).length;
+
   const overlay=document.createElement('div');
   overlay.id='seb-general-bilan';
   overlay.innerHTML=`
     <div class="seb-cc-card seb-gb-card" role="dialog" aria-modal="true" aria-label="Bilan général du candidat">
       <div class="seb-cc-head">
         <div class="seb-cc-title">Bilan général — ${safe(person.nom)} ${safe(person.prenom)}</div>
-        <div class="seb-cc-badge">${general.evaluationCount} PARCOURS</div>
+        <div class="seb-cc-badge">BILAN INSTITUTIONNEL</div>
       </div>
       <div class="seb-cc-body">
-        <p>Regroupement des tests identiques par identifiant. Points obtenus / possibles
-        additionnés entre parcours ; puis moyenne des tests distincts dans chaque catégorie.
-        Les tests non passés ne sont pas comptés.</p>
+        <p>Une seule grille institutionnelle consolidée. Les évaluations pratiques sont reprises des pré-bilans validés.</p>
+        ${warnings?'<p class="seb-gb-warning">Certaines lignes d’anciens pré-bilans manquent de points enregistrés. Réenregistrer ces pré-bilans avant une consolidation numérique définitive.</p>':''}
         ${response.outdated?'<p class="seb-gb-warning">Les bilans des parcours ont évolué : sauvegarder à nouveau le bilan général et régénérer le Word.</p>':''}
-        <div class="seb-cc-section"><h3>Résultats regroupés par catégorie</h3>
-          <table class="seb-gb-table"><thead><tr><th>Test / parcours</th><th>Résultat consolidé</th><th>Niveau</th></tr></thead>${rows||'<tbody><tr><td colspan="3">Aucun test noté ou documenté.</td></tr></tbody>'}</table>
-        </div>
-        <div class="seb-cc-section">
-          <h3>Observations des bilans de parcours</h3>
-          ${(general.notes||[]).map(note=>'<div class="seb-gb-note"><strong>'+safe(note.parcours)+
-            '</strong> — '+safe(note.date||'')+'<p>'+safe(note.summary)+'</p></div>').join('')||
-            '<p>Aucune observation déjà enregistrée.</p>'}
+        <div class="seb-cc-section"><h3>Bilan institutionnel consolidé</h3>
+          <table class="seb-gb-table" aria-label="Bilan institutionnel, lecture seule">
+            <thead><tr><th>Modules et compétences</th><th>NE</th><th>I</th><th>II</th><th>III</th><th>Pourcentage</th></tr></thead>
+            <tbody>${rows||'<tr><td colspan="6">Aucune ligne de bilan.</td></tr>'}</tbody>
+          </table>
         </div>
         <div class="seb-cc-section">
           <h3>Synthèse générale (modifiable)</h3>
           <textarea id="seb-gb-summary" spellcheck="true" rows="7" placeholder="Rédigez la synthèse croisée des parcours."></textarea>
-          <p id="seb-gb-status" role="status">Les niveaux affichés sont calculés à partir des points réellement enregistrés. Un niveau manuel non chiffré n'est pas moyenné avec les points.</p>
+          <p id="seb-gb-status" role="status">Grille en lecture seule. Les niveaux pratiques ont été validés dans les pré-bilans ; seule la synthèse générale est modifiable.</p>
         </div>
       </div>
       <div class="seb-cc-detail-actions seb-gb-actions">
