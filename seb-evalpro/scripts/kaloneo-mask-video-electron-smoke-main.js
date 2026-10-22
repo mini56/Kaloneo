@@ -20,9 +20,10 @@ app.whenReady().then(async()=>{
   const imageSrc='data:image/png;base64,'+fs.readFileSync(path.join(seed,imageFile)).toString('base64');
   const data=JSON.stringify({name:'KALONÉO — vidéo puis image',content:{video:videoSrc,image:imageSrc,text:''}});
   for(const [width,height] of [[1366,768],[1200,800]]){
-   win=new BrowserWindow({width,height,show:false,webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true}});
+   win=new BrowserWindow({width,height,show:true,webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true}});
    await win.loadFile(page);
-   await sleep(200);
+   win.show();win.focus();
+   await sleep(350);
    const info=await win.webContents.executeJavaScript(`(()=>{
       const stage=document.getElementById('mask-preview-media-stage');
       const player=window.KaloneoMaskMedia?.createPlayer({
@@ -38,7 +39,7 @@ app.whenReady().then(async()=>{
       const r=stage.getBoundingClientRect();
       return {ready:true,video:!vid.hidden,image:!img.hidden,opacity:img.style.opacity,
         width:r.width,height:r.height,bottom:r.bottom,viewport:innerHeight,
-        decode:vid.canPlayType('video/mp4')};
+        decode:vid.canPlayType('video/mp4'),visible:document.visibilityState,paused:vid.paused,currentTime:vid.currentTime};
     })()`,true);
    assert(info.ready&&info.video&&info.image&&info.opacity==='0', 'Écran vidéo initial non visible '+JSON.stringify(info));
    assert(info.width>180&&info.height>140&&info.bottom<=height+5,'L’écran déborde '+JSON.stringify(info));
@@ -54,7 +55,9 @@ app.whenReady().then(async()=>{
       networkState:document.getElementById('mask-preview-video').networkState,
       currentTime:document.getElementById('mask-preview-video').currentTime,
       duration:document.getElementById('mask-preview-video').duration,
-      canPlay:document.getElementById('mask-preview-video').canPlayType('video/mp4')
+      canPlay:document.getElementById('mask-preview-video').canPlayType('video/mp4'),
+      paused:document.getElementById('mask-preview-video').paused,
+      visible:document.visibilityState
     })`,true);
     assert(!hold.videoHidden&&hold.opacity==='0','Dernière image non conservée 3 s '+JSON.stringify(hold));
     await sleep(430);
