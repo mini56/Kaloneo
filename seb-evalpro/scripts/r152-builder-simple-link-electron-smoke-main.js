@@ -4,6 +4,7 @@ const path=require('node:path'),assert=require('node:assert/strict');
 const file=path.resolve(__dirname,'..','app','web','kaloneo-builder','test-builder.html');
 const timeout=setTimeout(()=>{console.error('R152_BUILDER_TIMEOUT');app.exit(2)},65000);
 app.commandLine.appendSwitch('disable-gpu');
+app.on('window-all-closed',()=>{});
 app.whenReady().then(async()=>{
  let win;
  try{

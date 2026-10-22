@@ -847,6 +847,14 @@ app.whenReady().then(async()=>{
       title.value='Contrôle Builder valide';title.dispatchEvent(new Event('input',{bubbles:true}));
       scenario.value='Contexte de travail';scenario.dispatchEvent(new Event('input',{bubbles:true}));
       instruction.value='Effectuer une tâche';instruction.dispatchEvent(new Event('input',{bubbles:true}));
+      // Depuis R152, une liaison officielle est obligatoire pour qu'un test
+      // soit valide. Sélectionner explicitement cette ligne avant le vert.
+      const bilanSimple=document.getElementById('bilan-simple-line');
+      if(bilanSimple){
+        const first=[...bilanSimple.options].find(o=>o.value);
+        if(first){bilanSimple.value=first.value;
+          bilanSimple.dispatchEvent(new Event('change',{bubbles:true}));}
+      }
       await new Promise(resolve=>setTimeout(resolve,520));
       const green=validationBox.dataset.validationStatus==='ok';
       const titleColorGreen=getComputedStyle(document.getElementById('validation-heading')).color;

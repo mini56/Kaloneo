@@ -32,6 +32,8 @@ permissions:
   contents: write
 jobs:
   windows-installer-migration:
+    # Release R151 / Build #154 figée : ne jamais redéclencher depuis les versions suivantes.
+    if: ${{ github.sha == 'befb61f352e23daecc19602d599d6751dc63f849' }}
     # Nouveau Build #154 ; la release de secours R150 reste inchangée.
     runs-on: windows-latest
     timeout-minutes: 60

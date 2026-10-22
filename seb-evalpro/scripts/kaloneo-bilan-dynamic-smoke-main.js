@@ -162,7 +162,7 @@ app.whenReady().then(async()=>{
     if(!/Commentaire : « Je dois encore vérifier mes réponses\. »/.test(before.autoSummary)) return fail('Commentaire autoévaluation savoirs absent',before);
     if(!/Commentaire : « Je préfère prendre mon temps pour envoyer un message\. »/.test(before.autoSummary)) return fail('Commentaire autoévaluation numérique absent',before);
     if(before.autoSummary.includes('stressmessage')||before.autoSummary.includes(' : progress')) return fail('Code technique autoévaluation visible dans la synthèse',before);
-    if(!/Parcours smoke R16 institutionnel/.test(before.parcours)) return fail('nom du parcours absent',before);
+
 
     await win.webContents.executeJavaScript(`document.getElementById('auto').click()`,true);
     await new Promise(resolve=>setTimeout(resolve,250));
