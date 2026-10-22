@@ -1521,9 +1521,10 @@
         wrap.addEventListener('transitionend', event => {
           if (event.target === wrap && event.propertyName === 'opacity') removeOverlay();
         });
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          wrap.classList.add('kaltest-transition-crossfade-out');
-        }));
+        // Forcer l'état initial dans le moteur CSS, même en fenêtre masquée.
+        // Le changement d'opacité déclenche alors le fondu de façon fiable.
+        void wrap.offsetWidth;
+        wrap.classList.add('kaltest-transition-crossfade-out');
         setTimeout(removeOverlay, fadeMs + 150);
       }, VIDEO_LAST_FRAME_HOLD_MS);
     };
@@ -1557,9 +1558,8 @@
     veil.addEventListener('transitionend', event => {
       if (event.target === veil && event.propertyName === 'opacity') clean();
     });
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      veil.classList.add('kaltest-transition-entrance-reveal');
-    }));
+    void veil.offsetWidth;
+    veil.classList.add('kaltest-transition-entrance-reveal');
     setTimeout(clean, 1650);
   }
 
