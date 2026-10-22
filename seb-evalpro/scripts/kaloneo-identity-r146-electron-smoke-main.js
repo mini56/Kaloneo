@@ -10,6 +10,11 @@ app.whenReady().then(async()=>{
    for (const [width,height] of [[1366,768],[1200,800],[1024,768]]) {
      const win=new BrowserWindow({width,height,show:false,webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true}});
      try {
+       win.webContents.on('console-message',(_event,...args)=>{
+         const message=typeof args[0]==='object' ? args[0]?.message : args[1];
+         if(message)console.log('R146_PAGE_CONSOLE '+String(message).slice(0,300));
+       });
+       win.webContents.on('did-fail-load',(_event,code,description)=>console.log('R146_LOAD_ERROR '+code+' '+description));
        await win.loadFile(page);
        await new Promise(resolve=>setTimeout(resolve,400));
        const result=await win.webContents.executeJavaScript(`(()=>{
