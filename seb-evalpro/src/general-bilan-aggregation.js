@@ -35,7 +35,7 @@ function sourceDigest(evaluations){
 }
 function aggregateGeneralBilan(evaluations){
   if(!Array.isArray(evaluations)||!evaluations.length)throw new Error('Aucune evaluation disponible.');
-  const ids=new Set(),groups=new Map(),sources=[],notes=[];
+  const ids=new Set(),groups=new Map(),testCategoryById=new Map(),sources=[],notes=[];
   for(const item of evaluations){
     const id=clean(item.candidateId);
     if(!id||ids.has(id))throw new Error('Identifiant evaluation absent ou en double.');
@@ -59,7 +59,11 @@ function aggregateGeneralBilan(evaluations){
       const completed=Boolean(state.result)||(String(state.status||'').toUpperCase()==='COMPLETED');
       if(!completed)continue;
       source.testCount++;
-      const category=categoryFor({id:testId,category:meta.category||state.category||'autres'});
+      const proposedCategory=categoryFor({id:testId,category:meta.category||state.category||'autres'});
+      // Une meme cle KALTEST ne doit jamais se retrouver dans deux categories
+      // si une edition du parcours a modifie ses metadonnees.
+      if(!testCategoryById.has(testId))testCategoryById.set(testId,proposedCategory);
+      const category=testCategoryById.get(testId);
       const title=clean(meta.title||state.title||testId);
       if(!groups.has(category))groups.set(category,new Map());
       const categoryTests=groups.get(category);
@@ -90,14 +94,16 @@ function aggregateGeneralBilan(evaluations){
     const children=[...tests.values()].map(t=>{
       // Score cumule uniquement sur les passages disposant d'un bareme numerique.
       const pct=t.possible>0?t.points/t.possible*100:null;
-      const level=pct===null?(t.passages===1&&t.manualLevels.length?t.manualLevels[0]:'NE'):percentLevel(pct);
-      return {...t,percent:pct===null?null:Math.round(pct*100)/100,level,points:Math.round(t.points*10000)/10000,possible:Math.round(t.possible*10000)/10000};
+      const agreedLevel=t.manualLevels.length&&t.manualLevels.every(level=>level===t.manualLevels[0])
+        ? t.manualLevels[0] : 'NE';
+      const level=pct===null?agreedLevel:percentLevel(pct);
+      return {...t,percent:pct===null?null:Math.round(pct*100)/100,level,percentRaw:pct,points:Math.round(t.points*10000)/10000,possible:Math.round(t.possible*10000)/10000};
     }).sort((a,b)=>a.title.localeCompare(b.title,'fr'));
     const scored=children.filter(t=>t.percent!==null);
     // Chaque test DISTINCT a le meme poids dans sa categorie :
     // un test passe trois fois ne supplante pas un test passe une seule fois.
     const categoryPercent=scored.length
-      ? scored.reduce((sum,t)=>sum+t.percent,0)/scored.length:null;
+      ? scored.reduce((sum,t)=>sum+t.percentRaw,0)/scored.length:null;
     categories.push({
       name,tests:children,testCount:children.length,scoredTestCount:scored.length,
       percent:categoryPercent===null?null:Math.round(categoryPercent*100)/100,
