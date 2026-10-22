@@ -63,6 +63,9 @@ permissions:
   contents: read
 jobs:
   verify-no-regression:
+    # Audit historique du Build #150 : ne pas exiger ses anciennes versions
+    # sur une branche qui contient désormais les Builds 151+.
+    if: ${{ github.sha == '303551cc43ddbc3a50c378c60bf25ae6e6b4284f' }}
     runs-on: windows-latest
     timeout-minutes: 55
     defaults:
