@@ -1148,6 +1148,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     const trashRecords = listCandidateDirs(candidateTrashRoot, false);
     const currentRecords = listCandidateDirs(candidatesRoot, false);
     let purged = 0;
+    const affectedPersons=new Set(trashRecords.map(record=>personIdentityForRecord(record).personId));
     try {
       for (const record of trashRecords) {
         const candidate = {
@@ -1159,6 +1160,13 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
         if (!active) removeCandidateRuntimeState(candidate);
         fs.rmSync(record.candidateDir, { recursive:true, force:true });
         purged += 1;
+      }
+      // Suppression DEFINITIVE du dernier parcours : aucune synthese
+      // nominative ni Word general ne reste orphelin dans le stockage prive.
+      for(const personId of affectedPersons){
+        if(currentRecords.some(r=>personIdentityForRecord(r).personId===personId))continue;
+        if(/^PERS-[A-F0-9]{24}$/.test(String(personId||'')))
+          fs.rmSync(generalBilanDir(personId),{recursive:true,force:true});
       }
       return { ok:true, purged };
     } catch (error) {
