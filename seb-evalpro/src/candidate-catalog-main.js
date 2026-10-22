@@ -7,7 +7,7 @@ const { encodeJson, isEncryptedLocalFileBuffer, decryptLocalFileBuffer } = requi
 const { verifyBilanDocxPassword, isEncryptedBilanDocxBuffer, protectPlainBilanDocxBuffer } = require('./bilan-docx-main');
 const {hasCurrentOnlyArchive}=require('./candidate-bilan-current');
 const {aggregateGeneralBilan,wordRows}=require('./general-bilan-aggregation');
-const {buildBilanDocxBuffer,verifyBilanDocxPassword}=require('./bilan-docx-main');
+const {buildBilanDocxBuffer}=require('./bilan-docx-main');
 const {persistSealedSidecar}=require('./candidate-word-portability');
 const {
   readJson,
