@@ -19,7 +19,7 @@ permissions:
   contents: write
 jobs:
   windows-installer-migration:
-    # Nouveau Build #151; la release R148 est conservée.
+    # Nouveau Build #151; la release de secours R145 reste inchangée.
     runs-on: windows-latest
     timeout-minutes: 60
     defaults:
@@ -210,7 +210,7 @@ jobs:
           $sha=(Get-FileHash -Algorithm SHA256 $item.FullName).Hash.ToUpperInvariant()
           "SETUP_PATH=$($item.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "SETUP_SHA256=$sha" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          Write-Host "KALONEO_R148_BUILD_150_SHA256=$sha"
+          Write-Host "KALONEO_R148_BUILD_151_SHA256=$sha"
       - name: Verify executable icon is the same as the transparent candidate chameleon
         shell: pwsh
         run: |
