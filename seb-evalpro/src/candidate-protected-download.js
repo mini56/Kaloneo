@@ -7,6 +7,7 @@ const crypto=require('crypto');
 const {encryptLocalFileBuffer,decryptLocalFileBuffer,isEncryptedLocalFileBuffer}=require('./candidate-data-crypto');
 const {opaqueCandidateName}=require('./candidate-private-documents');
 const {isEncryptedBilanDocxBuffer}=require('./bilan-docx-main');
+const {discardOldWordExports}=require('./candidate-bilan-current');
 
 async function storeProtectedWordDownload(bytes,originalExtension,directory) {
   const buffer=Buffer.from(bytes||[]);
@@ -38,6 +39,8 @@ async function storeProtectedWordDownload(bytes,originalExtension,directory) {
     if(outputExt!=='.docx' &&
        (!isEncryptedLocalFileBuffer(disk)||!decryptLocalFileBuffer(disk).equals(buffer)))
       throw new Error('Controle de chiffrement du Word echoue.');
+    // Le dernier Word remplace uniquement les anciens Word de cette evaluation.
+    discardOldWordExports(directory,[path.basename(dest)]);
     return {filename:path.basename(dest),path:dest,protected:true,contentType:outputExt};
   }finally{try{fs.rmSync(temp,{force:true})}catch(_){}}
 }
