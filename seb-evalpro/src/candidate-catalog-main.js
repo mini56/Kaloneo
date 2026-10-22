@@ -557,7 +557,9 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
           integrityOk: verifyBilan(archive)
         };
       })
-      .sort((a,b) => (a.revision - b.revision) || String(a.createdAt).localeCompare(String(b.createdAt)));
+      .sort((a,b) => (Number(b.integrityOk)-Number(a.integrityOk)) ||
+        String(b.createdAt).localeCompare(String(a.createdAt)) || (b.revision - a.revision))
+      .slice(0,1);
   }
 
   function replayEntries(candidateDir) {
@@ -583,14 +585,22 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   }
 
   function exportEntries(candidateDir) {
-    const dir = path.join(candidateDir, 'bilan', 'exports');
-    if (!fs.existsSync(dir)) return [];
-    cleanupDuplicateWordExports(candidateDir);
-    return fs.readdirSync(dir, { withFileTypes:true })
-      .filter((e) => e.isFile() && /^Evaluation_.+\.(?:docx?|sebdoc|sebword)$/i.test(e.name))
-      .filter((e) => !/\.sebword$/i.test(e.name) || !fs.existsSync(path.join(dir,e.name.replace(/\.sebword$/i,'.docx'))))
-      .map((e) => e.name)
-      .sort((a,b) => a.localeCompare(b, 'fr', { sensitivity:'base' }));
+    const dir=path.join(candidateDir,'bilan','exports');
+    const historyDir=path.join(candidateDir,'bilan','historique');
+    if(!fs.existsSync(dir))return [];
+    // Les anciennes revisions ont des Word sans lien documentaire fiable :
+    // ne surtout pas presenter un ancien Word comme celui du dernier bilan.
+    const historyCount=fs.existsSync(historyDir)
+      ? fs.readdirSync(historyDir,{withFileTypes:true}).filter(e=>e.isFile()&&e.name.endsWith('.json')).length
+      : 0;
+    if(historyCount>1)return [];
+    const wordNames=fs.readdirSync(dir,{withFileTypes:true})
+      .filter(e=>e.isFile()&&/^Evaluation_.+\.(?:docx?|sebdoc|sebword)$/i.test(e.name))
+      .map(e=>e.name)
+      .filter(n=>!/\.sebword$/i.test(n)||!fs.existsSync(path.join(dir,n.replace(/\.sebword$/i,'.docx'))));
+    // Des documents concurrents / anciens ne peuvent pas etre attribues
+    // de maniere sure au bilan courant. Regenerer le Word pour lever l'ambiguite.
+    return wordNames.length===1?wordNames:[];
   }
 
   function serialize(record) {
@@ -619,8 +629,8 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
       status: String(record.manifest && record.manifest.status || ''),
       updatedAt: String(record.manifest && record.manifest.updatedAt || ''),
       bilanCount: bilans.length,
-      revisionCount: bilans.filter((b) => b.revision > 0).length,
-      hasOriginalBilan: bilans.some((b) => b.revision === 0),
+      revisionCount:0,
+      hasOriginalBilan:bilans.length>0,
       replayCount: replays.length,
       exportCount: exportEntries(record.candidateDir).length
     };
@@ -1124,6 +1134,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     if (!record) return { ok:false, error:'Candidat introuvable.' };
     const safe = path.basename(String(filename || ''));
     if (!/^Evaluation_.+\.(?:docx?|sebdoc|sebword)$/i.test(safe)) return { ok:false, error:'Type de fichier non autorisé.' };
+    if(!exportEntries(record.candidateDir).includes(safe))return {ok:false,error:'Ce Word ne correspond pas avec certitude au dernier bilan. Regenerez-le.'};
     const full = path.join(record.candidateDir, 'bilan', 'exports', safe);
     if (!fs.existsSync(full)) return { ok:false, error:'Fichier résultat introuvable.' };
 
