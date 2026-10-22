@@ -332,30 +332,40 @@ try {
   const firstArchive = JSON.parse(fs.readFileSync(path.join(newDir, 'bilan', 'historique', firstBilan.filename), 'utf8'));
   assert.strictEqual(firstArchive.candidateId, 'candidate-xx', 'L’archive doit mémoriser le dossier candidat exact.');
 
-  const revisionDocument = {
+  // Un Word existant et son compagnon chiffre doivent disparaitre au
+  // remplacement du bilan, sans toucher au Replay ni a un autre parcours.
+  const wordBase='Evaluation_XX_JEAN_2026-09-18.doc';
+  const previousWords=[wordBase,'Evaluation_XX_JEAN_2026-09-18_2.doc',
+    'Evaluation_XX_JEAN_2026-09-18_R01.doc','Evaluation_TEST.sebword'];
+  for(const name of previousWords)
+    fs.writeFileSync(path.join(newDir,'bilan','exports',name),'ancien Word','utf8');
+  const revisionDocument={
     ...originalDocument,
-    rows:[{ ...originalDocument.rows[0], comment:'Révision 1' }]
+    rows:[{...originalDocument.rows[0],comment:'Version corrigee'}]
   };
-  const revision = saveBilanRevision(null, { sourceFilename:firstBilan.filename, document:revisionDocument });
-  assert(revision && revision.ok && revision.revision === 1, 'La première révision doit être enregistrée dans le même dossier candidat.');
-  assert(fs.existsSync(path.join(newDir, 'bilan', 'historique', revision.filename)), 'Le fichier de révision doit exister dans le dossier candidat.');
-
-  const wordBase = 'Evaluation_XX_JEAN_2026-09-18.doc';
-  fs.writeFileSync(path.join(newDir, 'bilan', 'exports', wordBase), 'word courant', 'utf8');
-  fs.writeFileSync(path.join(newDir, 'bilan', 'exports', 'Evaluation_XX_JEAN_2026-09-18_2.doc'), 'doublon', 'utf8');
-  fs.writeFileSync(path.join(newDir, 'bilan', 'exports', 'Evaluation_XX_JEAN_2026-09-18_R01.doc'), 'ancienne révision Word', 'utf8');
-  const afterBilan = detail(null, 'candidate-xx');
-  assert(afterBilan && afterBilan.ok);
-  assert.strictEqual(afterBilan.bilans.filter((b) => b.integrityOk).length, 2, 'Le catalogue doit voir le bilan original et sa révision.');
-  assert.strictEqual(afterBilan.candidate.revisionCount, 1, 'Le catalogue doit annoncer une révision.');
-  assert.deepStrictEqual(
-    afterBilan.exports.filter((name) => /^Evaluation_XX_JEAN_2026-09-18/i.test(name)).map((name) => name.toLowerCase()),
-    [wordBase.toLowerCase()],
-    'Un seul Word courant doit rester visible, sans dépendre de la casse du nom de fichier Windows.'
-  );
-  assert.strictEqual(fs.existsSync(path.join(newDir, 'bilan', 'exports', 'Evaluation_XX_JEAN_2026-09-18_2.doc')), false, 'Le doublon Word _2 doit être nettoyé.');
-  assert.strictEqual(fs.existsSync(path.join(newDir, 'bilan', 'exports', 'Evaluation_XX_JEAN_2026-09-18_R01.doc')), false, 'L’ancien Word de révision doit être nettoyé.');
-
+  const revision=saveBilanRevision(null,{sourceFilename:firstBilan.filename,document:revisionDocument});
+  assert(revision&&revision.ok&&revision.revision===0,'Le nouveau bilan remplace l ancien sans creer de revision.');
+  assert(fs.existsSync(path.join(newDir,'bilan','historique',revision.filename)),'Dernier bilan non conserve.');
+  assert(!fs.existsSync(path.join(newDir,'bilan','historique',firstBilan.filename)),'Ancien bilan non supprime.');
+  for(const name of previousWords)
+    assert(!fs.existsSync(path.join(newDir,'bilan','exports',name)),'Ancien Word conserve : '+name);
+  const afterBilan=detail(null,'candidate-xx');
+  assert(afterBilan&&afterBilan.ok);
+  assert.strictEqual(afterBilan.bilans.filter(x=>x.integrityOk).length,1,'Un seul bilan courant doit etre visible.');
+  assert.strictEqual(afterBilan.candidate.revisionCount,0,'Les revisions ne doivent plus etre exposees.');
+  assert.strictEqual(afterBilan.candidate.bilanCount,1,'Une evaluation ne compte qu un seul bilan.');
+  assert.deepStrictEqual(afterBilan.exports,[],'Le Word doit etre regenere apres enregistrement.');
+  assert(fs.existsSync(path.join(newDir,'replay',replayName)),'Le Replay doit rester intact.');
+  assert(fs.existsSync(path.join(separateDir,'manifest.json')),'L autre evaluation doit etre preservee.');
+  const sameBilan=saveBilanRevision(null,{sourceFilename:revision.filename,document:revisionDocument});
+  assert(sameBilan.ok&&sameBilan.unchanged,'Une sauvegarde identique ne doit pas creer un nouveau bilan.');
+  assert.strictEqual(detail(null,'candidate-xx').bilans.length,1,'La sauvegarde identique ne cree aucun historique.');
+  // Le dernier Word associe est visible lorsqu'il est le seul document disponible.
+  const currentWord='Evaluation_CURRENT.sebdoc';
+  fs.writeFileSync(path.join(newDir,'bilan','exports',currentWord),'chiffre fictif','utf8');
+  assert.deepStrictEqual(detail(null,'candidate-xx').exports,[currentWord]);
+  fs.rmSync(path.join(newDir,'bilan','exports',currentWord));
+  
   const modifiedState = {
     ...loadEvent.returnValue.state,
     sessionStorage:{
