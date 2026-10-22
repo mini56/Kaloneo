@@ -58,6 +58,25 @@ const manualAgain=aggregateGeneralBilan([
  build('man2','B',{x:{category:'technique',result:{level:'III'}}})
 ]);
 assert.equal(manualAgain.categories[0].tests[0].level,'NE','Des niveaux disparates ne sont pas des scores numeriques');
+const baseManual=build('manual1','A',{calculs:{score:8,max:10}});
+baseManual.archive.document.rows=[
+ {kind:'section',sectionText:'Compétences techniques'},
+ {kind:'item',key:'fabrication-plan',moduleText:'Lecture de plan',level:'I',comment:'Autonome'}
+];
+const followManual=build('manual2','B',{calculs:{score:6,max:10}});
+followManual.archive.document.rows=[
+ {kind:'section',sectionText:'Compétences techniques'},
+ {kind:'item',key:'fabrication-plan',moduleText:'Lecture de plan',level:'II',comment:'Consignes supplémentaires'}
+];
+const consolidated=aggregateGeneralBilan([baseManual,followManual]);
+const manualCategory=consolidated.categories.find(c=>c.name==='Compétences techniques');
+assert(manualCategory);
+const criterion=manualCategory.tests.find(t=>t.id==='MANUAL:fabrication-plan');
+assert(criterion&&criterion.level==='NE'&&criterion.passages===2,
+ 'Appréciations manuelles divergentes = réexamen et pas calcul artificiel.');
+assert(criterion.sources[0].comment==='Autonome');
+assert.equal(manualCategory.percent,null,'Critères manuels ne sont jamais des points possibles.');
+
 const never=aggregateGeneralBilan([build('x','Sans note',{n:{skipped:true}})]);
 assert.equal(never.testCount,0,'Tests non faits non penalises');
 assert.throws(()=>aggregateGeneralBilan([a,a]),/double/);
