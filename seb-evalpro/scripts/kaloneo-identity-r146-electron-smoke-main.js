@@ -46,7 +46,7 @@ app.whenReady().then(async()=>{
            document.getElementById('dateEvaluation').value='2026-10-22';
            document.getElementById('identity-next').click();
            const candidate=JSON.parse(sessionStorage.getItem('candidat_data')||'{}');
-           return {civilite:candidate.civilite,hasBirth:Object.hasOwn(candidate,'naissance'),phase:document.querySelector('#page-intro')?.classList.contains('visible')};
+           return {civilite:candidate.civilite,hasBirth:Object.hasOwn(candidate,'naissance'),phase:document.querySelector('#page-intro')?.classList.contains('visible'),status:document.getElementById('identity-status')?.textContent,disabled:document.getElementById('identity-next')?.disabled,globalReady:Boolean(window.sebKaltestPilot2),radio:document.querySelector('input[name="civilite"]:checked')?.value,formValues:['nom','prenom','personIdentifier','groupe','lieu','dateEvaluation'].map(k=>[k,document.getElementById(k)?.value])};
          })()`,true);
          if(data.civilite!=='Autre'||data.hasBirth||!data.phase)throw Error('Civilité non sauvegardée dans le parcours: '+JSON.stringify(data));
        }
