@@ -39,6 +39,8 @@ jobs:
           node --check src/candidate-store-main.js
           node --check src/candidate-catalog-main.js
           node --check src/qwen-rich-synthesis.js
+      - name: Generate official historical KALTEST pilot data
+        run: node scripts/build-kaltest-pilot2-data.js
       - name: Prepare real candidate page and check original guards
         run: npm run prepare:web
       - name: Electron first page 2x4 and candidate storage on 3 screen sizes
