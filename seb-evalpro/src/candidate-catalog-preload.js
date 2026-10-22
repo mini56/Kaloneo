@@ -43,6 +43,7 @@ function addStyle() {
     .seb-cc-body{padding:12px 16px;overflow-y:auto;min-height:260px;max-height:68vh;background:#f5f7fb}
     .seb-cc-row{display:grid;grid-template-columns:1.35fr 1.2fr .95fr auto;gap:10px;align-items:center;padding:11px 12px;background:#fff;border:1px solid #d8dde8;border-radius:7px;margin-bottom:8px}
     .seb-cc-row strong{font-size:15px;color:#222}.seb-cc-row small{display:block;color:#666;margin-top:3px}
+    .seb-cc-bilan-row strong{display:block;overflow-wrap:anywhere}.seb-cc-bilan-row small{display:block;margin-top:5px;line-height:1.45;color:#555;overflow-wrap:anywhere}
     .seb-cc-bilan{font-size:13px;line-height:1.35}.seb-cc-actions{display:flex;gap:7px;justify-content:flex-end}
     .seb-cc-actions button,.seb-cc-foot button,.seb-cc-bilan-row button,.seb-cc-detail-actions button{font:700 14px Arial,sans-serif;padding:8px 14px;border:2px solid #0070c0!important;border-radius:6px;background:#fff!important;color:#0070c0!important;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.18)}
     .seb-cc-actions .primary,.seb-cc-bilan-row .primary,.seb-cc-detail-actions .primary{background:#fff!important;color:#0070c0!important;border-color:#0070c0!important}
@@ -140,8 +141,7 @@ function installGenericSearchObserver() {
 
 function bilanLabel(item) {
   if (!item.bilanCount) return 'Bilan : non enregistré';
-  if (item.revisionCount) return `Bilan disponible<br><b>${item.revisionCount} révision(s)</b>`;
-  return 'Bilan disponible<br><b>Original</b>';
+  return 'Bilan courant disponible';
 }
 
 function personSummaryLabel(person) {
@@ -225,10 +225,10 @@ async function openCandidateDetail(candidateId, onChanged) {
       <div class="seb-cc-head"><div class="seb-cc-title">${escapeHtml(item.nom)} ${escapeHtml(item.prenom)}</div><div class="seb-cc-badge">ÉVALUATION</div></div>
       <div class="seb-cc-meta">
         <div><b>N° identifiant :</b> ${escapeHtml(item.personIdentifier || '—')}</div><div><b>Ville :</b> ${escapeHtml(item.lieu)}</div><div><b>Groupe :</b> ${escapeHtml(item.groupe)}</div>
-        <div><b>Date :</b> ${escapeHtml(item.date)}</div><div><b>Bilans :</b> ${item.bilanCount}</div><div><b>Parcours :</b> ${escapeHtml(item.parcours || '—')}</div>
+        <div><b>Date :</b> ${escapeHtml(item.date)}</div><div><b>Bilan :</b> ${item.bilanCount ? 'Enregistré' : 'Non enregistré'}</div><div><b>Parcours :</b> ${escapeHtml(item.parcours || '—')}</div>
       </div>
       <div class="seb-cc-body">
-        <div class="seb-cc-section"><h3>Bilan et révisions</h3><div id="seb-cc-detail-bilans"></div></div>
+        <div class="seb-cc-section"><h3>Dernier bilan enregistré</h3><div id="seb-cc-detail-bilans"></div></div>
         <div class="seb-cc-section"><h3>Replay du parcours</h3><div id="seb-cc-detail-replays"></div></div>
         <div class="seb-cc-section"><h3>Résultats du candidat</h3><div id="seb-cc-detail-results"></div></div>
         <div class="seb-cc-section"><h3>Document Word du bilan</h3><div id="seb-cc-detail-exports"></div></div>
@@ -259,7 +259,7 @@ async function openCandidateDetail(candidateId, onChanged) {
       row.className = 'seb-cc-bilan-row';
       const when = b.createdAt ? new Date(b.createdAt).toLocaleString('fr-FR') : '';
       const integrity = b.integrityOk ? '' : '<small style="color:#c00000;font-weight:700">⚠ intégrité à vérifier</small>';
-      row.innerHTML = `<div><strong>${b.revision === 0 ? 'Bilan original' : 'Révision ' + b.revision}</strong>${integrity}</div><div>Build #${escapeHtml(b.originalBuild)}</div><div><small>${escapeHtml(when)}</small></div><div></div>`;
+      row.innerHTML = `<div><strong>Bilan courant</strong>${integrity}</div><div>Build #${escapeHtml(b.originalBuild)}</div><div><small>Enregistré le ${escapeHtml(when)}</small></div><div></div>`;
       const open = document.createElement('button');
       open.type = 'button';
       open.className = 'primary';
@@ -324,12 +324,12 @@ async function openCandidateDetail(candidateId, onChanged) {
 
   const exports = overlay.querySelector('#seb-cc-detail-exports');
   if (!Array.isArray(result.exports) || !result.exports.length) {
-    exports.innerHTML = '<div class="seb-cc-empty">Aucun document Word enregistré pour ce candidat.</div>';
+    exports.innerHTML = '<div class="seb-cc-empty">Aucun Word associé au dernier bilan. Ouvrez le bilan courant et générez le Word.</div>';
   } else {
     result.exports.forEach((filename) => {
       const row = document.createElement('div');
       row.className = 'seb-cc-bilan-row';
-      row.innerHTML = `<div><strong>${escapeHtml(filename)}</strong><small>Ouverture côté Administrateur : lecture et impression possibles avec le logiciel Windows associé.</small></div><div></div><div></div><div></div>`;
+      row.innerHTML = `<div><strong>Word du dernier bilan</strong><small>${escapeHtml(filename)}</small><small>Ouverture sécurisée avec le logiciel Windows associé.</small></div><div></div><div></div><div></div>`;
       const open = document.createElement('button');
       open.type = 'button';
       open.className = 'primary';
