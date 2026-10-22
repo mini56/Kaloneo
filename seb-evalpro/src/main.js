@@ -17,6 +17,7 @@ const { persistSealedSidecar, ensurePortableCandidateWords } = require('./candid
 const { createCandidateLocalProtection } = require('./candidate-local-protection');
 const { migrateCandidatePrivateDocuments } = require('./candidate-private-documents');
 const { storeProtectedWordDownload } = require('./candidate-protected-download');
+const {discardOldWordExports}=require('./candidate-bilan-current');
 const { internalStorageRoot, documentsWordRoot, migrateLegacyDocumentsStorage } = require('./storage-layout');
 const kaloneoFullParcoursRoute = require('./kaloneo-full-parcours-route');
 const { buildBilanDocxBuffer, decryptBilanDocxBuffer } = require('./bilan-docx-main');
@@ -1852,6 +1853,7 @@ ipcMain.handle('admin:export-bilan-docx', async (_event, payload) => {
     const portablePlain=await decryptBilanDocxBuffer(buffer,adminSessionDocumentPassword);
     persistSealedSidecar(target.replace(/\.docx$/i,'.sebword'),portablePlain);
     fs.writeFileSync(target, buffer);
+    discardOldWordExports(targetDirectory,[filename,path.basename(target.replace(/\.docx$/i,'.sebword'))]);
     cleanupNumberedCandidateWordCopies(targetDirectory, filename);
     return { ok:true, filename };
   } catch (error) {
