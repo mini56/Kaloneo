@@ -26,6 +26,8 @@ permissions:
   contents: write
 jobs:
   windows-installer-migration:
+    # R150 est déjà publiée : ne jamais tenter de recycler son Build #153.
+    if: ${{ github.sha == 'e30d48219c8b6512d27de77eec8d1dd47dd3e7c1' }}
     # Nouveau Build #153 ; la release de secours R149 reste inchangée.
     runs-on: windows-latest
     timeout-minutes: 60
