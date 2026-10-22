@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const { listCandidateDirs, selectCandidate, copyFileIfMissing, ensureDir } = require('./candidate-folder-utils');
 const { readJsonFile, encodeJson, encryptLocalFileBuffer, decryptLocalFileBuffer } = require('./candidate-data-crypto');
 const { opaqueCandidateName } = require('./candidate-private-documents');
+const {discardOldWordExports,pruneReplacedBilans}=require('./candidate-bilan-current');
 
 module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked, buildNumber, dataRoot = null }) {
   const CURRENT_BUILD = String(buildNumber || 'DEV');
@@ -69,6 +70,8 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
     return {
       title: String(document.title || 'Bilan institutionnel'),
       note: String(document.note || ''),
+      summary: String(document.summary || ''),
+      feeling: String(document.feeling || ''),
       headers: Array.isArray(document.headers) ? document.headers.map((v) => String(v || '')) : ['Modules', 'NE', 'I', 'II', 'III', 'Commentaires'],
       rows: rows.map((row, index) => ({
         kind: row && row.kind === 'section' ? 'section' : 'item',
@@ -197,6 +200,20 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
       .sort((a, b) => Number(b.archive.revision || 0) - Number(a.archive.revision || 0))[0] || null;
   }
 
+  function currentForCandidate(candidate,candidateId) {
+    const dir=candidateHistoryDir(candidate,candidateId);
+    const items=fs.readdirSync(dir,{withFileTypes:true})
+      .filter(e=>e.isFile()&&e.name.toLowerCase().endsWith('.json'))
+      .map(e=>{
+        const full=path.join(dir,e.name);
+        let archive=null;
+        try{archive=readJsonFile(full)}catch(_){}
+        return {filename:e.name,archive,full,integrityOk:verify(archive)};
+      }).filter(item=>item.integrityOk);
+    return items.sort((a,b)=>String(b.archive.createdAt||'').localeCompare(String(a.archive.createdAt||''))||
+      Number(b.archive.revision||0)-Number(a.archive.revision||0))[0]||null;
+  }
+
   function writeArchive({ rootId, revision, parentFilename, originalBuild, candidateId, candidate, document, source }) {
     const targetHistory = candidateHistoryDir(candidate, candidateId);
     const createdAt = new Date().toISOString();
@@ -205,7 +222,7 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
       type: TYPE,
       autonomous: true,
       editable: true,
-      immutableRevision: true,
+      immutableRevision: false,
       rootId,
       revision,
       parentFilename: parentFilename || '',
@@ -226,7 +243,10 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
     const temp = target + '.tmp';
     fs.writeFileSync(temp, encodeJson(body), 'utf8');
     fs.renameSync(temp, target);
-    // SEB_CANDIDATE_AUTONOMOUS_BILAN : aucune écriture opérationnelle dans l'ancien historique global.
+    // Ne purger qu'apres ecriture verifiee. Rien n'est efface des autres parcours.
+    if(!verify(readJsonFile(target)))throw new Error('Verification du nouveau bilan impossible.');
+    pruneReplacedBilans(targetHistory,filename);
+    discardOldWordExports(path.join(path.dirname(targetHistory),'exports'));
     return { filename, archive:body };
   }
 
@@ -239,21 +259,21 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
       const document = normalizeDocument(payload && payload.document);
       const sessionToken = safePart(payload && payload.sessionToken, '');
       const rootId = sessionToken || sha({ candidate, originalBuild:String((payload && payload.originalBuild) || CURRENT_BUILD) }).slice(0,24);
-      const latest = latestForRoot(rootId);
+      const latest = currentForCandidate(candidate,candidateId);
       const documentSha256 = sha(document);
       if (latest && latest.archive.documentSha256 === documentSha256) {
-        return { ok:true, unchanged:true, filename:latest.filename, revision:latest.archive.revision, rootId };
+        return { ok:true, unchanged:true, filename:latest.filename, revision:0, rootId };
       }
-      const revision = nextRevision(rootId);
+      const revision = 0;
       const result = writeArchive({
-        rootId,
+        rootId:latest && latest.archive.rootId || rootId,
         revision,
-        parentFilename: latest ? latest.filename : '',
+        parentFilename: '',
         originalBuild:String((payload && payload.originalBuild) || CURRENT_BUILD),
         candidateId,
         candidate,
         document,
-        source: revision === 0 ? 'CURRENT_BILAN_ORIGINAL' : 'CURRENT_BILAN_SAVE'
+        source: 'CURRENT_BILAN'
       });
       return { ok:true, filename:result.filename, revision, rootId, originalBuild:result.archive.originalBuild };
     } catch (error) {
@@ -310,20 +330,21 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
       const source = loaded.archive;
       const document = normalizeDocument(payload && payload.document);
       const documentSha256 = sha(document);
-      const latest = latestForRoot(source.rootId);
+      const latest = currentForCandidate(normalizeCandidate(source.candidate),String(source.candidateId||''));
       if (latest && latest.archive.documentSha256 === documentSha256) {
-        return { ok:true, unchanged:true, filename:latest.filename, revision:latest.archive.revision, rootId:source.rootId };
+        return { ok:true, unchanged:true, filename:latest.filename, revision:0, rootId:source.rootId };
       }
-      const revision = nextRevision(source.rootId);
+      if(latest && latest.filename!==loaded.filename)throw new Error('Ce bilan a deja ete remplace : reouvrez le dernier bilan.');
+      const revision = 0;
       const result = writeArchive({
         rootId:source.rootId,
         revision,
-        parentFilename:loaded.filename,
+        parentFilename:'',
         originalBuild:source.originalBuild,
         candidateId:String(source.candidateId || ''),
         candidate:normalizeCandidate(source.candidate),
         document,
-        source:'HISTORICAL_REVISION'
+        source:'CURRENT_BILAN'
       });
       return { ok:true, filename:result.filename, revision, rootId:source.rootId, originalBuild:source.originalBuild };
     } catch (error) {
@@ -385,6 +406,7 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
       finally{try{fs.rmSync(temp,{force:true})}catch(_){}}
       if(!decryptLocalFileBuffer(fs.readFileSync(target)).equals(plain))
         throw new Error('Verification du bilan Word chiffre impossible.');
+      discardOldWordExports(archiveDir,[targetName]);
       event.returnValue={ok:true,filename:targetName,path:targetName,size:sealed.length,protected:true};
     } catch (error) {
       event.returnValue = { ok: false, error: error && error.message ? error.message : String(error) };
