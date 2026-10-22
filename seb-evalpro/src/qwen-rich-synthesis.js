@@ -173,7 +173,7 @@
     const candidate=input.candidate||{};
     const choix=norm(candidate.civilite);
     const civilite=/^(mme|madame)$/i.test(choix)?'Madame':
-      /^(m|monsieur)$/i.test(choix)?'Monsieur':'la personne';
+      /^(m\\.|m|monsieur)$/i.test(choix)?'Monsieur':'la personne';
     const nom=norm(candidate.nom);
     const prenom=norm(candidate.prenom||candidate['prénom']);
     return genererJsonRichePourQwen(
