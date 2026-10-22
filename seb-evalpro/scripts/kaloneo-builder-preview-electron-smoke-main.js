@@ -130,7 +130,8 @@ ipcMain.handle('kaloneo-library:get-mask-screen',()=>({ok:true,maskScreen:{id:'k
 ipcMain.handle('kaloneo-library:list-parcours',()=>({ok:true,parcours:[]}));
 ipcMain.handle('kaloneo-library:save-parcours',()=>({ok:true}));
 
-const timeout=setTimeout(()=>fail('délai global dépassé'),65000);
+// Smoke de parcours Builder exhaustif : plusieurs prévisualisations Electron et images.
+const timeout=setTimeout(()=>fail('délai global dépassé'),180000);
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
 app.whenReady().then(async()=>{
@@ -1017,6 +1018,7 @@ app.whenReady().then(async()=>{
       return fail('Le curseur disparaît lors de la saisie dans le Builder',typingFocus);
     }
     console.log('KALONEO_BUILDER_INPUT_FOCUS_STABLE=OK',JSON.stringify(typingFocus));
+    console.log('R152_BUILDER_SMOKE_PROGRESS=begin-full-preview-sequence');
 
             const setup=await win.webContents.executeJavaScript(`(async()=>{
       document.getElementById('test-title').value='Aperçu Electron Smoke';
