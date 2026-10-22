@@ -3,8 +3,9 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
 const assert=require('node:assert/strict');
 const register=require('../src/candidate-catalog-main');
 const {codedFolderName}=require('../src/candidate-folder-utils');
-const {readJsonFile,writeJsonFile,isEncryptedLocalFileBuffer}=require('../src/candidate-data-crypto');
+const {readJsonFile,writeJsonFile,isEncryptedLocalFileBuffer,configureLocalKey,clearLocalKey}=require('../src/candidate-data-crypto');
 const root=fs.mkdtempSync(path.join(os.tmpdir(),'kaloneo-general-bilan-'));
+configureLocalKey(crypto.randomBytes(32));
 function stable(value){
  if(Array.isArray(value))return '['+value.map(stable).join(',')+']';
  if(value&&typeof value==='object')
@@ -87,5 +88,5 @@ function fixture(id,date,title,tests) {
   assert(handler('candidate-catalog:trash-empty').ok);
   assert(!fs.existsSync(generalDir),'Supprimer definitivement une personne efface son bilan general et le Word.');
   console.log('KALONEO_GENERAL_BILAN_IPC=OK — personne unique, sources chiffre, calcul, Word, stale, purge');
- }finally{fs.rmSync(root,{recursive:true,force:true})}
+ }finally{fs.rmSync(root,{recursive:true,force:true});clearLocalKey()}
 })().catch(e=>{console.error(e);process.exitCode=1});
