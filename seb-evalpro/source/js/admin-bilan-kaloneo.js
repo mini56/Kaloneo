@@ -668,7 +668,7 @@ function autoInstitutional(){
   persist();
   const status=document.getElementById('status');
   if(status)status.textContent=(routing?.warnings?.length
-    ? 'Bilan calculé. Attention : '+routing.warnings.length+
+    ? 'Bilan institutionnel complété. Attention : '+routing.warnings.length+
       ' liaison(s) du Builder à vérifier (catégorie ou sorties incompatibles).'
     : 'Bilan institutionnel complété avec les liaisons du Builder et les tests du parcours.');
   return true;
