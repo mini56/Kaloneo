@@ -14,7 +14,9 @@ app.whenReady().then(async()=>{
   const videoFile=fs.readdirSync(seed).find(name=>/\.mp4$/i.test(name));
   const imageFile=fs.readdirSync(seed).find(name=>/\.png$/i.test(name));
   assert(videoFile&&imageFile,'Vidéo et PNG fournis absents du Setup.');
-  const videoSrc='data:video/mp4;base64,'+fs.readFileSync(path.join(seed,videoFile)).toString('base64');
+  const videoBytes=fs.readFileSync(path.join(seed,videoFile));
+  console.log('MASK_VIDEO_CODEC_TAGS='+JSON.stringify([...new Set(videoBytes.toString('latin1').match(/avc1|hvc1|hev1|av01|vp09|mp4a|avc3/g) || [])]));
+  const videoSrc='data:video/mp4;base64,'+videoBytes.toString('base64');
   const imageSrc='data:image/png;base64,'+fs.readFileSync(path.join(seed,imageFile)).toString('base64');
   const data=JSON.stringify({name:'KALONÉO — vidéo puis image',content:{video:videoSrc,image:imageSrc,text:''}});
   for(const [width,height] of [[1366,768],[1200,800]]){
@@ -45,7 +47,14 @@ app.whenReady().then(async()=>{
     await sleep(2730);
     const hold=await win.webContents.executeJavaScript(`({
       videoHidden:document.getElementById('mask-preview-video').hidden,
-      opacity:document.getElementById('mask-preview-image').style.opacity
+      opacity:document.getElementById('mask-preview-image').style.opacity,
+      error:document.getElementById('mask-preview-video').error?.message || '',
+      errorCode:document.getElementById('mask-preview-video').error?.code || 0,
+      readyState:document.getElementById('mask-preview-video').readyState,
+      networkState:document.getElementById('mask-preview-video').networkState,
+      currentTime:document.getElementById('mask-preview-video').currentTime,
+      duration:document.getElementById('mask-preview-video').duration,
+      canPlay:document.getElementById('mask-preview-video').canPlayType('video/mp4')
     })`,true);
     assert(!hold.videoHidden&&hold.opacity==='0','Dernière image non conservée 3 s '+JSON.stringify(hold));
     await sleep(430);
