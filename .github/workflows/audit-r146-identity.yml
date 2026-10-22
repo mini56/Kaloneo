@@ -1,0 +1,47 @@
+name: "KALONÉO R146 - Civilité, identité minimale et bilan général"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - 'seb-evalpro/source/kaltest-pilot2.html'
+      - 'seb-evalpro/source/css/kaltest-pilot2.css'
+      - 'seb-evalpro/source/js/kaltest-pilot2-runtime.js'
+      - 'seb-evalpro/src/candidate-person-identity.js'
+      - 'seb-evalpro/src/candidate-store-main.js'
+      - 'seb-evalpro/src/candidate-catalog-main.js'
+      - 'seb-evalpro/src/qwen-rich-synthesis.js'
+      - 'seb-evalpro/scripts/candidate-identity-privacy-smoke.js'
+      - '.github/workflows/audit-r146-identity.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  identity-and-general-bilan:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Check JavaScript syntax
+        shell: pwsh
+        run: |
+          node --check source/js/kaltest-pilot2-runtime.js
+          node --check src/candidate-person-identity.js
+          node --check src/candidate-store-main.js
+          node --check src/candidate-catalog-main.js
+          node --check src/qwen-rich-synthesis.js
+      - name: Privacy, civilité and old/new candidate grouping
+        run: node scripts/candidate-identity-privacy-smoke.js
+      - name: General bilan and candidate regressions
+        run: |
+          node scripts/general-bilan-aggregation-smoke.js
+          node scripts/general-bilan-ipc-smoke.js
+          node scripts/candidate-store-smoke.js
+          node scripts/candidate-catalog-smoke.js

@@ -40,37 +40,45 @@
       <h2>Informations du candidat</h2>
       <form id="pilot2-identification-form">
         <div class="pilot2-form-grid">
-          <div class="pilot2-field">
-            <label for="nom">Nom *</label>
-            <input class="step" id="nom" name="nom" autocomplete="family-name" required>
+          <div class="pilot2-identity-column">
+            <div class="pilot2-field pilot2-civility-field">
+              <span class="pilot2-civility-label" id="pilot2-civility-label">Civilité *</span>
+              <div class="pilot2-civility-options" role="radiogroup" aria-labelledby="pilot2-civility-label">
+                <label class="pilot2-radio-option"><input type="radio" name="civilite" value="M." required> M.</label>
+                <label class="pilot2-radio-option"><input type="radio" name="civilite" value="Mme" required> Mme</label>
+                <label class="pilot2-radio-option"><input type="radio" name="civilite" value="Autre" required> Autre</label>
+              </div>
+            </div>
+            <div class="pilot2-field">
+              <label for="nom">Nom *</label>
+              <input class="step" id="nom" name="nom" autocomplete="family-name" required>
+            </div>
+            <div class="pilot2-field">
+              <label for="prenom">Prénom *</label>
+              <input class="step" id="prenom" name="prenom" autocomplete="given-name" required>
+            </div>
+            <div class="pilot2-field">
+              <label for="dateEvaluation">Date *</label>
+              <input class="step" id="dateEvaluation" name="dateEvaluation" type="date" required>
+            </div>
           </div>
-          <div class="pilot2-field">
-            <label for="prenom">Prénom *</label>
-            <input class="step" id="prenom" name="prenom" autocomplete="given-name" required>
-          </div>
-          <div class="pilot2-field">
-            <label for="naissance">Date de naissance *</label>
-            <input class="step" id="naissance" name="naissance" type="date" required>
-          </div>
-          <div class="pilot2-field">
-            <label for="personIdentifier">N° identifiant *</label>
-            <input class="step" id="personIdentifier" name="personIdentifier" inputmode="text" maxlength="7" autocapitalize="characters" autocomplete="off" required>
-          </div>
-          <div class="pilot2-field">
-            <label for="lieu">Ville *</label>
-            <input class="step" id="lieu" name="lieu" required>
-          </div>
-          <div class="pilot2-field">
-            <label for="groupe">Groupe *</label>
-            <input class="step" id="groupe" name="groupe" required>
-          </div>
-          <div class="pilot2-field">
-            <label for="dateEvaluation">Date de l’évaluation *</label>
-            <input class="step" id="dateEvaluation" name="dateEvaluation" type="date" required>
-          </div>
-          <div class="pilot2-field">
-            <label for="parcours">Parcours</label>
-            <input class="pilot2-readonly" id="parcours" name="parcours" readonly>
+          <div class="pilot2-identity-column">
+            <div class="pilot2-field">
+              <label for="groupe">Groupe *</label>
+              <input class="step" id="groupe" name="groupe" required>
+            </div>
+            <div class="pilot2-field">
+              <label for="lieu">Ville *</label>
+              <input class="step" id="lieu" name="lieu" required>
+            </div>
+            <div class="pilot2-field">
+              <label for="personIdentifier">N° ID *</label>
+              <input class="step" id="personIdentifier" name="personIdentifier" inputmode="text" maxlength="7" autocapitalize="characters" autocomplete="off" required>
+            </div>
+            <div class="pilot2-field">
+              <label for="parcours">Parcours</label>
+              <input class="pilot2-readonly" id="parcours" name="parcours" readonly>
+            </div>
           </div>
         </div>
       </form>

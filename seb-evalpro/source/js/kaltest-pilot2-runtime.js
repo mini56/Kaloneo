@@ -3902,7 +3902,7 @@
     const values = {
       nom: document.getElementById('nom').value.trim(),
       prenom: document.getElementById('prenom').value.trim(),
-      naissance: document.getElementById('naissance').value,
+      civilite: document.querySelector('input[name="civilite"]:checked')?.value || '',
       personIdentifier: document.getElementById('personIdentifier').value.trim().toUpperCase(),
       lieu: document.getElementById('lieu').value.trim(),
       groupe: document.getElementById('groupe').value.trim(),
@@ -3910,7 +3910,7 @@
       parcours: DATA.parcours?.title || 'Parcours KALTEST'
     };
 
-    const required = ['nom','prenom','naissance','personIdentifier','lieu','groupe','dateEvaluation'];
+    const required = ['civilite','nom','prenom','personIdentifier','lieu','groupe','dateEvaluation'];
     if (required.some(key => !values[key])) {
       return { ok:false, message:'Veuillez remplir tous les champs avant de commencer.' };
     }
@@ -3923,6 +3923,11 @@
   function renderIdentity() {
     document.getElementById('parcours').value = DATA.parcours?.title || 'Parcours KALTEST';
     for (const [key, value] of Object.entries(state.identity || {})) {
+      if (key === 'civilite') {
+        const option = [...document.querySelectorAll('input[name="civilite"]')].find(item => item.value === value);
+        if (option) option.checked = true;
+        continue;
+      }
       const input = document.getElementById(key);
       if (input && key !== 'parcours') input.value = value || '';
     }
@@ -4143,7 +4148,7 @@
       // Le navigateur ne doit pas créer d'identité technique concurrente.
       sessionStorage.setItem('candidat_data', JSON.stringify(candidateData));
       replay('IDENTITY_VALIDATED', {
-        fields:['nom','prenom','naissance','personIdentifier','lieu','groupe','dateEvaluation','parcours']
+        fields:['civilite','nom','prenom','personIdentifier','lieu','groupe','dateEvaluation','parcours']
       });
       showPhase('intro');
     });

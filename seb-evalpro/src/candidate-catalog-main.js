@@ -25,6 +25,7 @@ const {
 } = require('./candidate-folder-utils');
 const {
   candidatePersonIdentity,
+  candidatePersonMatchKey,
   enrichCandidatePersonIdentity
 } = require('./candidate-person-identity');
 
@@ -110,8 +111,36 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     ensureDir(candidatesRoot);
     let updated = 0;
     const records = listCandidateDirs(candidatesRoot, false);
+    // R146 : parcours historiques (avec naissance) et récents (sans naissance)
+    // sont rattachés si l'identifiant à 7 caractères ET les noms concordent.
+    // Un bilan général existant garde toujours son identifiant de stockage.
+    const candidatesByKey = new Map();
     for (const record of records) {
+      const candidate = { ...(record.manifest?.candidat || {}), ...(record.candidate || {}) };
+      const key = candidatePersonMatchKey(candidate);
+      if (!key) continue;
+      if (!candidatesByKey.has(key)) candidatesByKey.set(key, []);
+      candidatesByKey.get(key).push({
+        personId:personIdentityForRecord(record).personId,
+        createdAt:String(record.manifest?.createdAt || ''),
+        candidateId:record.candidateId
+      });
+    }
+    const preferredByKey = new Map();
+    for (const [key, entries] of candidatesByKey) {
+      const ids = [...new Set(entries.map(e => e.personId))].filter(id => /^PERS-[A-F0-9]{24}$/.test(id));
+      if (!ids.length) continue;
+      const saved = ids.filter(id => fs.existsSync(path.join(root, 'BilansGeneraux', id, 'bilan-general.json')));
+      if (saved.length > 1) continue; // Plusieurs bilans concurrents : contrôle manuel.
+      const oldest = entries.slice().sort((a,b) =>
+        a.createdAt.localeCompare(b.createdAt) || a.candidateId.localeCompare(b.candidateId))[0];
+      preferredByKey.set(key, saved[0] || oldest.personId);
+    }
+    for (const record of records) {
+      const originalCandidate = { ...(record.manifest?.candidat || {}), ...(record.candidate || {}) };
+      const matchKey = candidatePersonMatchKey(originalCandidate);
       const person = personIdentityForRecord(record);
+      if (matchKey && preferredByKey.has(matchKey)) person.personId = preferredByKey.get(matchKey);
       const manifestPath = path.join(record.candidateDir, 'manifest.json');
       const candidatePath = path.join(record.candidateDir, 'donnees', 'candidat.json');
       const statePath = path.join(record.candidateDir, 'donnees', 'evaluation-state.json');

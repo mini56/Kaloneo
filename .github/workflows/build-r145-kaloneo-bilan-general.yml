@@ -24,6 +24,8 @@ permissions:
   contents: write
 jobs:
   windows-installer-migration:
+    # La release R145 / Build 150 est figée : ne jamais republier son numéro.
+    if: ${{ github.sha == '303551cc43ddbc3a50c378c60bf25ae6e6b4284f' }}
     runs-on: windows-latest
     timeout-minutes: 60
     defaults:

@@ -2,9 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { encodeJson, readJsonFile } = require('./candidate-data-crypto');
-const { codedFolderName } = require('./candidate-folder-utils');
+const { codedFolderName, listCandidateDirs } = require('./candidate-folder-utils');
 const {
   normalizePersonIdentifier,
+  candidatePersonMatchKey,
   candidatePersonIdentity,
   enrichCandidatePersonIdentity
 } = require('./candidate-person-identity');
@@ -303,6 +304,21 @@ function createCandidateStore(options = {}) {
     return pointer;
   }
 
+  function previousPersonIdFor(candidate) {
+    const key = candidatePersonMatchKey(candidate);
+    if (!key) return '';
+    const ids = new Set();
+    for (const record of listCandidateDirs(candidatesRoot, false)) {
+      const savedCandidate = { ...(record.manifest?.candidat || {}), ...(record.candidate || {}) };
+      if (candidatePersonMatchKey(savedCandidate) !== key) continue;
+      const id = String(record.manifest?.personId || savedCandidate.personId ||
+        candidatePersonIdentity(savedCandidate, record.candidateId).personId);
+      if (/^PERS-[A-F0-9]{24}$/.test(id)) ids.add(id);
+    }
+    // Plusieurs identités préexistantes : ne pas arbitrer silencieusement.
+    return ids.size === 1 ? [...ids][0] : '';
+  }
+
   function allocateCandidate(identity) {
     ensureRoots();
 
@@ -330,8 +346,10 @@ function createCandidateStore(options = {}) {
 
     const createdAt = now().toISOString();
     const person = candidatePersonIdentity(identity.original, candidateId);
+    const personId = previousPersonIdFor(identity.original) || person.personId;
     const candidateData = {
       ...enrichCandidatePersonIdentity(identity.original, candidateId),
+      personId,
       evaluationId:candidateId
     };
     const manifest = {
@@ -340,7 +358,7 @@ function createCandidateStore(options = {}) {
       privacyStorageVersion: 1,
       candidateId,
       evaluationId:candidateId,
-      personId:person.personId,
+      personId,
       personIdentifier:person.personIdentifier,
       shortId,
       folderName,
@@ -368,7 +386,7 @@ function createCandidateStore(options = {}) {
       schemaVersion: 1,
       candidateId,
       evaluationId:candidateId,
-      personId:person.personId,
+      personId,
       shortId,
       folderName,
       candidateDir,
@@ -438,6 +456,7 @@ function createCandidateStore(options = {}) {
     if (identity) {
       candidateData = {
         ...enrichCandidatePersonIdentity(identity.original, active.candidateId),
+        personId:String(active.personId || ''),
         evaluationId:String(active.evaluationId || active.candidateId)
       };
       if (state && state.sessionStorage && typeof state.sessionStorage === 'object') {

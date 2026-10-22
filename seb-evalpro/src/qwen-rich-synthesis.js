@@ -171,7 +171,9 @@
   function buildRichProfile(input){
     input=input||{};
     const candidate=input.candidate||{};
-    const civilite=/^mme|madame$/i.test(norm(candidate.civilite))?'Madame':'Monsieur';
+    const choix=norm(candidate.civilite);
+    const civilite=/^(mme|madame)$/i.test(choix)?'Madame':
+      /^(m|monsieur)$/i.test(choix)?'Monsieur':'la personne';
     const nom=norm(candidate.nom);
     const prenom=norm(candidate.prenom||candidate['prénom']);
     return genererJsonRichePourQwen(

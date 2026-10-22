@@ -15,6 +15,17 @@ function normalizePersonIdentifier(value) {
     .slice(0, 7);
 }
 
+// Identifier, name and given name are the only permitted stable match dimensions.
+function candidatePersonMatchKey(candidate) {
+  const c = candidate && typeof candidate === 'object' ? candidate : {};
+  const identifier = normalizePersonIdentifier(c.personIdentifier || c.identifiant || c.identifier || c.ss7 || '');
+  const nom = normalizeHuman(c.nom);
+  const prenom = normalizeHuman(c.prenom || c['prénom']);
+  return /^[A-Z0-9]{7}$/.test(identifier) && nom && prenom
+    ? [identifier, nom, prenom].join('|')
+    : '';
+}
+
 function candidatePersonIdentity(candidate, fallbackCandidateId = '') {
   const c = candidate && typeof candidate === 'object' ? candidate : {};
   const personIdentifier = normalizePersonIdentifier(
@@ -65,6 +76,7 @@ function enrichCandidatePersonIdentity(candidate, fallbackCandidateId = '') {
 module.exports = {
   normalizeHuman,
   normalizePersonIdentifier,
+  candidatePersonMatchKey,
   candidatePersonIdentity,
   enrichCandidatePersonIdentity
 };
