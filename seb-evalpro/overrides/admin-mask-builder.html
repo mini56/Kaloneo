@@ -52,7 +52,14 @@
         <button id="remove-mask-image" class="seb-action-btn seb-btn-functional" type="button">Retirer l’image</button>
         <span id="mask-image-name" class="muted"></span>
       </div>
-      <p class="muted">Un écran doit contenir au moins un texte ou une image. Aucun autre composant n’est autorisé.</p>
+      <div class="image-row">
+        <label class="file-label">Vidéo facultative (MP4, WEBM ou OGG)
+          <input id="mask-video-file" type="file" accept="video/mp4,video/webm,video/ogg,.mp4,.webm,.ogg">
+        </label>
+        <button id="remove-mask-video" class="seb-action-btn seb-btn-functional" type="button">Retirer la vidéo</button>
+        <span id="mask-video-name" class="muted"></span>
+      </div>
+      <p class="muted">Avec une vidéo, l’image finale est obligatoire. La dernière image de la vidéo reste 3 secondes, puis un fondu de 1 seconde révèle l’image. Sans vidéo : texte et/ou image, comme auparavant.</p>
       <div class="save-row">
         <button id="save-mask" class="seb-action-btn seb-btn-nav" type="button">Enregistrer dans la bibliothèque</button>
       </div>
@@ -64,13 +71,17 @@
         <button id="open-real-mask-preview" class="seb-action-btn seb-btn-functional" type="button">Voir la vraie page dans Electron</button>
       </div>
       <div id="mask-preview-screen" class="mask-preview-screen">
-        <img id="mask-preview-image" alt="" hidden>
+        <div id="mask-preview-media-stage" class="mask-media-stage" hidden>
+          <video id="mask-preview-video" muted playsinline preload="auto" hidden></video>
+          <img id="mask-preview-image" alt="" hidden>
+        </div>
         <div id="mask-preview-text" class="mask-preview-text"></div>
         <button class="mask-close-preview" type="button" disabled>Masquer l’écran d’accueil</button>
       </div>
     </section>
   </main>
 
+  <script src="js/kaloneo-mask-media.js"></script>
   <script src="js/admin-mask-builder.js"></script>
 </body>
 </html>

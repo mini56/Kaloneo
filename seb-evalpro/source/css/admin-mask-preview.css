@@ -6,3 +6,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff;font-f
 .mask-preview-content img{display:block;max-width:94%;max-height:72%;width:auto;height:auto;object-fit:contain;object-position:center;user-select:none;-webkit-user-drag:none}
 .mask-preview-text{max-width:92%;white-space:pre-wrap;text-align:center;color:#004E70;font:700 clamp(24px,4vw,54px) Calibri,"Segoe UI",Arial,sans-serif;line-height:1.2}
 #mask-preview-close{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);margin:0;padding:11px 20px;border:0;border-radius:8px;background:#0070c0;color:#fff;font:700 15px Arial,sans-serif;box-shadow:0 3px 12px rgba(0,0,0,.25);cursor:pointer}
+
+/* Masque vidéo : image finale superposée pendant le fondu progressif. */
+.mask-media-stage{position:relative;flex:1 1 auto;width:100%;min-height:0;max-height:100%;overflow:hidden;}
+.mask-media-stage[hidden],.mask-media-stage video[hidden],.mask-media-stage img[hidden]{display:none!important}
+.mask-media-stage video,.mask-media-stage img{
+ position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;
+ object-fit:contain;object-position:center;display:block;pointer-events:none;
+}
+.mask-media-stage video{z-index:0}
+.mask-media-stage img{z-index:1}
+.mask-preview-text{flex:0 0 auto}

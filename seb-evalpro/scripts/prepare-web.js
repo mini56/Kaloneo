@@ -62,6 +62,10 @@ fs.rmSync(outputDir,{recursive:true,force:true});
 fs.mkdirSync(outputDir,{recursive:true});
 copyTree(sourceDir,outputDir,new Set(['QCM.lnk','README.md']));
 copyTree(overridesDir,outputDir);
+// Le moteur média est partagé sans duplication entre Preload, Builder et aperçu.
+fs.copyFileSync(path.join(root,'src','kaloneo-mask-media.js'),path.join(outputDir,'js','kaloneo-mask-media.js'));
+// Les fichiers fournis par l'administrateur ne sont pas ajoutés à la bibliothèque d'images.
+copyTree(path.join(repoRoot,'video_ecran_mq'),path.join(outputDir,'mask-media-seed'));
 writeOfficialSeedOverrides({
   repoRoot,sourceTestsDir:path.join(sourceDir,'kaltest','tests'),
   outputTestsDir:path.join(outputDir,'kaltest','tests')

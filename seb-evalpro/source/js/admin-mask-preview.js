@@ -11,26 +11,14 @@
     }
 
     const value=result.definition||{};
-    const content=value.content||{};
-    const text=String(content.text||'');
-    const image=String(content.image||'');
-
-    const textNode=$('mask-preview-text');
-    const imageNode=$('mask-preview-image');
-
-    textNode.textContent=text;
-    textNode.hidden=!text.trim();
-
-    if(image) {
-      imageNode.src=image;
-      imageNode.alt=String(value.name||'Écran de masquage');
-      imageNode.hidden=false;
-    } else {
-      imageNode.hidden=true;
-      imageNode.removeAttribute('src');
-    }
+    const player=window.KaloneoMaskMedia.createPlayer({
+      stage:$('mask-preview-media-stage'),video:$('mask-preview-video'),
+      image:$('mask-preview-image'),text:$('mask-preview-text')
+    });
+    player.show(value);
 
     $('mask-preview-close').addEventListener('click',async()=>{
+      player.stop();
       await window.sebEvalPro?.kaloneoCloseMaskPreview?.();
     });
   }

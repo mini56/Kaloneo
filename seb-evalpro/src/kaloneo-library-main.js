@@ -36,6 +36,7 @@ const DEFAULT_MASK_VERSION = '1.0.0';
 function createKaloneoLibrary(options = {}) {
   const dataRoot = String(options.dataRoot || '').trim();
   const seedTestsRoot = String(options.seedTestsRoot || '').trim();
+  const seedMaskMediaRoot = String(options.seedMaskMediaRoot || '').trim();
   const seedImageRoots = Array.isArray(options.seedImageRoots)
     ? options.seedImageRoots
       .map(item => typeof item === 'string'
@@ -774,6 +775,31 @@ function createKaloneoLibrary(options = {}) {
     };
   }
 
+  // Écran de démonstration prêt à utiliser : vidéo du dépôt, 3 secondes sur
+  // la dernière image et fondu vers le PNG. Les données restent dans le
+  // dossier de masque et voyagent avec les exports/imports de parcours.
+  function ensureFeaturedVideoMask() {
+    const id = 'kaloneo-video-image';
+    const version = '1.0.0';
+    const target = maskFile(id, version);
+    if (fs.existsSync(target) || !seedMaskMediaRoot || !fs.existsSync(seedMaskMediaRoot)) return;
+    const entries = fs.readdirSync(seedMaskMediaRoot).sort();
+    const videoName = entries.find(item => /\.mp4$/i.test(item));
+    const imageName = entries.find(item => /\.png$/i.test(item));
+    if (!videoName || !imageName) return;
+    const video = 'data:video/mp4;base64,' +
+      fs.readFileSync(path.join(seedMaskMediaRoot, videoName)).toString('base64');
+    const image = 'data:image/png;base64,' +
+      fs.readFileSync(path.join(seedMaskMediaRoot, imageName)).toString('base64');
+    const stamp = now().toISOString();
+    atomicWriteJson(target, {
+      format:'kaloneo-mask-screen', schemaVersion:2,
+      id, version, name:'KALONÉO — vidéo puis image', systemProvided:false,
+      createdAt:stamp, updatedAt:stamp,
+      content:{ text:'', image, imageName, video, videoName }
+    });
+  }
+
   function maskFile(id, version) {
     return path.join(maskScreensRoot, safeSegment(id, 'masque'), safeSegment(version, '1.0.0'), 'mask.json');
   }
@@ -801,7 +827,8 @@ function createKaloneoLibrary(options = {}) {
       name:String(value.name || value.id),
       systemProvided:value.systemProvided === true,
       hasText:Boolean(String(value.content?.text || '').trim()),
-      hasImage:Boolean(String(value.content?.image || '').trim())
+      hasImage:Boolean(String(value.content?.image || '').trim()),
+      hasVideo:Boolean(String(value.content?.video || '').trim())
     };
   }
 
@@ -842,13 +869,21 @@ function createKaloneoLibrary(options = {}) {
     const name = String(payload.name || '').trim();
     const text = String(payload.content?.text || '');
     const image = String(payload.content?.image || '');
+    const video = String(payload.content?.video || '');
+    const imageName = String(payload.content?.imageName || '').slice(0,180);
+    const videoName = String(payload.content?.videoName || '').slice(0,180);
 
     if (!id) return { ok:false, error:'ID de l’écran de masquage obligatoire.' };
     if (!version) return { ok:false, error:'Version de l’écran de masquage obligatoire.' };
     if (!name) return { ok:false, error:'Nom de l’écran de masquage obligatoire.' };
-    if (!text.trim() && !image.trim()) return { ok:false, error:'Ajoutez un texte, une image, ou les deux.' };
+    if (!text.trim() && !image.trim() && !video.trim()) return { ok:false, error:'Ajoutez un texte, une image, ou une vidéo.' };
+    if (video && !image) return { ok:false, error:'Une image finale est nécessaire après la vidéo.' };
     if (id === DEFAULT_MASK_ID) return { ok:false, error:'L’écran KALONÉO par défaut est protégé.' };
-    if (image && !/^data:image\//i.test(image)) return { ok:false, error:'L’image de masquage doit être embarquée dans KALONÉO.' };
+    if (image && !/^data:image\/(png|jpeg|webp|gif);base64,/i.test(image))
+      return { ok:false, error:'L’image doit être embarquée (PNG, JPEG, WEBP ou GIF).' };
+    if (video && !/^data:video\/(mp4|webm|ogg);base64,/i.test(video))
+      return { ok:false, error:'La vidéo doit être embarquée (MP4, WEBM ou OGG).' };
+    if (video.length > 42000000) return { ok:false, error:'La vidéo ne peut pas dépasser environ 30 Mo.' };
 
     const target = maskFile(id, version);
     const exists = fs.existsSync(target);
@@ -860,14 +895,14 @@ function createKaloneoLibrary(options = {}) {
     const stamp = now().toISOString();
     const value = {
       format:'kaloneo-mask-screen',
-      schemaVersion:1,
+      schemaVersion:video ? 2 : 1,
       id,
       version,
       name,
       systemProvided:false,
       createdAt:String(previous?.createdAt || stamp),
       updatedAt:stamp,
-      content:{ text, image }
+      content:{ text, image, imageName, video, videoName }
     };
     atomicWriteJson(target, value);
     return { ok:true, replaced:exists, maskScreen:toMaskMetadata({ value, file:target }) };
@@ -970,6 +1005,7 @@ function createKaloneoLibrary(options = {}) {
       imageSeedsEnsured = true;
     }
     ensureDefaultMaskScreen();
+    ensureFeaturedVideoMask();
     ensureBaseParcours();
     return true;
   }

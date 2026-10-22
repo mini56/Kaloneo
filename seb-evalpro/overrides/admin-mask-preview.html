@@ -9,11 +9,15 @@
 <body>
   <main id="mask-preview-root" class="mask-preview-root" aria-label="Aperçu réel de l’écran de masquage">
     <div id="mask-preview-content" class="mask-preview-content">
-      <img id="mask-preview-image" alt="" hidden>
+      <div id="mask-preview-media-stage" class="mask-media-stage" hidden>
+        <video id="mask-preview-video" muted playsinline preload="auto" hidden></video>
+        <img id="mask-preview-image" alt="" hidden>
+      </div>
       <div id="mask-preview-text" class="mask-preview-text" hidden></div>
     </div>
     <button id="mask-preview-close" type="button">Masquer l’écran d’accueil</button>
   </main>
+  <script src="js/kaloneo-mask-media.js"></script>
   <script src="js/admin-mask-preview.js"></script>
 </body>
 </html>

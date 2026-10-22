@@ -1,0 +1,58 @@
+name: "KALONÉO R148 - Écrans de masquage vidéo et image"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - 'video_ecran_mq/**'
+      - 'seb-evalpro/src/kaloneo-mask-media.js'
+      - 'seb-evalpro/src/kaloneo-library-main.js'
+      - 'seb-evalpro/src/preload.js'
+      - 'seb-evalpro/src/main.js'
+      - 'seb-evalpro/scripts/prepare-web.js'
+      - 'seb-evalpro/source/js/admin-mask-builder.js'
+      - 'seb-evalpro/source/js/admin-mask-preview.js'
+      - 'seb-evalpro/overrides/admin-mask-builder.html'
+      - 'seb-evalpro/overrides/admin-mask-preview.html'
+      - 'seb-evalpro/source/css/admin-mask-builder.css'
+      - 'seb-evalpro/source/css/admin-mask-preview.css'
+      - 'seb-evalpro/scripts/kaloneo-mask-video-smoke.js'
+      - 'seb-evalpro/scripts/kaloneo-mask-video-electron-smoke-main.js'
+      - '.github/workflows/audit-r148-mask-video.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mask-video-and-portability:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Dependencies
+        run: npm install --no-audit --no-fund
+      - name: JavaScript syntax
+        run: |
+          node --check src/kaloneo-mask-media.js
+          node --check src/kaloneo-library-main.js
+          node --check src/main.js
+          node --check src/preload.js
+          node --check source/js/admin-mask-builder.js
+          node --check source/js/admin-mask-preview.js
+      - name: Video mask library, privacy lifecycle, frozen last frame, portable files
+        run: node scripts/kaloneo-mask-video-smoke.js
+      - name: Prepare actual candidate and admin pages
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          npm run prepare:web
+      - name: Test 3 s pause and 1 s fade in actual Windows Electron with supplied media
+        run: npx electron --no-sandbox scripts/kaloneo-mask-video-electron-smoke-main.js
+      - name: Existing parcours, result categories and import/export contracts
+        run: |
+          node scripts/kaloneo-parcours-builder-smoke.js
+          node scripts/general-bilan-aggregation-smoke.js
+          node scripts/general-bilan-ipc-smoke.js

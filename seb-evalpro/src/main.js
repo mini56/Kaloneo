@@ -263,6 +263,7 @@ function getKaloneoLibrary() {
     kaloneoLibrary = createKaloneoLibrary({
       dataRoot: sebInternalRoot(),
       seedTestsRoot: path.join(__dirname, '..', 'app', 'web', 'kaltest', 'tests'),
+      seedMaskMediaRoot: path.join(__dirname, '..', 'app', 'web', 'mask-media-seed'),
       seedImageRoots:[
         { root:path.join(__dirname, '..', 'app', 'web', 'imageqcm'), category:'Images exercices KALONÉO' },
         { root:path.join(__dirname, '..', 'app', 'web', 'flacon'), category:'Images Stock' },
@@ -1570,8 +1571,12 @@ ipcMain.handle('kaloneo-mask:open-preview', (_event, definition) => {
   }
   const text = String(definition.content?.text || '');
   const image = String(definition.content?.image || '');
-  if (!text.trim() && !image.trim()) {
-    return { ok:false, error:'Ajoutez un texte, une image, ou les deux avant l’aperçu.' };
+  const video = String(definition.content?.video || '');
+  if (!text.trim() && !image.trim() && !video.trim()) {
+    return { ok:false, error:'Ajoutez du texte, une image ou une vidéo avant l’aperçu.' };
+  }
+  if (video && !image) {
+    return { ok:false, error:'Choisissez aussi une image finale pour le fondu.' };
   }
   const target = path.join(__dirname, '..', 'app', 'web', 'admin-mask-preview.html');
   if (!fs.existsSync(target)) return { ok:false, error:'Page d’aperçu de masquage absente.' };

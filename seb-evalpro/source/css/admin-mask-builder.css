@@ -25,3 +25,14 @@ body{display:grid;grid-template-rows:auto minmax(0,1fr);padding:0}
 
 /* Boutons KALONÉO : restaurer le relief sur cet écran. */
 .mask-topbar button:not(:disabled):active,.mask-shell button:not(:disabled):active{box-shadow:var(--kaloneo-btn-pressed)!important;filter:brightness(.935);}
+
+/* Masque vidéo : image finale superposée pendant le fondu progressif. */
+.mask-media-stage{position:relative;flex:1 1 auto;width:100%;min-height:0;max-height:100%;overflow:hidden;}
+.mask-media-stage[hidden],.mask-media-stage video[hidden],.mask-media-stage img[hidden]{display:none!important}
+.mask-media-stage video,.mask-media-stage img{
+ position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;
+ object-fit:contain;object-position:center;display:block;pointer-events:none;
+}
+.mask-media-stage video{z-index:0}
+.mask-media-stage img{z-index:1}
+.mask-preview-text{flex:0 0 auto}
