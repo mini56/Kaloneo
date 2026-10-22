@@ -2210,6 +2210,8 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
     content:{text:'KALONÉO\nAu cœur d’un nouvel élan',image:''}
   };
   let privacyMaskLoaded = false;
+  const { createPlayer: createMaskMediaPlayer } = require('./kaloneo-mask-media');
+  let privacyMediaPlayer = null;
 
   function readPrivacyMode(){
     try {
@@ -2261,8 +2263,13 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
       '#seb-evalpro-privacy-layer{position:fixed;inset:0;background:#fff;display:none;align-items:center;justify-content:center;overflow:hidden;font-family:Arial,sans-serif}' +
       '#seb-evalpro-privacy-content{position:absolute;inset:0 0 68px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:28px;box-sizing:border-box;overflow:hidden}' +
       '#seb-evalpro-privacy-layer img{display:block;max-width:94%;max-height:72%;width:auto;height:auto;object-fit:contain;object-position:center;user-select:none;-webkit-user-drag:none}' +
+      '#seb-evalpro-privacy-media{position:relative;width:100%;flex:1 1 auto;min-height:0;overflow:hidden}' +
+      '#seb-evalpro-privacy-media[hidden],#seb-evalpro-privacy-media video[hidden],#seb-evalpro-privacy-media img[hidden]{display:none!important}' +
+      '#seb-evalpro-privacy-media video,#seb-evalpro-privacy-media img{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:contain;object-position:center;pointer-events:none;user-select:none}' +
+      '#seb-evalpro-privacy-media video{z-index:0}#seb-evalpro-privacy-media img{z-index:1}' +
       '#seb-evalpro-privacy-text{max-width:92%;white-space:pre-wrap;text-align:center;color:#004E70;font:700 clamp(24px,4vw,54px) Calibri,"Segoe UI",Arial,sans-serif;line-height:1.2}' +
       '#seb-evalpro-privacy-layer.seb-final-privacy #seb-evalpro-privacy-content{inset:0;padding:0}' +
+      '#seb-evalpro-privacy-layer.seb-final-privacy #seb-evalpro-privacy-media{position:absolute;inset:0;height:100%}' +
       '#seb-evalpro-privacy-layer.seb-final-privacy img{position:absolute;inset:0;max-width:none;max-height:none;width:100%;height:100%;object-fit:cover}' +
       '#seb-evalpro-privacy-hide{position:absolute!important;left:50%!important;bottom:24px!important;transform:translateX(-50%)!important;margin:0!important;padding:11px 20px!important;border:0!important;border-radius:8px!important;background:#0070c0!important;color:#fff!important;font:700 15px Arial,sans-serif!important;box-shadow:0 3px 12px rgba(0,0,0,.25)!important;cursor:pointer!important}' +
       '#seb-evalpro-final-privacy-wrap{display:flex!important;justify-content:center!important;margin:22px 0 12px!important}' +
@@ -2304,6 +2311,17 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
     const content = document.createElement('div');
     content.id = 'seb-evalpro-privacy-content';
 
+    const media = document.createElement('div');
+    media.id = 'seb-evalpro-privacy-media';
+    media.hidden = true;
+    const video = document.createElement('video');
+    video.id = 'seb-evalpro-privacy-video';
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.preload = 'auto';
+    video.hidden = true;
     const image = document.createElement('img');
     image.id = 'seb-evalpro-privacy-image';
     image.alt = '';
@@ -2313,8 +2331,11 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
     const text = document.createElement('div');
     text.id = 'seb-evalpro-privacy-text';
 
-    content.appendChild(image);
+    media.appendChild(video);
+    media.appendChild(image);
+    content.appendChild(media);
     content.appendChild(text);
+    privacyMediaPlayer = createMaskMediaPlayer({stage:media,video,image,text});
 
     const hide = document.createElement('button');
     hide.id = 'seb-evalpro-privacy-hide';
@@ -2341,32 +2362,35 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
 
   function renderPrivacyContent(layer, mode){
     if (!layer) return;
+    const player = privacyMediaPlayer;
+    const media = layer.querySelector('#seb-evalpro-privacy-media');
+    const video = layer.querySelector('#seb-evalpro-privacy-video');
     const image = layer.querySelector('#seb-evalpro-privacy-image');
     const text = layer.querySelector('#seb-evalpro-privacy-text');
+
     if (mode === MODE_FINAL) {
+      if (player?.active) player.stop();
       layer.classList.add('seb-final-privacy');
+      if (media) media.hidden = false;
+      if (video) video.hidden = true;
       if (image) {
         image.src = 'imageqcm/seb-evalpro-privacy-screen.jpg';
         image.alt = 'SEB-éval-PRO';
         image.hidden = false;
+        image.style.transition = 'none';
+        image.style.opacity = '1';
       }
       if (text) { text.textContent=''; text.hidden=true; }
       return;
     }
 
     layer.classList.remove('seb-final-privacy');
-    const value = privacyMaskScreen || {};
-    const content = value.content || {};
-    const imageValue = String(content.image || '');
-    const textValue = String(content.text || '');
-    if (image) {
-      if (imageValue) image.src=imageValue; else image.removeAttribute('src');
-      image.alt = value.name ? String(value.name) : '';
-      image.hidden = !imageValue;
-    }
-    if (text) {
-      text.textContent = textValue;
-      text.hidden = !textValue.trim();
+    if (mode === MODE_TEMP) {
+      // Même lecteur que l'éditeur : vidéo, 3 secondes sur dernière image,
+      // fondu vers le PNG, aucun rafraîchissement ne recommence la vidéo.
+      player?.show(privacyMaskScreen || {});
+    } else if (player?.active) {
+      player.stop();
     }
   }
 
@@ -2430,6 +2454,7 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
     const finalResults = onFinalResults();
 
     if (adminPage && privacyMode !== MODE_TEMP) {
+      if (privacyMediaPlayer?.active) privacyMediaPlayer.stop();
       toggle.style.setProperty('display', 'none', 'important');
       layer.style.setProperty('display', 'none', 'important');
       if (finalWrap) finalWrap.style.setProperty('display', 'none', 'important');
@@ -2456,6 +2481,7 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
       hide.style.setProperty('display', 'none', 'important');
       hide.setAttribute('aria-hidden', 'true');
     } else {
+      if (privacyMediaPlayer?.active) privacyMediaPlayer.stop();
       layer.style.setProperty('display', 'none', 'important');
       hide.style.setProperty('display', 'none', 'important');
       toggle.style.setProperty('display', (String(pageName() || '').toLowerCase() === 'introbrique.html' || finalResults) ? 'none' : 'block', 'important');
