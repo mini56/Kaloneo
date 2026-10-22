@@ -11,6 +11,8 @@ on:
       - 'seb-evalpro/scripts/kaloneo-r125-branding-guard.js'
       - 'seb-evalpro/scripts/kaloneo-r126-install-path-guard.js'
       - 'seb-evalpro/scripts/kaloneo-r128-taskbar-icon-guard.js'
+      - 'seb-evalpro/scripts/kaloneo-r127-visible-brand-guard.js'
+      - 'seb-evalpro/scripts/admin-build-label-guard.js'
   workflow_dispatch:
 concurrency:
   group: kaloneo-r148-mask-video-setup-${{ github.ref }}
