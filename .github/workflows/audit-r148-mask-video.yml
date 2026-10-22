@@ -17,6 +17,7 @@ on:
       - 'seb-evalpro/source/css/admin-mask-preview.css'
       - 'seb-evalpro/scripts/kaloneo-mask-video-smoke.js'
       - 'seb-evalpro/scripts/kaloneo-mask-video-electron-smoke-main.js'
+      - 'seb-evalpro/scripts/kaloneo-mask-candidate-electron-smoke-main.js'
       - '.github/workflows/audit-r148-mask-video.yml'
   workflow_dispatch:
 permissions:
@@ -51,6 +52,8 @@ jobs:
           npm run prepare:web
       - name: Test 3 s pause and 1 s fade in actual Windows Electron with supplied media
         run: npx electron --no-sandbox scripts/kaloneo-mask-video-electron-smoke-main.js
+      - name: Real candidate privacy screen (not Builder preview), video 3 s then fade
+        run: npx electron --no-sandbox scripts/kaloneo-mask-candidate-electron-smoke-main.js
       - name: Existing parcours, result categories and import/export contracts
         run: |
           node scripts/kaloneo-parcours-builder-smoke.js
