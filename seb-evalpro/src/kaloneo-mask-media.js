@@ -54,6 +54,7 @@
 
       let imageReady = false;
       let finished = false;
+      let hasEnded = false;
       const revealImage = () => {
         if (generation !== own || finished) return;
         finished = true;
@@ -87,7 +88,8 @@
       video.hidden = false;
       video.src = videoSrc;
       const afterLastFrame = () => {
-        if (generation !== own) return;
+        if (generation !== own || hasEnded) return;
+        hasEnded = true;
         try { video.pause(); } catch (_) {}
         // "ended" conserve la dernière frame visible de la vidéo.
         timer = setTimeout(() => {
@@ -97,7 +99,7 @@
       };
       video.onended = afterLastFrame;
       video.onerror = () => {
-        if (generation !== own) return;
+        if (generation !== own || hasEnded) return;
         if (timer !== null) clearTimeout(timer);
         timer = null;
         revealImage(); // Échec de lecture : garder un masquage sûr.
@@ -109,9 +111,11 @@
       try {
         const p = video.play();
         if (p && typeof p.catch === 'function') p.catch(() => {
-          if (generation === own) revealImage();
+          // Un événement ended peut arriver pendant que play() se résout.
+          // Ne jamais escamoter les trois secondes à cause de cet arrêt.
+          if (generation === own && !hasEnded) revealImage();
         });
-      } catch (_) { revealImage(); }
+      } catch (_) { if (!hasEnded) revealImage(); }
     }
     return {show, stop:clear, get active() { return active; }, get freezeMs() { return freezeMs; }, get fadeMs() { return fadeMs; }};
   }
