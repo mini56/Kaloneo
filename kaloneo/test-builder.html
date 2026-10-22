@@ -62,10 +62,10 @@
           </select>
         </label>
 
-        <label>Notation
+        <label hidden>Notation calculée par KALONÉO
           <select id="test-scored">
-            <option value="true">Test noté</option>
-            <option value="false">Test non noté</option>
+            <option value="true">Pourcentage de bonnes réponses</option>
+            <option value="false">Évaluation pratique par l’administrateur</option>
           </select>
         </label>
 
@@ -253,12 +253,15 @@
       <section class="builder-contract-section">
         <div class="section-title-row">
           <div>
-            <h2>Sorties et Bilan</h2>
-            <p class="muted">Les sorties du test peuvent alimenter zéro, une ou plusieurs lignes du Bilan SEB. Les liaisons utilisent des IDs stables.</p>
+            <h2>Liaison au bilan institutionnel</h2>
+            <p class="muted">Chaque test doit être rattaché à une des 17 lignes officielles du bilan institutionnel. Choisissez la catégorie en haut, puis la ligne ci-dessous : KALONÉO calcule automatiquement le pourcentage de bonnes réponses.</p>
+            <label for="bilan-simple-line">Ligne officielle du bilan (obligatoire)</label>
+            <select id="bilan-simple-line" aria-describedby="bilan-simple-help" style="width:100%;max-width:920px;padding:9px;margin:7px 0"></select>
+            <p class="muted" id="bilan-simple-help" aria-live="polite">Choisissez une ligne : elle détermine l'emplacement du résultat dans le bilan individuel puis dans le bilan général.</p>
           </div>
           <div class="section-action-buttons">
-            <button id="add-output" class="mini-btn" type="button">+ Sortie</button>
-            <button id="toggle-contract-section" class="section-fold-btn mini-btn" type="button"
+            <button id="add-output" class="mini-btn" type="button" hidden style="display:none">+ Sortie</button>
+            <button id="toggle-contract-section" class="section-fold-btn mini-btn" type="button" hidden style="display:none"
               aria-controls="contract-section-content" aria-expanded="false"
               aria-label="Déployer Sorties et Bilan" title="Déployer Sorties et Bilan">+</button>
           </div>
@@ -270,7 +273,7 @@
               <h3>Liaisons vers le Bilan</h3>
               <p class="muted">Les lignes automatiques ou manuelles proviennent du catalogue Bilan intégré à SEB EvalPro.</p>
             </div>
-            <button id="add-bilan-contribution" class="mini-btn" type="button">+ Liaison Bilan</button>
+            <button id="add-bilan-contribution" class="mini-btn" type="button" hidden style="display:none">+ Liaison Bilan</button>
           </div>
           <div id="bilan-editor" class="contract-list"></div>
         </div>
@@ -550,6 +553,7 @@
   <script src="builder-core.js"></script>
   <script src="builder-workflow.js"></script>
   <script src="bilan-catalog.js"></script>
+  <script src="bilan-simple-link.js"></script>
   <script src="image-library-gallery.js"></script>
   <script src="shared-presentation.js"></script>
   <script src="builder-legacy-table-preview.js"></script>

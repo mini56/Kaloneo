@@ -288,7 +288,9 @@
       id:$('test-id').value.trim(),
       version:$('test-version').value.trim() || '1.0.0',
       category,
-      scored:category==='activite_pratique' ? false : $('test-scored').value === 'true',
+      scored:state.sourceProtectedVersion
+        ? (category!=='activite_pratique'&&$('test-scored').value==='true')
+        : category!=='activite_pratique',
       icon:selectedIcon(),
       layout:$('test-layout').value,
       template:$('test-template').value,
@@ -369,8 +371,17 @@
 
   function syncPracticalCategory() {
     const practical=$('test-category').value==='activite_pratique';
-    if(practical) $('test-scored').value='false';
-    $('test-scored').disabled=practical;
+    if(!state.sourceProtectedVersion)$('test-scored').value=practical?'false':'true';
+    else if(practical)$('test-scored').value='false';
+    $('test-scored').disabled=true;
+    // Une catégorie ne peut jamais conserver la ligne d'un autre domaine.
+    if(!state.sourceProtectedVersion && state.bilanContributions.length){
+      const link=state.bilanContributions[0];
+      const line=contractLine(link?.lineId);
+      if(!line||!window.KaloneoSimpleBilanLink?.allowed($('test-category').value,line))
+        state.bilanContributions=[];
+    }
+    renderSimpleBilanLink();
   }
 
   const renderRichContext=window.KaloneoSharedPresentation.renderRichContext;
@@ -2261,6 +2272,51 @@
   const CONTRACT_ID_RE=/^[a-z0-9][a-z0-9._-]*$/;
   const contractLines=()=>Array.isArray(window.KaloneoBilanCatalog)?window.KaloneoBilanCatalog:[];
   const contractLine=id=>contractLines().find(line=>line.id===id);
+  // Interface principale : une seule ligne institutionnelle et aucun
+  // paramétrage technique score / score_max demandé à l'utilisateur.
+  function renderSimpleBilanLink(){
+    const control=$('bilan-simple-line'),help=$('bilan-simple-help');
+    if(!control||!window.KaloneoSimpleBilanLink)return;
+    const category=$('test-category')?.value||'';
+    const options=window.KaloneoSimpleBilanLink.options(category,contractLines());
+    const selected=String(state.bilanContributions?.[0]?.lineId||'');
+    control.replaceChildren();
+    const placeholder=document.createElement('option');
+    placeholder.value='';
+    placeholder.textContent=options.length
+      ?'Choisir la ligne institutionnelle obligatoire…'
+      :'Aucune ligne officielle compatible avec cette catégorie';
+    control.appendChild(placeholder);
+    for(const line of options){
+      const opt=document.createElement('option');
+      opt.value=line.id;
+      opt.textContent=line.subsection+' — '+line.label;
+      control.appendChild(opt);
+    }
+    if(selected&&options.some(line=>line.id===selected))control.value=selected;
+    else control.value='';
+    control.disabled=options.length===0||state.sourceProtectedVersion===true;
+    if(help){
+      if(state.sourceProtectedVersion)help.textContent='Test V1 protégé : liaison historique conservée, aucune modification.';
+      else if(control.value){
+        const line=contractLine(control.value);
+        help.textContent=line?.mode==='manual'
+          ?'Activité pratique : cette ligne sera évaluée exclusivement par l’administrateur dans le pré-bilan.'
+          :'La note sera calculée automatiquement : bonnes réponses ÷ réponses possibles × 100. La même ligne servira aux bilans individuel et général.';
+      }else help.textContent='Sélection obligatoire : sans cette liaison, ce nouveau test ne peut pas être enregistré.';
+    }
+  }
+  function installSimpleBilanLink(){
+    const control=$('bilan-simple-line');
+    if(!control)return;
+    control.addEventListener('change',()=>{
+      const line=contractLine(control.value);
+      state.bilanContributions=line ? [window.KaloneoSimpleBilanLink.contribution(line,$('test-category').value)] : [];
+      renderSimpleBilanLink();
+      changed();
+    });
+    renderSimpleBilanLink();
+  }
 
   function contractField(title,value,options,onChange){
     const label=document.createElement('label');label.textContent=title;
@@ -2407,8 +2463,17 @@
       empty.textContent='Aucune liaison directe vers le Bilan.';bilanHost.appendChild(empty);
     }
     restoreContractFocus(focus);
+    renderSimpleBilanLink();
   }
   function validateContract(add){
+    if(!state.sourceProtectedVersion && window.KaloneoSimpleBilanLink){
+      const result=window.KaloneoSimpleBilanLink.validate(
+        $('test-category').value,state.bilanContributions,contractLines());
+      add(result.ok,result.ok
+        ?'Test relié à la ligne officielle : '+result.line.label
+        :result.error);
+      return;
+    }
     const ids=new Set();
     for(const output of state.outputs){
       const id=String(output.id||'');
@@ -3866,6 +3931,7 @@
     renderIconPicker();
     initSectionFold('toggle-icon-library');
     initSectionFold('toggle-contract-section');
+    installSimpleBilanLink();
     initSectionFold('toggle-page-style');
     initSectionFold('toggle-validation-section');
     initSectionFold('toggle-exercise-section');

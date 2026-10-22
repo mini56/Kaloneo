@@ -43,7 +43,8 @@ assert.equal(result.notes.length,1);
 const org=result.categories.find(c=>c.name==='Organisation');
 assert.equal(org.testCount,3);
 assert.equal(org.tests.find(t=>t.id==='rangement').scoredPassages,1);
-assert(wordRows(result).some(t=>t.type==='row'&&t.module==='TOTAL — Mathématiques'&&t.level==='II'));
+assert.equal(wordRows(result).filter(t=>t.type==='row').length,17,'Le Word ne peut plus ajouter de lignes TOTAL ou de catégorie.');
+assert(!wordRows(result).some(t=>/TOTAL|passage|parcours/i.test(t.module||'')));
 const weighted=aggregateGeneralBilan([
  build('one','A',{x:{score:1,max:2,category:'math'}}),
  build('two','B',{x:{score:18,max:20,category:'math'}})

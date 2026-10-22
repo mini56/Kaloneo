@@ -83,6 +83,11 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
         preset: String((row && row.preset) || ''),
         comment: String((row && row.comment) || ''),
         detail: String((row && row.detail) || ''),
+        points: row?.points!==null && row?.points!==undefined &&
+          Number.isFinite(Number(row.points))?Number(row.points):null,
+        possible: row?.possible!==null && row?.possible!==undefined &&
+          Number.isFinite(Number(row.possible)) && Number(row.possible)>0
+          ?Number(row.possible):null,
         options: Array.isArray(row && row.options) ? row.options.map((opt) => ({
           value: String((opt && opt.value) || ''),
           text: String((opt && opt.text) || ''),

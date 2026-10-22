@@ -40,6 +40,17 @@ function addStyle() {
     .seb-gb-table{width:100%;border-collapse:collapse;background:#fff;font:14px Arial,sans-serif}
     .seb-gb-table th,.seb-gb-table td{border:1px solid #ccd5e0;padding:9px;text-align:left;vertical-align:top}
     .seb-gb-category th{background:#deebfa;font-size:16px;color:#15476b}
+    .seb-gb-table{table-layout:fixed}
+    .seb-gb-table td:first-child,.seb-gb-table th:first-child{width:52%;overflow-wrap:anywhere}
+    .seb-gb-table th:not(:first-child),.seb-gb-table td:not(:first-child){text-align:center}
+    .seb-gb-table th:last-child,.seb-gb-table td:last-child{width:14%}
+    .seb-gb-table .seb-gb-grade{width:7%;font-size:15px;font-weight:bold}
+    .seb-gb-table .seb-gb-pct{white-space:nowrap;font-weight:bold}
+    .seb-gb-table .seb-gb-selected{font-weight:900}
+    .seb-gb-table .seb-gb-NE{background:#ccffff;color:#111}
+    .seb-gb-table .seb-gb-I{background:#92d050;color:#111}
+    .seb-gb-table .seb-gb-II{background:#ed7d31;color:#fff}
+    .seb-gb-table .seb-gb-III{background:#c00000;color:#fff}
     .seb-gb-level{display:inline-block;min-width:30px;text-align:center;border-radius:4px;padding:4px 8px;font-weight:700;color:#111}
     .seb-gb-NE{background:#ccffff}.seb-gb-I{background:#92d050}.seb-gb-II{background:#ed7d31;color:#fff}.seb-gb-III{background:#c00000;color:#fff}
     .seb-gb-table details{margin-top:5px;color:#475b69;font-size:12px}.seb-gb-table ul{padding-left:19px}

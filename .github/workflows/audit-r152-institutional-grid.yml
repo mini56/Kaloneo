@@ -1,0 +1,66 @@
+name: "KALONÉO R152 - Builder simple et 17 lignes institutionnelles"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - 'kaloneo/bilan-simple-link.js'
+      - 'kaloneo/test-builder.html'
+      - 'kaloneo/test-builder.js'
+      - 'seb-evalpro/source/js/kaloneo-bilan-routing.js'
+      - 'seb-evalpro/source/js/admin-bilan-kaloneo.js'
+      - 'seb-evalpro/src/institutional-bilan-grid.js'
+      - 'seb-evalpro/src/general-bilan-aggregation.js'
+      - 'seb-evalpro/src/candidate-catalog-main.js'
+      - 'seb-evalpro/src/candidate-catalog-preload.js'
+      - 'seb-evalpro/src/bilan-history-main.js'
+      - 'seb-evalpro/src/bilan-history-preload.js'
+      - 'seb-evalpro/scripts/r152-*'
+      - 'seb-evalpro/scripts/kaloneo-bilan-*-electron-smoke-main.js'
+      - 'seb-evalpro/scripts/kaloneo-bilan-dynamic-smoke-main.js'
+      - '.github/workflows/audit-r152-institutional-grid.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  official-builder-and-grid:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Dependencies
+        run: npm install --no-audit --no-fund
+      - name: Syntax of all changed runtime code
+        run: |
+          node --check ../kaloneo/bilan-simple-link.js
+          node --check ../kaloneo/test-builder.js
+          node --check source/js/admin-bilan-kaloneo.js
+          node --check source/js/kaloneo-bilan-routing.js
+          node --check src/institutional-bilan-grid.js
+          node --check src/general-bilan-aggregation.js
+          node --check src/candidate-catalog-main.js
+          node --check src/candidate-catalog-preload.js
+          node --check src/bilan-history-main.js
+          node --check src/bilan-history-preload.js
+      - name: 17 rows, obligatory mapping, 3 official sections, exact Word, score weighting
+        run: node scripts/r152-institutional-grid-and-builder-smoke.js
+      - name: Multi-evaluation regression and confidentiality
+        run: |
+          node scripts/general-bilan-aggregation-smoke.js
+          node scripts/general-bilan-ipc-smoke.js
+          node scripts/kaloneo-bilan-builder-routing-smoke.js
+      - name: Build real Electron pages, no V1 modification
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          npm run prepare:web
+      - name: New Builder liaison UI on two real Windows resolutions
+        run: npx electron --no-sandbox scripts/r152-builder-simple-link-electron-smoke-main.js
+      - name: Validated V1 institutional table only
+        run: npx electron --no-sandbox scripts/kaloneo-bilan-dynamic-smoke-main.js
+      - name: Custom mathematics and expression routing with exact 17 rows
+        run: npx electron --no-sandbox scripts/kaloneo-bilan-builder-routing-electron-smoke-main.js

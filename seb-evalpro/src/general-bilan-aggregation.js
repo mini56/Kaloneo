@@ -3,6 +3,7 @@
 // par identifiant de test, aggregation des points obtenus / points possibles.
 // Aucune moyenne des niveaux I/II/III; les tests non evalues ne valent jamais zero.
 const crypto=require('crypto');
+const {aggregateInstitutionalRows,wordRows:institutionalWordRows}=require('./institutional-bilan-grid');
 const LEVELS=Object.freeze({NE:'NE',I:'I',II:'II',III:'III'});
 const EXCLUDED=new Set(['fin_parcours','transition_video_f1','qcm-1','qcm-finale']);
 const LABELS=Object.freeze({
@@ -142,23 +143,16 @@ function aggregateGeneralBilan(evaluations){
   }
   categories.sort((a,b)=>a.name.localeCompare(b.name,'fr'));
   const totalTests=categories.reduce((sum,c)=>sum+c.testCount,0);
-  return {schemaVersion:1,evaluationCount:evaluations.length,testCount:totalTests,
-    categories,sources,notes,sourceDigest:sourceDigest(evaluations)};
+  const institutional=aggregateInstitutionalRows(evaluations);
+  return {schemaVersion:2,evaluationCount:evaluations.length,testCount:totalTests,
+    categories,sources,notes,sourceDigest:sourceDigest(evaluations),
+    institutionalRows:institutional.rows,institutionalWarnings:institutional.warnings};
 }
 function wordRows(general){
-  const rows=[];
-  for(const category of general.categories||[]){
-    rows.push({type:'section',text:category.name,strong:true});
-    for(const test of category.tests){
-      const score=test.percent===null?'Appréciation manuelle (sans points)':test.points+' / '+test.possible+' points — '+test.percent.toLocaleString('fr-FR')+' %';
-      const remarks=test.percent===null?test.sources.map(s=>s.comment||'').filter(Boolean).join(' | '):'';
-      rows.push({type:'row',module:test.title,level:test.level,
-        comment:score,detail:(remarks?remarks+' — ':'')+test.passages+' parcours / passage(s) documenté(s)'});
-    }
-    rows.push({type:'row',module:'TOTAL — '+category.name,level:category.level,
-      comment:category.percent===null?'Non évalué':category.percent.toLocaleString('fr-FR')+' %',
-      detail:'Moyenne de '+category.scoredTestCount+' test(s) distinct(s)'});
-  }
-  return rows;
+  // Le Word est STRICTEMENT la grille de 17 lignes institutionnelles.
+  // Aucune rubrique calculée à partir des noms de catégorie, aucun TOTAL,
+  // aucune mention du nombre de parcours ou de passages dans cette grille.
+  return institutionalWordRows(general);
 }
+
 module.exports={aggregateGeneralBilan,wordRows,percentLevel,categoryFor,stateFromSession};

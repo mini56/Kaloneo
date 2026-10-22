@@ -35,7 +35,7 @@
     const cat=normalize(category);
     if(lineId.includes('.mathematiques.'))return cat==='mathematiques'||cat==='maths'||cat==='math';
     if(lineId.includes('.expression_ecrite.'))return cat==='francais'||cat==='expression ecrite'||cat==='dictee';
-    if(lineId.includes('.competences_techniques.'))return ['technique','techniques','competences techniques','organisation','planification','activite pratique','raisonnement'].includes(cat);
+    if(lineId.includes('.competences_techniques.'))return ['technique','techniques','competences techniques','organisation','planification','activite pratique','activite_pratique','raisonnement'].includes(cat);
     if(lineId.includes('.tic.'))return ['tic','bureautique','numerique','communication'].includes(cat);
     return false;
   }

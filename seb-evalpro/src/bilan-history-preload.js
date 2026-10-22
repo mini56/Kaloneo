@@ -74,6 +74,10 @@ function captureBilanDocument() {
       preset: select ? String(select.value || '') : '',
       comment: textarea ? String(textarea.value || '') : '',
       detail: detail ? String(detail.innerText || detail.textContent || '').trim() : '',
+      points: tr.dataset.score!==undefined && tr.dataset.score!==''
+        ? Number(tr.dataset.score) : null,
+      possible: tr.dataset.possible!==undefined && tr.dataset.possible!==''
+        ? Number(tr.dataset.possible) : null,
       options
     });
   });

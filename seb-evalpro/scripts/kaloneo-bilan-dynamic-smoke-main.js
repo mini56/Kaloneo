@@ -146,16 +146,16 @@ app.whenReady().then(async()=>{
       return fail('Résultat parasite ajouté au Bilan depuis un test absent du manifeste',before);
     if(before.generatedPerTest!==0) return fail('le Bilan est encore construit avec une ligne par exercice',before);
     if(before.textareas!==0) return fail('une zone texte supplémentaire est encore présente dans la colonne Commentaires',before);
-    const mustRows=['fabrication-plan','fabrication-tracage','fabrication-decoupe','fabrication-assemblage','fabrication-finition',
-      'briques-identification','briques-manipulation','organisation','planning','tri-temps','tri-erreurs','math-enonce','kaloneo-gestes-postures'];
-    if(mustRows.some(id=>!before.visibleRows.includes(id))) return fail('lignes institutionnelles attendues absentes',before);
-    const forbiddenRows=['carre','texte','mail','expression','math-problemes'];
-    if(forbiddenRows.some(id=>before.visibleRows.includes(id))) return fail('ligne institutionnelle hors parcours encore visible',before);
+    const mustRows=["fabrication-plan","fabrication-tracage","fabrication-decoupe","fabrication-assemblage","fabrication-finition","briques-identification","briques-manipulation","carre","organisation","planning","tri-temps","tri-erreurs","texte","mail","expression","math-enonce","math-problemes"];
+    if(before.visibleRows.length!==17||mustRows.some(id=>!before.visibleRows.includes(id)))
+      return fail('Le Bilan doit montrer exactement les 17 lignes officielles',before);
+    if(before.visibleRows.some(id=>!mustRows.includes(id)))return fail('Ligne institutionnelle inventée',before);
     if(before.fabrication.length!==5||before.fabrication.some(x=>x.hidden)) return fail('grille manuelle Structure 3D incomplète',before);
     if(!before.visibleSections.includes('Compétences techniques')||!before.visibleSections.includes('Savoirs fondamentaux')) {
       return fail('sections institutionnelles attendues incorrectes',before);
     }
-    if(before.visibleSections.some(x=>/techniques de l'information/i.test(x))) return fail('section TIC visible sans exercice TIC',before);
+    if(!before.visibleSections.some(x=>/techniques de l'information/i.test(x))) return fail('Section TIC officielle absente',before);
+    if(before.visibleSections.length!==3)return fail('Le Bilan doit contenir exactement 3 sections',before);
     if(before.autoRowPresent||before.autoSectionPresent) return fail('Autoévaluation visible dans le tableau institutionnel',before);
     if(!/Je pense avoir progressé dans mes compétences de base\./.test(before.autoSummary)) return fail('Libellé lisible de l’autoévaluation savoirs absent',before);
     if(!/Messagerie : Je me suis senti\(e\) stressé\(e\) ou bloqué\(e\)/.test(before.autoSummary)) return fail('Libellé lisible de l’autoévaluation numérique absent',before);
@@ -204,7 +204,7 @@ app.whenReady().then(async()=>{
     if(after.levels.organisation!=='III') return fail('Ranger le stock avec 33 erreurs doit être niveau III rouge',after);
     if(after.levels.planning!=='II') return fail('niveau institutionnel Planification incorrect',after);
     if(after.levels.triTemps!=='I'||after.levels.triErreurs!=='I') return fail('niveaux institutionnels Tri incorrects',after);
-    if(after.levels.mathEnonce!=='I'||after.levels.gestures!=='I') return fail('agrégation institutionnelle incorrecte',after);
+    if(after.levels.mathEnonce!=='I'||after.levels.gestures!=='') return fail('agrégation institutionnelle incorrecte',after);
     if(after.levels.fabrication.some(Boolean)) return fail('Structure 3D remplie automatiquement alors qu’elle doit rester manuelle',after);
 
     if(!/nombreuses erreurs nécessitant un accompagnement/i.test(after.selected.organisation)) return fail('commentaire institutionnel Organisation niveau III incorrect',after);
@@ -218,7 +218,7 @@ app.whenReady().then(async()=>{
     if(after.details.bricksErrors!=='2 erreurs') return fail('pluriel du nombre d’erreurs Briques incorrect',after);
     if(after.details.organisation!=='33 erreurs') return fail('Ranger le stock doit afficher exactement 33 erreurs',after);
     if(!/erreur/.test(after.details.planning)||/Planification/.test(after.details.planning)) return fail('détail Planning doit rester factuel sans nom de test',after);
-    if(after.details.mathEnonce!=='80 % de réussite') return fail('pourcentage Maths mal affiché sous le commentaire',after);
+    if(after.details.mathEnonce!=='80 %') return fail('pourcentage Maths mal affiché sous le commentaire',after);
     if(after.details.triErrors!=='') return fail('la moyenne fractionnaire des erreurs du Tri ne doit pas être affichée dans le Bilan',after);
 
     for(const label of ['N°1','N°2','N°3','N°4']){

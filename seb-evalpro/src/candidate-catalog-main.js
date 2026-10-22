@@ -818,7 +818,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
       const buffer=await buildBilanDocxBuffer({
         candidate:{nom:person.nom,prenom:person.prenom,date:new Date().toLocaleDateString('fr-FR')},
         rows:wordRows(general),
-        summary:'BILAN GENERAL DE '+general.evaluationCount+' PARCOURS\n'+String(summary||''),
+        summary:String(summary||''),
         feeling:'',feelingTitle:''
       },secret);
       if(!await verifyBilanDocxPassword(buffer,secret))

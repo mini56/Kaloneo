@@ -214,10 +214,15 @@ function setLevel(target,level){
   target.dataset.level=level||'';
   target.querySelectorAll('.level').forEach(cell=>cell.classList.toggle('on',cell.dataset.l===level));
 }
-function applyInstitutional(id,level,detail){
+function applyInstitutional(id,level,detail,numericPair=null){
   const target=row(id);
   if(!target)return;
   setLevel(target,level);
+  if(numericPair&&Number.isFinite(numericPair.score)&&
+     Number.isFinite(numericPair.max)&&numericPair.max>0){
+    target.dataset.score=String(numericPair.score);
+    target.dataset.possible=String(numericPair.max);
+  }
   const select=target.querySelector('.csel');
   if(select&&level){
     const option=[...select.options].find(item=>item.dataset.l===level);
@@ -234,7 +239,7 @@ function errorDetail(value){
 }
 function percentDetail(value){
   const pct=Math.round(Number(value)||0);
-  return pct+' % de réussite';
+  return pct+' %';
 }
 function clearAutomaticRows(){
   const manualRows=new Set([
@@ -246,6 +251,8 @@ function clearAutomaticRows(){
     const target=row(id);
     if(!target||target.hidden)return;
     setLevel(target,'');
+    delete target.dataset.score;
+    delete target.dataset.possible;
     const detail=target.querySelector('.detail');
     if(detail)detail.textContent='';
   });
@@ -336,40 +343,21 @@ function findSectionRows(){
   return groups;
 }
 function installInstitutionalFilter(){
+  // Les 17 lignes officielles du Bilan ne sont ni générées ni masquées
+  // selon le contenu du parcours : elles existent dans le modèle source.
+  // Une ligne sans résultat reste NE/non évaluée, sans rubrique inventée.
   if(!context.enabled)return false;
   const table=document.getElementById('bilan');
   const tbody=table?.querySelector('tbody');
   if(!tbody)return false;
-
-  // On conserve les vraies lignes institutionnelles. Seules les lignes sans
-  // exercice correspondant dans le parcours sont masquées.
-  const linked=window.KaloneoBilanRouting?.collect(context.tests,stateFor);
-  const linkedRows=linked?.entries||new Map();
-  Object.entries(EXISTING_ROW_SOURCES).forEach(([id,sources])=>{
-    const target=row(id);
-    if(!target)return;
-    const visible=hasAny(sources)||linkedRows.has(id);
-    target.hidden=!visible;
-    target.dataset.sebKaloneoExcluded=visible?'0':'1';
+  tbody.querySelectorAll('tr[data-r]').forEach(target=>{
+    target.hidden=false;
+    target.dataset.sebKaloneoExcluded='0';
   });
-
-  installGesturesRow(tbody);
-  // L'autoévaluation ne fait pas partie du tableau institutionnel.
-  // Elle reste disponible pour la synthèse SEB-IA uniquement.
-  installUnknownSections(tbody);
-
-  // Les titres institutionnels restent exactement ceux du document d’origine.
   findSectionRows().forEach(group=>{
-    const visible=group.rows.some(item=>!item.hidden);
-    group.header.hidden=!visible;
-    group.header.dataset.sebKaloneoExcluded=visible?'0':'1';
+    group.header.hidden=false;
+    group.header.dataset.sebKaloneoExcluded='0';
   });
-
-  const info=document.createElement('p');
-  info.id='seb-kaloneo-bilan-parcours';
-  info.className='note';
-  info.textContent='Parcours réalisé : '+(context.parcoursTitle||'KALONÉO')+' — le Bilan institutionnel est alimenté uniquement par les activités présentes dans ce parcours.';
-  table.insertAdjacentElement('beforebegin',info);
   return true;
 }
 
@@ -614,19 +602,19 @@ function autoInstitutional(){
   const expression=aggregate(['texte_a_trous_stage_logistique','genre_nombre','paronymes_rapport','dictee_professionnelle']
     .filter(id=>['francais','expression ecrite','dictee'].includes(context.byId.get(id)?.category)));
   if(expression){
-    applyInstitutional('expression',genericLevel(expression.pct),percentDetail(expression.pct,expression.score,expression.max));
+    applyInstitutional('expression',genericLevel(expression.pct),percentDetail(expression.pct),expression);
   }
 
   const mathStatement=aggregate(['calculs_commandes_atelier','calculs_poids_volumes']
     .filter(id=>['mathematiques','math','maths'].includes(context.byId.get(id)?.category)));
   if(mathStatement){
-    applyInstitutional('math-enonce',genericLevel(mathStatement.pct),percentDetail(mathStatement.pct,mathStatement.score,mathStatement.max));
+    applyInstitutional('math-enonce',genericLevel(mathStatement.pct),percentDetail(mathStatement.pct),mathStatement);
   }
 
   const mathProblems=aggregate(['horaires_reception_controle','fractions_preparation_lots','conversions_atelier_expedition']
     .filter(id=>['mathematiques','math','maths'].includes(context.byId.get(id)?.category)));
   if(mathProblems){
-    applyInstitutional('math-problemes',genericLevel(mathProblems.pct),percentDetail(mathProblems.pct,mathProblems.score,mathProblems.max));
+    applyInstitutional('math-problemes',genericLevel(mathProblems.pct),percentDetail(mathProblems.pct),mathProblems);
   }
 
   if(has('gestes_postures')){
@@ -643,7 +631,7 @@ function autoInstitutional(){
     const ids=String(target.dataset.kaloneoSourceIds||'').split(',').filter(Boolean);
     const group=aggregate(ids);
     if(!group)return;
-    applyInstitutional(target.dataset.r,genericLevel(group.pct),percentDetail(group.pct,group.score,group.max));
+    applyInstitutional(target.dataset.r,genericLevel(group.pct),percentDetail(group.pct),group);
   });
 
   // Les sorties Builder ne peuvent alimenter QUE les lignes choisies dans
@@ -660,8 +648,8 @@ function autoInstitutional(){
       if(possible<=0)continue;
       const pct=100*points/possible;
       const titles=[...new Set(scored.map(entry=>entry.title))];
-      applyInstitutional(rowId,genericLevel(pct),percentDetail(pct)+
-        (titles.length?' — '+titles.join(' ; '):''));
+      applyInstitutional(rowId,genericLevel(pct),percentDetail(pct),
+        {score:points,max:possible});
     }
   }
 
