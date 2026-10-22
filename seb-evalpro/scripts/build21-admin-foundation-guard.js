@@ -113,7 +113,7 @@ assert(candidateStoreCore.includes('privacyStorageVersion: 1'), 'Nouvelle genera
 assert(candidateStoreCore.includes('evaluationId:candidateId'), 'R36 : identifiant d’évaluation technique absent à la création.');
 assert((candidateStoreCore.includes('personId:person.personId') ||
   (candidateStoreCore.includes('const personId = previousPersonIdFor(identity.original) || person.personId;') &&
-   candidateStoreCore.match(/personId,\\s*personIdentifier:person\\.personIdentifier,/))), 'R36 : personId interne absent à la création.');
+   candidateStoreCore.match(/personId,\s*personIdentifier:person\.personIdentifier,/))), 'R36 : personId interne absent à la création.');
 
 // replay-preload.js conserve le socle Build #21, mais peut évoluer pour les
 // règles Replay validées ensuite (ex. exclusion des pages de transition).
@@ -252,7 +252,7 @@ assert(personIdentity.includes("c.personIdentifier || c.identifiant || c.identif
 const candidateStore = read('src/candidate-store-main.js');
 assert((candidateStore.includes("personId:person.personId") ||
   (candidateStore.includes('const personId = previousPersonIdFor(identity.original) || person.personId;') &&
-   candidateStore.match(/personId,\\s*personIdentifier:person\\.personIdentifier,/))), 'personId non persisté lors de la création d’une évaluation.');
+   candidateStore.match(/personId,\s*personIdentifier:person\.personIdentifier,/))), 'personId non persisté lors de la création d’une évaluation.');
 assert(candidateStore.includes("evaluationId:candidateId"), 'evaluationId distinct du personId non persisté.');
 const identityPage = read('source/kaltest-pilot2.html');
 assert((identityPage.includes('for="personIdentifier">N° identifiant') ||
