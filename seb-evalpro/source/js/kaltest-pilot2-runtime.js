@@ -241,6 +241,8 @@
   let transitionAdvanceTimer = null;
   let activeInteractiveFrame = null;
   let interactivePageActions = [];
+  const VIDEO_HANDOFF_FADE_KEY = 'seb_kaltest_video_fade_to_brique_v1';
+  const VIDEO_LAST_FRAME_HOLD_MS = 3000;
 
   function refreshCandidateBar() {
     try { window.KaloneoNavigation?.refresh?.(); } catch (_) {}
@@ -1469,8 +1471,9 @@
     wrap.append(video, fade);
     host.appendChild(wrap);
 
+    const fadeMs = Math.max(0, Number(definition.fadeMs) || 1500);
     let advanced = false;
-    const complete = () => {
+    const complete = (videoFailed = false) => {
       if (advanced) return;
       advanced = true;
       const testState = testStateFor(test);
@@ -1479,25 +1482,85 @@
       testState.answers.transition_complete = '1';
       persist();
       replay('TRANSITION_VIDEO_COMPLETED', {testId:test.id});
-      fade.classList.add('visible');
+
       clearTimeout(transitionAdvanceTimer);
-      transitionAdvanceTimer = setTimeout(() => {
+      if (videoFailed) {
+        // Pas de dernière image fiable si la vidéo n'est pas lisible.
         document.body.classList.remove('seb-kaltest-transition-video');
         advance();
-      }, Math.max(0, Number(definition.fadeMs) || 0));
+        return;
+      }
+
+      // Le lecteur conserve sa toute dernière image, immobile pendant trois secondes.
+      video.pause();
+      wrap.classList.add('kaltest-transition-holding');
+      transitionAdvanceTimer = setTimeout(() => {
+        transitionAdvanceTimer = null;
+        if (!wrap.isConnected) return;
+
+        if (PILOT11_MODE) {
+          // Le parcours historique change de document : fondu au noir,
+          // puis révélation progressive de la page Briques après navigation.
+          fade.classList.add('visible');
+          transitionAdvanceTimer = setTimeout(() => {
+            transitionAdvanceTimer = null;
+            try { sessionStorage.setItem(VIDEO_HANDOFF_FADE_KEY, String(Date.now())); } catch (_) {}
+            document.body.classList.remove('seb-kaltest-transition-video');
+            advance();
+          }, fadeMs);
+          return;
+        }
+
+        // KALTEST autonome : conserver l'image arrêtée au-dessus du prochain
+        // écran, puis la rendre transparente pour un vrai fondu enchaîné.
+        wrap.classList.add('kaltest-transition-last-frame-overlay');
+        wrap.style.setProperty('--kaltest-transition-crossfade-ms', fadeMs + 'ms');
+        document.body.appendChild(wrap);
+        advance(); // Dessine l'image de l'exercice suivant sous la vidéo arrêtée.
+        const removeOverlay = () => { if (wrap.isConnected) wrap.remove(); };
+        wrap.addEventListener('transitionend', event => {
+          if (event.target === wrap && event.propertyName === 'opacity') removeOverlay();
+        });
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          wrap.classList.add('kaltest-transition-crossfade-out');
+        }));
+        setTimeout(removeOverlay, fadeMs + 150);
+      }, VIDEO_LAST_FRAME_HOLD_MS);
     };
 
-    video.addEventListener('ended', complete, {once:true});
+    video.addEventListener('ended', () => complete(), {once:true});
     video.addEventListener('error', () => {
       document.getElementById('exercise-status').textContent = 'La transition vidéo est indisponible. Passage à l’exercice suivant.';
-      complete();
+      complete(true);
     }, {once:true});
     const promise = video.play();
     if (promise?.catch) promise.catch(() => {
       video.muted = true;
-      video.play().catch(() => {});
+      video.play().catch(() => complete(true));
     });
     return true;
+  }
+
+  function revealBriqueAfterVideoHandoff() {
+    // Le parcours historique ouvre la page Briques dans un nouveau document.
+    if (SEGMENT_KEY !== 'brique') return;
+    let saved = 0;
+    try {
+      saved = Number(sessionStorage.getItem(VIDEO_HANDOFF_FADE_KEY) || 0);
+      sessionStorage.removeItem(VIDEO_HANDOFF_FADE_KEY);
+    } catch (_) {}
+    if (!saved || Date.now() - saved > 30000) return;
+    const veil = document.createElement('div');
+    veil.className = 'kaltest-transition-entrance-veil';
+    document.body.appendChild(veil);
+    const clean = () => veil.remove();
+    veil.addEventListener('transitionend', event => {
+      if (event.target === veil && event.propertyName === 'opacity') clean();
+    });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      veil.classList.add('kaltest-transition-entrance-reveal');
+    }));
+    setTimeout(clean, 1650);
   }
 
   function renderBrique(test, host) {
@@ -4216,6 +4279,7 @@
 
     if (state.phase === 'exercise') renderCurrentTest();
     showPhase(state.phase || DEFAULT_PHASE, false);
+    revealBriqueAfterVideoHandoff();
     if (BUILDER_PREVIEW_MODE && !BUILDER_MINI_PREVIEW_MODE) {
       const close=document.getElementById('kaltest-next');
       if(close){

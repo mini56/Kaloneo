@@ -1,0 +1,40 @@
+name: "KALONÉO R147 - Dernière image vidéo F1 et fondu"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - 'seb-evalpro/source/js/kaltest-pilot2-runtime.js'
+      - 'seb-evalpro/source/css/kaltest-pilot2.css'
+      - 'seb-evalpro/scripts/kaloneo-video-f1-crossfade-electron-smoke-main.js'
+      - '.github/workflows/audit-r147-video-crossfade.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  video-last-frame-crossfade:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Syntax and source guards
+        run: |
+          node --check source/js/kaltest-pilot2-runtime.js
+          node --check scripts/kaloneo-video-f1-crossfade-electron-smoke-main.js
+      - name: Prepare official tests and candidate pages
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          npm run prepare:web
+      - name: Verify last video frame 3 seconds and real crossfade to brick image
+        run: npx electron --no-sandbox scripts/kaloneo-video-f1-crossfade-electron-smoke-main.js
+      - name: Bilan non-regression
+        run: |
+          node scripts/general-bilan-aggregation-smoke.js
+          node scripts/general-bilan-ipc-smoke.js

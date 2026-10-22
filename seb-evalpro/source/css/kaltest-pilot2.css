@@ -2910,6 +2910,33 @@ body[data-seb-kaltest-id="transition_video_f1"] #seb-evalpro-privacy-toggle{disp
 .kaltest-transition-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
 .kaltest-transition-fade{position:absolute;inset:0;background:#000;opacity:0;transition:opacity 1.5s ease-in-out;pointer-events:none}
 .kaltest-transition-fade.visible{opacity:1}
+/* R147 : arrêt de 3 s sur l'ultime image, puis fondu vers le modèle en briques. */
+.kaltest-transition-last-frame-overlay {
+  position:fixed!important;
+  inset:0!important;
+  width:100vw;
+  height:100dvh;
+  z-index:2147483600;
+  opacity:1;
+  pointer-events:all;
+  transition:opacity var(--kaltest-transition-crossfade-ms, 1500ms) ease-in-out;
+}
+.kaltest-transition-last-frame-overlay.kaltest-transition-crossfade-out{
+  opacity:0;
+  pointer-events:none;
+}
+.kaltest-transition-entrance-veil {
+  position:fixed;
+  inset:0;
+  background:#000;
+  z-index:2147483600;
+  pointer-events:none;
+  opacity:1;
+  transition:opacity 1500ms ease-in-out;
+}
+.kaltest-transition-entrance-veil.kaltest-transition-entrance-reveal {
+  opacity:0;
+}
 
 body[data-seb-kaltest-id="construction_briques"] #kaltest-content{padding:7px 9px}
 .kaltest-brique-layout{width:100%;height:100%;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
