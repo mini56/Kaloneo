@@ -23,6 +23,8 @@ permissions:
   contents: write
 jobs:
   windows-installer-migration:
+    # Published release frozen: a later version must never rebuild/reuse this number.
+    if: ${{ github.sha == 'f9a232b0da2e9beed4fcf758898040437b830293' }}
     # Nouveau Build #152 ; la release de secours R148 reste inchangée.
     runs-on: windows-latest
     timeout-minutes: 60
