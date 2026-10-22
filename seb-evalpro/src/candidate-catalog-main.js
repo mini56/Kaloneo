@@ -6,6 +6,9 @@ const { getEditionCapabilities } = require('./edition');
 const { encodeJson, isEncryptedLocalFileBuffer, decryptLocalFileBuffer } = require('./candidate-data-crypto');
 const { verifyBilanDocxPassword, isEncryptedBilanDocxBuffer, protectPlainBilanDocxBuffer } = require('./bilan-docx-main');
 const {hasCurrentOnlyArchive}=require('./candidate-bilan-current');
+const {aggregateGeneralBilan,wordRows}=require('./general-bilan-aggregation');
+const {buildBilanDocxBuffer,verifyBilanDocxPassword}=require('./bilan-docx-main');
+const {persistSealedSidecar}=require('./candidate-word-portability');
 const {
   readJson,
   ensureDir,
@@ -699,6 +702,127 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   function findPersonById(personId) {
     return listPersonGroups().find((person) => String(person.personId || '') === String(personId || '')) || null;
   }
+  // Le bilan general appartient a la PERSONNE (identifiant interne stable),
+  // jamais au nom, a la ville ou a l'un des parcours individuels.
+  function generalBilanDir(personId) {
+    if(!/^PERS-[A-F0-9]{24}$/.test(String(personId||'')))
+      throw new Error('Identifiant interne de personne invalide.');
+    return path.join(root,'BilansGeneraux',personId);
+  }
+  function currentEvaluationBilan(record) {
+    const history=path.join(record.candidateDir,'bilan','historique');
+    if(!fs.existsSync(history))return null;
+    const archives=[];
+    for(const entry of fs.readdirSync(history,{withFileTypes:true})){
+      if(!entry.isFile()||!entry.name.toLowerCase().endsWith('.json'))continue;
+      const archive=readJson(path.join(history,entry.name));
+      if(!archive)throw new Error('Archive de bilan illisible : '+entry.name);
+      if(!verifyBilan(archive))throw new Error('Integrite du bilan invalide : '+entry.name);
+      archives.push(archive);
+    }
+    archives.sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+    return archives[0]||null;
+  }
+  function computePersonGeneralBilan(personId) {
+    synchronize();
+    const person=findPersonById(personId);
+    if(!person)throw new Error('Candidat introuvable.');
+    if(person.identifierCollision)throw new Error('Identifiant partage : rapprocher les identites avant un bilan general.');
+    if(person.evaluations.length<2)throw new Error('Deux parcours distincts minimum sont necessaires.');
+    const records=listCandidateDirs(candidatesRoot,false);
+    const evaluations=person.evaluations.map(e=>{
+      const record=records.find(r=>String(r.candidateId)===String(e.candidateId));
+      if(!record)throw new Error('Dossier du parcours introuvable : '+e.candidateId);
+      if(personIdentityForRecord(record).personId!==person.personId)
+        throw new Error('Des evaluations de personnes differentes ne peuvent pas etre fusionnees.');
+      const stored=readJson(path.join(record.candidateDir,'donnees','evaluation-state.json'))||{};
+      const session=stored.sessionStorage&&typeof stored.sessionStorage==='object'?stored.sessionStorage:{};
+      return {candidateId:record.candidateId,parcours:e.parcours,date:e.date,
+        session,manifest:record.manifest||{},archive:currentEvaluationBilan(record)};
+    });
+    const general=aggregateGeneralBilan(evaluations);
+    const saved=readJson(path.join(generalBilanDir(person.personId),'bilan-general.json'));
+    return {person,general,
+      savedSummary:saved&&typeof saved.summary==='string'?saved.summary:'',
+      lastSavedAt:saved&&saved.savedAt||'',
+      outdated:!!(saved&&saved.sourceDigest!==general.sourceDigest)};
+  }
+  function saveGeneralBilan(personId,summary,digest) {
+    const current=computePersonGeneralBilan(personId);
+    if(digest!==current.general.sourceDigest)throw new Error('Les bilans sources ont change. Recalculer le bilan general.');
+    const directory=generalBilanDir(current.person.personId);
+    ensureDir(directory);
+    const saved={schemaVersion:1,personId:current.person.personId,summary:String(summary||'').slice(0,30000),
+      sourceDigest:current.general.sourceDigest,savedAt:new Date().toISOString()};
+    writeJson(path.join(directory,'bilan-general.json'),saved);
+    return {directory,saved,current};
+  }
+  ipcMain.handle('candidate-catalog:general-bilan',(_event,personId)=>{
+    if(!getAdminUnlocked()||!editionCapabilities.canBilan)return {ok:false,error:'Acces administrateur requis.'};
+    try{
+      const data=computePersonGeneralBilan(personId);
+      return {ok:true,person:data.person,general:data.general,
+        summary:data.savedSummary,lastSavedAt:data.lastSavedAt,outdated:data.outdated};
+    }catch(error){return {ok:false,error:String(error.message||error)}}
+  });
+  ipcMain.handle('candidate-catalog:save-general-bilan',(_event,personId,summary,digest)=>{
+    if(!getAdminUnlocked()||!editionCapabilities.canBilan)return {ok:false,error:'Acces administrateur requis.'};
+    try{
+      const result=saveGeneralBilan(personId,summary,digest);
+      const previousWord=path.join(result.directory,'bilan-general.docx');
+      const previousSealed=path.join(result.directory,'bilan-general.sebword');
+      // Invalider le Word a chaque modification de la synthese ou des sources.
+      fs.rmSync(previousWord,{force:true});
+      fs.rmSync(previousSealed,{force:true});
+      return {ok:true,savedAt:result.saved.savedAt};
+    }catch(error){return {ok:false,error:String(error.message||error)}}
+  });
+  ipcMain.handle('candidate-catalog:export-general-bilan',async(_event,personId,summary,digest)=>{
+    if(!getAdminUnlocked()||!editionCapabilities.canBilan)return {ok:false,error:'Acces administrateur requis.'};
+    try{
+      const secret=String(getAdminDocumentPassword&&getAdminDocumentPassword()||'');
+      if(!secret)return {ok:false,error:'Mot de passe administrateur indispensable au document Word.'};
+      const result=saveGeneralBilan(personId,summary,digest);
+      const {person,general}=result.current;
+      if(!general.testCount)return {ok:false,error:'Aucun test exploitable pour produire le bilan general.'};
+      const buffer=await buildBilanDocxBuffer({
+        candidate:{nom:person.nom,prenom:person.prenom,date:new Date().toLocaleDateString('fr-FR')},
+        rows:wordRows(general),
+        summary:'BILAN GENERAL DE '+general.evaluationCount+' PARCOURS\n'+String(summary||''),
+        feeling:'',feelingTitle:''
+      },secret);
+      if(!await verifyBilanDocxPassword(buffer,secret))
+        throw new Error('Chiffrement du Word non verifie.');
+      const target=path.join(result.directory,'bilan-general.docx');
+      const temp=target+'.tmp';
+      try{fs.writeFileSync(temp,buffer);fs.renameSync(temp,target)}
+      finally{fs.rmSync(temp,{force:true})}
+      // Sidecar chiffre localement, utile pour proteger la portabilite des Word.
+      const {decryptBilanDocxBuffer}=require('./bilan-docx-main');
+      const plain=await decryptBilanDocxBuffer(buffer,secret);
+      persistSealedSidecar(path.join(result.directory,'bilan-general.sebword'),plain);
+      return {ok:true,filename:'bilan-general.docx',savedAt:result.saved.savedAt};
+    }catch(error){return {ok:false,error:String(error.message||error)}}
+  });
+  ipcMain.handle('candidate-catalog:open-general-word',async(_event,personId)=>{
+    if(!getAdminUnlocked()||!editionCapabilities.canBilan)return {ok:false,error:'Acces administrateur requis.'};
+    try{
+      const data=computePersonGeneralBilan(personId);
+      if(data.outdated)throw new Error('Le bilan general a change : regenerer le document Word.');
+      const directory=generalBilanDir(data.person.personId);
+      const stored=readJson(path.join(directory,'bilan-general.json'));
+      if(!stored||stored.sourceDigest!==data.general.sourceDigest)
+        throw new Error('Enregistrer le bilan general avant d ouvrir son Word.');
+      const target=path.join(directory,'bilan-general.docx');
+      if(!fs.existsSync(target))throw new Error('Aucun Word du bilan general. Cliquez sur Generer Word.');
+      const secret=String(getAdminDocumentPassword&&getAdminDocumentPassword()||'');
+      if(!secret||!await verifyBilanDocxPassword(fs.readFileSync(target),secret))
+        throw new Error('Mot de passe de ce Word non reconnu.');
+      const message=await shell.openPath(target);
+      return message?{ok:false,error:message}:{ok:true};
+    }catch(error){return {ok:false,error:String(error.message||error)}}
+  });
+
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value == null ? {} : value));
