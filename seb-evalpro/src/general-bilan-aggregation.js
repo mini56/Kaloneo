@@ -84,6 +84,36 @@ function aggregateGeneralBilan(evaluations){
     }
     if(item.archive&&item.archive.document){
       const doc=item.archive.document;
+      // Les criteres manuels sont repris des bilans precedents, avec leur
+      // commentaire et leur niveau d'origine, sans convertir I/II/III en points.
+      let section='Compétences techniques';
+      const manualIds=new Set(['fabrication-plan','fabrication-tracage',
+        'fabrication-decoupe','fabrication-assemblage','fabrication-finition',
+        'briques-identification']);
+      for(const r of Array.isArray(doc.rows)?doc.rows:[]){
+        if(!r||typeof r!=='object')continue;
+        if(r.kind==='section'){
+          const label=clean(r.sectionText);
+          if(label)section=label;
+          continue;
+        }
+        const key=clean(r.key),level=clean(r.level);
+        if(!key||!['I','II','III'].includes(level))continue;
+        if(!key.startsWith('kaltest-manuel-')&&!manualIds.has(key))continue;
+        const criterionId='MANUAL:'+key;
+        const label=clean(r.moduleText)||key;
+        const category=section;
+        if(!groups.has(category))groups.set(category,new Map());
+        const criteria=groups.get(category);
+        if(!criteria.has(criterionId))
+          criteria.set(criterionId,{id:criterionId,title:label,category,points:0,
+            possible:0,scoredPassages:0,passages:0,sources:[],manualLevels:[]});
+        const criterion=criteria.get(criterionId);
+        criterion.passages++;
+        criterion.manualLevels.push(level);
+        criterion.sources.push({candidateId:id,parcours:source.parcours,date:source.date,
+          scored:false,level,comment:clean(r.comment),detail:clean(r.detail)});
+      }
       const summary=clean(doc.summary);
       if(summary)notes.push({candidateId:id,parcours:source.parcours,date:source.date,summary});
     }
@@ -120,9 +150,10 @@ function wordRows(general){
   for(const category of general.categories||[]){
     rows.push({type:'section',text:category.name,strong:true});
     for(const test of category.tests){
-      const score=test.percent===null?'Non noté':test.points+' / '+test.possible+' points — '+test.percent.toLocaleString('fr-FR')+' %';
+      const score=test.percent===null?'Appréciation manuelle (sans points)':test.points+' / '+test.possible+' points — '+test.percent.toLocaleString('fr-FR')+' %';
+      const remarks=test.percent===null?test.sources.map(s=>s.comment||'').filter(Boolean).join(' | '):'';
       rows.push({type:'row',module:test.title,level:test.level,
-        comment:score,detail:test.passages+' parcours / passage(s) documenté(s)'});
+        comment:score,detail:(remarks?remarks+' — ':'')+test.passages+' parcours / passage(s) documenté(s)'});
     }
     rows.push({type:'row',module:'TOTAL — '+category.name,level:category.level,
       comment:category.percent===null?'Non évalué':category.percent.toLocaleString('fr-FR')+' %',
