@@ -3,7 +3,7 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
 const assert=require('node:assert/strict');
 const register=require('../src/candidate-catalog-main');
 const {codedFolderName}=require('../src/candidate-folder-utils');
-const {readJsonFile,isEncryptedLocalFileBuffer}=require('../src/candidate-data-crypto');
+const {readJsonFile,writeJsonFile,isEncryptedLocalFileBuffer}=require('../src/candidate-data-crypto');
 const root=fs.mkdtempSync(path.join(os.tmpdir(),'kaloneo-general-bilan-'));
 function stable(value){
  if(Array.isArray(value))return '['+value.map(stable).join(',')+']';
@@ -73,11 +73,11 @@ function fixture(id,date,title,tests) {
   assert(fs.statSync(path.join(generalDir,'bilan-general.sebword')).size>1000);
   // La derniere sauvegarde de l'un des parcours rend le general obsolete.
   const statePath=path.join(f1.directory,'donnees','evaluation-state.json');
-  const updated=JSON.parse(fs.readFileSync(statePath,'utf8'));
+  const updated=readJsonFile(statePath);
   const state=JSON.parse(updated.sessionStorage.seb_kaltest_pilot2_state_v1);
   state.tests.calculs.result.score=9;
   updated.sessionStorage.seb_kaltest_pilot2_state_v1=JSON.stringify(state);
-  write(statePath,updated);
+  writeJsonFile(statePath,updated);
   const stale=handler('candidate-catalog:general-bilan',personId);
   assert(stale.ok&&stale.outdated,'Un changement de source doit invalider le general.');
   const refused=await handler('candidate-catalog:export-general-bilan',personId,summary,loaded.general.sourceDigest);
