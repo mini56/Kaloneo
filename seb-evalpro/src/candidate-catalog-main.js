@@ -730,16 +730,19 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     if(person.identifierCollision)throw new Error('Identifiant partage : rapprocher les identites avant un bilan general.');
     if(person.evaluations.length<2)throw new Error('Deux parcours distincts minimum sont necessaires.');
     const records=listCandidateDirs(candidatesRoot,false);
-    const evaluations=person.evaluations.map(e=>{
+    const evaluations=person.evaluations.filter(e=>Number(e.bilanCount||0)>0).map(e=>{
       const record=records.find(r=>String(r.candidateId)===String(e.candidateId));
       if(!record)throw new Error('Dossier du parcours introuvable : '+e.candidateId);
       if(personIdentityForRecord(record).personId!==person.personId)
         throw new Error('Des evaluations de personnes differentes ne peuvent pas etre fusionnees.');
       const stored=readJson(path.join(record.candidateDir,'donnees','evaluation-state.json'))||{};
       const session=stored.sessionStorage&&typeof stored.sessionStorage==='object'?stored.sessionStorage:{};
+      const archive=currentEvaluationBilan(record);
+      if(!archive)throw new Error('Bilan du parcours non trouve : '+e.parcours);
       return {candidateId:record.candidateId,parcours:e.parcours,date:e.date,
-        session,manifest:record.manifest||{},archive:currentEvaluationBilan(record)};
+        session,manifest:record.manifest||{},archive};
     });
+    if(evaluations.length<2)throw new Error('Il faut au moins deux bilans de parcours enregistres.');
     const general=aggregateGeneralBilan(evaluations);
     const saved=readJson(path.join(generalBilanDir(person.personId),'bilan-general.json'));
     return {person,general,
