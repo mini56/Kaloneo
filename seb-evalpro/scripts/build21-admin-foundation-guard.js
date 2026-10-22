@@ -42,7 +42,7 @@ function section(text, start, end) {
 
 const exactBuild21 = {
   // Replay evolue uniquement pour chiffrer les captures et gerer les cles Windows des imports.
-  'src/bilan-history-preload.js': '7f53efab6addbf19a1cb8b42aff5233ff4db5416',
+  // Le bilan ne cree plus de revisions : verification structurelle ci-dessous.
   // Module bilan historique autorise a securiser la generation des anciens Word.
   // candidate-store-main.js a volontairement évolué après le Build #21
   // (protection des reprises puis modèle R36 personne -> évaluations).
@@ -62,6 +62,19 @@ const cryptoCore = read('src/candidate-data-crypto.js');
 const archiveIntegrityCore = read('src/replay-archive-integrity.js');
 const privateDocumentCore=read('src/candidate-private-documents.js');
 const privateBilanCore=read('src/bilan-history-main.js');
+const currentBilanCore=read('src/candidate-bilan-current.js');
+const historicalBilanUi=read('src/bilan-history-preload.js');
+assert(privateBilanCore.includes("pruneReplacedBilans(targetHistory,filename)"),
+  'Le bilan courant ne remplace plus ses anciennes versions.');
+assert(privateBilanCore.includes("discardOldWordExports(path.join(path.dirname(targetHistory),'exports'))"),
+  'Modification bilan : Word precedent non invalide.');
+assert(currentBilanCore.includes('function pruneReplacedBilans('),
+  'Nettoyage par evaluation des revisions absent.');
+assert(historicalBilanUi.includes('Enregistrer le bilan'),
+  'Editeur : ancien bouton Enregistrer une revision detecte.');
+assert(!historicalBilanUi.includes('Word mis à jour automatiquement'),
+  'Enregistrement du bilan ne doit jamais creer de Word automatiquement.');
+
 assert(replayCore.includes("ipcMain.handle('replay:capture-page'"), 'Replay : capture candidat historique absente.');
 assert(replayCore.includes("ipcMain.handle('admin:get-candidate-parcours-slide'"), 'Replay : visionneuse admin historique absente.');
 assert(replayCore.includes('function migrateStoredReplayImages()'), 'Replay : migration de captation PNG existante absente.');
