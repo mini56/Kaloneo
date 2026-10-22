@@ -104,8 +104,8 @@ async function archiveCurrentBilan() {
     const status = document.getElementById('status');
     if (result && result.ok) {
       if (status) status.textContent = result.unchanged
-        ? `Bilan déjà archivé · révision ${result.revision}`
-        : `Bilan archivé · révision ${result.revision}`;
+        ? 'Bilan déjà enregistré (inchangé)'
+        : 'Bilan enregistré ; ancien Word à régénérer';
       window.sessionStorage.setItem('seb_evalpro_bilan_history_file', String(result.filename || ''));
     } else if (status && result && result.error) {
       status.textContent = `Archive bilan : ${result.error}`;
@@ -333,7 +333,7 @@ function openEditor(filename, archive) {
   const overlay = document.createElement('div');
   overlay.id = 'seb-bilan-history-editor';
   const candidate = archive.candidate || {};
-  overlay.innerHTML = `<div class="seb-bh-editor-card"><div class="seb-bh-editor-head"><strong>Ancien bilan — ${escapeHtml(candidateLabel(candidate))}</strong><span class="seb-bh-badge">Build #${escapeHtml(archive.originalBuild || '?')}</span><span class="seb-bh-warning">MODIFICATION = NOUVELLE RÉVISION</span></div><div class="seb-bh-editor-body"><div class="seb-bh-meta"><span><b>Nom :</b> ${escapeHtml(candidate.nom || '')}</span><span><b>Prénom :</b> ${escapeHtml(candidate.prenom || '')}</span><span><b>Date :</b> ${escapeHtml(candidate.date || '')}</span><span><b>Version :</b> ${archive.revision === 0 ? 'Original' : `Révision ${archive.revision}`}</span></div><table class="seb-bh-table"><colgroup><col style="width:39%"><col style="width:5.6%"><col style="width:5.6%"><col style="width:5.6%"><col style="width:5.6%"><col style="width:38.6%"></colgroup><thead><tr><th>Modules</th><th>NE</th><th>I</th><th>II</th><th>III</th><th>Commentaires</th></tr></thead><tbody></tbody></table><section style="margin:16px 0;border:1px solid #9cc2e5;background:#f7fbff;padding:13px"><h2 style="margin:0 0 8px;color:#1f4e79">Synthèse du bilan</h2><button type="button" id="seb-bh-gen-summary" style="background:#0070c0;color:#fff;border:0;border-radius:5px;padding:8px 13px;font-weight:700">Générer / régénérer la synthèse</button><p style="font-size:12px;color:#555">Ancien bilan sans civilité : utilisation de « La personne ».</p><textarea id="seb-bh-history-summary" style="width:100%;min-height:360px;box-sizing:border-box;padding:9px;font:14px Calibri,Arial;line-height:1.45"></textarea></section><section style="margin:14px 0;border:1px solid #b8cce4;background:#fbfdff;padding:13px"><h2 id="seb-bh-history-feeling-title" style="margin:0 0 8px;color:#1f4e79"></h2><p style="font-size:12px;color:#555">Renseigner ici le bilan personnel exprimé par le stagiaire sur son parcours au plateau technique.</p><textarea id="seb-bh-history-feeling" style="width:100%;min-height:180px;box-sizing:border-box;padding:9px;font:14px Calibri,Arial;line-height:1.4"></textarea></section></div><div class="seb-bh-editor-foot"><div class="info" id="seb-bh-editor-info">Archive autonome · le bilan d'origine n'est jamais écrasé.</div><button type="button" id="seb-bh-export">Exporter Word</button><button type="button" id="seb-bh-save-revision" class="primary">Enregistrer une nouvelle révision</button><button type="button" id="seb-bh-editor-close">Fermer</button></div></div>`;
+  overlay.innerHTML = `<div class="seb-bh-editor-card"><div class="seb-bh-editor-head"><strong>Bilan courant — ${escapeHtml(candidateLabel(candidate))}</strong><span class="seb-bh-badge">Build #${escapeHtml(archive.originalBuild || '?')}</span><span class="seb-bh-warning">UNE SEULE VERSION PAR ÉVALUATION</span></div><div class="seb-bh-editor-body"><div class="seb-bh-meta"><span><b>Nom :</b> ${escapeHtml(candidate.nom || '')}</span><span><b>Prénom :</b> ${escapeHtml(candidate.prenom || '')}</span><span><b>Date :</b> ${escapeHtml(candidate.date || '')}</span><span><b>Version :</b> Bilan courant</span></div><table class="seb-bh-table"><colgroup><col style="width:39%"><col style="width:5.6%"><col style="width:5.6%"><col style="width:5.6%"><col style="width:5.6%"><col style="width:38.6%"></colgroup><thead><tr><th>Modules</th><th>NE</th><th>I</th><th>II</th><th>III</th><th>Commentaires</th></tr></thead><tbody></tbody></table><section style="margin:16px 0;border:1px solid #9cc2e5;background:#f7fbff;padding:13px"><h2 style="margin:0 0 8px;color:#1f4e79">Synthèse du bilan</h2><button type="button" id="seb-bh-gen-summary" style="background:#0070c0;color:#fff;border:0;border-radius:5px;padding:8px 13px;font-weight:700">Générer / régénérer la synthèse</button><p style="font-size:12px;color:#555">Ancien bilan sans civilité : utilisation de « La personne ».</p><textarea id="seb-bh-history-summary" style="width:100%;min-height:360px;box-sizing:border-box;padding:9px;font:14px Calibri,Arial;line-height:1.45"></textarea></section><section style="margin:14px 0;border:1px solid #b8cce4;background:#fbfdff;padding:13px"><h2 id="seb-bh-history-feeling-title" style="margin:0 0 8px;color:#1f4e79"></h2><p style="font-size:12px;color:#555">Renseigner ici le bilan personnel exprimé par le stagiaire sur son parcours au plateau technique.</p><textarea id="seb-bh-history-feeling" style="width:100%;min-height:180px;box-sizing:border-box;padding:9px;font:14px Calibri,Arial;line-height:1.4"></textarea></section></div><div class="seb-bh-editor-foot"><div class="info" id="seb-bh-editor-info">Bilan courant · tout nouvel enregistrement remplace le précédent et invalide son Word.</div><button type="button" id="seb-bh-export">Exporter Word</button><button type="button" id="seb-bh-save-revision" class="primary">Enregistrer le bilan</button><button type="button" id="seb-bh-editor-close">Fermer</button></div></div>`;
   document.body.appendChild(overlay);
   const card = overlay.querySelector('.seb-bh-editor-card');
   card.dataset.note = String((archive.document && archive.document.note) || '');
@@ -394,16 +394,15 @@ function openEditor(filename, archive) {
     saveRevisionButton.disabled = true;
     try {
       const info = overlay.querySelector('#seb-bh-editor-info');
-      info.textContent = 'Enregistrement de la nouvelle révision…';
+      info.textContent = 'Enregistrement du bilan courant…';
       const result = await ipcRenderer.invoke('bilan-history:save-revision', { sourceFilename: currentFilename, document: buildEditorDocument(card) });
       if (result && result.ok) {
         currentFilename = result.filename || currentFilename;
         currentRevision = Number.isFinite(Number(result.revision)) ? Number(result.revision) : currentRevision;
         if (result.unchanged) {
-          info.textContent = `Aucune modification : révision ${result.revision} inchangée.`;
+          info.textContent = 'Aucune modification : bilan courant inchangé.';
         } else {
-          const wordFilename = exportHistoricalWord(card, candidate, archive.originalBuild, currentRevision);
-          info.textContent = `Révision ${result.revision} enregistrée. Word mis à jour automatiquement : ${wordFilename} dans le dossier des bilans KALONÉO. L'ancienne version est conservée.`;
+          info.textContent = 'Bilan enregistré. Le Word précédent a été supprimé : cliquez sur Exporter Word pour le régénérer.';
         }
       } else info.textContent = `Erreur : ${(result && result.error) || 'enregistrement impossible'}`;
     } finally {
@@ -411,10 +410,24 @@ function openEditor(filename, archive) {
       saveRevisionButton.disabled = false;
     }
   });
-  overlay.querySelector('#seb-bh-export').addEventListener('click', () => {
-    const info = overlay.querySelector('#seb-bh-editor-info');
-    const wordFilename = exportHistoricalWord(card, candidate, archive.originalBuild, currentRevision);
-    if (info) info.textContent = `Word mis à jour : ${wordFilename} dans le dossier des bilans KALONÉO.`;
+  overlay.querySelector('#seb-bh-export').addEventListener('click', async () => {
+    const info=overlay.querySelector('#seb-bh-editor-info');
+    const button=overlay.querySelector('#seb-bh-export');
+    if(button.disabled)return;
+    button.disabled=true;
+    try{
+      // Le Word doit correspondre exactement au dernier bilan sauvegarde.
+      const saved=await ipcRenderer.invoke('bilan-history:save-revision',{
+        sourceFilename:currentFilename,document:buildEditorDocument(card)
+      });
+      if(!saved||!saved.ok)throw new Error(saved&&saved.error||'Bilan non enregistre');
+      currentFilename=saved.filename||currentFilename;
+      currentRevision=0;
+      const name=exportHistoricalWord(card,candidate,archive.originalBuild,currentRevision);
+      if(info)info.textContent='Word du bilan courant genere : '+name;
+    }catch(error){
+      if(info)info.textContent='Erreur : '+String(error&&error.message||error);
+    }finally{button.disabled=false}
   });
 }
 
