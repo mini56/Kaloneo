@@ -13,8 +13,8 @@ function stable(value){
  return JSON.stringify(value);
 }
 const write=(p,v)=>{fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,JSON.stringify(v),'utf8')};
-function fixture(id,date,title,tests) {
- const c={nom:'TEST',prenom:'SOPHIE',naissance:'1990-01-01',personIdentifier:'7654321',date,parcours:title,lieu:'Lorient',groupe:'1'};
+function fixture(id,date,title,tests,overrides={}) {
+ const c={nom:'TEST',prenom:'SOPHIE',naissance:'1990-01-01',personIdentifier:'7654321',date,parcours:title,lieu:'Lorient',groupe:'1',...overrides};
  const directory=path.join(root,'Candidats',codedFolderName(id));
  const metadata=Object.entries(tests).map(([k,v])=>({id:k,title:v.title||k,category:v.category||'mathematiques'}));
  const statuses=Object.fromEntries(Object.entries(tests).map(([k,v])=>[k,{status:'COMPLETED',result:{score:v.score,scoreMax:v.max}}]));
@@ -40,6 +40,12 @@ function fixture(id,date,title,tests) {
    calculs:{title:'Calculs',score:8,max:10},
    conversions:{title:'Conversions',score:6,max:10}
   });
+  // Une autre personne utilise délibérément le MÊME identifiant de test.
+  // Ses résultats et ses deux bilans ne doivent jamais polluer ceux de Sophie.
+  fixture('eval-charlie','2026-09-03','Transport',{calculs:{title:'Calculs',score:1,max:10}},
+    {nom:'MARTIN',prenom:'JULES',naissance:'1992-07-12'});
+  fixture('eval-delta','2026-09-04','Commerce',{calculs:{title:'Calculs',score:2,max:10}},
+    {nom:'MARTIN',prenom:'JULES',naissance:'1992-07-12'});
   const handlers=new Map();
   const ipcMain={handle:(name,fn)=>handlers.set(name,fn),on:()=>{}};
   const app={getPath(name){return name==='temp'?path.join(root,'temp'):name==='userData'?path.join(root,'userData'):path.join(root,'Documents')}};
@@ -47,9 +53,21 @@ function fixture(id,date,title,tests) {
     getActiveCandidate:()=>null,dataRoot:root});
   const handler=(name,...args)=>handlers.get(name)(null,...args);
   const persons=handler('candidate-catalog:list-persons');
-  assert.equal(persons.length,1,'Deux parcours doivent etre regroupes en une personne.');
-  assert.equal(persons[0].evaluationCount,2);
-  const personId=persons[0].personId;
+  assert.equal(persons.length,2,'Même N° ID réutilisé : 2 personnes distinctes attendues.');
+  const sophie=persons.find(p=>p.nom==='TEST'&&p.prenom==='SOPHIE');
+  const jules=persons.find(p=>p.nom==='MARTIN'&&p.prenom==='JULES');
+  assert(sophie&&jules,'Personnes distinctes introuvables.');
+  assert.equal(sophie.evaluationCount,2);
+  assert.equal(jules.evaluationCount,2);
+  assert(persons.every(p=>!p.identifierCollision),
+    'Un identifiant à 7 caractères réutilisé entre noms différents ne doit pas bloquer les bilans.');
+  const personId=sophie.personId;
+  const other=handler('candidate-catalog:general-bilan',jules.personId);
+  assert(other.ok,other.error);
+  assert.equal(other.general.evaluationCount,2);
+  const otherCalculs=other.general.categories.flatMap(c=>c.tests||[]).find(t=>t.id==='calculs');
+  assert(otherCalculs && otherCalculs.points===3 && otherCalculs.possible===20,
+    'Bilans de Jules isolés : 1+2/20, sans les 14 points de Sophie.');
   const loaded=handler('candidate-catalog:general-bilan',personId);
   assert(loaded.ok,loaded.error);
   assert.equal(loaded.general.evaluationCount,2);
@@ -87,6 +105,11 @@ function fixture(id,date,title,tests) {
   assert(handler('candidate-catalog:delete-person',personId).ok);
   assert(handler('candidate-catalog:trash-empty').ok);
   assert(!fs.existsSync(generalDir),'Supprimer definitivement une personne efface son bilan general et le Word.');
-  console.log('KALONEO_GENERAL_BILAN_IPC=OK — personne unique, sources chiffre, calcul, Word, stale, purge');
+  const remaining=handler('candidate-catalog:list-persons');
+  assert.equal(remaining.length,1,'La suppression de Sophie ne supprime pas Jules même avec le même N° ID.');
+  assert.equal(remaining[0].personId,jules.personId);
+  const stillAvailable=handler('candidate-catalog:general-bilan',jules.personId);
+  assert(stillAvailable.ok,'Le bilan général de Jules doit rester disponible.');
+  console.log('KALONEO_GENERAL_BILAN_IPC=OK — N° ID partagé autorisé, 2x2 parcours isolés, chiffres, Word, stale, purge');
  }finally{fs.rmSync(root,{recursive:true,force:true});clearLocalKey()}
 })().catch(e=>{console.error(e);process.exitCode=1});

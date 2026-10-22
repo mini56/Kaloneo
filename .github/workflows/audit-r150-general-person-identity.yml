@@ -1,0 +1,41 @@
+name: "KALONÉO R150 - Bilan général avec N° ID réutilisé"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - 'seb-evalpro/src/candidate-catalog-main.js'
+      - 'seb-evalpro/src/candidate-person-identity.js'
+      - 'seb-evalpro/scripts/candidate-identity-privacy-smoke.js'
+      - 'seb-evalpro/scripts/general-bilan-ipc-smoke.js'
+      - '.github/workflows/audit-r150-general-person-identity.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bilan-general-identite:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Syntax and safe identity grouping
+        run: |
+          node --check src/candidate-catalog-main.js
+          node --check scripts/candidate-identity-privacy-smoke.js
+          node --check scripts/general-bilan-ipc-smoke.js
+      - name: Identity and security (reuse same 7-character ID, never mix person identities)
+        run: node scripts/candidate-identity-privacy-smoke.js
+      - name: Real multi-parcours general bilan, isolated scores, encrypted Word and purge
+        run: node scripts/general-bilan-ipc-smoke.js
+      - name: General score aggregation and existing candidate workflows
+        run: |
+          node scripts/general-bilan-aggregation-smoke.js
+          node scripts/candidate-store-smoke.js
+          node scripts/candidate-catalog-smoke.js

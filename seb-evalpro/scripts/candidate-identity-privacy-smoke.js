@@ -65,8 +65,24 @@ try {
  assert(!('naissance' in readJsonFile(path.join(recentDir,'donnees','candidat.json'))));
  assert.equal(readJsonFile(path.join(legacyDir,'manifest.json')).personId,oldId);
  assert.notEqual(readJsonFile(path.join(distinctDir,'manifest.json')).personId,oldId);
- assert(persons.every(p=>p.identifierCollision),'Identifiant partagé avec autre nom doit bloquer un bilan général.');
- console.log('KALONEO_R146_IDENTITE=OK — page 2x4, civilité et moteur, vie privée, migration historique, collisions.');
+ assert(persons.every(p=>!p.identifierCollision),
+   'Même N° ID et noms distincts : chaque personne doit conserver son propre bilan général.');
+ assert.equal(persons.find(p=>p.personId!==oldId).evaluationCount,1);
+ // Collision RÉELLE : un même personId contient deux noms différents.
+ // Elle doit rester bloquante malgré la réutilisation autorisée d'un N° ID.
+ const foreignManifestPath=path.join(distinctDir,'manifest.json');
+ const foreignManifest=readJsonFile(foreignManifestPath);
+ foreignManifest.personId=oldId;
+ write(foreignManifestPath,foreignManifest);
+ const resync=call('candidate-catalog:sync');
+ assert(resync.ok,JSON.stringify(resync));
+ const mixed=call('candidate-catalog:list-persons').find(p=>p.personId===oldId);
+ assert(mixed&&mixed.identifierCollision,
+   'Deux identités différentes dans un même personId doivent être bloquées.');
+ const refused=call('candidate-catalog:general-bilan',oldId);
+ assert(!refused.ok && /identifian|identit/i.test(refused.error),
+   'Ne jamais fusionner des bilans de personnes différentes.');
+ console.log('KALONEO_R150_IDENTITE=OK — mêmes ID / autres noms autorisés, identité réellement mélangée bloquée.');
 } finally {
  fs.rmSync(root,{recursive:true,force:true});
  clearLocalKey();

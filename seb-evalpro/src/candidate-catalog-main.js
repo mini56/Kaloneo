@@ -707,16 +707,14 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
       };
     });
 
-    const identifierOwners = new Map();
+    // Un même N° ID peut être réutilisé par des personnes DIFFERENTES,
+    // notamment dans les parcours de test. Ce n'est pas une collision
+    // d'identité : leurs personId restent séparés et leurs bilans isolés.
+    // Le danger réel serait au contraire de trouver plusieurs identités
+    // (ID + nom + prénom) à l'intérieur d'un SEUL personId.
     for (const person of persons) {
-      const identifier = String(person.personIdentifier || '');
-      if (!identifier) continue;
-      if (!identifierOwners.has(identifier)) identifierOwners.set(identifier, new Set());
-      identifierOwners.get(identifier).add(person.personId);
-    }
-    for (const person of persons) {
-      const owners = identifierOwners.get(String(person.personIdentifier || ''));
-      person.identifierCollision = Boolean(owners && owners.size > 1);
+      const identityKeys = new Set(person.evaluations.map(item => candidatePersonMatchKey(item)));
+      person.identifierCollision = identityKeys.size !== 1 || identityKeys.has('');
     }
 
     return persons.sort((a,b) =>
