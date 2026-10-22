@@ -34,6 +34,19 @@ function addStyle() {
   style.id = 'seb-candidate-catalog-style';
   style.textContent = `
     #seb-evalpro-open-candidate{background:#fff!important;color:#0070c0!important;border:2px solid #0070c0!important;font-weight:700}
+    #seb-general-bilan{position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif}
+    #seb-general-bilan .seb-gb-card{width:min(1120px,95vw);max-height:92vh}
+    #seb-general-bilan .seb-cc-detail-actions{gap:9px;display:flex;flex-wrap:wrap;padding:12px;background:#fff}
+    .seb-gb-table{width:100%;border-collapse:collapse;background:#fff;font:14px Arial,sans-serif}
+    .seb-gb-table th,.seb-gb-table td{border:1px solid #ccd5e0;padding:9px;text-align:left;vertical-align:top}
+    .seb-gb-category th{background:#deebfa;font-size:16px;color:#15476b}
+    .seb-gb-level{display:inline-block;min-width:30px;text-align:center;border-radius:4px;padding:4px 8px;font-weight:700;color:#111}
+    .seb-gb-NE{background:#ccffff}.seb-gb-I{background:#92d050}.seb-gb-II{background:#ed7d31;color:#fff}.seb-gb-III{background:#c00000;color:#fff}
+    .seb-gb-table details{margin-top:5px;color:#475b69;font-size:12px}.seb-gb-table ul{padding-left:19px}
+    .seb-gb-warning{padding:9px;color:#a33000;background:#fff3e2;border:1px solid #ffca82}
+    .seb-gb-note{padding:9px;border-bottom:1px solid #ddd;overflow-wrap:anywhere}.seb-gb-note p{white-space:pre-wrap;margin:5px 0}
+    #seb-gb-summary{width:100%;box-sizing:border-box;padding:10px;font:14px Arial,sans-serif;border:1px solid #a8b8c8;border-radius:5px}
+    #seb-gb-status{font-size:13px;color:#335}
     #seb-candidate-catalog,#seb-candidate-person-detail,#seb-candidate-detail,#seb-candidate-trash{position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.58);display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif}
     .seb-cc-card{width:min(1180px,96vw);max-height:90vh;background:#fff;border-radius:10px;box-shadow:0 16px 50px rgba(0,0,0,.35);display:flex;flex-direction:column;overflow:hidden}
     .seb-cc-head{background:#0070c0;color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px}
@@ -568,6 +581,98 @@ async function openCandidateTrash(onChanged, onTrashStateChanged) {
   await reload();
 }
 
+async function openGeneralBilan(personId) {
+  document.getElementById('seb-general-bilan')?.remove();
+  const response=await ipcRenderer.invoke('candidate-catalog:general-bilan',personId);
+  if(!response||!response.ok){
+    alert(response&&response.error||'Bilan general non disponible.');
+    return;
+  }
+  const {person,general}=response;
+  const safe=escapeHtml;
+  const fmt=p=>p===null||p===undefined?'Non noté':Number(p).toLocaleString('fr-FR',{maximumFractionDigits:2})+' %';
+  const badge=level=>'<span class="seb-gb-level seb-gb-'+safe(level||'NE')+'">'+safe(level||'NE')+'</span>';
+  const rows=(general.categories||[]).map(category=>{
+    const tests=(category.tests||[]).map(test=>{
+      const number=test.percent===null?'Non noté':safe(String(test.points))+' / '+safe(String(test.possible))+' ('+fmt(test.percent)+')';
+      const passed=(test.sources||[]).map(src=>
+        '<li>'+safe(src.parcours)+' — '+safe(src.date||'')+
+        (src.scored?' : '+safe(String(src.score))+' / '+safe(String(src.scoreMax)):' : sans note numérique')+'</li>').join('');
+      return '<tr><td><strong>'+safe(test.title)+'</strong><details><summary>'+
+        test.passages+' passage(s)</summary><ul>'+passed+'</ul></details></td>'+
+        '<td>'+number+'</td><td>'+badge(test.level)+'</td></tr>';
+    }).join('');
+    return '<tbody><tr class="seb-gb-category"><th colspan="3">'+safe(category.name)+
+      ' — '+(category.percent===null?'Non évalué':fmt(category.percent))+' — '+badge(category.level)+
+      '</th></tr>'+tests+'</tbody>';
+  }).join('');
+  const overlay=document.createElement('div');
+  overlay.id='seb-general-bilan';
+  overlay.innerHTML=`
+    <div class="seb-cc-card seb-gb-card" role="dialog" aria-modal="true" aria-label="Bilan général du candidat">
+      <div class="seb-cc-head">
+        <div class="seb-cc-title">Bilan général — ${safe(person.nom)} ${safe(person.prenom)}</div>
+        <div class="seb-cc-badge">${general.evaluationCount} PARCOURS</div>
+      </div>
+      <div class="seb-cc-body">
+        <p>Regroupement des tests identiques par identifiant. Points obtenus / possibles
+        additionnés entre parcours ; puis moyenne des tests distincts dans chaque catégorie.
+        Les tests non passés ne sont pas comptés.</p>
+        ${response.outdated?'<p class="seb-gb-warning">Les bilans des parcours ont évolué : sauvegarder à nouveau le bilan général et régénérer le Word.</p>':''}
+        <div class="seb-cc-section"><h3>Résultats regroupés par catégorie</h3>
+          <table class="seb-gb-table"><thead><tr><th>Test / parcours</th><th>Résultat consolidé</th><th>Niveau</th></tr></thead>${rows||'<tbody><tr><td colspan="3">Aucun test noté ou documenté.</td></tr></tbody>'}</table>
+        </div>
+        <div class="seb-cc-section">
+          <h3>Observations des bilans de parcours</h3>
+          ${(general.notes||[]).map(note=>'<div class="seb-gb-note"><strong>'+safe(note.parcours)+
+            '</strong> — '+safe(note.date||'')+'<p>'+safe(note.summary)+'</p></div>').join('')||
+            '<p>Aucune observation déjà enregistrée.</p>'}
+        </div>
+        <div class="seb-cc-section">
+          <h3>Synthèse générale (modifiable)</h3>
+          <textarea id="seb-gb-summary" spellcheck="true" rows="7" placeholder="Rédigez la synthèse croisée des parcours."></textarea>
+          <p id="seb-gb-status" role="status">Les niveaux affichés sont calculés à partir des points réellement enregistrés. Un niveau manuel non chiffré n'est pas moyenné avec les points.</p>
+        </div>
+      </div>
+      <div class="seb-cc-detail-actions seb-gb-actions">
+        <button type="button" id="seb-gb-save" class="primary">Enregistrer le bilan général</button>
+        <button type="button" id="seb-gb-word">Générer Word</button>
+        <button type="button" id="seb-gb-open">Ouvrir Word</button>
+        <button type="button" id="seb-gb-close">Fermer</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const field=overlay.querySelector('#seb-gb-summary');
+  field.value=String(response.summary||'');
+  const status=overlay.querySelector('#seb-gb-status');
+  const save=overlay.querySelector('#seb-gb-save');
+  const word=overlay.querySelector('#seb-gb-word');
+  const open=overlay.querySelector('#seb-gb-open');
+  let pending=false;
+  function busy(state){pending=state;for(const b of [save,word,open])b.disabled=state}
+  save.addEventListener('click',async()=>{
+    if(pending)return;busy(true);
+    try {
+      const r=await ipcRenderer.invoke('candidate-catalog:save-general-bilan',personId,field.value,general.sourceDigest);
+      status.textContent=r&&r.ok?'Bilan général enregistré. Générer un nouveau Word.':(r&&r.error||'Échec enregistrement');
+    }catch(e){status.textContent=String(e.message||e)}finally{busy(false)}
+  });
+  word.addEventListener('click',async()=>{
+    if(pending)return;busy(true);
+    try {
+      const r=await ipcRenderer.invoke('candidate-catalog:export-general-bilan',personId,field.value,general.sourceDigest);
+      status.textContent=r&&r.ok?'Word sécurisé généré. Cliquez sur Ouvrir Word.':(r&&r.error||'Échec génération Word');
+    }catch(e){status.textContent=String(e.message||e)}finally{busy(false)}
+  });
+  open.addEventListener('click',async()=>{
+    if(pending)return;busy(true);
+    try {
+      const r=await ipcRenderer.invoke('candidate-catalog:open-general-word',personId);
+      status.textContent=r&&r.ok?'Ouverture du Word sécurisé demandée.':(r&&r.error||'Word indisponible');
+    }catch(e){status.textContent=String(e.message||e)}finally{busy(false)}
+  });
+  overlay.querySelector('#seb-gb-close').addEventListener('click',()=>overlay.remove());
+}
 async function openPersonDetail(personId, onChanged) {
   document.getElementById('seb-candidate-person-detail')?.remove();
   const result = await ipcRenderer.invoke('candidate-catalog:person-detail', personId);
@@ -599,6 +704,7 @@ async function openPersonDetail(personId, onChanged) {
         </div>
       </div>
       <div class="seb-cc-detail-actions">
+        <button type="button" id="seb-cc-person-general" class="primary">Bilan général</button>
         <button type="button" id="seb-cc-person-delete" class="danger">Supprimer le candidat</button>
         <button type="button" id="seb-cc-person-close">Fermer</button>
       </div>
@@ -653,6 +759,11 @@ async function openPersonDetail(personId, onChanged) {
     host.appendChild(row);
   });
 
+  const generalButton=overlay.querySelector('#seb-cc-person-general');
+  generalButton.hidden=!editionCapabilities.canBilan;
+  generalButton.disabled=Number(person.evaluationCount||0)<2;
+  generalButton.title=generalButton.disabled?'Deux parcours minimum pour un bilan général':'Regrouper les résultats de tous les parcours';
+  generalButton.addEventListener('click',()=>openGeneralBilan(personId));
   overlay.querySelector('#seb-cc-person-delete').addEventListener('click', async () => {
     if (!(await confirmPersonDelete(person))) return;
     const deleted = await ipcRenderer.invoke('candidate-catalog:delete-person', person.personId).catch((error) => ({
