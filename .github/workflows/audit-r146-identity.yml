@@ -55,4 +55,4 @@ jobs:
           # Le vieux candidate-catalog-smoke lit du JSON brut : incompatible avec
           # les dossiers chiffrés. Les contrôles actuels vérifient le cycle réel.
           node scripts/candidate-lifecycle-smoke.js
-          node scripts/candidate-transfer-smoke.js
+          node scripts/candidate-private-transfer-smoke.js
