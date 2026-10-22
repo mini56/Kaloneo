@@ -28,7 +28,7 @@ assert(nsis.includes('Function KaloneoDirectoryPre'));
 assert(nsis.includes('Page custom KaloneoDirectoryPostPage'));
 assert(nsis.includes('StrCpy $INSTDIR "$R5"'));
 assert(nsis.includes('Rename "$INSTDIR" "$R1"'));
-assert(nsis.includes('!define SEB_BUILD_NUMBER "150"'));
+assert(nsis.includes('!define SEB_BUILD_NUMBER "151"'));
 const config=load('build/kaloneo-r148-mask-video.yml');
 assert(config.includes('version: 0.0.175'));
 assert(config.includes('executableName: KALONEO'));
