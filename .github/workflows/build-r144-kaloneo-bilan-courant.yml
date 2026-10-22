@@ -1,18 +1,7 @@
 name: "KALONÉO R144 - Bilan courant unique par parcours"
 on:
-  push:
-    branches: [fix-r60-tri-rearm-only-20261011]
-    paths:
-      - '.github/workflows/build-r144-kaloneo-bilan-courant.yml'
-      - 'seb-evalpro/src/candidate-bilan-current.js'
-      - 'seb-evalpro/src/candidate-catalog-main.js'
-      - 'seb-evalpro/src/bilan-history-main.js'
-      - 'seb-evalpro/src/candidate-private-documents.js'
-      - 'seb-evalpro/scripts/candidate-catalog-smoke.js'
-      - 'seb-evalpro/scripts/kaloneo-r125-branding.py'
-      - 'seb-evalpro/scripts/kaloneo-r125-branding-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r127-visible-brand-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r128-taskbar-icon-guard.js'
+  workflow_dispatch:
+
 concurrency:
   group: kaloneo-r144-single-bilan-setup-${{ github.ref }}
   cancel-in-progress: true

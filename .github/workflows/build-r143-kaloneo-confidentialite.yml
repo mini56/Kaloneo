@@ -1,13 +1,7 @@
 name: "KALONÉO R143 - Confidentialité des dossiers et transferts Windows"
 on:
-  push:
-    branches: [fix-r60-tri-rearm-only-20261011]
-    paths:
-      - '.github/workflows/build-r143-kaloneo-confidentialite.yml'
-      - 'seb-evalpro/scripts/kaloneo-r125-branding.py'
-      - 'seb-evalpro/scripts/kaloneo-r125-branding-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r127-visible-brand-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r128-taskbar-icon-guard.js'
+  workflow_dispatch:
+
 concurrency:
   group: kaloneo-r143-privacy-setup-${{ github.ref }}
   cancel-in-progress: false
