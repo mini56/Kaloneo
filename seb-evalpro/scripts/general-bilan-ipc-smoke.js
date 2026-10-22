@@ -3,7 +3,7 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
 const assert=require('node:assert/strict');
 const register=require('../src/candidate-catalog-main');
 const {codedFolderName}=require('../src/candidate-folder-utils');
-const {readJsonFile,writeJsonFile,isEncryptedLocalFileBuffer,configureLocalKey,clearLocalKey}=require('../src/candidate-data-crypto');
+const {readJsonFile,writeJsonFile,isEncryptedJsonFile,configureLocalKey,clearLocalKey}=require('../src/candidate-data-crypto');
 const root=fs.mkdtempSync(path.join(os.tmpdir(),'kaloneo-general-bilan-'));
 configureLocalKey(crypto.randomBytes(32));
 function stable(value){
@@ -66,7 +66,7 @@ function fixture(id,date,title,tests) {
   assert(saved.ok,saved.error);
   const generalDir=path.join(root,'BilansGeneraux',personId);
   const savedFile=fs.readFileSync(path.join(generalDir,'bilan-general.json'));
-  assert(isEncryptedLocalFileBuffer(savedFile),'Synthese generale non chiffree.');
+  assert(isEncryptedJsonFile(path.join(generalDir,'bilan-general.json')),'Synthese generale non chiffree.');
   assert.equal(readJsonFile(path.join(generalDir,'bilan-general.json')).summary,summary);
   const exported=await handler('candidate-catalog:export-general-bilan',personId,summary,loaded.general.sourceDigest);
   assert(exported.ok,exported.error);
