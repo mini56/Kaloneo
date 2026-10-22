@@ -7,6 +7,11 @@ on:
       - 'seb-evalpro/package.json'
       - 'seb-evalpro/build/installer.nsh'
       - 'seb-evalpro/build/kaloneo-r148-mask-video.yml'
+      - 'seb-evalpro/scripts/kaloneo-r125-branding.py'
+      - 'seb-evalpro/scripts/kaloneo-r125-branding-guard.js'
+      - 'seb-evalpro/scripts/kaloneo-r126-install-path-guard.js'
+      - 'seb-evalpro/scripts/kaloneo-r128-taskbar-icon-guard.js'
+  workflow_dispatch:
 concurrency:
   group: kaloneo-r148-mask-video-setup-${{ github.ref }}
   cancel-in-progress: true
