@@ -87,7 +87,14 @@ function catalog(){
   try{
     const payload=window.sebEvalPro?.kaloneoTestMetadataSync?.();
     const tests=payload&&payload.ok===true&&Array.isArray(payload.tests)?payload.tests:[];
-    return new Map(tests.map(test=>[String(test.id||''),test]).filter(([id])=>id));
+    const meta=new Map();
+    for(const item of tests){
+      const id=String(item?.id||''),version=String(item?.version||'');
+      if(!id)continue;
+      meta.set(id,item);
+      if(version)meta.set(id+'@'+version,item);
+    }
+    return meta;
   }catch(_){return new Map()}
 }
 function canonicalState(){
@@ -117,8 +124,10 @@ function buildContext(){
     if(!rawTest||!rawTest.id)return;
     const id=String(rawTest.id);
     if(EXCLUDED_IDS.has(id))return;
-    const m=meta.get(id)||{};
-    const cat=categoryFor(id,m.category||rawTest.category||'autres');
+    const wantedVersion=String(rawTest.version||'');
+    // Jamais de liaison d'une autre version du même test.
+    const m=wantedVersion?(meta.get(id+'@'+wantedVersion)||{}):(meta.get(id)||{});
+    const cat=categoryFor(id,rawTest.category||m.category||'autres');
     if(cat==='transition'||cat==='fin'||cat==='introduction')return;
     const test={
       id,
@@ -127,7 +136,11 @@ function buildContext(){
       categoryLabel:categoryLabel(cat),
       scored:m.scored!==undefined?m.scored!==false:rawTest.scored!==false,
       activityType:clean(m.activityType||rawTest.activityType||''),
-      version:clean(m.version||rawTest.version||'')
+      version:clean(rawTest.version||m.version||''),
+      adminModified:m.adminModified===true,
+      bilanContributions:Array.isArray(rawTest.bilanContributions)
+        ? rawTest.bilanContributions
+        : Array.isArray(m.bilanContributions)?m.bilanContributions:[]
     };
     if(!byId.has(id))order.push(id);
     byId.set(id,test);
@@ -330,10 +343,12 @@ function installInstitutionalFilter(){
 
   // On conserve les vraies lignes institutionnelles. Seules les lignes sans
   // exercice correspondant dans le parcours sont masquées.
+  const linked=window.KaloneoBilanRouting?.collect(context.tests,stateFor);
+  const linkedRows=linked?.entries||new Map();
   Object.entries(EXISTING_ROW_SOURCES).forEach(([id,sources])=>{
     const target=row(id);
     if(!target)return;
-    const visible=hasAny(sources);
+    const visible=hasAny(sources)||linkedRows.has(id);
     target.hidden=!visible;
     target.dataset.sebKaloneoExcluded=visible?'0':'1';
   });
@@ -481,7 +496,13 @@ function genericOptions(category){
 function installUnknownSections(tbody){
   const known=knownIds();
   const groups=new Map();
-  context.tests.filter(test=>!known.has(test.id)).forEach(test=>{
+  context.tests.filter(test=>{
+    if(known.has(test.id))return false;
+    // Les tests Builder restent dans la ligne institutionnelle explicitement
+    // choisie, jamais dans une deuxième section automatique par catégorie.
+    if(test.adminModified || Array.isArray(test.bilanContributions)&&test.bilanContributions.length)return false;
+    return true;
+  }).forEach(test=>{
     const label=test.categoryLabel||categoryLabel(test.category);
     if(!groups.has(label))groups.set(label,[]);
     groups.get(label).push(test);
@@ -590,17 +611,20 @@ function autoInstitutional(){
     }
   }
 
-  const expression=aggregate(['texte_a_trous_stage_logistique','genre_nombre','paronymes_rapport','dictee_professionnelle']);
+  const expression=aggregate(['texte_a_trous_stage_logistique','genre_nombre','paronymes_rapport','dictee_professionnelle']
+    .filter(id=>['francais','expression ecrite','dictee'].includes(context.byId.get(id)?.category)));
   if(expression){
     applyInstitutional('expression',genericLevel(expression.pct),percentDetail(expression.pct,expression.score,expression.max));
   }
 
-  const mathStatement=aggregate(['calculs_commandes_atelier','calculs_poids_volumes']);
+  const mathStatement=aggregate(['calculs_commandes_atelier','calculs_poids_volumes']
+    .filter(id=>['mathematiques','math','maths'].includes(context.byId.get(id)?.category)));
   if(mathStatement){
     applyInstitutional('math-enonce',genericLevel(mathStatement.pct),percentDetail(mathStatement.pct,mathStatement.score,mathStatement.max));
   }
 
-  const mathProblems=aggregate(['horaires_reception_controle','fractions_preparation_lots','conversions_atelier_expedition']);
+  const mathProblems=aggregate(['horaires_reception_controle','fractions_preparation_lots','conversions_atelier_expedition']
+    .filter(id=>['mathematiques','math','maths'].includes(context.byId.get(id)?.category)));
   if(mathProblems){
     applyInstitutional('math-problemes',genericLevel(mathProblems.pct),percentDetail(mathProblems.pct,mathProblems.score,mathProblems.max));
   }
@@ -622,9 +646,31 @@ function autoInstitutional(){
     applyInstitutional(target.dataset.r,genericLevel(group.pct),percentDetail(group.pct,group.score,group.max));
   });
 
+  // Les sorties Builder ne peuvent alimenter QUE les lignes choisies dans
+  // « Liaisons vers le Bilan ». Ne jamais déduire une ligne de son seul titre.
+  const routing=window.KaloneoBilanRouting?.collect(context.tests,stateFor);
+  if(routing){
+    for(const [rowId,entries] of routing.entries){
+      const scored=entries.filter(entry=>entry.pair);
+      if(!scored.length)continue; // Les réponses libres restent dans les Résultats.
+      const legacySources=EXISTING_ROW_SOURCES[rowId]||[];
+      const legacy=aggregate(legacySources.filter(id=>context.byId.get(id)?.adminModified!==true));
+      const points=scored.reduce((sum,entry)=>sum+entry.pair.score,legacy?.score||0);
+      const possible=scored.reduce((sum,entry)=>sum+entry.pair.max,legacy?.max||0);
+      if(possible<=0)continue;
+      const pct=100*points/possible;
+      const titles=[...new Set(scored.map(entry=>entry.title))];
+      applyInstitutional(rowId,genericLevel(pct),percentDetail(pct)+
+        (titles.length?' — '+titles.join(' ; '):''));
+    }
+  }
+
   persist();
   const status=document.getElementById('status');
-  if(status)status.textContent='Bilan institutionnel complété à partir des activités réellement présentes dans le parcours — complétez les lignes manuelles.';
+  if(status)status.textContent=(routing?.warnings?.length
+    ? 'Bilan calculé. Attention : '+routing.warnings.length+
+      ' liaison(s) du Builder à vérifier (catégorie ou sorties incompatibles).'
+    : 'Bilan institutionnel complété avec les liaisons du Builder et les tests du parcours.');
   return true;
 }
 function persist(){

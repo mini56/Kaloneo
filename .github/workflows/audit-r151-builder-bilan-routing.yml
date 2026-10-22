@@ -1,0 +1,50 @@
+name: "KALONÉO R151 - Routage du Builder dans le bilan institutionnel"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - 'seb-evalpro/source/js/kaloneo-bilan-routing.js'
+      - 'seb-evalpro/source/js/admin-bilan-kaloneo.js'
+      - 'seb-evalpro/overrides/admin-bilan.html'
+      - 'seb-evalpro/src/kaloneo-library-main.js'
+      - 'seb-evalpro/scripts/kaloneo-bilan-builder-routing-smoke.js'
+      - 'seb-evalpro/scripts/kaloneo-bilan-builder-routing-electron-smoke-main.js'
+      - '.github/workflows/audit-r151-builder-bilan-routing.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  builder-bilan-routing:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Installer les dépendances
+        run: npm install --no-audit --no-fund
+      - name: Vérifier la syntaxe
+        run: |
+          node --check source/js/kaloneo-bilan-routing.js
+          node --check source/js/admin-bilan-kaloneo.js
+          node --check src/kaloneo-library-main.js
+          node --check scripts/kaloneo-bilan-builder-routing-smoke.js
+          node --check scripts/kaloneo-bilan-builder-routing-electron-smoke-main.js
+      - name: Vérifier catégorie, ID, sorties, liens et absence de doublons
+        run: node scripts/kaloneo-bilan-builder-routing-smoke.js
+      - name: Préparer les véritables pages Electron
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          npm run prepare:web
+      - name: Vérifier dans le vrai Bilan Electron les tests inédits Mathématiques et Expression écrite
+        run: npx electron --no-sandbox scripts/kaloneo-bilan-builder-routing-electron-smoke-main.js
+      - name: Contrôle du bilan V1 institutionnel inchangé
+        run: npx electron --no-sandbox scripts/kaloneo-bilan-dynamic-smoke-main.js
+      - name: Contrôle du bilan général multi-parcours et de son historique
+        run: |
+          node scripts/general-bilan-aggregation-smoke.js
+          node scripts/general-bilan-ipc-smoke.js

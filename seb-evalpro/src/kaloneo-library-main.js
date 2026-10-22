@@ -589,7 +589,15 @@ function createKaloneoLibrary(options = {}) {
       icon:definition.icon || null,
       tools:[...new Set(tools)],
       protectedVersion:seedContainsTest(definition.id, definition.version),
-      adminModified:definition?.kaloneoLibrary?.adminModified === true
+      adminModified:definition?.kaloneoLibrary?.adminModified === true,
+      // Les liaisons du Builder sont conservées par version. Le bilan ne doit
+      // jamais tenter de les deviner d'après le titre ou la catégorie.
+      bilanContributions:Array.isArray(definition.bilanContributions)
+        ? definition.bilanContributions.map(item=>({
+          lineId:String(item?.lineId||''),
+          bindings:item?.bindings&&typeof item.bindings==='object'?{...item.bindings}:{}
+        }))
+        : []
     };
   }
 
