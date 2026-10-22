@@ -11,6 +11,8 @@ on:
       - 'seb-evalpro/src/candidate-catalog-main.js'
       - 'seb-evalpro/src/qwen-rich-synthesis.js'
       - 'seb-evalpro/scripts/candidate-identity-privacy-smoke.js'
+      - 'seb-evalpro/scripts/kaloneo-identity-r146-electron-smoke-main.js'
+      - 'seb-evalpro/scripts/build21-admin-foundation-guard.js'
       - '.github/workflows/audit-r146-identity.yml'
   workflow_dispatch:
 permissions:
@@ -37,6 +39,10 @@ jobs:
           node --check src/candidate-store-main.js
           node --check src/candidate-catalog-main.js
           node --check src/qwen-rich-synthesis.js
+      - name: Prepare real candidate page and check original guards
+        run: npm run prepare:web
+      - name: Electron first page 2x4 and candidate storage on 3 screen sizes
+        run: npx electron --no-sandbox scripts/kaloneo-identity-r146-electron-smoke-main.js
       - name: Privacy, civilité and old/new candidate grouping
         run: node scripts/candidate-identity-privacy-smoke.js
       - name: General bilan and candidate regressions

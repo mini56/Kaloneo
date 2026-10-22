@@ -111,7 +111,9 @@ assert(candidateStoreCore.includes('function completeActiveCandidate(state'), 'c
 assert(candidateStoreCore.includes('removeActivePointer();'), 'pointeur actif non supprimé à la clôture.');
 assert(candidateStoreCore.includes('privacyStorageVersion: 1'), 'Nouvelle generation de candidats sans controle de confidentialite.');
 assert(candidateStoreCore.includes('evaluationId:candidateId'), 'R36 : identifiant d’évaluation technique absent à la création.');
-assert(candidateStoreCore.includes('personId:person.personId'), 'R36 : personId interne absent à la création.');
+assert((candidateStoreCore.includes('personId:person.personId') ||
+  (candidateStoreCore.includes('const personId = previousPersonIdFor(identity.original) || person.personId;') &&
+   candidateStoreCore.includes('personId,\n      personIdentifier:person.personIdentifier,'))), 'R36 : personId interne absent à la création.');
 
 // replay-preload.js conserve le socle Build #21, mais peut évoluer pour les
 // règles Replay validées ensuite (ex. exclusion des pages de transition).
@@ -248,10 +250,13 @@ const personIdentity = read('src/candidate-person-identity.js');
 assert(personIdentity.includes('function candidatePersonIdentity('), 'modèle personId interne absent.');
 assert(personIdentity.includes("c.personIdentifier || c.identifiant || c.identifier || c.ss7"), 'migration de l’ancien identifiant vers personIdentifier absente.');
 const candidateStore = read('src/candidate-store-main.js');
-assert(candidateStore.includes("personId:person.personId"), 'personId non persisté lors de la création d’une évaluation.');
+assert((candidateStore.includes("personId:person.personId") ||
+  (candidateStore.includes('const personId = previousPersonIdFor(identity.original) || person.personId;') &&
+   candidateStore.includes('personId,\n      personIdentifier:person.personIdentifier,'))), 'personId non persisté lors de la création d’une évaluation.');
 assert(candidateStore.includes("evaluationId:candidateId"), 'evaluationId distinct du personId non persisté.');
 const identityPage = read('source/kaltest-pilot2.html');
-assert(identityPage.includes('for="personIdentifier">N° identifiant'), 'page d’accueil candidat : N° identifiant absent.');
+assert((identityPage.includes('for="personIdentifier">N° identifiant') ||
+  identityPage.includes('for="personIdentifier">N° ID')), 'page d’accueil candidat : N° identifiant absent.');
 assert(!identityPage.includes('sécurité sociale'), 'page d’accueil candidat : ancienne référence sécurité sociale encore visible.');
 const identityRuntime = read('source/js/kaltest-pilot2-runtime.js');
 assert(identityRuntime.includes("/^[A-Z0-9]{7}$/"), 'validation du N° identifiant alphanumérique 7 caractères absente.');
