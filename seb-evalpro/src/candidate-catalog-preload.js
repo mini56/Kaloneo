@@ -597,7 +597,8 @@ async function openGeneralBilan(personId) {
       const number=test.percent===null?'Non noté':safe(String(test.points))+' / '+safe(String(test.possible))+' ('+fmt(test.percent)+')';
       const passed=(test.sources||[]).map(src=>
         '<li>'+safe(src.parcours)+' — '+safe(src.date||'')+
-        (src.scored?' : '+safe(String(src.score))+' / '+safe(String(src.scoreMax)):' : sans note numérique')+'</li>').join('');
+        (src.scored?' : '+safe(String(src.score))+' / '+safe(String(src.scoreMax)):
+          ' : '+(src.level?'Niveau '+safe(src.level):'sans note numérique')+(src.comment?' — '+safe(src.comment):''))+'</li>').join('');
       return '<tr><td><strong>'+safe(test.title)+'</strong><details><summary>'+
         test.passages+' passage(s)</summary><ul>'+passed+'</ul></details></td>'+
         '<td>'+number+'</td><td>'+badge(test.level)+'</td></tr>';
