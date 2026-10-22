@@ -364,7 +364,27 @@ try {
   const currentWord='Evaluation_CURRENT.sebdoc';
   fs.writeFileSync(path.join(newDir,'bilan','exports',currentWord),'chiffre fictif','utf8');
   assert.deepStrictEqual(detail(null,'candidate-xx').exports,[currentWord]);
-  fs.rmSync(path.join(newDir,'bilan','exports',currentWord));
+  const updatedDocument={
+    ...revisionDocument,
+    rows:[{...revisionDocument.rows[0],comment:'Nouveau contenu pour le meme parcours'}]
+  };
+  const otherSession=saveCurrentBilan(null,{
+    candidateId:'candidate-xx',candidate:{nom:'XX',prenom:'YY',date:'2026-09-18'},
+    originalBuild:'80',sessionToken:'NEW-UNRELATED-REPLAY-TOKEN',document:updatedDocument
+  });
+  assert(otherSession&&otherSession.ok&&otherSession.revision===0,
+    'Un changement de jeton de session ne doit pas creer de revision.');
+  assert(!fs.existsSync(path.join(newDir,'bilan','exports',currentWord)),
+    'Word perime non supprime au nouveau bilan courant.');
+  assert(!fs.existsSync(path.join(newDir,'bilan','historique',revision.filename)),
+    'Dernier ancien bilan non efface apres changement de jeton.');
+  assert.strictEqual(detail(null,'candidate-xx').bilans.length,1);
+  assert.strictEqual(detail(null,'candidate-xx').exports.length,0);
+  assert(fs.existsSync(path.join(newDir,'replay',replayName)),
+    'La sauvegarde du bilan ne doit jamais supprimer le Replay.');
+  assert(fs.existsSync(path.join(separateDir,'manifest.json')),
+    'La sauvegarde ne doit jamais supprimer un autre parcours du meme candidat.');
+
   
   const modifiedState = {
     ...loadEvent.returnValue.state,
