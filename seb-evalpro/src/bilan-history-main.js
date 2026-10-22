@@ -214,6 +214,13 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
       Number(b.archive.revision||0)-Number(a.archive.revision||0))[0]||null;
   }
 
+  function compactOlderVersions(latest) {
+    if(!latest||!latest.full)return 0;
+    const dir=path.dirname(latest.full);
+    const count=pruneReplacedBilans(dir,latest.filename);
+    if(count)discardOldWordExports(path.join(path.dirname(dir),'exports'));
+    return count;
+  }
   function writeArchive({ rootId, revision, parentFilename, originalBuild, candidateId, candidate, document, source }) {
     const targetHistory = candidateHistoryDir(candidate, candidateId);
     const createdAt = new Date().toISOString();
@@ -262,6 +269,7 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
       const latest = currentForCandidate(candidate,candidateId);
       const documentSha256 = sha(document);
       if (latest && latest.archive.documentSha256 === documentSha256) {
+        compactOlderVersions(latest);
         return { ok:true, unchanged:true, filename:latest.filename, revision:0, rootId };
       }
       const revision = 0;
@@ -332,6 +340,8 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
       const documentSha256 = sha(document);
       const latest = currentForCandidate(normalizeCandidate(source.candidate),String(source.candidateId||''));
       if (latest && latest.archive.documentSha256 === documentSha256) {
+        if(latest.filename!==loaded.filename)throw new Error('Ce bilan a deja ete remplace.');
+        compactOlderVersions(latest);
         return { ok:true, unchanged:true, filename:latest.filename, revision:0, rootId:source.rootId };
       }
       if(latest && latest.filename!==loaded.filename)throw new Error('Ce bilan a deja ete remplace : reouvrez le dernier bilan.');
