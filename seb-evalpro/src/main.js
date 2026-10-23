@@ -264,6 +264,9 @@ function getKaloneoLibrary() {
       dataRoot: sebInternalRoot(),
       seedTestsRoot: path.join(__dirname, '..', 'app', 'web', 'kaltest', 'tests'),
       seedMaskMediaRoot: path.join(__dirname, '..', 'app', 'web', 'mask-media-seed'),
+      // Catalogue livré avec le Setup : index virtuel, lecture paresseuse.
+      // Ne pas ajouter ce dossier à seedImageRoots (pas de copie en AppData).
+      suppliedImagesRoot:path.join(__dirname, '..', 'app', 'web', 'bibliotheque-images'),
       seedImageRoots:[
         { root:path.join(__dirname, '..', 'app', 'web', 'kaltest', 'v1-assets'), category:'Images tests Builder KALONÉO' },
         { root:path.join(__dirname, '..', 'app', 'web', 'imageqcm'), category:'Images exercices KALONÉO' },

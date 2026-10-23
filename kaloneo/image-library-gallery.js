@@ -67,6 +67,8 @@
     // Toutes les images livrées avec les exercices V1 sont regroupées
     // dans un thème séparé. Ni leurs fichiers ni leurs identifiants ne changent.
     if(item?.systemProvided===true){
+      if(normalized(item.category)==='images supplementaires kaloneo')
+        return String(item.theme||'Illustrations générales');
       return normalized(item.category)==='images exercices seb evalpro'
         ?'Images V1':'Illustrations';
     }

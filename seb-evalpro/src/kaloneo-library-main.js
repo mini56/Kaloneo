@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const {extract,hydrate}=require('./kaloneo-v1-image-assets');
+const {loadSuppliedImages,publicMetadata}=require('./kaloneo-supplied-images');
 const zlib = require('zlib');
 const { exportImageRecords } = require('./kaloneo-image-export');
 
@@ -38,6 +39,8 @@ function createKaloneoLibrary(options = {}) {
   const dataRoot = String(options.dataRoot || '').trim();
   const seedTestsRoot = String(options.seedTestsRoot || '').trim();
   const seedMaskMediaRoot = String(options.seedMaskMediaRoot || '').trim();
+  const suppliedImages=loadSuppliedImages(String(options.suppliedImagesRoot||'').trim());
+  const suppliedById=new Map(suppliedImages.map(item=>[item.id,item]));
   const seedImageRoots = Array.isArray(options.seedImageRoots)
     ? options.seedImageRoots
       .map(item => typeof item === 'string'
@@ -393,8 +396,7 @@ function createKaloneoLibrary(options = {}) {
   function listImages() {
     // La bibliothèque est initialisée dès createKaloneoLibrary().
     // Ne pas réexécuter la synchronisation de toutes les V1 à chaque liste.
-    return scanImageRecords()
-      .map(toImageMetadata)
+    return [...scanImageRecords().map(toImageMetadata),...suppliedImages.map(publicMetadata)]
       .sort((a,b) => {
         if (a.systemProvided !== b.systemProvided) return a.systemProvided ? -1 : 1;
         const category = a.category.localeCompare(b.category, 'fr');
@@ -404,6 +406,18 @@ function createKaloneoLibrary(options = {}) {
   }
 
   function getImage(id) {
+    // Les 207 images livrées ne sont lues qu'au clic ou à l'affichage
+    // d'une vignette : aucun scan de 106 Mo au lancement.
+    const bundled=suppliedById.get(String(id||''));
+    if(bundled){
+      try{
+        const content=fs.readFileSync(bundled.absolute);
+        return {ok:true,image:{...publicMetadata(bundled),
+          data:'data:'+bundled.mime+';base64,'+content.toString('base64')}};
+      }catch(error){
+        return {ok:false,error:'Image fournie absente ou illisible : '+bundled.sourceName};
+      }
+    }
     // Chaque miniature doit être une lecture ciblée, pas une resynchronisation
     // du catalogue V1 + un parcours complet des dossiers d'images.
     const record = findImageRecord(id);
