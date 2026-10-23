@@ -371,7 +371,10 @@
 
   function syncPracticalCategory(categoryChanged=false) {
     const practical=$('test-category').value==='activite_pratique';
-    if(!state.sourceProtectedVersion)$('test-scored').value=practical?'false':'true';
+    // Sur une V1 chargée, ne pas modifier la notation historique.
+    // Sur changement explicite de catégorie, appliquer les règles communes :
+    // pratique = évaluation administrateur, autres = pourcentage automatique.
+    if(!state.sourceProtectedVersion||categoryChanged)$('test-scored').value=practical?'false':'true';
     else if(practical)$('test-scored').value='false';
     $('test-scored').disabled=true;
     // À l'ouverture d'une V1, préserver strictement ses liaisons historiques.
