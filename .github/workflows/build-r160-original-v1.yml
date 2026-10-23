@@ -77,11 +77,11 @@ jobs:
       - name: Checkout the original work branch only
         uses: actions/checkout@v4
       # Revalidate current Build #147 and the permanent Windows identity before production of installer.
-      - name: R160 Build 162 unique; R157 fallback, all V1 protected
+      - name: R160 Build 163 unique; R159 fallback, all V1 protected
         shell: pwsh
         run: |
           git fetch --depth=1 origin tag seb-kaloneo-r159-clean-five-tests-test
-          if($LASTEXITCODE -ne 0){throw 'R158 fallback missing'}
+          if($LASTEXITCODE -ne 0){throw 'R159 comparison reference missing'}
           $old=(git show 'seb-kaloneo-r159-clean-five-tests-test:seb-evalpro/package.json') -join [Environment]::NewLine | ConvertFrom-Json
           $pkg=Get-Content -Raw -Encoding UTF8 package.json | ConvertFrom-Json
           if([int]$old.sebBuildNumber -ne 162 -or $old.sebReleaseVersion -ne '0.0.186' -or [int]$pkg.sebBuildNumber -ne 163 -or $pkg.sebReleaseVersion -ne '0.0.187'){
@@ -358,7 +358,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag='seb-kaloneo-r160-original-v1-performance-test'
-          if(gh release view $tag 2>$null){throw 'Build 162 already published: no reuse'}
+          if(gh release view $tag 2>$null){throw 'Build 163 already published: no reuse'}
           $title='KALONÉO — R160 / Build #163 — Diagnostic sans cinq TESTS_V1'
           $notes=@"
           R160 / Build #163 / Version 0.0.187 — COMPARAISON WINDOWS.
@@ -372,4 +372,5 @@ jobs:
           - R159 / Build #162 / 0.0.186 conservée pour comparaison.
           SHA256: $env:SETUP_SHA256
           Commit: $env:GITHUB_SHA
-          "@          gh release create $tag "$env:SETUP_PATH" --target "$env:GITHUB_SHA" --title $title --notes $notes --prerelease
+          "@
+          gh release create $tag "$env:SETUP_PATH" --target "$env:GITHUB_SHA" --title $title --notes $notes --prerelease
