@@ -8,6 +8,7 @@ const fs=require('fs');
 const path=require('path');
 const cp=require('child_process');
 const crypto=require('crypto');
+const {extract}=require('../src/kaloneo-v1-image-assets');
 
 const VALID_ID=/^[a-z0-9][a-z0-9_-]{0,99}$/i;
 function readJson(file){return JSON.parse(fs.readFileSync(file,'utf8'));}
@@ -115,12 +116,14 @@ function loadOfficialOverrides(repoRoot, sourceTestsDir){
 
 function writeOfficialSeedOverrides({repoRoot,sourceTestsDir,outputTestsDir}){
   const {overrides}=loadOfficialOverrides(repoRoot,sourceTestsDir);
+  const assetsDir=path.join(path.dirname(outputTestsDir),'v1-assets');
   const manifest=[];
   for(const [id,record] of overrides){
     const target=path.join(outputTestsDir,record.relative);
     fs.mkdirSync(path.dirname(target),{recursive:true});
-    fs.writeFileSync(target,JSON.stringify(record.definition,null,2)+'\n','utf8');
-    manifest.push({id,version:'1.0.0',relative:record.relative.replace(/\\/g,'/'),sha256:record.sha256,isNew:record.isNew});
+    const converted=extract(record.definition,assetsDir);
+    fs.writeFileSync(target,JSON.stringify(converted.definition,null,2)+'\n','utf8');
+    manifest.push({id,version:'1.0.0',relative:record.relative.replace(/\\/g,'/'),sha256:record.sha256,isNew:record.isNew,images:converted.usages.length});
   }
   const manifestFile=path.join(path.dirname(outputTestsDir),'TESTS_V1-manifest.json');
   fs.mkdirSync(path.dirname(manifestFile),{recursive:true});

@@ -1,6 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {loadOfficialOverrides}=require('./kaloneo-testsv1');
+const {hydrate}=require('../src/kaloneo-v1-image-assets');
 const root=path.resolve(__dirname,'..'),repo=path.resolve(root,'..');
 const source=path.join(root,'source','kaltest','tests');
 const generated=path.join(root,'app','web','kaltest','tests');
@@ -15,11 +16,24 @@ for(const id of expected){
  const o=overrides.get(id);
  assert(o && o.definition.version==='1.0.0' && o.definition.kaltestFormat===1);
  assert(o.relative.endsWith('/1.0.0/test.json')||o.relative.includes('\\1.0.0\\test.json'));
- const data=JSON.parse(fs.readFileSync(path.join(generated,o.relative),'utf8'));
+ const light=JSON.parse(fs.readFileSync(path.join(generated,o.relative),'utf8'));
+ const assets=path.join(root,'app','web','kaltest','v1-assets');
+ assert(Buffer.byteLength(JSON.stringify(light))<100000,'V1 JSON should be lightweight');
+ const data=hydrate(light,assets);
+ const canonical=JSON.parse(JSON.stringify(o.definition));
+ function fixNames(x){
+   if(Array.isArray(x))return x.forEach(fixNames);
+   if(!x||typeof x!=='object')return;
+   if(x.resource&&typeof x.resource.name==='string'&&x.resource.name.startsWith('data:image/')){
+     x.resource.name=light.id; // normalise both sides for visual comparison
+   }
+   for(const v of Object.values(x))fixNames(v);
+ }
+ fixNames(data);fixNames(canonical);
  assert.equal(data.id,id);
  assert.equal(data.title,o.definition.title);
- assert.deepEqual(data.questions,o.definition.questions,'Do not alter questions or answers');
- assert.deepEqual(data.presentation,o.definition.presentation,'Do not alter visual template');
+ assert.deepEqual(data.questions,canonical.questions,'Do not alter questions or answers');
+ assert.deepEqual(data.presentation,canonical.presentation,'Do not alter visual template');
  const fields=new Set(data.outputs.map(x=>x.id));
  assert(fields.has('score')&&fields.has('score_max'),'Score must expose raw points');
  assert(Array.isArray(data.bilanContributions)&&data.bilanContributions.length===1);

@@ -1,6 +1,5 @@
 'use strict';
-// Banc d'essai : images originales en fichiers partagés, JSON légers.
-// Aucune modification des TESTS_V1 sources ni activation dans le Setup.
+// Stockage léger et portabilité des images du Builder dans la bibliothèque commune.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const MIME_EXT={'image/png':'png','image/jpeg':'jpg','image/webp':'webp','image/gif':'gif','image/svg+xml':'svg'};
 const EXT_MIME=Object.fromEntries(Object.entries(MIME_EXT).map(([mime,ext])=>[ext,mime]));
@@ -54,15 +53,17 @@ function extract(definition,assetsDir){
   });
   return {definition:converted,addedCount:added.size,usages:usage};
 }
-function hydrate(definition,assetsDir){
+function hydrate(definition,assetsDir,resolveFromLibrary=null){
   return mutate(definition,(value,p)=>{
     if(!value.startsWith('kaloneo-asset:'))return value;
     const m=value.match(REFERENCE);
     if(!m)throw new Error('Référence image malformée : '+p.join('.'));
     const [_,expected,extension]=m;
     const file=path.join(assetsDir,expected+'.'+extension);
-    if(!fs.existsSync(file))throw new Error('Image manquante dans la bibliothèque : '+expected);
-    const bytes=fs.readFileSync(file);
+    const bytes=fs.existsSync(file) ? fs.readFileSync(file) :
+      (typeof resolveFromLibrary==='function' ? resolveFromLibrary(expected,extension) : null);
+    if(!Buffer.isBuffer(bytes)||!bytes.length)
+      throw new Error('Image manquante dans la bibliothèque : '+expected);
     if(hash(bytes)!==expected)throw new Error('Image altérée dans la bibliothèque : '+expected);
     return 'data:'+EXT_MIME[extension]+';base64,'+bytes.toString('base64');
   });

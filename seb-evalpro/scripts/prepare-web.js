@@ -69,8 +69,8 @@ fs.copyFileSync(path.join(root,'src','kaloneo-mask-media.js'),path.join(outputDi
 // comme source historique, mais n'entre plus dans l'installateur Windows.
 copyTree(path.join(repoRoot,'video_ecran_mq'),path.join(outputDir,'mask-media-seed'),
   new Set(fs.readdirSync(path.join(repoRoot,'video_ecran_mq')).filter(name=>! /\.png$/i.test(name))));
-// R160 comparison: do not package the five main TESTS_V1 exports.
-// The source files on GitHub are untouched; R159 keeps its own frozen Setup.
+// Les cinq V1 sont à nouveau intégrées : JSON allégés et images en fichiers
+// partagés, sans modifier ni supprimer les cinq exports officiels GitHub.
 if(process.env.KALONEO_SKIP_OFFICIAL_V1 === '1'){
   const manifestFile=path.join(outputDir,'kaltest','TESTS_V1-manifest.json');
   fs.writeFileSync(manifestFile,JSON.stringify({

@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const {extract,hydrate}=require('./kaloneo-v1-image-assets');
 const zlib = require('zlib');
 const { exportImageRecords } = require('./kaloneo-image-export');
 
@@ -652,13 +653,46 @@ function createKaloneoLibrary(options = {}) {
       .map(item => ({ id:String(item.id || ''), name:String(item.name || item.id || '') }));
   }
 
+  // Les images de chaque test sont stockées dans Bibliotheque-images.
+  // On réhydrate uniquement la définition réellement demandée par le candidat,
+  // l'éditeur ou un export ; aucune image n'est dans les listes/metadata.
+  function hydrateLibraryDefinition(definition) {
+    return hydrate(definition,path.join(imagesRoot,'v1-assets'),(digest,extension)=>{
+      const id='img-'+digest.slice(0,32);
+      const record=findImageRecord(id);
+      if(!record)throw new Error('Image Builder absente de la bibliothèque : '+id);
+      return fs.readFileSync(record.binary);
+    });
+  }
+
+  function storeDefinitionImages(definition) {
+    const assetsDir=path.join(imagesRoot,'v1-assets');
+    const converted=extract(definition,assetsDir);
+    const done=new Set();
+    for(const ref of converted.usages){
+      if(done.has(ref.sha256))continue;
+      done.add(ref.sha256);
+      const ext=ref.mime==='image/jpeg'?'jpg':ref.mime==='image/svg+xml'?'svg':ref.mime.slice('image/'.length);
+      const file=path.join(assetsDir,ref.sha256+'.'+ext);
+      const result=storeImageBuffer(fs.readFileSync(file),{
+        name:'image-'+ref.sha256.slice(0,12)+'.'+ext,mime:ref.mime,
+        category:'Images tests Builder KALONÉO',systemProvided:false,
+        sourceName:'test.json'
+      });
+      if(!result.ok)throw new Error(result.error||'Échec enregistrement image Builder');
+      // Les vrais binaires sont maintenant dans la bibliothèque normale.
+      fs.unlinkSync(file);
+    }
+    return converted.definition;
+  }
+
   function getTest(id, version) {
     ensureSeed();
     const file = exactTestFile(id, version);
     if (!file) return { ok:false, error:'Test KALTEST introuvable.' };
     const definition = readJson(file);
     if (!definition) return { ok:false, error:'Test KALTEST illisible.' };
-    return { ok:true, definition };
+    return { ok:true, definition:hydrateLibraryDefinition(definition) };
   }
 
   function saveTest(definition, options = {}) {
@@ -715,7 +749,8 @@ function createKaloneoLibrary(options = {}) {
       draft[v1DraftKey(value)]={seedHash:sha256(JSON.stringify(seed)),savedAt:now().toISOString()};
       atomicWriteJson(developerV1DraftsFile,draft);
     }
-    atomicWriteJson(target, value);
+    const compact=storeDefinitionImages(value);
+    atomicWriteJson(target, compact);
     const record = { definition:value, file:target };
     return { ok:true, replaced:Boolean(existing), test:toTestMetadata(record) };
   }
@@ -1386,7 +1421,7 @@ function createKaloneoLibrary(options = {}) {
     if (role !== expectedRole) {
       throw new Error('Type de page invalide pour ' + id + ' : ' + role + ' au lieu de ' + expectedRole + '.');
     }
-    return definition;
+    return hydrateLibraryDefinition(definition);
   }
 
   function resolveMaskRef(ref) {

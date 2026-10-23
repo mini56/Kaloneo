@@ -265,6 +265,7 @@ function getKaloneoLibrary() {
       seedTestsRoot: path.join(__dirname, '..', 'app', 'web', 'kaltest', 'tests'),
       seedMaskMediaRoot: path.join(__dirname, '..', 'app', 'web', 'mask-media-seed'),
       seedImageRoots:[
+        { root:path.join(__dirname, '..', 'app', 'web', 'kaltest', 'v1-assets'), category:'Images tests Builder KALONÉO' },
         { root:path.join(__dirname, '..', 'app', 'web', 'imageqcm'), category:'Images exercices KALONÉO' },
         { root:path.join(__dirname, '..', 'app', 'web', 'flacon'), category:'Images Stock' },
         { root:path.join(__dirname, '..', 'app', 'web', 'assets'), category:'Images KALONÉO' }
