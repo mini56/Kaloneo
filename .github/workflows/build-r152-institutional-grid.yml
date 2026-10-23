@@ -32,6 +32,7 @@ permissions:
   contents: write
 jobs:
   windows-installer-migration:
+    if: ${{ github.sha == 'c0acb65910e60d85c974432482ad1d773e249362' }}
     # Nouveau Build #155. La release R152 reste figée et disponible comme secours.
     runs-on: windows-latest
     timeout-minutes: 60
