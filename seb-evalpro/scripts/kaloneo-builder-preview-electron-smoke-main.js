@@ -1570,13 +1570,27 @@ app.whenReady().then(async()=>{
           secondBackground:nodes[1]?getComputedStyle(nodes[1]).backgroundColor:''
         };
       })();
+      // V1 réelle : la régression de deux liaisons ne doit pas revenir,
+      // même si l'ancien bouton reçoit un clic artificiel.
+      const hiddenLegacy=(()=>{
+        const ids=['toggle-contract-section','contract-section-content',
+          'outputs-editor','bilan-editor','add-output','add-bilan-contribution'];
+        const invisible=()=>ids.every(id=>document.getElementById(id)?.getClientRects().length===0);
+        const initiallyHidden=invisible();
+        document.getElementById('toggle-contract-section')?.click();
+        const afterClickHidden=invisible();
+        return {initiallyHidden,afterClickHidden,
+          inert:document.getElementById('contract-section-content')?.inert===true,
+          singlePicker:document.getElementById('bilan-simple-line')?.getClientRects().length>0};
+      })();
       const before={
         ok:true,
         version:version?.value||'',
         versionReadOnly:!!version?.readOnly,
         saveLabel:String(save?.textContent||'').trim(),
         saveTitle:String(save?.title||''),
-        title:document.getElementById('test-title')?.value||''
+        title:document.getElementById('test-title')?.value||'',
+        hiddenLegacy
       };
       const scenario=document.getElementById('test-scenario');
       scenario.value=String(scenario.value||'')+' — modification smoke';
@@ -1608,6 +1622,10 @@ app.whenReady().then(async()=>{
     if(!protectedV1.ok||
        protectedV1.before.version!=='1.0.0'||
        !protectedV1.before.versionReadOnly||
+       !protectedV1.before.hiddenLegacy?.initiallyHidden||
+       !protectedV1.before.hiddenLegacy?.afterClickHidden||
+       !protectedV1.before.hiddenLegacy?.inert||
+       !protectedV1.before.hiddenLegacy?.singlePicker||
        protectedV1.before.saveLabel!=='Enregistrer V1'||
        !/copie de sécurité/i.test(protectedV1.before.saveTitle)||
        protectedV1.after.version!=='1.0.0'||
