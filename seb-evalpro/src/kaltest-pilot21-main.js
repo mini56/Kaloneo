@@ -11,8 +11,13 @@ try {
   app.setName(APP_NAME);
   const appData = app.getPath('appData');
   const isolatedRoot = path.join(appData, 'KALONEO');
+  const documentsRoot = path.join(isolatedRoot, 'Documents');
+  // Electron requires setPath() destinations to exist. Without creation,
+  // the catch below would silently fall back to the internal package name,
+  // recreating an unwanted seb-evalpro profile on a genuinely clean PC.
+  require('node:fs').mkdirSync(documentsRoot,{recursive:true});
   app.setPath('userData', isolatedRoot);
-  app.setPath('documents', path.join(isolatedRoot, 'Documents'));
+  app.setPath('documents', documentsRoot);
 } catch (_) {}
 
 require('./main');
