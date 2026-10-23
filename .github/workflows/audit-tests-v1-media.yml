@@ -7,6 +7,10 @@ on:
       - 'seb-evalpro/scripts/audit-tests-v1-media.js'
       - 'seb-evalpro/scripts/proof-tests-v1-external-images.js'
       - 'seb-evalpro/src/kaloneo-v1-image-assets.js'
+      - 'seb-evalpro/scripts/test-integrator-preservation-guard.js'
+      - 'seb-evalpro/scripts/kaloneo-testsv1.js'
+      - 'seb-evalpro/scripts/prepare-web.js'
+      - 'seb-evalpro/src/kaloneo-library-main.js'
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,6 +23,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Protéger le code de l'intégrateur pour tous les prochains Builds
+        run: node seb-evalpro/scripts/test-integrator-preservation-guard.js
       - name: Inspecter les cinq JSON sans en modifier le contenu
         run: node seb-evalpro/scripts/audit-tests-v1-media.js
       - name: Vérifier JSON légers et images partagées sans changer les V1
