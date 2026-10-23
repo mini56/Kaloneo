@@ -369,13 +369,16 @@
     syncCapabilityOptions();
   }
 
-  function syncPracticalCategory() {
+  function syncPracticalCategory(categoryChanged=false) {
     const practical=$('test-category').value==='activite_pratique';
     if(!state.sourceProtectedVersion)$('test-scored').value=practical?'false':'true';
     else if(practical)$('test-scored').value='false';
     $('test-scored').disabled=true;
-    // Une catégorie ne peut jamais conserver la ligne d'un autre domaine.
-    if(!state.sourceProtectedVersion && state.bilanContributions.length){
+    // À l'ouverture d'une V1, préserver strictement ses liaisons historiques.
+    // MAIS si l'administrateur change explicitement la catégorie, effacer
+    // uniquement les liaisons devenues incompatibles : le nouvel emplacement
+    // institutionnel doit pouvoir être choisi et enregistré avec copie V1.
+    if((!state.sourceProtectedVersion||categoryChanged) && state.bilanContributions.length){
       const link=state.bilanContributions[0];
       const line=contractLine(link?.lineId);
       if(!line||!window.KaloneoSimpleBilanLink?.allowed($('test-category').value,line))
@@ -2295,15 +2298,18 @@
     }
     if(selected&&options.some(line=>line.id===selected))control.value=selected;
     else control.value='';
-    control.disabled=options.length===0||state.sourceProtectedVersion===true;
+    // « V1 protégée » impose sauvegarde + copie de sécurité, pas un menu grisé.
+    // Les mêmes 18 lignes officielles sont disponibles pour V1 et tests inédits.
+    control.disabled=options.length===0;
     if(help){
-      if(state.sourceProtectedVersion)help.textContent='Test V1 protégé : liaison historique conservée, aucune modification.';
-      else if(control.value){
+      if(control.value){
         const line=contractLine(control.value);
         help.textContent=line?.mode==='manual'
           ?'Activité pratique : cette ligne sera évaluée exclusivement par l’administrateur dans le pré-bilan.'
           :'La note sera calculée automatiquement : bonnes réponses ÷ réponses possibles × 100. La même ligne servira aux bilans individuel et général.';
-      }else help.textContent='Sélection obligatoire : sans cette liaison, ce nouveau test ne peut pas être enregistré.';
+      }else help.textContent=state.sourceProtectedVersion
+        ?'V1 : sélectionnez une ligne officielle compatible. La V1 ne sera modifiée que lors de « Enregistrer V1 », avec copie de sécurité.'
+        :'Sélection obligatoire : sans cette liaison, ce nouveau test ne peut pas être enregistré.';
     }
   }
   function installSimpleBilanLink(){
@@ -4087,7 +4093,7 @@
           $('custom-sizing-row').hidden=field.value!=='chars-rest';
           renderBlocks();
         }else{
-          if(id==='test-category')syncPracticalCategory();
+          if(id==='test-category')syncPracticalCategory(true);
           if(['calculator-compatible','chrono-enabled','admin-intervention','external-material'].includes(id))syncCapabilityOptions();
           if(id==='page-background-type')syncPageBackgroundOptions();
         }
