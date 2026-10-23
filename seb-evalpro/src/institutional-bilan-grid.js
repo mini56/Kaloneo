@@ -214,7 +214,7 @@ function aggregateInstitutionalRows(evaluations){
   // La formule choisit une phrase institutionnelle existante pour la note
   // consolidée. Les commentaires manuels proviennent du dernier pré-bilan.
   const comment=level==='NE'?'':line.mode==='manual'
-    ?(manualComment||definition.comments[level]||'')
+    ?manualComment
     :(definition.comments[level]||'');
   const display=percent===null?'':fmt(percent);
   const detail=percent===null?manualDetail:(display+' de réponses correctes.');
