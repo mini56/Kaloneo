@@ -11,7 +11,7 @@ assert.equal(cfgFiles.length,1,'Version-specific installer config missing');
 const cfg=fs.readFileSync(path.join(root,'build',cfgFiles[0]),'utf8');
 assert.equal(pkg.build.nsis.deleteAppDataOnUninstall,true);
 assert.match(cfg,/deleteAppDataOnUninstall: true/);
-const uninstall=nsis.match(/!macro customUnInstall\n([\s\S]*?)\n!macroend/);
+const uninstall=nsis.match(/!macro customUnInstall\r?\n([\s\S]*?)\r?\n!macroend/);
 assert(uninstall,'KALONEO NSIS uninstall hook is missing');
 assert.match(uninstall[1],/\$\{IfNot\} \$\{isUpdated\}/,'An upgrade must NEVER delete user data');
 assert.match(uninstall[1],/RMDir \/r "\$APPDATA\\KALONEO"/);
