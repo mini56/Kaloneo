@@ -389,4 +389,5 @@ jobs:
           - Contrôles Windows réels : cinq V1, écran candidat à 1366x768 et 1200x800, bilan, Word, sécurité, installateur et désinstallation.
           SHA256: $env:SETUP_SHA256
           Commit: $env:GITHUB_SHA
-          "@          gh release create $tag "$env:SETUP_PATH" --target "$env:GITHUB_SHA" --title $title --notes $notes --prerelease
+          "@
+          gh release create $tag "$env:SETUP_PATH" --target "$env:GITHUB_SHA" --title $title --notes $notes --prerelease
