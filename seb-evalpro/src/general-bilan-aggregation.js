@@ -14,7 +14,9 @@ const LABELS=Object.freeze({
   techniques:'Compétences techniques',raisonnement:'Raisonnement',
   tic:'Outils numériques',numerique:'Outils numériques',
   bureautique:'Outils numériques',communication:'Communication',
-  autoevaluation:'Autoévaluation',autres:'Autres'
+  autoevaluation:'Autoévaluation',
+  'competences transversales':'Compétences transversales',
+  autres:'Autres'
 });
 function clean(v){return String(v==null?'':v).replace(/\s+/g,' ').trim()}
 function norm(v){return clean(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[_-]/g,' ').replace(/\s+/g,' ').trim()}
