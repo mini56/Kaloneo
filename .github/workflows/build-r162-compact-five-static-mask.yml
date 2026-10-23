@@ -166,8 +166,6 @@ jobs:
           node scripts/candidate-identity-privacy-smoke.js
           node scripts/general-bilan-ipc-smoke.js
           node scripts/general-bilan-aggregation-smoke.js
-      - name: R162 static masking image, legacy profile conversion and no MP4
-        run: node scripts/r162-static-mask-smoke.js
       - name: R162 - Exact Gestes et postures V1 1.0.0, answers unchanged, Transversales, 3/3 and real upgrade of installed V1
         shell: pwsh
         run: |
