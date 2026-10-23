@@ -16,35 +16,48 @@ $exe=Join-Path $target 'KALONEO.exe'
 if(-not(Test-Path $exe -PathType Leaf)){throw "KALONEO.exe not installed at clean path: $exe"}
 if(Test-Path $legacy){throw "Old SEB install folder created by fresh installation"}
 if(Test-Path $recovery){throw "Fresh installation incorrectly recovered legacy profile"}
-# electron-builder NSIS registers the effective installation folder directly
-# under HKCU:\Software (not reliably as InstallLocation on the Uninstall key).
-# Verify the REAL path and current application identifier, never the old name.
-$installed=@(Get-ChildItem 'HKCU:\Software' -ErrorAction Stop | ForEach-Object {
-  try {
-    $entry=Get-ItemProperty -Path $_.PSPath -Name InstallLocation -ErrorAction Stop
-    if([string]$entry.InstallLocation -and
-       [string]::Equals(([string]$entry.InstallLocation).TrimEnd('\'),$target.TrimEnd('\'),
-         [StringComparison]::OrdinalIgnoreCase)){
-      $entry
+# NSIS registers the application under the Windows Uninstall registry key.
+# InstallLocation under HKCU:\Software is OPTIONAL and must never be the
+# only way to recognize a clean, valid KALONÉO installation.
+$uninstallRoots=@(
+  'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall',
+  'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall',
+  'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
+)
+$registered=@(foreach($root in $uninstallRoots){
+  if(-not(Test-Path $root)){continue}
+  foreach($key in (Get-ChildItem $root -ErrorAction Stop)){
+    $info=Get-ItemProperty $key.PSPath -ErrorAction SilentlyContinue
+    if($null -eq $info){continue}
+    if([string]$info.DisplayName -match 'KALON[EÉ]O'){
+      [pscustomobject]@{
+        RegistryPath=$key.Name
+        Id=$key.PSChildName
+        DisplayName=[string]$info.DisplayName
+        InstallLocation=[string]$info.InstallLocation
+        UninstallString=[string]$info.UninstallString
+      }
     }
-  }catch{}
+  }
 })
-if($installed.Count -ne 1){
-  throw "Expected one KALONEO InstallLocation in HKCU Software, found $($installed.Count)"
+if($registered.Count -ne 1){
+  Write-Host "R159_REGISTRY_DIAGNOSTIC=$($registered | ConvertTo-Json -Compress -Depth 5)"
+  throw "Expected one clean KALONÉO uninstall registration, found $($registered.Count)"
 }
-$details=$installed[0]
-if($details.PSChildName -match 'sebevalpro|seb-evalpro|pilot22'){
+$details=$registered[0]
+if($details.Id -match 'sebevalpro|seb-evalpro|pilot22' -or
+   $details.RegistryPath -match 'sebevalpro|seb-evalpro|pilot22'){
   throw 'Legacy SEB Windows application ID was reused'
 }
-Write-Host "KALONEO_R159_REGISTRY=OK — identity=$($details.PSChildName) location=$($details.InstallLocation)"
-# The uninstall display name can be accented/versioned. It is not a reliable
-# lookup key for the installed directory, unlike InstallLocation above.
-$uninstallKeys=@(Get-ChildItem 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall' -ErrorAction SilentlyContinue)
-$registered=@($uninstallKeys | Where-Object {
-  $info=Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue
-  ($info.DisplayName -match 'KALON[EÉ]O' -or $info.UninstallString -match 'KALON[EÉ]O')
-})
-Write-Host "KALONEO_R159_UNINSTALL_REGISTRY_ENTRIES=$($registered.Count)"
+if($details.InstallLocation -and
+   -not [string]::Equals($details.InstallLocation.TrimEnd('\'),$target.TrimEnd('\'),
+     [StringComparison]::OrdinalIgnoreCase)){
+  throw "KALONÉO registry InstallLocation points outside fresh directory: $($details.InstallLocation)"
+}
+if(-not $details.UninstallString -or $details.UninstallString -notmatch 'KALON[EÉ]O'){
+  throw "Unexpected or missing KALONÉO uninstall command: $($details.UninstallString)"
+}
+Write-Host "KALONEO_R159_REGISTRY=OK — identity=$($details.Id) name=$($details.DisplayName) location=$target"
 $shortcut=Join-Path ([Environment]::GetFolderPath('Desktop')) 'KALONÉO.lnk'
 if(-not(Test-Path $shortcut)){throw "New KALONÉO desktop shortcut absent"}
 $uninstaller=Get-ChildItem $target -File -Filter '*Uninstall*.exe' | Select-Object -First 1
