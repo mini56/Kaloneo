@@ -1,7 +1,7 @@
 'use strict';
-/* Modèle institutionnel figé — exactement 17 lignes et 3 sections.
+/* Modèle institutionnel figé — exactement 18 lignes et 3 sections.
  * Les libellés sont copiés du tableau historique admin-bilan.html.
- * Aucun test, catégorie ou parcours ne peut en ajouter.
+ * Seule la 18e ligne transversale est un ajout officiel, partagé par tous les bilans.
  */
 const OFFICIAL=Object.freeze([
   {
@@ -117,6 +117,12 @@ const OFFICIAL=Object.freeze([
     "key": "math-problemes",
     "label": "Capacité à résoudre des problèmes en lien avec le domaine professionnel, d’autres disciplines ou la vie courante",
     "mode": "automatic"
+  },
+  {
+    "kind": "row",
+    "key": "competences-transversales",
+    "label": "Compétences transversales — Capacité à mobiliser des connaissances et des compétences dans différentes situations de travail ou de la vie quotidienne.",
+    "mode": "automatic"
   }
 ]);
 
@@ -166,7 +172,7 @@ function officialRowDefinitions(){
  }
  const expected=OFFICIAL.filter(x=>x.kind==='row').map(x=>x.key);
  if(rows.size!==expected.length||expected.some(key=>!rows.has(key)))
-  throw new Error('Le tableau institutionnel ne contient pas exactement les 17 lignes officielles.');
+  throw new Error('Le tableau institutionnel ne contient pas exactement les 18 lignes officielles.');
  officialHtmlRows=rows;
  return rows;
 }
