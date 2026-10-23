@@ -72,7 +72,6 @@ permissions:
 jobs:
   windows-installer-migration:
     # R162 was released at this commit: no republishing Build #165 on the moving branch.
-    if: github.sha == 'ee3cfa2ad84978d14b8a8dbbdf2925d4e1474f77'
     env:
       KALONEO_SKIP_OFFICIAL_V1: '0'
     # R162 / Build #165 unique, publication uniquement après les validations complètes.
