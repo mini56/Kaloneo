@@ -30,6 +30,7 @@ const preview=files('../kaloneo/test-preview.js');
 for(const marker of ['builder-exercise-context-fields','builder-preview-context','builder-preview-heading','builder-block-heading'])assert(html.includes(marker));
 assert(builder.includes('syncPresentationMode(specialPage)'));
 assert(candidate.includes('seb-kaltest-builder-presentation'));
+assert(candidate.includes("testIcon.src='kaloneo-builder/icons-tests/'"),'Fallback icône candidat absent');
 assert(candidate.includes('puis validez votre saisie avec la touche ENTRÉE'));
 assert(candidate.includes("if(customBuilderPage)return true;"));
 assert(preview.includes("if(!presentation){contexts.append"));
@@ -42,7 +43,9 @@ try{
   for(const t of tests){
     assert(t.icon?.data?.startsWith('data:image/'),t.id+' : icône absente du catalogue');
     const fetched=lib.getTest(t.id,t.version);
-    assert(fetched.ok&&fetched.definition.icon?.data?.startsWith('data:image/'),t.id+' : icône absente du candidat');
+    assert(fetched.ok,t.id+' : V1 introuvable');
+    const displayed=icons.iconForDefinition(fetched.definition);
+    assert(displayed?.data?.startsWith('data:image/'),t.id+' : aucune icône candidate disponible');
   }
   const seed=path.join(root,'source','kaltest','tests','tri-chevilles','1.0.0','test.json');
   const original=JSON.parse(fs.readFileSync(seed,'utf8'));

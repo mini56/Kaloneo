@@ -672,15 +672,12 @@ function createKaloneoLibrary(options = {}) {
   // On réhydrate uniquement la définition réellement demandée par le candidat,
   // l'éditeur ou un export ; aucune image n'est dans les listes/metadata.
   function hydrateLibraryDefinition(definition) {
-    const hydrated=hydrate(definition,path.join(imagesRoot,'v1-assets'),(digest,extension)=>{
+    return hydrate(definition,path.join(imagesRoot,'v1-assets'),(digest,extension)=>{
       const id='img-'+digest.slice(0,32);
       const record=findImageRecord(id);
       if(!record)throw new Error('Image Builder absente de la bibliothèque : '+id);
       return fs.readFileSync(record.binary);
     });
-    const icon=iconForDefinition(hydrated);
-    if(icon && !hydrated.icon?.data)hydrated.icon=icon;
-    return hydrated;
   }
 
   function storeDefinitionImages(definition) {

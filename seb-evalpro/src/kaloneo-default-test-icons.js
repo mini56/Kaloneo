@@ -45,7 +45,7 @@ const folders=[
   path.resolve(__dirname,'..','..','kaloneo','icons-tests')
 ];
 function iconForDefinition(definition){
-  if(definition?.icon?.data)return definition.icon;
+  if(typeof definition?.icon?.data==='string' && /^data:image\//i.test(definition.icon.data))return definition.icon;
   const name=byId[String(definition?.id||'')]||byCategory[String(definition?.category||'')]||'test_organisation_etapes';
   if(cache.has(name))return cache.get(name);
   const file=folders.map(folder=>path.join(folder,name+'.png')).find(fs.existsSync);

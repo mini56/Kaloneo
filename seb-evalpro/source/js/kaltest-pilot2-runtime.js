@@ -3882,6 +3882,16 @@
       testIcon.onerror = () => { testIcon.hidden = true; testIcon.removeAttribute('src'); };
       testIcon.src = iconData;
       testIcon.hidden = false;
+    } else {
+      // Icône d'affichage de la bibliothèque commune : ne modifie jamais la V1
+      // ni les définitions exportées/importées des parcours.
+      const builtinById={"autoevaluation_savoirs":"test_autoevaluation_progression","autoevaluation_tic":"test_autoevaluation_progression","calculs_commandes_atelier":"test_calculs_arithmetiques","calculs_poids_volumes":"test_poids_volumes","construction_briques":"test_montage_briques","conversions_atelier_expedition":"test_conversion_mesures","dictee_professionnelle":"test_dictee_orthographe","fin_parcours":"test_autoevaluation_progression","fractions_preparation_lots":"test_fractions_proportions","genre_nombre":"test_redaction_ecrite","gestes_postures":"test_securite_chantier","gratte_ciel":"test_construction_gratte_ciel","horaires_reception_controle":"test_planning_horaires","introduction_parcours_base":"test_lecture_comprehension","organisation_demenagement":"test_organisation_demenagement","paronymes_rapport":"test_lecture_comprehension","planning_cantine":"test_planning_cantine","ranger_stock":"test_stock_inventaire","redaction_email":"test_message_email","structure_3d_papier":"test_structure_papier","texte_a_trous_stage_logistique":"test_texte_a_trous","traitement_texte_bureautique":"test_traitement_texte","transition_video_f1":"test_ecoute_audio","tri_chevilles":"test_tri_chevilles"};
+      const builtinByCategory={"mathematiques":"test_calculs_arithmetiques","francais":"test_lecture_comprehension","expression_ecrite":"test_redaction_ecrite","tic":"test_traitement_texte","numerique":"test_traitement_texte","organisation":"test_organisation_etapes","planification":"test_organisation_planning","technique":"test_securite_chantier","activite_pratique":"test_structure_papier","competences_transversales":"test_securite_chantier","autoevaluation":"test_autoevaluation_progression","raisonnement":"test_puzzle_logique","introduction":"test_lecture_comprehension","fin":"test_autoevaluation_progression","systeme":"test_autoevaluation_progression","transition":"test_ecoute_audio"};
+      const builtin=builtinById[test.id]||builtinByCategory[test.category]||'test_organisation_etapes';
+      testIcon.alt='';
+      testIcon.onerror=()=>{testIcon.hidden=true;testIcon.removeAttribute('src');};
+      testIcon.src='kaloneo-builder/icons-tests/'+builtin+'.png';
+      testIcon.hidden=false;
     }
     document.getElementById('kaltest-progress').textContent =
       'Exercice ' + (state.testIndex + 1) + ' / ' + ACTIVE_TESTS.length;
