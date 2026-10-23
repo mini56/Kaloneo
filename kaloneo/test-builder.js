@@ -908,21 +908,61 @@
   // la liste dans une zone défilante. showPicker() la sollicite explicitement
   // dans le geste utilisateur ; si la fonction n'est pas supportée, la
   // commande native reprend normalement (aucune option / donnée modifiée).
+  // R157.1 — Une miniature Electron utilise une AUTRE fenêtre native Windows
+  // (cachée) et peut être créée/détruite pendant l'ouverture d'un <select>.
+  // Ne jamais déclencher cette opération tant que le menu natif est manipulé.
+  // L'état est libéré par change / focusout / clic extérieur / retour fenêtre.
+  let builderSelectInteracting=false;
+  let miniPreviewWaitingForSelect=false;
+  function releaseBuilderSelect() {
+    if(!builderSelectInteracting)return;
+    builderSelectInteracting=false;
+    if(miniPreviewWaitingForSelect){
+      miniPreviewWaitingForSelect=false;
+      scheduleMiniPreviewCapture();
+    }
+  }
   function installNativeSelectPickers() {
     document.addEventListener('pointerdown',event=>{
       if(event.button!==0||event.pointerType==='touch')return;
       const control=event.target?.closest?.('select');
       if(!control || !control.closest('.builder-editor,.builder-preview,.modal,.test-library-dialog,.image-library-dialog') ||
-         control.disabled || control.options.length<2 ||
-         typeof control.showPicker!=='function')return;
+         control.disabled || control.options.length<2){
+        releaseBuilderSelect();
+        return;
+      }
+      builderSelectInteracting=true;
+      // Le menu n'est pas un changement de test : ne pas effacer la miniature.
+      if(miniPreviewTimer){clearTimeout(miniPreviewTimer);miniPreviewTimer=null;miniPreviewWaitingForSelect=true;}
+      if(typeof control.showPicker!=='function')return;
       try{
         control.showPicker();
-        event.preventDefault(); // Ne pas lancer un second popup au clic natif.
+        event.preventDefault(); // Un seul popup, sans double clic Electron.
       }catch(_){
-        // Certains Windows/Electron interdisent showPicker. Le clic natif
-        // reste intact et la sélection au clavier demeure disponible.
+        // Fallback natif sans bloquer le clic et le clavier.
       }
     },{capture:true});
+    document.addEventListener('change',event=>{
+      if(event.target?.matches?.('select'))setTimeout(releaseBuilderSelect,0);
+    },{capture:true});
+    document.addEventListener('focusout',event=>{
+      if(event.target?.matches?.('select'))setTimeout(releaseBuilderSelect,0);
+    },{capture:true});
+    document.addEventListener('keydown',event=>{
+      if(builderSelectInteracting&&['Escape','Tab','Enter'].includes(event.key))
+        setTimeout(releaseBuilderSelect,0);
+    },{capture:true});
+    window.addEventListener('blur',()=>{
+      // Un changement Firefox <-> KALONÉO ne doit pas bloquer l'aperçu.
+      builderSelectInteracting=false;
+      if(miniPreviewTimer){clearTimeout(miniPreviewTimer);miniPreviewTimer=null;miniPreviewWaitingForSelect=true;}
+    });
+    window.addEventListener('focus',()=>{
+      if(miniPreviewWaitingForSelect){
+        miniPreviewWaitingForSelect=false;
+        scheduleMiniPreviewCapture();
+      }
+    });
   }
 
   function selectField(label,value,values,onChange) {
@@ -3017,11 +3057,19 @@
 
   function scheduleMiniPreviewCapture(delay=MINI_PREVIEW_IDLE_MS) {
     if(Supplementary?.isEditing())return;
+    if(builderSelectInteracting){
+      miniPreviewWaitingForSelect=true;
+      return;
+    }
     if(miniPreviewTimer)clearTimeout(miniPreviewTimer);
     miniPreviewTimer=setTimeout(async()=>{
       miniPreviewTimer=null;
       const revision=miniPreviewRevision;
       if(Supplementary?.isEditing())return;
+      if(builderSelectInteracting){
+        miniPreviewWaitingForSelect=true;
+        return;
+      }
       if(miniPreviewRunning) {
         // Une capture est déjà en cours : garder seulement la dernière demande.
         miniPreviewDeferredRevision=revision;
