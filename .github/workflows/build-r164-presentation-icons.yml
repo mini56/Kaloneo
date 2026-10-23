@@ -400,12 +400,15 @@ jobs:
         run: |
           $tag='seb-kaloneo-r164-presentation-icons-test'
           if(gh release view $tag 2>$null){throw 'Build 167 already published: no reuse'}
-          $title='KALONÉO — R164 / Build #167 — Pages de présentation, icônes et détails d'installation'
+          $title="KALONÉO — R164 / Build #167 — Pages de présentation, icônes et détails d'installation"
           $notes=@"
           KALONÉO R164 / Build #167 / 0.0.191 — Vérifications et essai Windows.
           - 207 illustrations originales fournies avec le logiciel, 9 thèmes, images chargées à la demande sans duplication dans AppData.
           - Bibliothèque d'images accessible en haut du Builder et classement des séries de stage, objets, bandeaux et horaires.
-          - Introduction de parcours et Fin de parcours créables dans le Builder, sans notation ni ligne du bilan.
+          - Pages Introduction et Fin libres : pas de scénario ni consigne ni notation, bouton Suivant dans la barre.
+          - Icônes adaptées à tous les tests, provenant de la bibliothèque d'icônes ; aucune modification des V1.
+          - Tri de chevilles : consigne de validation de la saisie des erreurs avec la touche ENTRÉE.
+          - Installateur NSIS : opérations détaillées visibles durant l'installation.
           - Parcours de base : nom du créateur KALONÉO, ancienne mention SEB EvalPro remplacée.
           - Les cinq V1 officielles, 13 images partagées et intégrateur de tests R162 sont conservés.
           - Masquage : image fixe, sans lecture de vidéo.
