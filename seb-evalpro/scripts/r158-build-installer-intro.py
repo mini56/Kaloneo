@@ -7,8 +7,10 @@ unchanged, and there is no transcoding or ffmpeg dependency on candidate PCs.
 """
 from pathlib import Path
 import math
+import re
 import shutil
 import subprocess
+from imageio_ffmpeg import get_ffmpeg_exe
 
 ROOT = Path(__file__).resolve().parents[1]
 VIDEO = ROOT.parent / "video_ecran_mq" / "Chameleon_walking_laptop_53805_Seedance_20_Mini.mp4"
@@ -16,12 +18,21 @@ OUT = ROOT / "build" / "pilot-resources" / "intro-frames"
 FPS = 8
 MAX_DURATION = 30.0
 assert VIDEO.is_file() and VIDEO.stat().st_size > 10_000, f"Original video missing: {VIDEO}"
+# A pinned Python wheel bundles a self-contained FFmpeg executable on the
+# Windows CI runner. It avoids third-party GitHub "latest FFmpeg" rate limits
+# and ships NO video player to installed KALONÉO.
+ffmpeg_bin = get_ffmpeg_exe()
+assert Path(ffmpeg_bin).is_file(), "Bundled FFmpeg executable unavailable"
 probe = subprocess.run(
-    ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-     "-of", "default=noprint_wrappers=1:nokey=1", str(VIDEO)],
-    capture_output=True, text=True, check=True,
+    [ffmpeg_bin, "-hide_banner", "-i", str(VIDEO)],
+    capture_output=True, text=True, errors="replace",
 )
-duration = float(probe.stdout.strip())
+duration_match = re.search(
+    r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", probe.stderr
+)
+assert duration_match, f"Cannot read original chameleon duration: {probe.stderr[-1200:]}"
+hours, minutes, seconds = duration_match.groups()
+duration = float(hours) * 3600 + float(minutes) * 60 + float(seconds)
 assert math.isfinite(duration) and 0.5 <= duration <= MAX_DURATION, (
     f"Unreasonable video duration {duration}s; inspect before publishing"
 )
@@ -33,7 +44,7 @@ filter_graph = (
     "pad=450:228:(ow-iw)/2:(oh-ih)/2:color=white"
 )
 subprocess.run(
-    ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+    [ffmpeg_bin, "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
      "-i", str(VIDEO), "-an", "-vf", filter_graph,
      "-pix_fmt", "bgr24", "-c:v", "bmp", str(OUT / "frame_%d.bmp")],
     check=True,
