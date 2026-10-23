@@ -15,7 +15,7 @@ assert.match(build,/uninstallerIcon: build\/pilot-resources\/kaloneo\.ico/);
 assert.match(build,/appId: fr\.sauvegarde56\.kaloneo/);
 const pilot=rd('src/kaltest-pilot21-main.js');
 assert.match(pilot,/APP_NAME = 'KALONÉO'/);
-assert.match(pilot,/SEB EvalPro Kaloneo PILOTE 21/,'Preserve historic userData location');
+assert.match(pilot,/path.join\(appData, 'KALONEO'\)/,'Use a new KALONEO userData directory');
 const nsh=rd('build/installer.nsh');
 assert.match(nsh,/SEB_BUILD_NUMBER "162"/);
 assert.match(nsh,/KALONÉO — \$\{SEB_BUILD_LABEL\}/);
