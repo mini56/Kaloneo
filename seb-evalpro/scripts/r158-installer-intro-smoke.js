@@ -1,0 +1,42 @@
+'use strict';
+// Strict Windows installer intro audit; no custom video player on candidate PC.
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const logo=path.join(root,'build','pilot-resources','installerBranding.bmp');
+const framesDir=path.join(root,'build','pilot-resources','intro-frames');
+const header=fs.readFileSync(path.join(framesDir,'intro-meta.nsh'),'utf8');
+const nsis=fs.readFileSync(path.join(root,'build','installer.nsh'),'utf8');
+const video=path.join(root,'..','video_ecran_mq','Chameleon_walking_laptop_53805_Seedance_20_Mini.mp4');
+assert(fs.existsSync(video),'Do not substitute another video');
+assert(fs.statSync(video).size>10000);
+assert(fs.existsSync(logo),'Official original static logo required as fallback');
+const frameCount=Number(header.match(/!define KALONEO_INTRO_FRAME_COUNT (\d+)/)?.[1]);
+const frameMs=Number(header.match(/!define KALONEO_INTRO_FRAME_MS (\d+)/)?.[1]);
+assert(frameCount>=4&&frameCount<=240);assert(frameMs>=80&&frameMs<=250);
+assert(nsis.includes('!include "${BUILD_RESOURCES_DIR}\\intro-frames\\intro-meta.nsh"'));
+assert(nsis.includes('File "${BUILD_RESOURCES_DIR}\\intro-frames\\frame_*.bmp"'));
+assert(nsis.includes('EnableWindow $SebIntroNextButton 0'));
+assert(nsis.includes('EnableWindow $SebIntroNextButton 1'));
+assert(nsis.includes('!macro customWelcomePage'));
+assert(nsis.includes('!macro customInstall'));
+assert(nsis.includes('!macro customUnInstall'));
+assert(nsis.includes('!macro customFinishPage'));
+assert(nsis.includes('Function SebIntroTick'));
+assert(nsis.includes('Function SebIntroComplete'));
+assert(nsis.includes('${NSD_KillTimer} SebIntroTick'));
+assert(nsis.includes('IfFileExists "$PLUGINSDIR\\kaloneo-intro\\frame_1.bmp" 0 intro_fallback'));
+assert(nsis.includes('StrCpy $SebIntroShown 1'));
+assert(nsis.includes('StrCpy $SebIntroActive 0'));
+assert(nsis.includes('intro_fallback:'));
+assert(!/ExecShell|nsExec::|PowerShell|mciSendString|MediaPlayer|WebBrowser/i.test(nsis.slice(nsis.indexOf('Function SebIntroComplete'),nsis.indexOf('!macro customFinishPage'))),'No external video player or script');
+const files=fs.readdirSync(framesDir).filter(n=>/^frame_\d+\.bmp$/.test(n));
+assert.equal(files.length,frameCount);
+for(let i=1;i<=frameCount;i++){
+ const data=fs.readFileSync(path.join(framesDir,`frame_${i}.bmp`));
+ assert.equal(data.toString('ascii',0,2),'BM');
+ assert.equal(data.readInt32LE(18),450);
+ assert.equal(Math.abs(data.readInt32LE(22)),228);
+ assert.equal(data.readUInt16LE(28),24);
+}
+console.log(`KALONEO_R158_INTRO_NSIS=OK frames=${frameCount}, ${frameMs}ms, 450x228 BMP, silent, finish->logo+Next, fallback+Cancel, V1 untouched`);
