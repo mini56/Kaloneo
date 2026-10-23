@@ -2682,12 +2682,19 @@ app.whenReady().then(async()=>{
       const visible=el=>el&&el.getClientRects().length>0&&
         getComputedStyle(el).visibility!=='hidden';
       const audit=()=>[...document.querySelectorAll('.builder-editor select')].filter(visible).map(s=>{
+        // Les menus hors du viewport doivent être scannés après défilement.
+        // elementFromPoint sur les coordonnées hors écran retourne null
+        // et produirait une fausse régression de clic.
+        s.scrollIntoView({block:'center',inline:'nearest'});
         const rect=s.getBoundingClientRect();
-        const at=document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2);
+        const insideViewport=rect.width>0&&rect.height>0&&
+          rect.left>=0&&rect.right<=innerWidth+2&&rect.top>=0&&rect.bottom<=innerHeight+2;
+        const at=insideViewport?document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2):null;
         const closest=s.closest('label');
         const label=closest?.childNodes?.[0]?.textContent?.trim()||s.id||s.className;
         return {label,id:s.id,className:String(s.className),disabled:s.disabled,
           count:s.options.length,value:s.value,hit:at===s||s.contains(at),
+          insideViewport,
           hitElement:at?.tagName,hitId:at?.id||'',hitClass:String(at?.className||'')};
       });
       window.confirm=()=>true;
