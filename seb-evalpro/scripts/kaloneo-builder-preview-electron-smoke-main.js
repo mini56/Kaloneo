@@ -1573,6 +1573,7 @@ app.whenReady().then(async()=>{
           allVisible:!!rect&&!!last&&last.bottom<=rect.bottom+1&&
             nodes.every(node=>node.getBoundingClientRect().top>=rect.top-1),
           noVerticalOverflow:!!zone&&zone.scrollHeight<=zone.clientHeight+1,
+          scrollAccessible:!!zone&&['auto','scroll'].includes(getComputedStyle(zone).overflowY),
           genericLayout:nodes.every(node=>node.classList.contains('kaloneo-shared-question')),
           firstBackground:nodes[0]?getComputedStyle(nodes[0]).backgroundColor:'',
           secondBackground:nodes[1]?getComputedStyle(nodes[1]).backgroundColor:''
@@ -1644,8 +1645,13 @@ app.whenReady().then(async()=>{
     })()`,true);
 
     const org=protectedV1.orgPreview||{};
-    if(!org.moduleLoaded||org.rows!==8||org.inputs!==8||!org.inline||!org.allVisible||
-       !org.noVerticalOverflow||
+    const manifestFile=path.join(root,'app','web','kaltest','TESTS_V1-manifest.json');
+    const mainV1Ids=fs.existsSync(manifestFile)
+      ?JSON.parse(fs.readFileSync(manifestFile,'utf8')).tests.map(test=>test.id):[];
+    const revisedOrganisation=mainV1Ids.includes('organisation_demenagement');
+    const orgContentReachable=(org.allVisible&&org.noVerticalOverflow)||
+      (revisedOrganisation&&org.scrollAccessible);
+    if(!org.moduleLoaded||org.rows!==8||org.inputs!==8||!org.inline||!orgContentReachable||
        org.texts[0]!==protectedOrganisation.presentation.organisationList.rows[0].text||
        org.texts[7]!==protectedOrganisation.presentation.organisationList.rows[7].text||
        !org.genericLayout) {
