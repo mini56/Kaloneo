@@ -23,7 +23,9 @@ const EXISTING_ROW_SOURCES=Object.freeze({
   'mail':['redaction_email'],
   'expression':['texte_a_trous_stage_logistique','genre_nombre','paronymes_rapport','dictee_professionnelle'],
   'math-enonce':['calculs_commandes_atelier','calculs_poids_volumes'],
-  'math-problemes':['horaires_reception_controle','fractions_preparation_lots','conversions_atelier_expedition']
+  'math-problemes':['horaires_reception_controle','fractions_preparation_lots','conversions_atelier_expedition'],
+  // Également réinitialisée lors d'un nouveau calcul du bilan.
+  'competences-transversales':[]
 });
 
 const CATEGORY_LABELS=Object.freeze({
@@ -45,7 +47,8 @@ const CATEGORY_LABELS=Object.freeze({
   bureautique:'Utilisation des techniques de l’information et de la communication',
   communication:'Utilisation des techniques de l’information et de la communication',
   autoevaluation:'Autoévaluation',
-  autres:'Autres'
+  autres:'Autres',
+  'competences transversales':'Compétences transversales'
 });
 
 const INSTITUTIONAL_SECTION_BY_ROW=Object.freeze({
@@ -65,7 +68,8 @@ const INSTITUTIONAL_SECTION_BY_ROW=Object.freeze({
   'mail':'Utilisation des techniques de l’information et de la communication',
   'expression':'Savoirs fondamentaux',
   'math-enonce':'Savoirs fondamentaux',
-  'math-problemes':'Savoirs fondamentaux'
+  'math-problemes':'Savoirs fondamentaux',
+  'competences-transversales':'Savoirs fondamentaux'
 });
 
 function clean(value){return String(value==null?'':value).replace(/\s+/g,' ').trim()}
@@ -343,7 +347,7 @@ function findSectionRows(){
   return groups;
 }
 function installInstitutionalFilter(){
-  // Les 17 lignes officielles du Bilan ne sont ni générées ni masquées
+  // Les 18 lignes officielles du Bilan ne sont ni générées ni masquées
   // selon le contenu du parcours : elles existent dans le modèle source.
   // Une ligne sans résultat reste NE/non évaluée, sans rubrique inventée.
   if(!context.enabled)return false;
@@ -426,29 +430,6 @@ function insertBeforeSectionEnd(tbody,sectionLabel,node){
   else tbody.appendChild(node);
   group.header.hidden=false;
   group.header.dataset.sebKaloneoExcluded='0';
-}
-function installGesturesRow(tbody){
-  const id='kaloneo-gestes-postures';
-  let target=row(id);
-  if(!has('gestes_postures')){
-    if(target){target.hidden=true;target.dataset.sebKaloneoExcluded='1'}
-    return;
-  }
-  if(!target){
-    target=createInstitutionalRow({
-      id,
-      title:'Gestes et postures',
-      capacity:'Capacité à identifier les gestes et postures adaptés à une situation professionnelle.',
-      options:{
-        I:'I. Identifie les gestes et postures adaptés aux situations proposées.',
-        II:'II. Identifie partiellement les gestes et postures adaptés et nécessite quelques repères.',
-        III:'III. A des difficultés à identifier les gestes et postures adaptés aux situations proposées.'
-      }
-    });
-    insertBeforeSectionEnd(tbody,'Compétences techniques',target);
-  }
-  target.hidden=false;
-  target.dataset.sebKaloneoExcluded='0';
 }
 function summarySelfEvaluation(){
   return selfEvalText(['autoevaluation_savoirs','autoevaluation_tic'].filter(has));
@@ -617,13 +598,9 @@ function autoInstitutional(){
     applyInstitutional('math-problemes',genericLevel(mathProblems.pct),percentDetail(mathProblems.pct),mathProblems);
   }
 
-  if(has('gestes_postures')){
-    const pair=scorePair('gestes_postures');
-    if(pair){
-      const level=pair.score>=3?'I':pair.score>=2?'II':'III';
-      applyInstitutional('kaloneo-gestes-postures',level,percentDetail((pair.score/pair.max)*100,pair.score,pair.max));
-    }
-  }
+  // La V1 Gestes et postures passe maintenant par sa liaison officielle
+  // Compétences transversales dans le moteur commun ci-dessous. Aucune
+  // ancienne ligne séparée « Gestes et postures » ne doit être réintroduite.
 
   // Les lignes d'activités pratiques, la lecture du schéma des briques et
   // l'autoévaluation restent volontairement manuelles.
