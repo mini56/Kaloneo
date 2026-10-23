@@ -1,0 +1,30 @@
+name: "KALONÉO - Builder : Introduction, fin et bibliothèque images"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/audit-builder-intro-fin-images.yml'
+      - 'kaloneo/builder-core.js'
+      - 'kaloneo/test-builder.html'
+      - 'kaloneo/test-builder.js'
+      - 'seb-evalpro/source/js/kaltest-pilot2-runtime.js'
+      - 'seb-evalpro/scripts/builder-special-parcours-pages-smoke.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  create-special-pages:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Vérifier la syntaxe du Builder, du noyau et du moteur candidat
+        run: |
+          node --check kaloneo/test-builder.js
+          node --check kaloneo/builder-core.js
+          node --check seb-evalpro/source/js/kaltest-pilot2-runtime.js
+      - name: Créer deux nouvelles pages puis enregistrer un vrai parcours
+        run: node seb-evalpro/scripts/builder-special-parcours-pages-smoke.js
