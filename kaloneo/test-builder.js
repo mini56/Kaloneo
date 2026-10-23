@@ -3504,7 +3504,7 @@
       technique:'Technique',
       planification:'Planification',
       activite_pratique:'Activités pratiques',
-      competences_transversales:'Compétences transversales / Autres'
+      competences_transversales:'Compétences transversales'
     };
     const raw=String(value||'Autres');
     return labels[raw]||raw.replace(/[_-]+/g,' ').replace(/^./,char=>char.toUpperCase());
