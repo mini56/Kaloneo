@@ -133,7 +133,11 @@ jobs:
       - name: Verify mask-video portable data and 3-second frozen image
         run: node scripts/kaloneo-mask-video-smoke.js
       - name: R157 - Exact Gestes et postures V1 1.0.0, answers unchanged, Transversales, 3/3 and real upgrade of installed V1
-        run: node scripts/r156-gestes-postures-v1-institutional-smoke.js
+        shell: pwsh
+        run: |
+          git fetch --depth=1 origin tag seb-kaloneo-r155-single-builder-link-test
+          if($LASTEXITCODE -ne 0){throw 'R155 original V1 baseline unavailable'}
+          node scripts/r156-gestes-postures-v1-institutional-smoke.js
       - name: Generate original complete candidate parcours data
         run: node scripts/build-kaltest-pilot2-data.js
       # The 2021 bilan module retains its original SHA after exactly two visible wording changes.
