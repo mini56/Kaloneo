@@ -26,7 +26,8 @@ function normalize(value){
  return t;
 }
 try {
- const library=createKaloneoLibrary({dataRoot:tmp,seedTestsRoot:seeds,seedImageRoots:[{
+ const library=createKaloneoLibrary({dataRoot:tmp,seedTestsRoot:seeds,
+   seedMaskMediaRoot:path.join(root,'app','web','mask-media-seed'),seedImageRoots:[{
    root:assets,category:'Images tests Builder KALONÉO'
  }]});
  const metas=library.listImages();

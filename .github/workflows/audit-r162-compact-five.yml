@@ -28,9 +28,11 @@ jobs:
           node-version: '24'
       - name: Générer la bibliothèque V1 légère
         run: node scripts/prepare-web.js
-      - name: Vérifier les 5 tests et la portabilité des 13 images
-        run: |
-          node scripts/r159-five-main-tests-smoke.js
-          node scripts/r162-compact-five-smoke.js
-          node scripts/kaloneo-testsv1-smoke.js
-          node scripts/test-integrator-preservation-guard.js
+      - name: Vérifier les cinq V1 et l'intégrateur officiel
+        run: node scripts/r159-five-main-tests-smoke.js
+      - name: Vérifier images partagées, Builder, candidat, export et masque fixe
+        run: node scripts/r162-compact-five-smoke.js
+      - name: Vérifier l'import TESTS_V1 original
+        run: node scripts/kaloneo-testsv1-smoke.js
+      - name: Empêcher la perte de l'intégrateur de tests
+        run: node scripts/test-integrator-preservation-guard.js

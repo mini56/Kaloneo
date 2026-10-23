@@ -24,8 +24,9 @@ for(const id of expected){
  function fixNames(x){
    if(Array.isArray(x))return x.forEach(fixNames);
    if(!x||typeof x!=='object')return;
-   if(x.resource&&typeof x.resource.name==='string'&&x.resource.name.startsWith('data:image/')){
-     x.resource.name=light.id; // normalise both sides for visual comparison
+   if(x.resource&&typeof x.resource.name==='string'&&
+      (x.resource.name.startsWith('data:image/')||/^image-[a-f0-9]{12}\./.test(x.resource.name))){
+     x.resource.name='même-image-normalisée'; // Deux copies de l'image intégrée corrigées
    }
    for(const v of Object.values(x))fixNames(v);
  }
