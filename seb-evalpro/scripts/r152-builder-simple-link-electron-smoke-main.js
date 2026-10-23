@@ -30,6 +30,7 @@ app.whenReady().then(async()=>{
      };
      return {linePresent:Boolean(line),math:validate('mathematiques'),
        french:validate('francais'),practice:validate('activite_pratique'),
+       transverse:validate('competences_transversales'),
        categoryValues:[...category.options].map(o=>o.value),
        advancedOutputButtonVisible:getComputedStyle(document.getElementById('add-output')).display!=='none',
        advancedLinkButtonVisible:getComputedStyle(document.getElementById('add-bilan-contribution')).display!=='none'};
@@ -38,6 +39,9 @@ app.whenReady().then(async()=>{
    assert(result.math.options.length===2&&result.math.options.every(x=>x.includes('mathematiques')));
    assert(result.french.options.length===1&&result.french.options[0].includes('expression_ecrite'));
    assert(result.practice.options.length===5&&result.practice.scored==='false');
+   assert(result.transverse.options.length===1&&result.transverse.options[0].includes('competences_transversales'));
+   assert(result.transverse.scored==='true','Compétences transversales must use automatic points.');
+   assert(result.categoryValues.includes('competences_transversales'));
    assert(!result.advancedOutputButtonVisible&&!result.advancedLinkButtonVisible);
    assert(result.practice.help.includes('administrateur'));
    console.log('R152_BUILDER_UI=OK '+width+'x'+height);
