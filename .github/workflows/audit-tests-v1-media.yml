@@ -1,0 +1,21 @@
+name: "KALONÉO - Audit poids des cinq TESTS_V1"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/audit-tests-v1-media.yml'
+      - 'seb-evalpro/scripts/audit-tests-v1-media.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit-five-official-exports:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Inspecter les cinq JSON sans en modifier le contenu
+        run: node seb-evalpro/scripts/audit-tests-v1-media.js
