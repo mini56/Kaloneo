@@ -44,6 +44,7 @@ permissions:
   actions: read
 jobs:
   windows-installer-migration:
+    if: ${{ github.sha == 'e2cba920e6a1deaede273b2ec8d36bbcba295f81' }}
     # Nouveau Build #157. La release R153 reste figée et disponible comme secours.
     runs-on: windows-latest
     timeout-minutes: 60
