@@ -333,7 +333,7 @@ jobs:
           - La catégorie affichée dans le Builder est uniquement « Compétences transversales », sans « Autres ».
           - La ligne officielle est ajoutée en fin de « Savoirs fondamentaux », dans les bilans individuel et général et dans Word.
           - Nouveau barème automatique : points obtenus / points possibles, avec cumul des différents parcours.
-          - Aucun changement dans les 17 critères antérieurs, les V1 ni les dossiers candidats.
+          - Aucun changement dans les 17 critères antérieurs, les autres V1 ni les dossiers candidats.
           - Correction du CSS qui réaffichait l'ancien bouton « + » et les paramètres techniques sous la liaison institutionnelle unique.
           - Les anciennes sorties et liaisons historiques existent toujours dans les fichiers tests, mais elles ne sont plus visibles ni accessibles dans le Builder.
           - Une seule sélection officielle du bilan dans le Builder ; aucune modification des 18 lignes ni des catégories.
