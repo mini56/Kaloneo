@@ -286,7 +286,7 @@ jobs:
           $setup=Join-Path (Resolve-Path dist) 'KALONEO-Setup-0.0.186.exe'
           if(-not(Test-Path $setup)){throw 'R159 executable missing'}
           & ./scripts/r159-clean-install-windows-smoke.ps1 -Setup $setup
-          if($LASTEXITCODE -ne 0){throw 'Independent KALONEO clean install failed'}
+          if(-not $?){throw 'Independent KALONEO clean install failed'}
       - name: SHA256 of validated Windows Setup
         shell: pwsh
         run: |
