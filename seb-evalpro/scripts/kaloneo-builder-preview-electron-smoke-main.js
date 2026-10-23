@@ -873,10 +873,12 @@ app.whenReady().then(async()=>{
       // La bibliothèque d’icônes est accessible directement dans sa section.
       iconButton.click();
       const jumpedOpen=!iconBody.hidden&&iconButton.getAttribute('aria-expanded')==='true';
-      // L'ajout d'une sortie ouvre Sorties et Bilan sans perdre les précédentes.
-      document.getElementById('add-output').click();
-      const outputOpened=!contractBody.hidden&&contractButton.getAttribute('aria-expanded')==='true';
-      const outputAdded=document.querySelectorAll('#outputs-editor .contract-item').length===outputsBefore+1;
+      // R155 : les sorties/liaisons techniques sont désormais masquées,
+      // mais leur état de données historique demeure intact.
+      const outputOpened=contractBody.getClientRects().length===0&&
+        contractButton.getClientRects().length===0;
+      const outputAdded=document.querySelectorAll('#outputs-editor .contract-item').length===outputsBefore&&
+        document.getElementById('add-output').getClientRects().length===0;
       document.getElementById('new-test').click();
       const allExpanded=iconBody.hidden&&contractBody.hidden&&
         pageStyleBody.hidden&&validationBody.hidden;
@@ -892,7 +894,7 @@ app.whenReady().then(async()=>{
       const rects=[...header?.children||[]].map(n=>n.getBoundingClientRect());
       const order=rects.every((r,i)=>r.width>0&&(i===0||r.left>=rects[i-1].right-1));
       const widthFits=header.scrollWidth<=header.clientWidth+2;
-      const controls=[iconButton,contractButton,pageStyleButton,validationButton,
+      const controls=[iconButton,pageStyleButton,validationButton,
         document.querySelector('.exercise-block .toggle-block')];
       const foldMeasurements=controls.map(button=>({
         text:button.textContent.trim(),
