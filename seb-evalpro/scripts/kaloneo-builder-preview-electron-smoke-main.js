@@ -2765,6 +2765,39 @@ app.whenReady().then(async()=>{
     console.log('KALONEO_R157_ALL_DROPDOWNS_V1_AUDIT=OK',
       JSON.stringify({count:allBuilderDropdowns.before.length,color:allBuilderDropdowns.color}));
 
+    // R157.1 — vérifier la vraie course signalée : un popup ouvert doit
+    // interrompre l'aperçu automatique, qui utilise une BrowserWindow cachée.
+    // Cela n'est PAS couvert par un simple changement programmatique de valeur.
+    await wait(1550); // vider toutes les captures précédentes
+    const captureCountBeforeMenu=miniRenderCalls;
+    const menuHeld=await win.webContents.executeJavaScript('('+async function(){
+      const color=[...document.querySelectorAll('.exercise-block .block-style-editor label')]
+        .find(node=>node.firstChild?.textContent.trim()==='Couleur du bloc')?.querySelector('select');
+      if(!color)return {ok:false,why:'Couleur du bloc absente'};
+      color.dispatchEvent(new PointerEvent('pointerdown',{
+        bubbles:true,cancelable:true,pointerType:'mouse',button:0
+      }));
+      await new Promise(resolve=>setTimeout(resolve,1500));
+      return {ok:true,colorConnected:color.isConnected,menuHeld:document.activeElement===color};
+    }.toString()+')()',true);
+    if(!menuHeld.ok||!menuHeld.colorConnected||miniRenderCalls!==captureCountBeforeMenu)
+      return fail('R157.1 aperçu Electron lancé pendant un menu couleur ouvert',
+        {menuHeld,captureCountBeforeMenu,actual:miniRenderCalls});
+    const afterCloseMenu=await win.webContents.executeJavaScript('('+async function(){
+      const color=[...document.querySelectorAll('.exercise-block .block-style-editor label')]
+        .find(node=>node.firstChild?.textContent.trim()==='Couleur du bloc')?.querySelector('select');
+      if(!color)return false;
+      color.dispatchEvent(new Event('change',{bubbles:true}));
+      return true;
+    }.toString()+')()',true);
+    if(!afterCloseMenu)return fail('R157.1 fermeture menu couleur impossible');
+    await wait(1450);
+    if(miniRenderCalls<=captureCountBeforeMenu)
+      return fail('R157.1 miniature ne reprend plus après fermeture du menu');
+    console.log('KALONEO_R157_NATIVE_MENU_PREVIEW_RACE=OK',
+      JSON.stringify({paused:miniRenderCalls===captureCountBeforeMenu+1,
+        captureCountBeforeMenu,after:miniRenderCalls}));
+
     console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
     console.log('KALONEO_BUILDER_PREVIEW_ELECTRON=OK');
