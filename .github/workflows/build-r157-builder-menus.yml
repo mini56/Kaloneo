@@ -50,6 +50,7 @@ permissions:
   actions: read
 jobs:
   windows-installer-migration:
+    if: github.sha == 'b9bc3415f74d47d7e48b712d78a8b42ba87a5dc3'
     # Nouveau Build #160. La release R156 reste figée et disponible comme secours.
     runs-on: windows-latest
     timeout-minutes: 60
