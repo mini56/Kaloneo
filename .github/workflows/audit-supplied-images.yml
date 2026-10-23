@@ -1,0 +1,36 @@
+name: "KALONÉO - 207 images fournies et bibliothèque légère"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/audit-supplied-images.yml'
+      - 'seb-evalpro/source/bibliotheque-images/**'
+      - 'seb-evalpro/src/kaloneo-supplied-images.js'
+      - 'seb-evalpro/src/kaloneo-library-main.js'
+      - 'seb-evalpro/src/main.js'
+      - 'kaloneo/image-library-gallery.js'
+      - 'seb-evalpro/scripts/supplied-images-library-smoke.js'
+      - 'seb-evalpro/scripts/prepare-web.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  supplied-images:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Contrôler la syntaxe et générer le futur contenu Electron sans Setup
+        run: |
+          node --check src/kaloneo-supplied-images.js
+          node --check src/kaloneo-library-main.js
+          node --check ../kaloneo/image-library-gallery.js
+          node scripts/prepare-web.js
+      - name: Vérifier toutes les images, les thèmes, la bibliothèque et l'absence de duplication
+        run: node scripts/supplied-images-library-smoke.js
