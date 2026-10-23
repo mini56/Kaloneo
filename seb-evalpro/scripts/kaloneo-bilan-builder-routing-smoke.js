@@ -5,6 +5,7 @@ const route=require('../source/js/kaloneo-bilan-routing');
 const {createKaloneoLibrary}=require('../src/kaloneo-library-main');
 const math='bilan.savoirs_fondamentaux.mathematiques.resoudre_problemes';
 const expression='bilan.savoirs_fondamentaux.expression_ecrite.maitrise';
+const transversal='bilan.savoirs_fondamentaux.competences_transversales.mobiliser_competences';
 const mathTest={
  id:'p',version:'1.0.0',title:"Peinture d'une fresque.",category:'mathematiques',
  adminModified:true,bilanContributions:[{
@@ -37,7 +38,15 @@ assert.equal(route.compatible('mathematiques',expression),false);
 assert.equal(route.compatible('mathematiques',math),true);
 assert.deepEqual(route.scoreOf(states.p.result,mathTest.bilanContributions[0].bindings),{score:50,max:100},
  'Deux fois pourcentage ne doit JAMAIS donner un faux 100 %.');
-const result=route.collect([mathTest,frenchTest,wrongTest,v1],id=>states[id]);
+const transversalTest={id:'transv',title:'Évaluation transversale inédite',category:'competences_transversales',adminModified:true,
+ bilanContributions:[{lineId:transversal,bindings:{score:'score',score_max:'score_max'}}]};
+states.transv={status:'COMPLETED',result:{score:4,scoreMax:5,percentage:80}};
+assert.equal(route.rowFor(transversal),'competences-transversales');
+assert(route.compatible('competences_transversales',transversal));
+assert(!route.compatible('mathematiques',transversal),'Catégorie incompatible bloquée.');
+const result=route.collect([mathTest,frenchTest,wrongTest,transversalTest,v1],id=>states[id]);
+assert.equal(result.entries.get('competences-transversales').length,1);
+assert.deepEqual(result.entries.get('competences-transversales')[0].pair,{score:4,max:5});
 assert.equal(result.entries.get('math-problemes').length,1);
 assert.equal(result.entries.get('expression').length,1,
   'Un résultat mathématiques ne doit pas entrer dans Expression écrite.');
