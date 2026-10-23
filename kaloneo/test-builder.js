@@ -378,6 +378,10 @@
       const node=$(id);
       if(node)node.hidden=specialPage;
     }
+    const layout=$('builder-layout-caption');
+    if(layout)layout.textContent=specialPage?'Présentation de la page':'Présentation de l’exercice';
+    const score=$('builder-scoring-field');
+    if(score)score.hidden=specialPage;
     const label=$('builder-title-caption');
     if(label)label.textContent=specialPage?'Nom de la page':'Titre du test';
     const heading=$('builder-block-heading');

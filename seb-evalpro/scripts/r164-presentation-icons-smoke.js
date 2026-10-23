@@ -27,7 +27,7 @@ const builder=files('../kaloneo/test-builder.js');
 const html=files('../kaloneo/test-builder.html');
 const candidate=files('source/js/kaltest-pilot2-runtime.js');
 const preview=files('../kaloneo/test-preview.js');
-for(const marker of ['builder-exercise-context-fields','builder-preview-context','builder-preview-heading','builder-block-heading'])assert(html.includes(marker));
+for(const marker of ['builder-exercise-context-fields','builder-preview-context','builder-preview-heading','builder-block-heading','builder-scoring-field','builder-layout-caption'])assert(html.includes(marker));
 assert(builder.includes('syncPresentationMode(specialPage)'));
 assert(candidate.includes('seb-kaltest-builder-presentation'));
 assert(candidate.includes("testIcon.src='kaloneo-builder/icons-tests/'"),'Fallback icône candidat absent');

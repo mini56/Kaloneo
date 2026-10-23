@@ -1862,3 +1862,11 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
   display: none !important;
   visibility: hidden !important;
 }
+
+/* Les champs d'exercice n'existent pas visuellement pour Introduction/Fin.
+   La grille du Builder pouvait surpasser l'attribut HTML hidden. */
+#builder-exercise-context-fields[hidden],
+#builder-exercise-options[hidden],
+#builder-preview-heading[hidden],
+#builder-preview-context[hidden],
+#builder-scoring-field[hidden] { display:none!important; }
