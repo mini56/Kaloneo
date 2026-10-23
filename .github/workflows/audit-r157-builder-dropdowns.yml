@@ -1,0 +1,39 @@
+name: "KALONÉO R157 - Audit général des menus déroulants Builder V1 et futur"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/audit-r157-builder-dropdowns.yml'
+      - 'kaloneo/test-builder.js'
+      - 'kaloneo/test-builder.css'
+      - 'kaloneo/test-builder.html'
+      - 'kaloneo/builder-core.js'
+      - 'seb-evalpro/scripts/kaloneo-builder-preview-electron-smoke-main.js'
+  workflow_dispatch:
+concurrency:
+  group: kaloneo-r157-dropdown-audit-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  builder-menus:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - name: Checkout same established work branch
+        uses: actions/checkout@v4
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install project dependencies
+        run: npm install --no-audit --no-fund
+      - name: Prepare 22 original candidate tests and official Builder web pages
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          npm run prepare:web
+      - name: Audit V1 real Electron selects, dropdown hit targets and color persistence
+        run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
