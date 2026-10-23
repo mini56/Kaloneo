@@ -33,7 +33,23 @@ app.whenReady().then(async()=>{
        transverse:validate('competences_transversales'),
        categoryValues:[...category.options].map(o=>o.value),
        advancedOutputButtonVisible:getComputedStyle(document.getElementById('add-output')).display!=='none',
-       advancedLinkButtonVisible:getComputedStyle(document.getElementById('add-bilan-contribution')).display!=='none'};
+       advancedLinkButtonVisible:getComputedStyle(document.getElementById('add-bilan-contribution')).display!=='none',
+       legacyFoldVisible:getComputedStyle(document.getElementById('toggle-contract-section')).display!=='none',
+       legacyContainerVisible:getComputedStyle(document.getElementById('contract-section-content')).display!=='none',
+       legacyContainerInert:document.getElementById('contract-section-content').inert,
+       reopenedLegacy:(()=>{
+         // Test la régression : le JS historique peut demander à développer
+         // l'éditeur, mais ni son bouton ni ses champs ne doivent apparaître.
+         const toggle=document.getElementById('toggle-contract-section');
+         const panel=document.getElementById('contract-section-content');
+         panel.hidden=false;
+         toggle.click();
+         return getComputedStyle(toggle).display!=='none'||
+           getComputedStyle(panel).display!=='none'||
+           getComputedStyle(document.getElementById('outputs-editor')).display==='grid';
+       })(),
+       simplePickerVisible:getComputedStyle(line).display!=='none'
+     };
    })()`,true);
    assert(result.linePresent,'La liaison institutionnelle simple manque.');
    assert(result.math.options.length===2&&result.math.options.every(x=>x.includes('mathematiques')));
@@ -43,6 +59,11 @@ app.whenReady().then(async()=>{
    assert(result.transverse.scored==='true','Compétences transversales must use automatic points.');
    assert(result.categoryValues.includes('competences_transversales'));
    assert(!result.advancedOutputButtonVisible&&!result.advancedLinkButtonVisible);
+   assert(!result.legacyFoldVisible&&!result.legacyContainerVisible,
+     'Régression : les anciens réglages de contrat restent affichés.');
+   assert(result.legacyContainerInert,'Les champs hérités doivent rester hors du clavier.');
+   assert(!result.reopenedLegacy,'Le + historique ne peut pas rouvrir une deuxième liaison.');
+   assert(result.simplePickerVisible,'La liaison institutionnelle unique doit rester affichée.');
    assert(result.practice.help.includes('administrateur'));
    console.log('R152_BUILDER_UI=OK '+width+'x'+height);
    win.destroy();win=null;
