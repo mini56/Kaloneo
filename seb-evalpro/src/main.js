@@ -890,22 +890,12 @@ function startApplication() {
   // Toujours créer une interface visible avant les contrôles de sécurité.
   // Une erreur de clé ne doit jamais laisser un simple processus invisible.
   createSplashWindow();
-  setSplashProgress(10, 'Migration du stockage local…');
+  setSplashProgress(10, 'Initialisation du stockage KALONÉO…');
 
   try {
-    const migration = migrateLegacyDocumentsStorage({
-      documentsPath: app.getPath('documents'),
-      userDataPath: app.getPath('userData')
-    });
-    if (!migration.completed) {
-      console.warn('SEB EvalPro 0.3.8 : migration Documents incomplète, anciennes données conservées.', migration);
-    } else {
-      console.log(
-        'SEB EvalPro : stockage interne migré ; dossiers Documents retirés=' +
-        migration.removedDirectories + ', exports Word migrés=' + migration.wordExports + '.'
-      );
-    }
-
+    // R159 : identité et stockage propres. Aucun parcours automatique
+    // d'anciens dossiers SEB, même si Windows en conserve des traces.
+    fs.mkdirSync(sebInternalRoot(),{recursive:true});
     setSplashProgress(16, 'Vérification de la protection des données…');
     initializeCandidateSecurity();
     const pendingProtection = candidateReplayHandlers.migrateStoredPending();
