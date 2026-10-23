@@ -30,11 +30,12 @@ Var KaloneoCleanPathInitialized
 
 # Install into KALONEO, ignoring previous product installations.
 Function KaloneoDirectoryPre
+  # NSIS installMode n'est PAS encore déclaré à la construction de la page.
+  # multiUser a déjà choisi le chemin depuis customInstallMode : le conserver.
+  # Une installation vierge sans chemin retenu prend le dossier KALONEO.
   ${If} $KaloneoCleanPathInitialized != "1"
     StrCpy $KaloneoCleanPathInitialized "1"
-    ${If} $installMode == "all"
-      StrCpy $INSTDIR "$PROGRAMFILES64\KALONEO"
-    ${Else}
+    ${If} $INSTDIR == ""
       StrCpy $INSTDIR "$LOCALAPPDATA\Programs\KALONEO"
     ${EndIf}
   ${EndIf}
