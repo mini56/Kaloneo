@@ -2,10 +2,10 @@
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
 
-!define SEB_BUILD_NUMBER "165"
+!define SEB_BUILD_NUMBER "166"
 !define SEB_BUILD_LABEL "Build #${SEB_BUILD_NUMBER}"
 
-# R162: Full application removal without deleting any other software's data.
+# R163: Full application removal without deleting any other software's data.
 # Upgrades must NEVER erase candidates, bilans, or current user preferences.
 # Only the uninstaller of this NEW version will execute this new macro.
 !macro customUnInstall
