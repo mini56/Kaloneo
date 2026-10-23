@@ -5,6 +5,8 @@ on:
     paths:
       - '.github/workflows/audit-tests-v1-media.yml'
       - 'seb-evalpro/scripts/audit-tests-v1-media.js'
+      - 'seb-evalpro/scripts/proof-tests-v1-external-images.js'
+      - 'seb-evalpro/src/kaloneo-v1-image-assets.js'
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,3 +21,5 @@ jobs:
           node-version: '24'
       - name: Inspecter les cinq JSON sans en modifier le contenu
         run: node seb-evalpro/scripts/audit-tests-v1-media.js
+      - name: Vérifier JSON légers et images partagées sans changer les V1
+        run: node seb-evalpro/scripts/proof-tests-v1-external-images.js
