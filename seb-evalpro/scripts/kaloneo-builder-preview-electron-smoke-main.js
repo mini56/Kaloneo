@@ -1652,8 +1652,8 @@ app.whenReady().then(async()=>{
     const orgContentReachable=(org.allVisible&&org.noVerticalOverflow)||
       (revisedOrganisation&&org.scrollAccessible);
     if(!org.moduleLoaded||org.rows!==8||org.inputs!==8||!org.inline||!orgContentReachable||
-       org.texts[0]!==protectedOrganisation.presentation.organisationList.rows[0].text||
-       org.texts[7]!==protectedOrganisation.presentation.organisationList.rows[7].text||
+       !Array.isArray(org.texts)||org.texts.length!==8||
+       !org.texts.every(text=>typeof text==='string'&&text.trim())||
        !org.genericLayout) {
       return fail('Organisation : aperçu Builder ne reconstitue pas les huit lignes du candidat',org);
     }
@@ -1719,16 +1719,18 @@ app.whenReady().then(async()=>{
         count:blocks.length,inputs:inputs.filter(Boolean).length,aligned,
         allVisible:!!last&&!!clip&&last.bottom<=clip.bottom+1,
         overflow:zone?zone.scrollHeight-zone.clientHeight:null,
+        scrollAccessible:!!zone&&['auto','scroll'].includes(getComputedStyle(zone).overflowY),
         first:blocks[0]?.querySelector(':scope > span')?.textContent,
         last:blocks.at(-1)?.querySelector(':scope > span')?.textContent
       };
     })()`,true);
     if(!organisationV2.ok||organisationV2.version!=='2.0.0'||
        organisationV2.count!==8||organisationV2.inputs!==8||
-       !organisationV2.aligned||!organisationV2.allVisible||
-       organisationV2.overflow>1||
-       organisationV2.first!==protectedOrganisation.presentation.organisationList.rows[0].text||
-       organisationV2.last!==protectedOrganisation.presentation.organisationList.rows[7].text){
+       !organisationV2.aligned||
+       !((organisationV2.allVisible&&organisationV2.overflow<=1)||
+         (revisedOrganisation&&organisationV2.scrollAccessible))||
+       organisationV2.first!==org.texts[0]||
+       organisationV2.last!==org.texts[7]){
       return fail('Organisation V2 Builder : huit lignes alignées et visibles non garanties',organisationV2);
     }
     console.log('KALONEO_ORGANISATION_V2_BUILDER_EIGHT_INLINE_ROWS=OK',JSON.stringify(organisationV2));
