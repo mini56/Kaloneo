@@ -1,0 +1,36 @@
+name: "KALONÉO R162 - 5 V1 allégées, images et masquage fixe"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/audit-r162-compact-five.yml'
+      - 'seb-evalpro/scripts/r162-compact-five-smoke.js'
+      - 'seb-evalpro/scripts/prepare-web.js'
+      - 'seb-evalpro/scripts/kaloneo-testsv1.js'
+      - 'seb-evalpro/src/kaloneo-v1-image-assets.js'
+      - 'seb-evalpro/src/kaloneo-library-main.js'
+      - 'seb-evalpro/src/main.js'
+      - 'seb-evalpro/scripts/r159-five-main-tests-smoke.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  five-v1-compact-runtime:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Générer la bibliothèque V1 légère
+        run: node scripts/prepare-web.js
+      - name: Vérifier les 5 tests et la portabilité des 13 images
+        run: |
+          node scripts/r159-five-main-tests-smoke.js
+          node scripts/r162-compact-five-smoke.js
+          node scripts/kaloneo-testsv1-smoke.js
+          node scripts/test-integrator-preservation-guard.js
