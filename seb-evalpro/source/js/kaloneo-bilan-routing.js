@@ -1,5 +1,5 @@
 /* KALONÉO — règles partagées de raccordement des tests Builder au bilan.
- * Aucune ligne supplémentaire n'est créée et aucune réponse libre n'est notée.
+ * La grille contient 18 lignes explicites et aucune réponse libre n'est notée.
  */
 (function(root,factory){
   'use strict';
@@ -25,7 +25,8 @@
     'bilan.tic.messagerie.echanger':'mail',
     'bilan.savoirs_fondamentaux.expression_ecrite.maitrise':'expression',
     'bilan.savoirs_fondamentaux.mathematiques.comprendre_enonce_consigne':'math-enonce',
-    'bilan.savoirs_fondamentaux.mathematiques.resoudre_problemes':'math-problemes'
+    'bilan.savoirs_fondamentaux.mathematiques.resoudre_problemes':'math-problemes',
+    'bilan.savoirs_fondamentaux.competences_transversales.mobiliser_competences':'competences-transversales'
   });
   function normalize(s){
     return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
@@ -33,6 +34,7 @@
   }
   function compatible(category,lineId){
     const cat=normalize(category);
+    if(lineId==='bilan.savoirs_fondamentaux.competences_transversales.mobiliser_competences')return cat==='competences transversales';
     if(lineId.includes('.mathematiques.'))return cat==='mathematiques'||cat==='maths'||cat==='math';
     if(lineId.includes('.expression_ecrite.'))return cat==='francais'||cat==='expression ecrite'||cat==='dictee';
     if(lineId.includes('.competences_techniques.'))return ['technique','techniques','competences techniques','organisation','planification','activite pratique','activite_pratique','raisonnement'].includes(cat);
