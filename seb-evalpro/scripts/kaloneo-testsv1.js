@@ -65,22 +65,49 @@ function loadOfficialOverrides(repoRoot, sourceTestsDir){
     if(entry.isDirectory())fail('sous-dossiers interdits: '+entry.name);
     if(!entry.name.endsWith('.json'))continue;
     if(!entry.isFile())fail('fichier non standard: '+entry.name);
-    const id=entry.name.slice(0,-5);
-    if(!VALID_ID.test(id))fail('nom de fichier invalide: '+entry.name);
     const source=fs.readFileSync(path.join(directory,entry.name),'utf8');
     let definition;
     try{definition=JSON.parse(source);}catch(error){fail(entry.name+' JSON invalide: '+error.message);}
+    const id=String(definition?.id||'');
+    if(!VALID_ID.test(id))fail(entry.name+' : identifiant KALTEST invalide');
+    // Le Builder exporte le nom <id>-1.0.0-test.json ; accepter aussi
+    // l'ancien nom <id>.json recommandé dans la documentation.
+    if(entry.name!==id+'.json'&&entry.name!==id+'-1.0.0-test.json')
+      fail(entry.name+' : nom attendu '+id+'-1.0.0-test.json ou '+id+'.json');
     if(Number(definition?.kaltestFormat)!==1)fail(entry.name+' : kaltestFormat doit être 1');
-    if(String(definition?.id||'')!==id)fail(entry.name+' : id doit être '+id);
     if(String(definition?.version||'')!=='1.0.0')fail(entry.name+' : version doit être 1.0.0');
     if(!String(definition?.title||'').trim())fail(entry.name+' : titre manquant');
-    if(!baseline.has(id))fail(entry.name+' : aucune V1 historique correspondante');
-    // Only one direct baseline target is changed; V2+ and test answers elsewhere are untouched.
-    const seed=readJson(baseline.get(id).file);
-    if(String(seed.id)!==id||String(seed.version)!=='1.0.0')fail(entry.name+' : source V1 incohérente');
+    if(overrides.has(id))fail('même identifiant fourni deux fois : '+id);
+    const previous=baseline.get(id);
+    if(previous){
+      const seed=readJson(previous.file);
+      if(String(seed.id)!==id||String(seed.version)!=='1.0.0')
+        fail(entry.name+' : V1 historique incohérente');
+    }
+    // Copie fidèle du test (questions, images, texte et barèmes intacts).
+    // Une liaison au bilan ne peut JAMAIS employer le pourcentage comme
+    // dénominateur : tous les tests notés reçoivent score/score_max réels.
+    const imported=JSON.parse(JSON.stringify(definition));
+    if(imported.scored!==false){
+      imported.outputs=Array.isArray(imported.outputs)?imported.outputs:[];
+      for(const name of ['score','score_max']){
+        if(!imported.outputs.some(output=>output.id===name))
+          imported.outputs.push({id:name,type:'number'});
+      }
+      for(const link of (Array.isArray(imported.bilanContributions)?imported.bilanContributions:[])){
+        if(link?.bindings?.score_max==='pourcentage')
+          link.bindings.score_max='score_max';
+        if(link?.bindings?.score==='pourcentage')
+          link.bindings.score='score';
+      }
+    }
     overrides.set(id,{
-      definition,file:path.join(directory,entry.name),
-      relative:baseline.get(id).relative,sha256:sha256(source)
+      definition:imported,file:path.join(directory,entry.name),
+      // Deux V1 modifiées et trois nouveaux tests sont publiés par le même
+      // mécanisme : source historique laissée intouchable.
+      relative:previous?.relative||path.join(id.replace(/_/g,'-'),'1.0.0','test.json'),
+      sha256:sha256(source),
+      isNew:!previous
     });
   }
   return {overrides,baseline};
@@ -93,7 +120,7 @@ function writeOfficialSeedOverrides({repoRoot,sourceTestsDir,outputTestsDir}){
     const target=path.join(outputTestsDir,record.relative);
     fs.mkdirSync(path.dirname(target),{recursive:true});
     fs.writeFileSync(target,JSON.stringify(record.definition,null,2)+'\n','utf8');
-    manifest.push({id,version:'1.0.0',relative:record.relative.replace(/\\/g,'/'),sha256:record.sha256});
+    manifest.push({id,version:'1.0.0',relative:record.relative.replace(/\\/g,'/'),sha256:record.sha256,isNew:record.isNew});
   }
   const manifestFile=path.join(path.dirname(outputTestsDir),'TESTS_V1-manifest.json');
   fs.mkdirSync(path.dirname(manifestFile),{recursive:true});
