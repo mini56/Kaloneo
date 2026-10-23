@@ -13,6 +13,7 @@ public static class KaloWindowsUi {
   public delegate bool EnumCallback(IntPtr h, IntPtr p);
   [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr p,EnumCallback callback,IntPtr extra);
   [DllImport("user32.dll")] public static extern IntPtr GetDlgItem(IntPtr p,int id);
+  [DllImport("user32.dll")] public static extern bool IsWindowEnabled(IntPtr h);
   [DllImport("user32.dll")] public static extern IntPtr SendMessage(IntPtr h,int msg,IntPtr wp,IntPtr lp);
   [DllImport("user32.dll",CharSet=CharSet.Unicode,EntryPoint="SendMessageW")]
   public static extern IntPtr SendMessageText(IntPtr h,int msg,int wp,StringBuilder result);
@@ -64,6 +65,20 @@ try {
     if($next -eq [IntPtr]::Zero){throw "Wizard Next button missing on step $step"}
     $buttonLabel=[KaloWindowsUi]::Read($next)
     if($buttonLabel -match 'Install|Installer'){throw 'Installer step reached without validating directory.'}
+    # R158: first NSIS page shows the original chameleon animation.
+    # Never click Next while the animation is playing (disabled by design).
+    $nextInitiallyDisabled=-not [KaloWindowsUi]::IsWindowEnabled($next)
+    for($tick=0;$tick -lt 100 -and -not [KaloWindowsUi]::IsWindowEnabled($next);$tick++){
+      Start-Sleep -Milliseconds 150
+      $proc.Refresh()
+      if($proc.HasExited){throw 'Installer exited before the video finished'}
+    }
+    if(-not [KaloWindowsUi]::IsWindowEnabled($next)){
+      throw 'R158: Next stayed disabled after the video; installer must never be blocked'
+    }
+    if($step -eq 0){
+      Write-Host "KALONEO_R158_INTRO_NEXT=OK initialDisabled=$nextInitiallyDisabled -> enabled after video/logo"
+    }
     [void][KaloWindowsUi]::SendMessage($next,0x00F5,[IntPtr]::Zero,[IntPtr]::Zero)
   }
   if(-not $seen){throw 'No NSIS installation directory field was shown within three pages.'}
