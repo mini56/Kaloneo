@@ -25,6 +25,7 @@ assert(nsis.includes('StrCpy $perMachineInstallationFolder "$PROGRAMFILES64\\KAL
 assert(!/seb-evalpro|Recovery|candidate-local-key|CopyFiles|Rename "\\$INSTDIR"|ReadRegStr|SEB EvalPro\\.lnk/i.test(nsis),
  'Legacy path, registry or recovery unexpectedly reachable from installer');
 assert(pilot.includes("path.join(appData, 'KALONEO')"));
+assert(pilot.includes('mkdirSync(documentsRoot,{recursive:true})'),'New userData path must exist before Electron setPath');
 assert(!pilot.includes('SEB EvalPro Kaloneo PILOTE 21'));
 assert(main.includes("const KALONEO_WINDOWS_APP_ID = 'fr.sauvegarde56.kaloneo'"));
 console.log('KALONEO_R159_CLEAN_SETUP=OK — path KALONEO only; new product ID/profile; NO old-file recovery/migration');
