@@ -737,8 +737,17 @@
       def.id=m.id||def.id;
       def.version=m.version||def.version;
       def.category=m.category||def.category;
+      const pageRole=def.category==='introduction'?'introduction':def.category==='fin'?'fin':null;
+      if(pageRole){
+        def.pageRole=pageRole;
+        def.scored=false;
+        def.bilanContributions=[];
+        def.behavior=Object.assign({},def.behavior||{},pageRole==='fin'
+          ? {terminal:true,hideNavigation:true,hideContext:true}
+          : {introduction:true});
+      }
       const practical=def.category==='activite_pratique';
-      def.scored=practical?false:(m.scored!==false);
+      def.scored=(practical||Boolean(pageRole))?false:(m.scored!==false);
       if(practical){
         def.activityType='practical';
         def.allowEmptyCompletion=true;
@@ -796,7 +805,7 @@
         } else def.externalMaterial=Boolean(m.externalMaterial);
       }
       if(Array.isArray(m.outputs)) def.outputs=clone(m.outputs);
-      if(Array.isArray(m.bilanContributions)) def.bilanContributions=clone(m.bilanContributions);
+      if(Array.isArray(m.bilanContributions)&&!pageRole) def.bilanContributions=clone(m.bilanContributions);
       def.presentation=Object.assign({},def.presentation||{});
       const pageStyle=pageStyleFromMeta(m);
       if(Array.isArray(model.supplementaryWindows)){
@@ -893,11 +902,14 @@
       version:m.version||'1.0.0',
       title:m.title||'',
       category:m.category||'',
+      pageRole:m.category==='introduction'?'introduction':m.category==='fin'?'fin':'test',
       activityType:m.category==='activite_pratique'?'practical':undefined,
       kind:questions.length?'questionnaire':'complex',
-      scored:m.category==='activite_pratique'?false:(m.scored!==false),
+      scored:['activite_pratique','introduction','fin'].includes(m.category)?false:(m.scored!==false),
       allowEmptyCompletion:m.category==='activite_pratique'?true:undefined,
-      behavior:m.category==='activite_pratique'?{practicalActivity:true}:undefined,
+      behavior:m.category==='fin'?{terminal:true,hideNavigation:true,hideContext:true}
+        :m.category==='introduction'?{introduction:true}
+        :m.category==='activite_pratique'?{practicalActivity:true}:undefined,
       icon:m.icon?clone(m.icon):undefined,
       features:[...new Set(features)],
       scenario:m.scenario||'',
@@ -927,7 +939,8 @@
       outputs:Array.isArray(m.outputs)?clone(m.outputs):[
         {id:'score',type:'number'},{id:'score_max',type:'number'},{id:'pourcentage',type:'number'},{id:'status',type:'string'}
       ],
-      bilanContributions:Array.isArray(m.bilanContributions)?clone(m.bilanContributions):[]
+      bilanContributions:['introduction','fin'].includes(m.category)?[]
+        :Array.isArray(m.bilanContributions)?clone(m.bilanContributions):[]
     };
   }
 

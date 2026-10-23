@@ -23,6 +23,7 @@
       <button id="undo-change" class="seb-action-btn seb-btn-functional builder-history-btn" type="button" disabled title="Annuler la dernière modification (Ctrl+Z)">↶ Annuler</button>
       <button id="redo-change" class="seb-action-btn seb-btn-functional builder-history-btn" type="button" disabled title="Rétablir la modification annulée (Ctrl+Y)">↷ Rétablir</button>
       <button id="open-library-test" class="seb-action-btn seb-btn-functional" type="button">Bibliothèque de tests</button>
+      <button id="open-library-image" class="seb-action-btn seb-btn-functional" type="button" aria-haspopup="dialog" aria-controls="image-library-dialog">Bibliothèque d’images</button>
       <button id="new-test" class="seb-action-btn seb-btn-danger" type="button">Nouveau test</button>
       <button id="save-draft" class="seb-action-btn seb-btn-nav" type="button">Enregistrer</button>
       <button id="back-tests" class="seb-action-btn seb-btn-functional" type="button">Fermer</button>
@@ -52,6 +53,8 @@
 
         <label>Catégorie
           <select id="test-category">
+            <option value="introduction">Introduction de parcours</option>
+            <option value="fin">Fin de parcours</option>
             <option value="mathematiques">Mathématiques</option>
             <option value="francais">Français</option>
             <option value="organisation">Organisation</option>

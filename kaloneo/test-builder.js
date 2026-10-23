@@ -283,14 +283,15 @@
 
   function collectMeta() {
     const category=$('test-category').value;
+    const specialPage=category==='introduction'||category==='fin';
     return {
       title:$('test-title').value.trim(),
       id:$('test-id').value.trim(),
       version:$('test-version').value.trim() || '1.0.0',
       category,
-      scored:state.sourceProtectedVersion
+      scored:specialPage?false:(state.sourceProtectedVersion
         ? (category!=='activite_pratique'&&$('test-scored').value==='true')
-        : category!=='activite_pratique',
+        : category!=='activite_pratique'),
       icon:selectedIcon(),
       layout:$('test-layout').value,
       template:$('test-template').value,
@@ -370,12 +371,15 @@
   }
 
   function syncPracticalCategory(categoryChanged=false) {
-    const practical=$('test-category').value==='activite_pratique';
+    const category=$('test-category').value;
+    const practical=category==='activite_pratique';
+    const specialPage=category==='introduction'||category==='fin';
     // Sur une V1 chargée, ne pas modifier la notation historique.
     // Sur changement explicite de catégorie, appliquer les règles communes :
     // pratique = évaluation administrateur, autres = pourcentage automatique.
-    if(!state.sourceProtectedVersion||categoryChanged)$('test-scored').value=practical?'false':'true';
-    else if(practical)$('test-scored').value='false';
+    if(!state.sourceProtectedVersion||categoryChanged)$('test-scored').value=(practical||specialPage)?'false':'true';
+    else if(practical||specialPage)$('test-scored').value='false';
+    if(specialPage && categoryChanged) state.bilanContributions=[];
     $('test-scored').disabled=true;
     // À l'ouverture d'une V1, préserver strictement ses liaisons historiques.
     // MAIS si l'administrateur change explicitement la catégorie, effacer
@@ -2347,7 +2351,8 @@
     const control=$('bilan-simple-line'),help=$('bilan-simple-help');
     if(!control||!window.KaloneoSimpleBilanLink)return;
     const category=$('test-category')?.value||'';
-    const options=window.KaloneoSimpleBilanLink.options(category,contractLines());
+    const specialPage=category==='introduction'||category==='fin';
+    const options=specialPage?[]:window.KaloneoSimpleBilanLink.options(category,contractLines());
     const selected=String(state.bilanContributions?.[0]?.lineId||'');
     control.replaceChildren();
     const placeholder=document.createElement('option');
@@ -2368,7 +2373,8 @@
     // Les mêmes 18 lignes officielles sont disponibles pour V1 et tests inédits.
     control.disabled=options.length===0;
     if(help){
-      if(control.value){
+      if(specialPage) help.textContent='Introduction et fin de parcours : aucune notation, aucune ligne du bilan institutionnel.';
+      else if(control.value){
         const line=contractLine(control.value);
         help.textContent=line?.mode==='manual'
           ?'Activité pratique : cette ligne sera évaluée exclusivement par l’administrateur dans le pré-bilan.'
@@ -2538,6 +2544,11 @@
     renderSimpleBilanLink();
   }
   function validateContract(add){
+    const category=$('test-category')?.value;
+    if(category==='introduction'||category==='fin'){
+      add(state.bilanContributions.length===0,'Page de parcours hors notation et hors bilan');
+      return;
+    }
     if(!state.sourceProtectedVersion && window.KaloneoSimpleBilanLink){
       const result=window.KaloneoSimpleBilanLink.validate(
         $('test-category').value,state.bilanContributions,contractLines());
@@ -3266,10 +3277,22 @@
     const add=(ok,text)=>items.push({ok:Boolean(ok),text});
     add(Boolean(m.title),'Titre renseigné');
     add(Boolean(m.id),'Identifiant du test créé');
-    add(Boolean(m.scenario),'Scénario renseigné');
-    add(Boolean(m.instruction),'Consigne renseignée');
+    const specialPage=m.category==='introduction'||m.category==='fin';
+    add(specialPage||Boolean(m.scenario),'Scénario renseigné');
+    add(specialPage||Boolean(m.instruction),'Consigne renseignée');
     add(state.blocks.some(b=>!['image','audio','video'].includes(b.type) ||
       Boolean(b.mediaData||b.mediaName||b.mediaPlaceholder)),'Au moins un bloc Exercice');
+    if(specialPage){
+      add(state.blocks.some(b=>
+        (b.type==='text'&&Boolean(String(b.text||'').trim()))||
+        (b.type==='html'&&Boolean(String(b.html||'').trim()))||
+        (b.type==='image'&&Boolean(b.mediaData))||
+        (b.type==='video'&&Boolean(b.mediaData))),
+      'Page de parcours : contenu visible obligatoire');
+      add(!state.blocks.some(b=>['question','image-selection','response-table','table-grid',
+        'multiple-tables','inline-flow'].includes(b.type)),
+      'Introduction et fin de parcours : aucune question ou réponse notée');
+    }
 
     if(m.layout==='chars-rest') {
       add(Number(m.block1WidthChars)>=3,'Bloc 1 : largeur en caractères ≥ 3');
@@ -4064,6 +4087,9 @@
     $('undo-change').addEventListener('click',undoChange);
     $('redo-change').addEventListener('click',redoChange);
     $('open-library-test').addEventListener('click',()=>{openLibraryDialog().catch(error=>alert('Bibliothèque inaccessible : '+String(error?.message||error)));});
+    $('open-library-image').addEventListener('click',()=>{
+      openImageLibrary(null).catch(error=>alert('Bibliothèque d’images inaccessible : '+String(error?.message||error)));
+    });
     $('close-image-library').addEventListener('click',()=>$('image-library-dialog').close());
     $('image-library-search').addEventListener('input',()=>{
       // Une recherche de 250 images ne doit pas reconstruire 250 fiches

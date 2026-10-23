@@ -1924,13 +1924,20 @@
 
   function renderEndPage(test, host) {
     const definition = test.presentation?.endPage;
-    if (!definition) return false;
+    // Les pages de fin créées dans le Builder conservent leurs propres
+    // blocs et images, tout en activant le même achèvement que la fin V1.
+    const customBuilderPage=test.pageRole==='fin' &&
+      Array.isArray(test.presentation?.builderContent);
+    if (!definition && !customBuilderPage) return false;
     document.body.classList.add('seb-kaltest-terminal');
     const next = document.getElementById('kaltest-next');
     if (next) next.hidden = true;
     const calculator = document.getElementById('kaltest-calculator');
     if (calculator) calculator.hidden = true;
 
+    if(customBuilderPage){
+      renderBuilderContent(test,host);
+    }else{
     const wrap = document.createElement('div');
     wrap.className = 'kaltest-terminal-page';
     const title = document.createElement('div');
@@ -1958,6 +1965,7 @@
       wrap.appendChild(end);
     }
     host.appendChild(wrap);
+    }
 
     const testState = testStateFor(test);
     testState.status = 'COMPLETED';
@@ -4184,8 +4192,30 @@
     });
   }
 
+  function renderSelectedIntroduction(){
+    const introduction=DATA.introduction;
+    if(introduction?.pageRole!=='introduction' ||
+      !Array.isArray(introduction.presentation?.builderContent))return;
+    const page=document.getElementById('page-intro');
+    if(!page)return;
+    const buttonBar=page.querySelector('.pilot2-actions');
+    if(!buttonBar)return;
+    const custom=document.createElement('section');
+    custom.className='pilot2-card kaloneo-custom-introduction';
+    custom.setAttribute('aria-label','Introduction du parcours sélectionné');
+    renderBuilderContent(introduction,custom);
+    // Ne remplacer QUE le contenu de présentation de l'introduction :
+    // le formulaire d'identification précédent et le bouton de démarrage
+    // restent ceux du moteur KALONÉO, et les V1 restent inchangées.
+    for(const element of Array.from(page.children)){
+      if(element!==buttonBar)element.style.display='none';
+    }
+    page.insertBefore(custom,buttonBar);
+  }
+
   function install() {
     renderIdentity();
+    renderSelectedIntroduction();
 
     document.getElementById('personIdentifier').addEventListener('input', event => {
       event.target.value = event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0,7);
