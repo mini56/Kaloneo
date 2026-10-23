@@ -1719,24 +1719,16 @@ app.whenReady().then(async()=>{
       indicationsEditor.value=indicationsEditor.value.replace('Jacqueline','JacquelinX');
       indicationsEditor.dispatchEvent(new Event('input',{bubbles:true}));
       if(!indicationsEditor.value.includes('JacquelinX'))return {ok:false,reason:'Saisie indications perdue'};
-      // Vérification des commandes Sortie et Liaison Bilan sur une définition temporaire.
-      document.getElementById('add-output').click();
-      const custom=[...document.querySelectorAll('#outputs-editor .contract-row')].at(-1);
-      const id=custom?.querySelector('input');
-      if(!id)return {ok:false,reason:'Bouton Sortie inopérant'};
-      id.value='variable_restaurant';id.dispatchEvent(new Event('input',{bubbles:true}));
-      id.dispatchEvent(new Event('blur',{bubbles:true}));
-      const valueType=[...document.querySelectorAll('#outputs-editor .contract-row')].at(-1)?.querySelector('select');
-      if(!valueType)return {ok:false,reason:'Type de sortie absent'};
-      valueType.value='integer';valueType.dispatchEvent(new Event('change',{bubbles:true}));
-      document.getElementById('add-bilan-contribution').click();
-      const link=[...document.querySelectorAll('#bilan-editor .contract-link-row select')].at(-1);
-      if(!link)return {ok:false,reason:'Bouton Liaison Bilan inopérant'};
-      link.value='bilan.competences_techniques.briques.identifier_schema';
-      link.dispatchEvent(new Event('change',{bubbles:true}));
-      const errorsSelect=[...document.querySelectorAll('#bilan-editor .contract-item')].at(-1)?.querySelector('.contract-bindings select');
-      if(!errorsSelect)return {ok:false,reason:'Entrée erreurs de la ligne Briques absente'};
-      errorsSelect.value='variable_restaurant';errorsSelect.dispatchEvent(new Event('change',{bubbles:true}));
+      R155 : l'exercice conserve une seule liaison institutionnelle officielle.
+      const selector=document.getElementById('bilan-simple-line');
+      const planning=[...selector.options].find(option=>
+        option.value==='bilan.competences_techniques.planning.repartition_taches');
+      if(!planning)return {ok:false,reason:'Ligne officielle Planning introuvable'};
+      selector.value=planning.value;
+      selector.dispatchEvent(new Event('change',{bubbles:true}));
+      if(selector.value!==planning.value)return {ok:false,reason:'Liaison Planning perdue'};
+      if(document.getElementById('contract-section-content').getClientRects().length>0)
+        return {ok:false,reason:'Ancien tableau de liaisons réapparu'};
       const preview=document.getElementById('open-electron-preview');
       if(!preview)return {ok:false,reason:'Bouton aperçu absent'};
       return {ok:true,blocks:blocks.length,interline:interline.value};
@@ -1753,11 +1745,10 @@ app.whenReady().then(async()=>{
     await wait(400);
     const definitionIndications=previewDefinition?.presentation?.builderContent
       ?.filter(block=>block?.type==='text').map(block=>String(block.text||'')).join(' ')||'';
-    if(!previewDefinition?.outputs?.some(output=>output.id==='variable_restaurant'&&output.type==='integer')||
-       !previewDefinition?.bilanContributions?.some(link=>
-         link.lineId==='bilan.competences_techniques.briques.identifier_schema'&&
-         link.bindings?.erreurs==='variable_restaurant')){
-      return fail('Sortie et liaison Bilan non conservées dans la définition KALTEST',previewDefinition?.bilanContributions);
+    if(!previewDefinition?.bilanContributions?.some(link=>
+         link.lineId==='bilan.competences_techniques.planning.repartition_taches'&&
+         link.bindings?.score==='score'&&link.bindings?.score_max==='score_max')){
+      return fail('Liaison institutionnelle unique Planning non conservée',previewDefinition?.bilanContributions);
     }
     if(!definitionIndications.includes('JacquelinX')||definitionIndications.includes('Jacqueline')) {
       return fail('R72 : texte Restaurant modifié non transmis à la définition de l’aperçu',{definitionIndications});
@@ -2432,21 +2423,16 @@ app.whenReady().then(async()=>{
       await new Promise(r=>setTimeout(r,35));
       const cancelRestored=document.activeElement===textarea&&textarea.selectionStart===0&&
         textarea.selectionEnd===7;
-      document.getElementById('add-output').click();
-      const type=document.querySelector('#outputs-editor .contract-item select');
-      type.focus();type.value='integer';type.dispatchEvent(new Event('change',{bubbles:true}));
-      const typeAfter=document.querySelector('#outputs-editor .contract-item select');
-      const contractRestored=typeAfter.isConnected&&document.activeElement===typeAfter&&
-        typeAfter.value==='integer';
-      document.getElementById('add-bilan-contribution').click();
-      const line=document.querySelector('#bilan-editor .contract-item select');
+      // Vérifier le focus du champ visible sans activer de commandes cachées.
+      const contractRestored=document.getElementById('contract-section-content').getClientRects().length===0&&
+        document.getElementById('add-output').getClientRects().length===0&&
+        document.getElementById('add-bilan-contribution').getClientRects().length===0;
+      const line=document.getElementById('bilan-simple-line');
       const options=[...line.options].filter(o=>o.value);
-      let bilanRestored=true;
+      let bilanRestored=false;
       if(options.length){
         line.focus();line.value=options[0].value;line.dispatchEvent(new Event('change',{bubbles:true}));
-        const lineAfter=document.querySelector('#bilan-editor .contract-item select');
-        bilanRestored=document.activeElement===lineAfter&&lineAfter.isConnected&&
-          lineAfter.value===options[0].value;
+        bilanRestored=document.activeElement===line&&line.isConnected&&line.value===options[0].value;
       }
       // Les opérations structurelles d'une grille ne doivent pas perdre le champ
       // avant une nouvelle saisie, même après un cycle de 400 ms.
