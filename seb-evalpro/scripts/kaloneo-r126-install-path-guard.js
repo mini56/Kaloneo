@@ -4,20 +4,28 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const pkg=require('../package.json');
-const cfg=read('build/kaloneo-r159-clean-install.yml');
+const matches=fs.readdirSync(path.join(root,'build'))
+ .filter(name=>/^kaloneo-r\d+[-a-z0-9]*\.yml$/i.test(name))
+ .filter(name=>{
+    const v=read('build/'+name);
+    return v.includes('version: '+pkg.sebReleaseVersion) &&
+      v.includes('KALONEO-Setup-'+pkg.sebReleaseVersion);
+ });
+assert.equal(matches.length,1,'One Windows release configuration must match package.json');
+const cfg=read('build/'+matches[0]);
 const nsis=read('build/installer.nsh');
 const pilot=read('src/kaltest-pilot21-main.js');
 const main=read('src/main.js');
-assert.equal(pkg.sebReleaseVersion,'0.0.186');
-assert.equal(pkg.sebBuildNumber,162);
+assert.match(pkg.sebReleaseVersion,/^\d+\.\d+\.\d+$/);
+assert(Number.isInteger(pkg.sebBuildNumber)&&pkg.sebBuildNumber>=162);
 assert(cfg.includes('appId: fr.sauvegarde56.kaloneo'));
 assert(cfg.includes('productName: "KALONÉO"'));
 assert(cfg.includes('executableName: KALONEO'));
 assert(cfg.includes('shortcutName: "KALONÉO"'));
 assert(cfg.includes('allowToChangeInstallationDirectory: true'));
 assert(cfg.includes('deleteAppDataOnUninstall: false'));
-assert(cfg.includes('artifactName: "KALONEO-Setup-0.0.186.\${ext}"'));
-assert(nsis.includes('!define SEB_BUILD_NUMBER "162"'));
+assert(cfg.includes('KALONEO-Setup-'+pkg.sebReleaseVersion));
+assert(nsis.includes('!define SEB_BUILD_NUMBER "'+pkg.sebBuildNumber+'"'));
 assert(nsis.includes('StrCpy $INSTDIR "$LOCALAPPDATA\\Programs\\KALONEO"'));
 assert(!nsis.includes('$installMode'),'Installer directory page must not access undeclared installMode');
 assert(nsis.includes('Function KaloneoDirectoryPre'),'Native installer folder page must stay present');

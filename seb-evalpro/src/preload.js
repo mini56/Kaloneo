@@ -2500,8 +2500,13 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
     if (!document.body) return;
     ensurePrivacyStyle();
     // Do not preload videos/images or entire candidate tests behind Admin screens.
-    // refreshPrivacy() loads the mask lazily if the privacy overlay is active.
+    // Do not load video on Admin pages; prefetch only on candidate pages so
+    // the privacy screen begins its video immediately when opened.
     refreshPrivacy();
+    if (!isAdminNavigationPage() && !adminCandidateResultsWorkspace &&
+        !adminCandidateWorkspace && !privacyMaskLoaded) {
+      void loadPrivacyMask();
+    }
 
     const observer = new MutationObserver(function(){
       setTimeout(refreshPrivacy, 0);

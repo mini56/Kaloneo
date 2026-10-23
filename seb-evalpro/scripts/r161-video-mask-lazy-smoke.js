@@ -38,12 +38,17 @@ try{
   }
   const preload=fs.readFileSync(path.join(app,'src','preload.js'),'utf8');
   assert(preload.includes('if (!privacyMaskLoaded) void loadPrivacyMask();'),
-    'Privacy overlay must lazy-load media only on demand');
+    'Masking media loads only in candidate context or when requested');
   const start=preload.indexOf('function startPrivacy(){');
   assert(start>=0);
-  assert(!preload.slice(start,start+230).includes('    loadPrivacyMask();'),
-    'Admin page initialization must not load video masking media');
-  console.log('KALONEO_R161_VIDEO_MASK_LAZY=OK — Admin/default masking avoids embedded video, explicit media remains functional');
+  const startBlock=preload.slice(start,start+600);
+  assert(startBlock.includes('if (!isAdminNavigationPage() && !adminCandidateResultsWorkspace'),
+    'No prefetch may happen in Admin navigation');
+  assert(startBlock.includes('!adminCandidateWorkspace && !privacyMaskLoaded'),
+    'Candidate prefetch must happen once');
+  assert(startBlock.includes('void loadPrivacyMask();'),
+    'Candidate prefetch must preserve immediate video start');
+  console.log('KALONEO_R161_VIDEO_MASK_LAZY=OK — Admin video loading prevented; candidate prefetch preserved');
 }finally{
   fs.rmSync(temp,{recursive:true,force:true});
 }

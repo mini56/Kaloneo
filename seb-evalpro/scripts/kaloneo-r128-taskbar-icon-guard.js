@@ -15,7 +15,16 @@ const icon=fs.readFileSync(path.join(root,'build/pilot-resources/kaloneo.ico'));
 assert.equal(icon.readUInt16LE(0),0);
 assert.equal(icon.readUInt16LE(2),1);
 assert(icon.readUInt16LE(4)>=6,'Multiresolution Windows ICO is missing sizes.');
-const config=read('build/kaloneo-r159-clean-install.yml');
+const pkg=JSON.parse(read('package.json'));
+const matches=fs.readdirSync(path.join(root,'build'))
+ .filter(name=>/^kaloneo-r\d+[-a-z0-9]*\.yml$/i.test(name))
+ .filter(name=>{
+    const v=read('build/'+name);
+    return v.includes('version: '+pkg.sebReleaseVersion) &&
+      v.includes('KALONEO-Setup-'+pkg.sebReleaseVersion);
+ });
+assert.equal(matches.length,1,'One Windows release configuration must match package.json');
+const config=read('build/'+matches[0]);
 assert(config.includes('icon: build/pilot-resources/kaloneo.ico'));
 assert(config.includes('installerIcon: build/pilot-resources/kaloneo.ico'));
 assert(config.includes('uninstallerIcon: build/pilot-resources/kaloneo.ico'));
@@ -31,7 +40,6 @@ const branding=read('scripts/kaloneo-r125-branding.py');
 assert(branding.includes('base64.b64decode(match.group(1),validate=True)'));
 assert(branding.includes('candidate_icon.getpixel((0,0))[3]==0'));
 assert(!branding.includes('paste_contained(icon,LOGO'),'Icon must not show the whole logo');
-const pkg=JSON.parse(read('package.json'));
-assert.equal(pkg.sebBuildNumber,162);
-assert.equal(pkg.sebReleaseVersion,'0.0.186');
+assert(Number.isInteger(pkg.sebBuildNumber)&&pkg.sebBuildNumber>=162);
+assert.match(pkg.sebReleaseVersion,/^\d+\.\d+\.\d+$/);
 console.log('KALONEO_R130_WINDOWS_ICON=OK — exact original 40px chameleon, transparent multiresolution ICO, executable, every window, links and Setup');
