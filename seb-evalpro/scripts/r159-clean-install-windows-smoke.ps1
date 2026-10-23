@@ -9,7 +9,7 @@ if(Test-Path $target){throw "R159 Windows runner is not clean: $target"}
 if(Test-Path $legacy){throw "R159 previous SEB program unexpectedly exists: $legacy"}
 if(Test-Path $recovery){throw "R159 recovered SEB files unexpectedly present"}
 & ./scripts/kaloneo-r127-interactive-wizard-windows-smoke.ps1 -Setup $Setup
-if($LASTEXITCODE -ne 0){throw 'Clean interactive installation did not show the official KALONEO folder'}
+if(-not $?){throw 'Clean interactive installation did not show the official KALONEO folder'}
 $proc=Start-Process -FilePath $Setup -ArgumentList '/S','/currentuser' -Wait -PassThru
 if($proc.ExitCode -ne 0){throw "Clean silent setup failed: $($proc.ExitCode)"}
 $exe=Join-Path $target 'KALONEO.exe'
