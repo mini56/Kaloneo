@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron');
+const {institutionalTableSource}=require('./institutional-bilan-grid');
 const bilanHistory = require('./bilan-history-preload');
 const replayPreload = require('./replay-preload');
 const editionCapabilities = ipcRenderer.sendSync('app:edition-sync') || { edition:'unified', canBilan:true };
@@ -35,7 +36,7 @@ function addStyle() {
   style.textContent = `
     #seb-evalpro-open-candidate{background:#fff!important;color:#0070c0!important;border:2px solid #0070c0!important;font-weight:700}
     #seb-general-bilan{position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif}
-    #seb-general-bilan .seb-gb-card{width:min(1120px,95vw);max-height:92vh}
+    #seb-general-bilan .seb-gb-card{width:min(1500px,97vw);max-height:95vh}
     #seb-general-bilan .seb-cc-detail-actions{gap:9px;display:flex;flex-wrap:wrap;padding:12px;background:#fff}
     .seb-gb-table{width:100%;border-collapse:collapse;background:#fff;font:14px Arial,sans-serif}
     .seb-gb-table th,.seb-gb-table td{border:1px solid #ccd5e0;padding:9px;text-align:left;vertical-align:top}
@@ -592,6 +593,62 @@ async function openCandidateTrash(onChanged, onTrashStateChanged) {
   await reload();
 }
 
+
+// Le bilan général utilise exactement la table officielle et sa feuille CSS,
+// pas une reproduction indépendante à maintenir.
+function renderInstitutionalGeneralTable(host,lines) {
+  const doc=new DOMParser().parseFromString(institutionalTableSource(),'text/html');
+  const original=doc.querySelector('table#bilan');
+  const css=doc.querySelector('head style');
+  if(!original||!css)throw new Error('Tableau officiel non trouvé.');
+  const entries=Array.isArray(lines)?lines.filter(item=>item.kind==='row'):[];
+  const originalRows=[...original.querySelectorAll('tbody tr[data-r]')];
+  const mapped=new Map(entries.map(line=>[line.key,line]));
+  if(entries.length!==17||originalRows.length!==17||mapped.size!==17||
+     originalRows.some(row=>!mapped.has(row.dataset.r)))
+    throw new Error('Le bilan général doit avoir les 17 lignes officielles.');
+  original.id='seb-gb-institutional-table';
+  original.setAttribute('aria-label','Bilan de parcour complet, lecture seule');
+  for(const row of originalRows){
+    const line=mapped.get(row.dataset.r);
+    const level=['NE','I','II','III'].includes(line.level)?line.level:'NE';
+    for(const cell of row.querySelectorAll('.level[data-l]')){
+      cell.classList.toggle('on',cell.dataset.l===level);
+      cell.style.cursor='default';
+    }
+    const select=row.querySelector('select.csel');
+    if(select){
+      const comment=String(line.comment||'');
+      const selected=[...select.options].find(option=>option.value===comment&&option.dataset.l===level)
+        ||[...select.options].find(option=>option.dataset.l===level&&level!=='NE');
+      select.selectedIndex=selected?selected.index:0;
+      select.disabled=true;
+      select.setAttribute('aria-label','Commentaire du bilan institutionnel (lecture seule)');
+    }
+    const detail=row.querySelector('.detail');
+    if(detail)detail.textContent=String(line.detail||'');
+    if(row.dataset.r==='tri-temps'){
+      const avg=String(line.latestModule||'').match(/Moyenne\s+(\d{2}:\d{2})/i);
+      const node=row.querySelector('#triAvg');
+      if(node)node.textContent=avg?avg[1]:'—';
+      const times=row.querySelector('#triTimes');
+      if(times)times.textContent='';
+    }
+    if(row.dataset.r==='tri-erreurs'){
+      const found=String(line.latestModule||'').match(/(\d+)\s+erreurs?/i);
+      const node=row.querySelector('#triErr');
+      if(node)node.textContent=found?found[0]:'Non renseigné';
+    }
+  }
+  const shadow=host.attachShadow({mode:'open'});
+  const style=document.createElement('style');
+  style.textContent=css.textContent+
+    ':host{display:block;color:#111;font:11pt Calibri,Arial,sans-serif}table{background:#fff}'+
+    'select.csel:disabled{opacity:1;color:#111;background:#fff;-webkit-text-fill-color:#111;cursor:default}'+
+    'td.level{cursor:default}@media(max-width:1050px){:host{font-size:10pt}th,td{padding:4px}}';
+  shadow.append(style,document.importNode(original,true));
+}
+
 async function openGeneralBilan(personId) {
   document.getElementById('seb-general-bilan')?.remove();
   const response=await ipcRenderer.invoke('candidate-catalog:general-bilan',personId);
@@ -601,20 +658,7 @@ async function openGeneralBilan(personId) {
   }
   const {person,general}=response;
   const safe=escapeHtml;
-  const fmt=p=>p===null||p===undefined?'Non noté':Number(p).toLocaleString('fr-FR',{maximumFractionDigits:2})+' %';
-  const badge=level=>'<span class="seb-gb-level seb-gb-'+safe(level||'NE')+'">'+safe(level||'NE')+'</span>';
-  // Référence institutionnelle : 3 sections, 17 lignes fixes, lecture seule.
   const lines=Array.isArray(general.institutionalRows)?general.institutionalRows:[];
-  const rows=lines.map(line=>{
-    if(line.kind==='section')
-      return '<tr class="seb-gb-category"><th colspan="6">'+safe(line.label)+'</th></tr>';
-    const level=['NE','I','II','III'].includes(line.level)?line.level:'NE';
-    return '<tr><td>'+safe(line.label)+'</td>'+
-      ['NE','I','II','III'].map(n=>
-        '<td class="seb-gb-grade'+(n===level?' seb-gb-selected seb-gb-'+n:'')+'">'+
-        (n===level?'●':'')+'</td>').join('')+
-      '<td class="seb-gb-pct">'+safe(line.display||'')+'</td></tr>';
-  }).join('');
   const warnings=(general.institutionalWarnings||[]).length;
 
   const overlay=document.createElement('div');
@@ -629,11 +673,8 @@ async function openGeneralBilan(personId) {
         <p>Une seule grille institutionnelle consolidée. Les évaluations pratiques sont reprises des pré-bilans validés.</p>
         ${warnings?'<p class="seb-gb-warning">Certaines lignes d’anciens pré-bilans manquent de points enregistrés. Réenregistrer ces pré-bilans avant une consolidation numérique définitive.</p>':''}
         ${response.outdated?'<p class="seb-gb-warning">Les bilans des parcours ont évolué : sauvegarder à nouveau le bilan général et régénérer le Word.</p>':''}
-        <div class="seb-cc-section"><h3>Bilan institutionnel consolidé</h3>
-          <table class="seb-gb-table" aria-label="Bilan institutionnel, lecture seule">
-            <thead><tr><th>Modules et compétences</th><th>NE</th><th>I</th><th>II</th><th>III</th><th>Pourcentage</th></tr></thead>
-            <tbody>${rows||'<tr><td colspan="6">Aucune ligne de bilan.</td></tr>'}</tbody>
-          </table>
+        <div class="seb-cc-section"><h3>Bilan de parcour complet</h3>
+          <div id="seb-gb-original-table"></div>
         </div>
         <div class="seb-cc-section">
           <h3>Synthèse générale (modifiable)</h3>
@@ -649,6 +690,13 @@ async function openGeneralBilan(personId) {
       </div>
     </div>`;
   document.body.appendChild(overlay);
+  try {
+    renderInstitutionalGeneralTable(overlay.querySelector('#seb-gb-original-table'),lines);
+  }catch(error){
+    overlay.remove();
+    alert('Affichage du tableau institutionnel impossible : '+String(error.message||error));
+    return;
+  }
   const field=overlay.querySelector('#seb-gb-summary');
   field.value=String(response.summary||'');
   const status=overlay.querySelector('#seb-gb-status');
