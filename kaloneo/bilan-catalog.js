@@ -242,5 +242,16 @@ window.KaloneoBilanCatalog=Object.freeze([
         "required": true
       }
     ]
+  },
+  {
+    "id": "bilan.savoirs_fondamentaux.competences_transversales.mobiliser_competences",
+    "label": "Capacité à mobiliser des connaissances et des compétences dans différentes situations de travail ou de la vie quotidienne.",
+    "mode": "automatic",
+    "section": "Savoirs fondamentaux",
+    "subsection": "Compétences transversales",
+    "inputs": [
+      {"id": "score", "type": "number", "required": true},
+      {"id": "score_max", "type": "number", "required": true}
+    ]
   }
 ]);
