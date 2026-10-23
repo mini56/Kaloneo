@@ -46,7 +46,7 @@ app.whenReady().then(async()=>{
          toggle.click();
          return getComputedStyle(toggle).display!=='none'||
            getComputedStyle(panel).display!=='none'||
-           getComputedStyle(document.getElementById('outputs-editor')).display==='grid';
+           document.getElementById('outputs-editor').getClientRects().length>0;
        })(),
        simplePickerVisible:getComputedStyle(line).display!=='none'
      };
