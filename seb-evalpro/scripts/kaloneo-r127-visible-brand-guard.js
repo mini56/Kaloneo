@@ -19,7 +19,7 @@ assert(!calculator.includes("brand.textContent = 'Sauvegarde 56'"));
 const settings=load('src/kaloneo-admin-settings.js');
 assert(!settings.includes('KALONÉO — SEB EvalPro'));
 const legacyPath=load('src/kaltest-pilot21-main.js');
-assert(legacyPath.includes('SEB EvalPro Kaloneo PILOTE 21'),'Preserve original candidate data storage');
+assert(legacyPath.includes("'KALONEO'"),'Clean KALONEO profile independent of old SEB');
 const nsis=load('build/installer.nsh');
 const assisted=load('build/kaloneo-assisted-installer.nsh');
 assert(assisted.includes('!define MUI_PAGE_CUSTOMFUNCTION_PRE KaloneoDirectoryPre'));
