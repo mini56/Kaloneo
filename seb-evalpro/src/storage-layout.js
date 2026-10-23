@@ -119,7 +119,7 @@ function internalStorageRoot(userDataPath) {
 }
 
 function documentsWordRoot(documentsPath) {
-  return path.join(documentsPath, 'SEB EvalPro');
+  return path.join(documentsPath, 'KALONEO');
 }
 
 function migrateLegacyDocumentsStorage({ documentsPath, userDataPath }) {
