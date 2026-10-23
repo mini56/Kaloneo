@@ -384,14 +384,16 @@ function calculator(){
 
 function footer(page){
   const foot=el('footer','kb-footer');
+  const presentation=['introduction','fin'].includes(state.model?.meta?.category);
   const left=el('div','kb-footer-left');
   const brand=el('div','kb-brand');
   const logo=el('img');logo.src='../assets/kaloneo-logo-bar.svg';logo.alt='KALONÉO';brand.append(logo,el('span','','KALONÉO'));
   const abandon=el('button','kb-nav-btn abandon','Abandonner l’exercice');abandon.type='button';abandon.onclick=()=>flash('Aperçu : aucun abandon n’est enregistré.');
-  left.append(brand,abandon);
+  left.append(brand);
+  if(!presentation)left.append(abandon);
 
   const center=el('div','kb-footer-center');
-  if(state.definition?.calculator?.compatible){
+  if(!presentation&&state.definition?.calculator?.compatible){
     const calc=el('button','seb-action-btn seb-btn-calculator','Ouvrir la calculatrice');
     calc.type='button';
     calc.dataset.sebAction='open-calculator';
@@ -418,6 +420,7 @@ function render(){
   root.innerHTML='';
   const def=state.definition||{};
   const m=state.model.meta||{};
+  const presentation=['introduction','fin'].includes(m.category);
   const page=el('div','kb-preview-page');
   const pageStyle=def.presentation?.pageStyle||{};
   if(pageStyle.backgroundImage||pageStyle.backgroundColor)page.classList.add('kb-custom-page-background');
@@ -433,15 +436,15 @@ function render(){
   const main=el('div','kb-heading-main');
   if(def.icon?.data){const icon=el('img','kb-heading-icon');icon.src=def.icon.data;icon.alt=def.icon.label||'';main.append(icon);}
   main.append(el('h1','',m.title||def.title||'Nouveau test'));heading.append(main,el('span','kb-preview-badge','APERÇU ELECTRON'));
-  page.append(heading);
+  if(!presentation)page.append(heading);
 
   const contexts=el('div','kb-contexts');
   const scenario=el('section','kb-context');const si=el('img');si.src='../imageqcm/scenario.png';si.alt='';const sb=el('div');const sp=el('p');renderRichContext(sp,m.scenario||'Le scénario apparaîtra ici.');sb.append(el('strong','','Scénario : '),sp);scenario.append(si,sb);
   const instruction=el('section','kb-context');const ii=el('img');ii.src='../imageqcm/avatar_transparant.png';ii.alt='';const ib=el('div');const ip=el('p');renderRichContext(ip,m.instruction||'La consigne apparaîtra ici.');ib.append(el('strong','','Consigne : '),ip);instruction.append(ii,ib);
-  contexts.append(scenario,instruction);page.append(contexts);
+  if(!presentation){contexts.append(scenario,instruction);page.append(contexts);}
 
   buildLayout(page);
-  installChrono(page.querySelector('.kb-workspace'));
+  if(!presentation)installChrono(page.querySelector('.kb-workspace'));
   footer(page);
   root.append(page);
 }

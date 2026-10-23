@@ -7,6 +7,7 @@ const {extract,hydrate}=require('./kaloneo-v1-image-assets');
 const {loadSuppliedImages,publicMetadata}=require('./kaloneo-supplied-images');
 const zlib = require('zlib');
 const { exportImageRecords } = require('./kaloneo-image-export');
+const { iconForDefinition } = require('./kaloneo-default-test-icons');
 
 const BASE_TEST_ORDER = Object.freeze([
   'calculs_commandes_atelier',
@@ -602,7 +603,7 @@ function createKaloneoLibrary(options = {}) {
       scored:definition.scored !== false,
       description:String(definition.description || ''),
       questionCount:questions,
-      icon:definition.icon || null,
+      icon:iconForDefinition(definition),
       tools:[...new Set(tools)],
       protectedVersion:seedContainsTest(definition.id, definition.version),
       adminModified:definition?.kaloneoLibrary?.adminModified === true,
@@ -671,12 +672,15 @@ function createKaloneoLibrary(options = {}) {
   // On réhydrate uniquement la définition réellement demandée par le candidat,
   // l'éditeur ou un export ; aucune image n'est dans les listes/metadata.
   function hydrateLibraryDefinition(definition) {
-    return hydrate(definition,path.join(imagesRoot,'v1-assets'),(digest,extension)=>{
+    const hydrated=hydrate(definition,path.join(imagesRoot,'v1-assets'),(digest,extension)=>{
       const id='img-'+digest.slice(0,32);
       const record=findImageRecord(id);
       if(!record)throw new Error('Image Builder absente de la bibliothèque : '+id);
       return fs.readFileSync(record.binary);
     });
+    const icon=iconForDefinition(hydrated);
+    if(icon && !hydrated.icon?.data)hydrated.icon=icon;
+    return hydrated;
   }
 
   function storeDefinitionImages(definition) {

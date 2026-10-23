@@ -746,11 +746,12 @@
         def.behavior=Object.assign({},def.behavior||{});
         if(pageRole==='fin'){
           delete def.behavior.introduction;
-          Object.assign(def.behavior,{terminal:true,hideNavigation:true,hideContext:true});
+          delete def.behavior.hideNavigation;
+          Object.assign(def.behavior,{terminal:true,hideContext:true});
         }else{
           delete def.behavior.terminal;
           delete def.behavior.hideNavigation;
-          delete def.behavior.hideContext;
+          def.behavior.hideContext=true;
           def.behavior.introduction=true;
         }
       }else if(previousCategory!==def.category &&
@@ -777,8 +778,8 @@
       }
       if(m.icon) def.icon=clone(m.icon);
       else if(Object.prototype.hasOwnProperty.call(def,'icon')) delete def.icon;
-      def.scenario=m.scenario||'';
-      def.instruction=m.instruction||'';
+      def.scenario=pageRole?'':(m.scenario||'');
+      def.instruction=pageRole?'':(m.instruction||'');
       def.calculator=Object.assign({},def.calculator||{},{
         compatible:Boolean(m.calculatorCompatible),
         defaultEnabled:Boolean(m.calculatorCompatible&&m.calculatorDefaultEnabled)
@@ -923,13 +924,13 @@
       kind:questions.length?'questionnaire':'complex',
       scored:['activite_pratique','introduction','fin'].includes(m.category)?false:(m.scored!==false),
       allowEmptyCompletion:m.category==='activite_pratique'?true:undefined,
-      behavior:m.category==='fin'?{terminal:true,hideNavigation:true,hideContext:true}
-        :m.category==='introduction'?{introduction:true}
+      behavior:m.category==='fin'?{terminal:true,hideContext:true}
+        :m.category==='introduction'?{introduction:true,hideContext:true}
         :m.category==='activite_pratique'?{practicalActivity:true}:undefined,
       icon:m.icon?clone(m.icon):undefined,
       features:[...new Set(features)],
-      scenario:m.scenario||'',
-      instruction:m.instruction||'',
+      scenario:['introduction','fin'].includes(m.category)?'':(m.scenario||''),
+      instruction:['introduction','fin'].includes(m.category)?'':(m.instruction||''),
       calculator:{
         compatible:Boolean(m.calculatorCompatible),
         defaultEnabled:Boolean(m.calculatorCompatible&&m.calculatorDefaultEnabled),

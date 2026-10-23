@@ -3759,3 +3759,7 @@ body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2 .kaltest-
   #page-identification .pilot2-civility-options { gap: 7px; }
   #page-identification .pilot2-civility-options .pilot2-radio-option { gap: 3px; font-size: 14px; }
 }
+
+/* Pages de présentation créées dans le Builder : pas de titre ni de contexte d'exercice. */
+body.seb-kaltest-builder-presentation #page-exercise .kaltest-heading,
+body.seb-kaltest-builder-presentation #page-exercise .kaltest-context-row {display:none!important}

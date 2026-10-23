@@ -295,22 +295,22 @@
       icon:selectedIcon(),
       layout:$('test-layout').value,
       template:$('test-template').value,
-      scenario:$('test-scenario').value.trim(),
-      instruction:$('test-instruction').value.trim(),
-      calculatorCompatible:$('calculator-compatible').checked,
+      scenario:specialPage?'':$('test-scenario').value.trim(),
+      instruction:specialPage?'':$('test-instruction').value.trim(),
+      calculatorCompatible:!specialPage&&$('calculator-compatible').checked,
       calculatorDefaultEnabled:false,
       calculatorBrand:$('calculator-brand').value.trim(),
-      chronoEnabled:$('chrono-enabled').checked,
+      chronoEnabled:!specialPage&&$('chrono-enabled').checked,
       chronoMode:$('chrono-mode').value,
       chronoMinMeasures:Math.max(1,Number($('chrono-min-measures').value)||1),
       chronoMaxMeasures:Math.max(1,Number($('chrono-max-measures').value)||1),
       chronoAutoReset:$('chrono-auto-reset').checked,
       chronoFocusAfterStop:$('chrono-focus-after-stop').checked,
       chronoShowTime:$('chrono-show-time').checked,
-      adminIntervention:$('admin-intervention').checked,
+      adminIntervention:!specialPage&&$('admin-intervention').checked,
       adminInstructions:$('admin-instructions').value.trim(),
-      autoevaluation:$('autoevaluation-enabled').checked,
-      externalMaterial:$('external-material').checked,
+      autoevaluation:!specialPage&&$('autoevaluation-enabled').checked,
+      externalMaterial:!specialPage&&$('external-material').checked,
       externalMaterialText:$('external-material-text').value.trim(),
       block1WidthChars:$('block1-width-chars').value,
       block2WidthChars:$('block2-width-chars').value,
@@ -370,6 +370,22 @@
     syncCapabilityOptions();
   }
 
+  // Les pages non notées sont de simples présentations : aucun contexte
+  // d'exercice ni titre imposé au candidat, mais un nom reste utile à l'admin.
+  function syncPresentationMode(specialPage) {
+    for(const id of ['builder-exercise-context-fields','builder-exercise-options',
+      'builder-preview-heading','builder-preview-context']) {
+      const node=$(id);
+      if(node)node.hidden=specialPage;
+    }
+    const label=$('builder-title-caption');
+    if(label)label.textContent=specialPage?'Nom de la page':'Titre du test';
+    const heading=$('builder-block-heading');
+    if(heading)heading.textContent=specialPage?'Blocs de présentation':'Bloc Exercice';
+    const fold=$('toggle-exercise-section');
+    if(fold)fold.setAttribute('aria-label',specialPage?'Replier les blocs de présentation':'Replier Bloc Exercice');
+  }
+
   function syncPracticalCategory(categoryChanged=false) {
     const category=$('test-category').value;
     const practical=category==='activite_pratique';
@@ -380,6 +396,7 @@
     if(!state.sourceProtectedVersion||categoryChanged)$('test-scored').value=(practical||specialPage)?'false':'true';
     else if(practical||specialPage)$('test-scored').value='false';
     if(specialPage && categoryChanged) state.bilanContributions=[];
+    syncPresentationMode(specialPage);
     $('test-scored').disabled=true;
     // À l'ouverture d'une V1, préserver strictement ses liaisons historiques.
     // MAIS si l'administrateur change explicitement la catégorie, effacer
@@ -3278,10 +3295,12 @@
     add(Boolean(m.title),'Titre renseigné');
     add(Boolean(m.id),'Identifiant du test créé');
     const specialPage=m.category==='introduction'||m.category==='fin';
-    add(specialPage||Boolean(m.scenario),'Scénario renseigné');
-    add(specialPage||Boolean(m.instruction),'Consigne renseignée');
+    if(!specialPage){
+      add(Boolean(m.scenario),'Scénario renseigné');
+      add(Boolean(m.instruction),'Consigne renseignée');
+    }
     add(state.blocks.some(b=>!['image','audio','video'].includes(b.type) ||
-      Boolean(b.mediaData||b.mediaName||b.mediaPlaceholder)),'Au moins un bloc Exercice');
+      Boolean(b.mediaData||b.mediaName||b.mediaPlaceholder)),specialPage?'Au moins un bloc de présentation':'Au moins un bloc Exercice');
     if(specialPage){
       add(state.blocks.some(b=>
         (b.type==='text'&&Boolean(String(b.text||'').trim()))||

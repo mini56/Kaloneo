@@ -1929,9 +1929,9 @@
     const customBuilderPage=test.pageRole==='fin' &&
       Array.isArray(test.presentation?.builderContent);
     if (!definition && !customBuilderPage) return false;
-    document.body.classList.add('seb-kaltest-terminal');
+    if(!customBuilderPage)document.body.classList.add('seb-kaltest-terminal');
     const next = document.getElementById('kaltest-next');
-    if (next) next.hidden = true;
+    if (next && !customBuilderPage) next.hidden = true;
     const calculator = document.getElementById('kaltest-calculator');
     if (calculator) calculator.hidden = true;
 
@@ -1967,6 +1967,9 @@
     host.appendChild(wrap);
     }
 
+    // Les nouvelles pages de fin restent visibles jusqu'au clic sur Suivant.
+    // Le comportement de la page finale V1 n'est pas modifié.
+    if(customBuilderPage)return true;
     const testState = testStateFor(test);
     testState.status = 'COMPLETED';
     testState.answers.final_seen = '1';
@@ -3857,7 +3860,10 @@
 
     document.body.dataset.sebKaltestExercise = '1';
     document.body.dataset.sebKaltestId = test.id;
-    document.body.classList.remove('seb-kaltest-transition-video','seb-kaltest-terminal');
+    document.body.classList.remove('seb-kaltest-transition-video','seb-kaltest-terminal','seb-kaltest-builder-presentation');
+    const builderPresentation=['introduction','fin'].includes(test.pageRole) &&
+      Array.isArray(test.presentation?.builderContent);
+    document.body.classList.toggle('seb-kaltest-builder-presentation',builderPresentation);
     document.body.classList.toggle('seb-kaltest-legacy-full', test.presentation?.legacyFullPage === true);
     document.body.dataset.sebKaltestLabel = test.title;
     window.sebNwtexteContext = null;
@@ -3880,7 +3886,12 @@
     document.getElementById('kaltest-progress').textContent =
       'Exercice ' + (state.testIndex + 1) + ' / ' + ACTIVE_TESTS.length;
     renderRichContext(document.getElementById('kaltest-scenario'), test.scenario || '');
-    renderRichContext(document.getElementById('kaltest-instruction'), test.instruction || '');
+    // Corriger la consigne affichée sans altérer la V1 historique protégée.
+    const visibleInstruction=test.id==='tri_chevilles'
+      ? String(test.instruction||'').replace('même s’il est égal à 0.',
+        'même s’il est égal à 0, puis validez votre saisie avec la touche ENTRÉE.')
+      : (test.instruction||'');
+    renderRichContext(document.getElementById('kaltest-instruction'), visibleInstruction);
 
     const calculator = document.getElementById('kaltest-calculator');
     const calculatorEnabled = test.calculator?.compatible === true && test.calculator?.defaultEnabled !== false;
@@ -3902,7 +3913,7 @@
     if (shouldPauseForValidation(test) && testState?.status !== 'COMPLETED') {
       next.textContent = test.behavior?.validationLabel || 'Valider';
     } else {
-      next.textContent = isLastActiveTest && !PILOT11_MODE ? 'Terminer le parcours' : 'Suivant';
+      next.textContent = builderPresentation?'Suivant':(isLastActiveTest && !PILOT11_MODE ? 'Terminer le parcours' : 'Suivant');
     }
 
     const status = document.getElementById('exercise-status');
@@ -4022,6 +4033,17 @@
     const testState = currentTestState();
     const status = document.getElementById('exercise-status');
     if (!test || !testState) return;
+
+    if(test.pageRole==='fin' && Array.isArray(test.presentation?.builderContent)){
+      testState.status='COMPLETED';
+      testState.answers.final_seen='1';
+      testState.result={score:0,scoreMax:0,percentage:0,details:{},status:'completed'};
+      sessionStorage.setItem('seb_kaltest_parcours_finished','1');
+      persist();
+      await captureReplayPage();
+      advance();
+      return;
+    }
 
     if (shouldPauseForValidation(test) && testState.status === 'COMPLETED') {
       if (test.behavior?.revalidateOnAdvance === true) {
@@ -4211,6 +4233,8 @@
       if(element!==buttonBar)element.style.display='none';
     }
     page.insertBefore(custom,buttonBar);
+    const introNext=document.getElementById('intro-next');
+    if(introNext)introNext.textContent='Suivant';
   }
 
   function install() {

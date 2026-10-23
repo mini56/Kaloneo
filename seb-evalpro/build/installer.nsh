@@ -2,8 +2,12 @@
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
 
-!define SEB_BUILD_NUMBER "166"
+!define SEB_BUILD_NUMBER "167"
 !define SEB_BUILD_LABEL "Build #${SEB_BUILD_NUMBER}"
+
+# R164 : montrer les opérations réelles de copie et de finalisation.
+ShowInstDetails show
+ShowUninstDetails show
 
 # R163: Full application removal without deleting any other software's data.
 # Upgrades must NEVER erase candidates, bilans, or current user preferences.
@@ -65,7 +69,8 @@ FunctionEnd
 !macroend
 
 !macro customInstall
-  # Intentionally empty: never migrate legacy programs or candidate files.
+  DetailPrint "Finalisation de KALONÉO et création des raccourcis Windows"
+  # Ne jamais migrer les programmes historiques ni les dossiers candidats.
 !macroend
 
 !macro preInit

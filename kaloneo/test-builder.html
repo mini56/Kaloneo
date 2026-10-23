@@ -38,7 +38,7 @@
       </div>
 
       <div class="form-grid cols-3">
-        <label>Titre du test
+        <label><span id="builder-title-caption">Titre du test</span>
           <input id="test-title" type="text" placeholder="Ex. Calculs de commandes">
         </label>
         <label>ID du test
@@ -177,7 +177,7 @@
           </div>
         </div>
 
-        <div class="form-grid cols-2">
+        <div id="builder-exercise-context-fields" class="form-grid cols-2">
         <label class="context-rich-field"><span class="context-field-heading">Scénario <span class="required">*</span></span>
           <span class="context-format-toolbar" aria-label="Mise en forme du scénario">
             <button type="button" class="context-format-btn" data-target="test-scenario" data-format="b" title="Gras"><strong>G</strong></button>
@@ -200,7 +200,7 @@
         </label>
         </div>
 
-        <div class="option-row">
+        <div id="builder-exercise-options" class="option-row">
         <label><input id="calculator-compatible" type="checkbox"> Calculatrice compatible</label>
         <label><input id="chrono-enabled" type="checkbox"> Compteur KALONÉO commun</label>
         <label><input id="admin-intervention" type="checkbox"> Intervention Administrateur</label>
@@ -288,7 +288,7 @@
       <div class="builder-exercise-section">
         <div class="section-title-row">
           <div>
-            <h2>Bloc Exercice</h2>
+            <h2 id="builder-block-heading">Bloc Exercice</h2>
             <p class="muted">Les blocs restent dans l’ordre ci-dessous. Un seul niveau de blocs est utilisé.</p>
           </div>
           <div class="builder-exercise-actions">
@@ -353,7 +353,7 @@
         <div id="mini-block-hover-layer" class="mini-block-hover-layer" aria-hidden="true" hidden></div>
         <div id="candidate-preview-status" class="candidate-preview-status" role="status" hidden></div>
       <div id="candidate-preview" class="candidate-preview">
-        <div class="preview-heading">
+        <div id="builder-preview-heading" class="preview-heading">
           <div class="preview-title-with-icon">
             <img id="preview-test-icon" class="preview-test-icon" alt="" hidden>
             <h2 id="preview-title">Nouveau test</h2>
@@ -361,7 +361,7 @@
           <span id="preview-version">v1.0.0</span>
         </div>
 
-        <section class="preview-context">
+        <section id="builder-preview-context" class="preview-context">
           <div class="preview-context-card">
             <img src="../imageqcm/scenario.png" alt="">
             <div><strong>Scénario :</strong><p id="preview-scenario"></p></div>
