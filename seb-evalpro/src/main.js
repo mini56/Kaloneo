@@ -27,7 +27,7 @@ const { inspectCandidateOverflow } = require('./kaloneo-layout-diagnostics');
 // The taskbar must show exactly the same chameleon as the candidate's left bar.
 // Electron-builder embeds this icon into KALONEO.exe; extraResources also
 // supplies the identical icon to Electron for every BrowserWindow.
-const KALONEO_WINDOWS_APP_ID = 'fr.sauvegarde56.sebevalpro.kaloneo.pilot22';
+const KALONEO_WINDOWS_APP_ID = 'fr.sauvegarde56.kaloneo';
 function kaloneoWindowsWindowIcon() {
   if (process.platform !== 'win32') return undefined;
   const iconPath = app.isPackaged
