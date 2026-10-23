@@ -54,6 +54,7 @@ permissions:
   actions: read
 jobs:
   windows-installer-migration:
+    if: github.sha == '9d080d2a2427b9a1cb09f457e8db6e7d5bc113da'
     # Nouveau Build #161. La release R157 reste figée et disponible comme secours.
     runs-on: windows-latest
     timeout-minutes: 60
