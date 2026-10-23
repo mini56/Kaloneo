@@ -619,8 +619,20 @@ function renderInstitutionalGeneralTable(host,lines) {
     const select=row.querySelector('select.csel');
     if(select){
       const comment=String(line.comment||'');
-      const selected=[...select.options].find(option=>option.value===comment&&option.dataset.l===level)
+      let selected=[...select.options].find(option=>option.value===comment&&option.dataset.l===level)
         ||(line.mode==='manual'?null:[...select.options].find(option=>option.dataset.l===level&&level!=='NE'));
+      // Un commentaire manuel historique doit rester visible à l'identique.
+      if(comment&&!selected){
+        selected=doc.createElement('option');
+        selected.value=comment;
+        selected.textContent=comment;
+        selected.dataset.l=level;
+        select.appendChild(selected);
+      }
+      // importNode() ne conserve pas toujours l'état IDL selectedIndex :
+      // sérialiser la sélection en attribut HTML AVANT le clonage du tableau.
+      for(const option of select.options)option.removeAttribute('selected');
+      if(selected)selected.setAttribute('selected','selected');
       select.selectedIndex=selected?selected.index:0;
       select.disabled=true;
       select.setAttribute('aria-label','Commentaire du bilan institutionnel (lecture seule)');
