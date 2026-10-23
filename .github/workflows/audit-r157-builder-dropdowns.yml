@@ -9,6 +9,7 @@ on:
       - '.github/workflows/build-r159-clean-kaloneo-five-tests.yml'
       - 'seb-evalpro/scripts/kaloneo-testsv1.js'
       - 'seb-evalpro/build/installer.nsh'
+      - 'seb-evalpro/scripts/kaloneo-r126-install-path-guard.js'
       - 'seb-evalpro/scripts/r158-build-installer-intro.py'
       - 'seb-evalpro/scripts/r158-installer-intro-smoke.js'
       - 'kaloneo/test-builder.js'
