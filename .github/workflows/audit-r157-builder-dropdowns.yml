@@ -9,6 +9,7 @@ on:
       - '.github/workflows/build-r159-clean-kaloneo-five-tests.yml'
       - '.github/workflows/build-r160-original-v1.yml'
       - 'seb-evalpro/scripts/prepare-web.js'
+      - 'seb-evalpro/scripts/kaloneo-r125-branding.py'
       - 'seb-evalpro/package.json'
       - 'seb-evalpro/scripts/r159-clean-install-windows-smoke.ps1'
       - 'seb-evalpro/scripts/kaloneo-testsv1.js'
