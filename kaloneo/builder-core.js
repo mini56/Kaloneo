@@ -736,15 +736,31 @@
       def.title=m.title||def.title;
       def.id=m.id||def.id;
       def.version=m.version||def.version;
+      const previousCategory=def.category;
       def.category=m.category||def.category;
       const pageRole=def.category==='introduction'?'introduction':def.category==='fin'?'fin':null;
       if(pageRole){
         def.pageRole=pageRole;
         def.scored=false;
         def.bilanContributions=[];
-        def.behavior=Object.assign({},def.behavior||{},pageRole==='fin'
-          ? {terminal:true,hideNavigation:true,hideContext:true}
-          : {introduction:true});
+        def.behavior=Object.assign({},def.behavior||{});
+        if(pageRole==='fin'){
+          delete def.behavior.introduction;
+          Object.assign(def.behavior,{terminal:true,hideNavigation:true,hideContext:true});
+        }else{
+          delete def.behavior.terminal;
+          delete def.behavior.hideNavigation;
+          delete def.behavior.hideContext;
+          def.behavior.introduction=true;
+        }
+      }else if(previousCategory!==def.category &&
+        (def.pageRole==='fin'||def.pageRole==='introduction')){
+        // Changer de catégorie ne doit pas laisser une ancienne page terminale
+        // ou d'introduction déguisée en test ordinaire.
+        def.pageRole='test';
+        def.behavior=Object.assign({},def.behavior||{});
+        for(const key of ['terminal','introduction','hideNavigation','hideContext'])
+          delete def.behavior[key];
       }
       const practical=def.category==='activite_pratique';
       def.scored=(practical||Boolean(pageRole))?false:(m.scored!==false);

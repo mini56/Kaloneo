@@ -43,6 +43,17 @@ try{
   assert.equal(roundTrip.presentation.builderContent[0].text,'Bienvenue dans '+category);
   created[category]={id,version:'1.0.0'};
  }
+ // Les changements de catégorie conservent une sémantique cohérente.
+ const base=Core.modelToDefinition(model('conversion_role','fin'));
+ const sourceModel=Core.definitionToModel(base);
+ sourceModel.meta.category='introduction';
+ const introFromFin=Core.modelToDefinition(sourceModel);
+ assert.equal(introFromFin.pageRole,'introduction');
+ assert(!introFromFin.behavior?.terminal,'Terminal hérité lors du passage vers introduction');
+ sourceModel.meta.category='mathematiques';
+ const testFromFin=Core.modelToDefinition(sourceModel);
+ assert.equal(testFromFin.pageRole,'test');
+ assert(!testFromFin.behavior?.terminal,'Terminal hérité lors du passage vers un test');
  const tests=lib.listTests().filter(x=>x.role==='test');
  assert(tests.length>=1,'Catalogue historique disparu');
  const chosen=tests.find(x=>x.id==='calculs_commandes_atelier')||tests[0];
