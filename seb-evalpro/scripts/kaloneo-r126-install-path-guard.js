@@ -19,7 +19,8 @@ assert(cfg.includes('deleteAppDataOnUninstall: false'));
 assert(cfg.includes('artifactName: "KALONEO-Setup-0.0.186.\${ext}"'));
 assert(nsis.includes('!define SEB_BUILD_NUMBER "162"'));
 assert(nsis.includes('StrCpy $INSTDIR "$LOCALAPPDATA\\Programs\\KALONEO"'));
-assert(nsis.includes('StrCpy $INSTDIR "$PROGRAMFILES64\\KALONEO"'));
+assert(!nsis.includes('$installMode'),'Installer directory page must not access undeclared installMode');
+assert(nsis.includes('Function KaloneoDirectoryPre'),'Native installer folder page must stay present');
 assert(nsis.includes('StrCpy $perUserInstallationFolder "$LOCALAPPDATA\\Programs\\KALONEO"'));
 assert(nsis.includes('StrCpy $perMachineInstallationFolder "$PROGRAMFILES64\\KALONEO"'));
 assert(!/seb-evalpro|Recovery|candidate-local-key|CopyFiles|Rename "\\$INSTDIR"|ReadRegStr|SEB EvalPro\\.lnk/i.test(nsis),
