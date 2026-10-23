@@ -902,6 +902,29 @@
     return wrap;
   }
 
+  // R157 — ouverture fiable des vrais menus déroulants sous Electron / Windows.
+  // La sélection reste un <select> natif, avec son change et sa gestion clavier.
+  // Sur certains postes, l'ouverture implicite au clic natif n'affiche pas
+  // la liste dans une zone défilante. showPicker() la sollicite explicitement
+  // dans le geste utilisateur ; si la fonction n'est pas supportée, la
+  // commande native reprend normalement (aucune option / donnée modifiée).
+  function installNativeSelectPickers() {
+    document.addEventListener('pointerdown',event=>{
+      if(event.button!==0||event.pointerType==='touch')return;
+      const control=event.target?.closest?.('select');
+      if(!control || !control.closest('.builder-editor,.builder-preview,.modal,.test-library-dialog,.image-library-dialog') ||
+         control.disabled || control.options.length<2 ||
+         typeof control.showPicker!=='function')return;
+      try{
+        control.showPicker();
+        event.preventDefault(); // Ne pas lancer un second popup au clic natif.
+      }catch(_){
+        // Certains Windows/Electron interdisent showPicker. Le clic natif
+        // reste intact et la sélection au clavier demeure disponible.
+      }
+    },{capture:true});
+  }
+
   function selectField(label,value,values,onChange) {
     const wrap=document.createElement('label');
     wrap.textContent=label;
@@ -3942,6 +3965,7 @@
     initSectionFold('toggle-icon-library');
     initSectionFold('toggle-contract-section');
     installSimpleBilanLink();
+    installNativeSelectPickers();
     initSectionFold('toggle-page-style');
     initSectionFold('toggle-validation-section');
     initSectionFold('toggle-exercise-section');
