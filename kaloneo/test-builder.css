@@ -801,7 +801,11 @@ body{
   display:flex;
   flex-direction:column;
   gap:8px;
-  overflow:hidden;
+  /* Nouvelle V1 enrichie : ne jamais couper les questions dépassant
+     la hauteur disponible en 1366x768 ou sur un écran plus petit. */
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
 }
 .preview-content-block{
   flex:0 0 auto;
