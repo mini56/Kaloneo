@@ -1,0 +1,26 @@
+name: "KALONÉO - Parcours de base sans SEB EvalPro"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/audit-parcours-branding.yml'
+      - 'seb-evalpro/src/kaloneo-library-main.js'
+      - 'seb-evalpro/overrides/admin-parcours-builder.html'
+      - 'seb-evalpro/scripts/kaloneo-parcours-builder-smoke.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-protected-parcours-branding:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Vérifier le parcours de base et le correctif de l'ancien créateur
+        run: node scripts/kaloneo-parcours-builder-smoke.js
