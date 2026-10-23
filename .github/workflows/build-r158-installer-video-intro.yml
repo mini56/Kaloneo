@@ -329,7 +329,7 @@ jobs:
           do {
             $all=gh api "repos/$env:GITHUB_REPOSITORY/actions/runs?head_sha=$env:GITHUB_SHA&per_page=100" | ConvertFrom-Json
             if($LASTEXITCODE -ne 0){throw 'GitHub Actions dropdown audit status unavailable'}
-            $matches=@($all.workflow_runs | Where-Object { $_.name -eq 'KALONÉO R158 - Audit général des menus déroulants Builder V1 et futur' })
+            $matches=@($all.workflow_runs | Where-Object { $_.name -eq 'KALONÉO R157 - Audit général des menus déroulants Builder V1 et futur' })
             if($matches.Count -gt 0){
               $latest=$matches | Sort-Object created_at -Descending | Select-Object -First 1
               if($latest.conclusion -eq 'success'){Write-Host 'R158 ALL MENUS GREEN on exact SHA';break}
