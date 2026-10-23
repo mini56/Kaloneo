@@ -1035,11 +1035,19 @@ function createKaloneoLibrary(options = {}) {
   function ensureBaseParcours() {
     const existing = readAllParcours().find(item => item && item.id === 'parcours-de-base');
     if (existing) {
+      let updated = false;
+      // R163 : corriger uniquement l'ancien créateur du modèle système.
+      // Ne modifier ni les parcours personnalisés, ni les tests, ni les dates.
+      if (existing.systemProvided === true && existing.creator === 'SEB EvalPro / KALONÉO') {
+        existing.creator = 'KALONÉO';
+        updated = true;
+      }
       if (!existing.maskScreen) {
         existing.maskScreen = defaultMaskRef();
         existing.schemaVersion = Math.max(2, Number(existing.schemaVersion) || 1);
-        atomicWriteJson(path.join(parcoursRoot, existing.id + '.json'), existing);
+        updated = true;
       }
+      if (updated) atomicWriteJson(path.join(parcoursRoot, existing.id + '.json'), existing);
       return;
     }
 
@@ -1059,7 +1067,7 @@ function createKaloneoLibrary(options = {}) {
       schemaVersion:2,
       id:'parcours-de-base',
       name:'Parcours de base',
-      creator:'SEB EvalPro / KALONÉO',
+      creator:'KALONÉO',
       systemProvided:true,
       createdAt:stamp,
       updatedAt:stamp,

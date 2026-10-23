@@ -71,7 +71,23 @@ try {
   const base = library.listParcours().find(item => item.id === 'parcours-de-base');
   assert.ok(base, 'Parcours de base absent');
   assert.strictEqual(base.testCount, 21, 'le parcours de base doit contenir 21 tests intermédiaires');
-  assert.strictEqual(base.creator, 'SEB EvalPro / KALONÉO');
+  assert.strictEqual(base.creator, 'KALONÉO');
+// Regression: a profile created with an older setup must migrate without
+// changing order, IDs, grades, dates or administrator-created parcours.
+const originalBaseFile=path.join(temp,'KALONEO','Parcours','parcours-de-base.json');
+const originalBase=JSON.parse(fs.readFileSync(originalBaseFile,'utf8'));
+const oldSystemBase={...originalBase,creator:'SEB EvalPro / KALONÉO'};
+fs.writeFileSync(originalBaseFile,JSON.stringify(oldSystemBase));
+const migrated=library.getParcours('parcours-de-base');
+assert.strictEqual(migrated.ok,true);
+assert.strictEqual(migrated.parcours.creator,'KALONÉO');
+const newSystemBase=JSON.parse(fs.readFileSync(originalBaseFile,'utf8'));
+assert.strictEqual(newSystemBase.creator,'KALONÉO');
+assert.deepStrictEqual(newSystemBase.tests,oldSystemBase.tests,'test order must not change');
+assert.deepStrictEqual(newSystemBase.maskScreen,oldSystemBase.maskScreen,'mask ref must not change');
+assert.strictEqual(newSystemBase.updatedAt,oldSystemBase.updatedAt,'creation date must not change');
+assert.deepStrictEqual(newSystemBase.introduction,oldSystemBase.introduction);
+assert.deepStrictEqual(newSystemBase.fin,oldSystemBase.fin);
 
   const selected = normal.slice(0, 3);
   const payload = {
@@ -142,7 +158,7 @@ try {
     ...payload,
     id:'parcours-de-base',
     name:'Parcours de base',
-    creator:'SEB EvalPro / KALONÉO'
+    creator:'KALONÉO'
   });
   assert.strictEqual(protectedBaseUpdate.ok, false, 'le parcours de base doit rester protégé');
 
