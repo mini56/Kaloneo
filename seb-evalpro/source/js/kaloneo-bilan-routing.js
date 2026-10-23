@@ -74,10 +74,15 @@
   function collect(tests,stateFor){
     const entries=new Map(),warnings=[];
     for(const test of tests||[]){
-      // Les V1 sont déjà traitées par les barèmes historiques validés.
-      // Seuls les tests issus du Builder passent par ce moteur générique :
-      // ne jamais compter une V1 deux fois.
-      if(test?.adminModified!==true)continue;
+      // Les V1 historiques ont leurs propres barèmes et ne doivent jamais
+      // être comptées deux fois. Exception explicite et UNIQUE validée en R156 :
+      // Gestes et postures V1 est désormais relié à la ligne officielle
+      // Compétences transversales, avec sa note réelle sur 3 points.
+      const gesturesV1=test?.id==='gestes_postures'&&String(test?.version)==='1.0.0'&&
+        test?.category==='competences_transversales'&&
+        links(test).some(link=>link.lineId===
+          'bilan.savoirs_fondamentaux.competences_transversales.mobiliser_competences');
+      if(test?.adminModified!==true&&!gesturesV1)continue;
       for(const link of links(test)){
         const rowId=rowFor(link.lineId);
         if(!compatible(test.category,link.lineId)){
