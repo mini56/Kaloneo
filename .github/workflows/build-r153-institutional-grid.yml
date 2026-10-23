@@ -36,6 +36,7 @@ permissions:
   actions: read
 jobs:
   windows-installer-migration:
+    if: ${{ github.sha == '1187f3421e6daac6209526ff864b1b910a080cf9' }}
     # Nouveau Build #156. La release R152 reste figée et disponible comme secours.
     runs-on: windows-latest
     timeout-minutes: 60
