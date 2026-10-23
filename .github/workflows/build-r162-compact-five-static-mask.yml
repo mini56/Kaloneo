@@ -71,6 +71,8 @@ permissions:
   actions: read
 jobs:
   windows-installer-migration:
+    # R162 Build #165 is published and immutable; never rerun a release on future commits.
+    if: github.sha == '7e5a3f753c8160a74d7822880a5b1fc9f00d887d'
     # R162 was released at this commit: no republishing Build #165 on the moving branch.
     env:
       KALONEO_SKIP_OFFICIAL_V1: '0'
