@@ -5,7 +5,7 @@
   "id": "gestes_postures",
   "version": "1.0.0",
   "title": "Gestes et postures",
-  "category": "prevention",
+  "category": "competences_transversales",
   "description": "Identifier trois bonnes postures de manutention parmi six propositions.",
   "kind": "questionnaire",
   "scored": true,
@@ -115,7 +115,15 @@
       "type": "number"
     }
   ],
-  "bilanContributions": [],
+  "bilanContributions": [
+    {
+      "lineId": "bilan.savoirs_fondamentaux.competences_transversales.mobiliser_competences",
+      "bindings": {
+        "score": "score",
+        "score_max": "score_max"
+      }
+    }
+  ],
   "features": [
     "runtime.basic",
     "questionnaire.basic",
