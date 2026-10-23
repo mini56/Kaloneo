@@ -4,6 +4,7 @@ on:
     branches: [fix-r60-tri-rearm-only-20261011]
     paths:
       - '.github/workflows/audit-r157-builder-dropdowns.yml'
+      - '.github/workflows/build-r157-builder-menus.yml'
       - 'kaloneo/test-builder.js'
       - 'kaloneo/test-builder.css'
       - 'kaloneo/test-builder.html'
