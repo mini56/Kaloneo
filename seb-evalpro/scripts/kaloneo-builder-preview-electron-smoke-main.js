@@ -23,6 +23,8 @@ let restaurantFixture = null;
 let genreNombreFixture = null;
 let genreLibraryMode = false;
 let protectedOrganisation = null;
+let gesturesV1Fixture = null;
+let gesturesLibraryMode = false;
 const imageLibraryData = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120"><rect width="180" height="120" fill="#1b6c8e"/></svg>').toString('base64');
 const imageLibraryAlternativeData = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120"><rect width="180" height="120" fill="#e67e22"/></svg>').toString('base64');
 let win = null;
@@ -82,8 +84,10 @@ ipcMain.handle('kaloneo-library:list-tests',()=>({
     {id:'organisation_demenagement',version:'1.0.0',title:'Organisation d’une activité',category:'organisation',role:'test',scored:true,protectedVersion:true}
   ] : []).concat(restaurantFixture?[{id:restaurantFixture.id,version:restaurantFixture.version,title:restaurantFixture.title,category:restaurantFixture.category,role:'test',scored:true,protectedVersion:false}]:[])
     .concat(genreLibraryMode&&genreNombreFixture?[{id:genreNombreFixture.id,version:genreNombreFixture.version,title:genreNombreFixture.title,category:genreNombreFixture.category,role:'test',scored:true,protectedVersion:false}]:[])
+    .concat(gesturesLibraryMode&&gesturesV1Fixture?[{id:gesturesV1Fixture.id,version:gesturesV1Fixture.version,title:gesturesV1Fixture.title,category:gesturesV1Fixture.category,role:'test',scored:true,protectedVersion:true}]:[])
 }));
 ipcMain.handle('kaloneo-library:get-test',(_e,payload)=>{
+  if(gesturesLibraryMode&&gesturesV1Fixture&&payload?.id===gesturesV1Fixture.id)return {ok:true,definition:JSON.parse(JSON.stringify(gesturesV1Fixture))};
   if(restaurantFixture&&payload?.id===restaurantFixture.id)return {ok:true,definition:JSON.parse(JSON.stringify(restaurantFixture))};
   if(genreLibraryMode&&genreNombreFixture&&payload?.id===genreNombreFixture.id)return {ok:true,definition:JSON.parse(JSON.stringify(genreNombreFixture))};
   if(protectedLibraryMode&&payload?.id==='organisation_demenagement'&&payload?.version==='2.0.0'&&organisationV2Fixture)
@@ -146,6 +150,7 @@ app.whenReady().then(async()=>{
      organisationV2Fixture.presentation?.organisationList)
     return fail('Le fixture V2 Organisation ne représente pas le schéma Builder attendu');
   restaurantFixture=JSON.parse(fs.readFileSync(path.join(root,'r48-demo','planning-restaurant-builder-r48.json'),'utf8'));
+  gesturesV1Fixture=JSON.parse(fs.readFileSync(path.join(root,'source','kaltest','tests','gestes-postures','1.0.0','test.json'),'utf8'));
   genreNombreFixture=JSON.parse(fs.readFileSync(path.join(root,'source','kaltest','tests','genre-nombre','1.0.0','test.json'),'utf8'));
   const builder=path.join(web,'kaloneo-builder','test-builder.html');
   const preview=path.join(web,'kaloneo-builder','test-preview.html');
@@ -2677,6 +2682,7 @@ app.whenReady().then(async()=>{
 
     // R157 — inventaire de TOUS les menus visibles et test du vrai
     // gestionnaire de sélection sur une V1 protégée et un nouveau bloc.
+    gesturesLibraryMode=true;
     const allBuilderDropdowns=await win.webContents.executeJavaScript('('+async function(){
       const delay=ms=>new Promise(ok=>setTimeout(ok,ms));
       const visible=el=>el&&el.getClientRects().length>0&&
@@ -2701,8 +2707,8 @@ app.whenReady().then(async()=>{
       document.getElementById('open-library-test').click();
       await delay(200);
       const row=[...document.querySelectorAll('.test-library-item')]
-        .find(n=>String(n.textContent||'').includes('v1.0.0'));
-      if(!row)return {ok:false,reason:'V1 non trouvée'};
+        .find(n=>String(n.textContent||'').includes('Gestes et postures'));
+      if(!row)return {ok:false,reason:'V1 Gestes et postures non trouvée'};
       row.querySelector('.test-library-item-actions button')?.click();
       await delay(260);
       const block=document.querySelector('.exercise-block');
