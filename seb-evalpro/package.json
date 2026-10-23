@@ -114,6 +114,6 @@
       "artifactName": "SEB-eval-PRO-${version}-Linux.${ext}"
     }
   },
-  "sebBuildNumber": 162,
-  "sebReleaseVersion": "0.0.186"
+  "sebBuildNumber": 163,
+  "sebReleaseVersion": "0.0.187"
 }

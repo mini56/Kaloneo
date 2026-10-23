@@ -66,10 +66,20 @@ copyTree(overridesDir,outputDir);
 fs.copyFileSync(path.join(root,'src','kaloneo-mask-media.js'),path.join(outputDir,'js','kaloneo-mask-media.js'));
 // Les fichiers fournis par l'administrateur ne sont pas ajoutés à la bibliothèque d'images.
 copyTree(path.join(repoRoot,'video_ecran_mq'),path.join(outputDir,'mask-media-seed'));
-writeOfficialSeedOverrides({
-  repoRoot,sourceTestsDir:path.join(sourceDir,'kaltest','tests'),
-  outputTestsDir:path.join(outputDir,'kaltest','tests')
-});
+// R160 comparison: do not package the five main TESTS_V1 exports.
+// The source files on GitHub are untouched; R159 keeps its own frozen Setup.
+if(process.env.KALONEO_SKIP_OFFICIAL_V1 === '1'){
+  const manifestFile=path.join(outputDir,'kaltest','TESTS_V1-manifest.json');
+  fs.writeFileSync(manifestFile,JSON.stringify({
+    format:'kaloneo-official-v1-overrides',version:1,tests:[]
+  },null,2)+'\n','utf8');
+  console.log('KALONEO R160: five TESTS_V1 excluded from comparison Setup');
+}else{
+  writeOfficialSeedOverrides({
+    repoRoot,sourceTestsDir:path.join(sourceDir,'kaltest','tests'),
+    outputTestsDir:path.join(outputDir,'kaltest','tests')
+  });
+}
 if (!fs.existsSync(kaloneoBuilderDir)) fail('générateur KALONÉO canonique absent: kaloneo/');
 copyTree(kaloneoBuilderDir,path.join(outputDir,'kaloneo-builder'));
 require('./kaloneo-r125-visible-branding').brandGeneratedWeb(outputDir);
