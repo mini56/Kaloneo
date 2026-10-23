@@ -68,6 +68,15 @@ Var SebIntroNewBitmapHandle
 # Only the exact original default folder is adjusted. The custom invisible
 # page restores the previous path before the built-in updater operates.
 Function KaloneoDirectoryPre
+  # R159: electron-builder reuses an old registered directory and sometimes
+  # appends the new product name, yielding the WRONG visible nested path
+  # ...\\Programs\\seb-evalpro\\KALONEO. Normalize only this exact legacy
+  # nesting; deliberately preserve every truly custom install directory.
+  ${If} $INSTDIR == "$LOCALAPPDATA\Programs\seb-evalpro\KALONEO"
+    StrCpy $INSTDIR "$LOCALAPPDATA\Programs\KALONEO"
+  ${ElseIf} $INSTDIR == "$PROGRAMFILES64\seb-evalpro\KALONEO"
+    StrCpy $INSTDIR "$PROGRAMFILES64\KALONEO"
+  ${EndIf}
   StrCpy $R5 "$LOCALAPPDATA\Programs\seb-evalpro"
   StrCpy $R6 "$LOCALAPPDATA\Programs\KALONEO"
   ${If} $INSTDIR != $R5
@@ -80,6 +89,13 @@ Function KaloneoDirectoryPre
 FunctionEnd
 
 Function KaloneoDirectoryShow
+  # Correct the actual EDIT field even if the assisted template populated
+  # it from the legacy registry after the PRE callback.
+  ${If} $INSTDIR == "$LOCALAPPDATA\Programs\seb-evalpro\KALONEO"
+    StrCpy $INSTDIR "$LOCALAPPDATA\Programs\KALONEO"
+  ${ElseIf} $INSTDIR == "$PROGRAMFILES64\seb-evalpro\KALONEO"
+    StrCpy $INSTDIR "$PROGRAMFILES64\KALONEO"
+  ${EndIf}
   # The install-mode variable belongs to NSIS multiUser.nsh (declared later).
   # Resolve the registered location directly to avoid forward-variable warnings.
   StrCpy $R5 "$LOCALAPPDATA\Programs\seb-evalpro"
@@ -90,11 +106,11 @@ Function KaloneoDirectoryShow
     StrCpy $R6 "$PROGRAMFILES64\KALONEO"
   ${EndIf}
   ${If} $INSTDIR == $R5
-    # MUI's directory page is a nested #32770 dialog. Its edit control is
-    # NOT a direct child of $HWNDPARENT; the previous handler did nothing.
-    # Setting $INSTDIR covers MUI implementations that initialize the field
-    # after the SHOW callback.
     StrCpy $INSTDIR "$R6"
+  ${EndIf}
+  ${If} $INSTDIR == $R6
+    # Always refresh the edit field after normalizing the known legacy
+    # location, but NEVER alter a custom selected install directory.
     FindWindow $R9 "#32770" "" $HWNDPARENT
     GetDlgItem $R8 $R9 1019
     ${If} $R8 == 0
@@ -112,6 +128,13 @@ FunctionEnd
 
 Function KaloneoDirectoryPostPage
   # Invisible custom page after directory selection, before InstFiles.
+  # R159: if an old version has registered a nested alias, correct it
+  # BEFORE the migration logic, never propagate a new nested location.
+  ${If} $INSTDIR == "$LOCALAPPDATA\Programs\seb-evalpro\KALONEO"
+    StrCpy $INSTDIR "$LOCALAPPDATA\Programs\KALONEO"
+  ${ElseIf} $INSTDIR == "$PROGRAMFILES64\seb-evalpro\KALONEO"
+    StrCpy $INSTDIR "$PROGRAMFILES64\KALONEO"
+  ${EndIf}
   # The install-mode variable belongs to NSIS multiUser.nsh (declared later).
   # Resolve the registered location directly to avoid forward-variable warnings.
   StrCpy $R5 "$LOCALAPPDATA\Programs\seb-evalpro"
@@ -122,9 +145,11 @@ Function KaloneoDirectoryPostPage
     StrCpy $R6 "$PROGRAMFILES64\KALONEO"
   ${EndIf}
   ${If} $INSTDIR == $R6
-    # The visible path is the final one; safely upgrade via the old
-    # registered directory, then relocate it after the extraction.
-    StrCpy $INSTDIR "$R5"
+    # Restore old location ONLY if an old installation really exists.
+    # A clean installation or already-correct KALONEO install must not
+    # create a fresh nested "seb-evalpro" folder.
+    IfFileExists "$R5\*.*" 0 +2
+      StrCpy $INSTDIR "$R5"
   ${EndIf}
   Abort
 FunctionEnd
@@ -202,6 +227,13 @@ FunctionEnd
 # Only the text of the already-registered legacy path is adjusted here;
 # the actual, validated move occurs in customInstall after the upgrade.
 !macro customInstallMode
+  # Normalize legacy registry paths before the installer shows the directory.
+  ${If} $perUserInstallationFolder == "$LOCALAPPDATA\Programs\seb-evalpro\KALONEO"
+    StrCpy $perUserInstallationFolder "$LOCALAPPDATA\Programs\KALONEO"
+  ${EndIf}
+  ${If} $perMachineInstallationFolder == "$PROGRAMFILES64\seb-evalpro\KALONEO"
+    StrCpy $perMachineInstallationFolder "$PROGRAMFILES64\KALONEO"
+  ${EndIf}
   # Directory callback is bound by version-controlled
   # kaloneo-assisted-installer.nsh immediately before MUI_PAGE_DIRECTORY.
   ${If} $perUserInstallationFolder == "$LOCALAPPDATA\Programs\seb-evalpro"
