@@ -1,0 +1,337 @@
+name: "KALONÉO R155 - Une seule liaison visible dans le Builder V1 et futur"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/build-r155-single-builder-link.yml'
+      - 'seb-evalpro/package.json'
+      - 'seb-evalpro/build/installer.nsh'
+      - 'seb-evalpro/build/kaloneo-r155-single-institutional-link.yml'
+      - 'seb-evalpro/src/preload.js'
+      - 'seb-evalpro/src/candidate-catalog-preload.js'
+      - 'seb-evalpro/src/institutional-bilan-grid.js'
+      - 'seb-evalpro/scripts/r153-original-institutional-electron-smoke-main.js'
+      - 'seb-evalpro/scripts/r154-competences-transversales-smoke.js'
+      - 'seb-evalpro/scripts/r152-institutional-grid-and-builder-smoke.js'
+      - 'seb-evalpro/scripts/r152-builder-simple-link-electron-smoke-main.js'
+      - 'kaloneo/test-builder.js'
+      - 'kaloneo/test-builder.html'
+      - 'kaloneo/test-builder.css'
+      - 'seb-evalpro/scripts/kaloneo-builder-preview-electron-smoke-main.js'
+      - 'kaloneo/bilan-simple-link.js'
+      - 'kaloneo/bilan-catalog.js'
+      - 'seb-evalpro/src/general-bilan-aggregation.js'
+      - 'seb-evalpro/src/candidate-catalog-main.js'
+      - 'seb-evalpro/src/kaloneo-library-main.js'
+      - 'seb-evalpro/source/js/admin-bilan-kaloneo.js'
+      - 'seb-evalpro/source/js/kaloneo-bilan-routing.js'
+      - 'seb-evalpro/overrides/admin-bilan.html'
+      - 'seb-evalpro/scripts/kaloneo-bilan-builder-routing-smoke.js'
+      - 'seb-evalpro/scripts/kaloneo-bilan-builder-routing-electron-smoke-main.js'
+      - 'seb-evalpro/scripts/candidate-identity-privacy-smoke.js'
+      - 'seb-evalpro/scripts/general-bilan-ipc-smoke.js'
+      - 'seb-evalpro/scripts/kaloneo-mask-candidate-electron-smoke-main.js'
+      - 'seb-evalpro/scripts/kaloneo-r125-branding.py'
+      - 'seb-evalpro/scripts/kaloneo-r125-branding-guard.js'
+      - 'seb-evalpro/scripts/kaloneo-r126-install-path-guard.js'
+      - 'seb-evalpro/scripts/kaloneo-r128-taskbar-icon-guard.js'
+      - 'seb-evalpro/scripts/kaloneo-r127-visible-brand-guard.js'
+      - 'seb-evalpro/scripts/admin-build-label-guard.js'
+  workflow_dispatch:
+concurrency:
+  group: kaloneo-r155-single-builder-link-setup-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+  actions: read
+jobs:
+  windows-installer-migration:
+    # Nouveau Build #158. La release R154 reste figée et disponible comme secours.
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - name: Checkout the original work branch only
+        uses: actions/checkout@v4
+      # Revalidate current Build #147 and the permanent Windows identity before production of installer.
+      - name: R155 Build 158 unique; R154 fallback and V1 protected
+        shell: pwsh
+        run: |
+          git fetch --depth=1 origin tag seb-kaloneo-r154-transversal-18-lines-test
+          if($LASTEXITCODE -ne 0){throw 'R154 fallback not found'}
+          $old=(git show 'seb-kaloneo-r154-transversal-18-lines-test:seb-evalpro/package.json') -join [Environment]::NewLine | ConvertFrom-Json
+          $pkg=Get-Content -Raw -Encoding UTF8 package.json | ConvertFrom-Json
+          if([int]$old.sebBuildNumber -ne 157 -or $old.sebReleaseVersion -ne '0.0.181' -or [int]$pkg.sebBuildNumber -ne 158 -or $pkg.sebReleaseVersion -ne '0.0.182'){
+            throw 'Build/version are inconsistent or reused'
+          }
+          $tag=git ls-remote --tags origin refs/tags/seb-kaloneo-r155-single-builder-link-test
+          if($LASTEXITCODE -ne 0 -or $tag){throw 'R155 release/tag already exists'}
+          foreach($file in (git diff --name-only seb-kaloneo-r154-transversal-18-lines-test HEAD)){
+            if($file -match '^(TESTS_VALIDES/|VALID2/|seb-evalpro/source/kaltest/tests/|images_tests/|kaloneo/icons-tests/)'){
+              throw "Protected validated V1 test or image modified: $file"
+            }
+          }
+          Write-Host 'Build #158 unique, R154 fallback and V1 resources retained.'
+      - name: Install Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build Windows KALONÉO icon and setup artwork from official logo
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check Pillow==11.3.0
+          python scripts/kaloneo-r125-branding.py
+          if($LASTEXITCODE -ne 0){throw 'Logo generation failed'}
+      - name: Install app dependencies
+        run: npm install --no-audit --no-fund
+      # Verify the actual source of the previously visible name before creating the installer.
+      # R155 : checks the new general-bilan config without changing installation paths.
+      - name: Static audit for true installation folder and guarded migration
+        shell: pwsh
+        run: |
+          node --check src/main.js
+          node --check src/preload.js
+          node --check scripts/kaloneo-r127-visible-brand-guard.js
+          node scripts/kaloneo-r127-visible-brand-guard.js
+          node --check src/kaloneo-admin-settings.js
+          node --check scripts/kaloneo-r140-about-left-electron-smoke-main.js
+          node --check scripts/kaloneo-r141-help-guides-guard.js
+          node --check scripts/kaloneo-r141-help-guides-electron-smoke-main.js
+          node scripts/kaloneo-about-credits-guard.js
+          node --check scripts/kaloneo-r128-taskbar-icon-guard.js
+          node scripts/kaloneo-r128-taskbar-icon-guard.js
+          node --check scripts/kaloneo-r126-install-path-guard.js
+          node --check scripts/kaloneo-r125-visible-branding.js
+          node --check scripts/kaloneo-r125-branding-guard.js
+          node scripts/kaloneo-r126-install-path-guard.js
+          node scripts/kaloneo-r141-help-guides-guard.js
+          node scripts/kaloneo-layout-diagnostics-unit-smoke.js
+          node scripts/kaloneo-builder-future-roundtrip-smoke.js
+          node scripts/kaloneo-answer-layout-roundtrip-smoke.js
+          node scripts/kaloneo-catalog-roundtrip-score-guard.js
+      - name: R155 - Verify new category without Autres, weighted points, 18 exact lines and official comments
+        run: node scripts/r154-competences-transversales-smoke.js
+      - name: R155 - Obligatory Builder liaison, 18 institutional lines and exact Word
+        run: node scripts/r152-institutional-grid-and-builder-smoke.js
+      - name: R155 - Validate Builder score mapping and category isolation
+        run: node scripts/kaloneo-bilan-builder-routing-smoke.js
+      - name: R155 - Same seven-character N° ID, distinct people, no mixed results or Word
+        run: |
+          node scripts/candidate-identity-privacy-smoke.js
+          node scripts/general-bilan-ipc-smoke.js
+          node scripts/general-bilan-aggregation-smoke.js
+      - name: Verify mask-video portable data and 3-second frozen image
+        run: node scripts/kaloneo-mask-video-smoke.js
+      - name: Generate original complete candidate parcours data
+        run: node scripts/build-kaltest-pilot2-data.js
+      # The 2021 bilan module retains its original SHA after exactly two visible wording changes.
+      - name: Build candidate and admin HTML with original KALONÉO branding
+        run: npm run prepare:web
+      - name: R155 - Real Builder liaison UI at 1366x768 and 1200x800
+        run: npx electron --no-sandbox scripts/r152-builder-simple-link-electron-smoke-main.js
+      - name: R155 Actual protected V1 — old dual-link controls hidden even after forced fold click
+        run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
+      - name: Real institutional Electron bilan — reject Math to Expression & manual duplicates
+        run: npx electron --no-sandbox scripts/kaloneo-bilan-builder-routing-electron-smoke-main.js
+      - name: R155 Actual Electron general bilan — 18 original lines, six columns, institutional comments, read-only
+        run: |
+          node --check scripts/r153-original-institutional-electron-smoke-main.js
+          npx electron --no-sandbox scripts/r153-original-institutional-electron-smoke-main.js
+      - name: V1 institutional Electron bilan unchanged
+        run: npx electron --no-sandbox scripts/kaloneo-bilan-dynamic-smoke-main.js
+      - name: Verify R155 media in actual Windows Electron
+        run: npx electron --no-sandbox scripts/kaloneo-mask-video-electron-smoke-main.js
+      - name: Verify old masking screens / real admin preview
+        run: npx electron --no-sandbox scripts/kaloneo-mask-builder-electron-smoke-main.js
+      - name: Mandatory real candidate video playback and crossfade
+        run: npx electron --no-sandbox scripts/kaloneo-mask-candidate-electron-smoke-main.js
+      - name: Audit 18 real offline screenshots and their packaged copies
+        run: |
+          node scripts/kaloneo-r141-help-guides-guard.js
+          node scripts/kaloneo-builder-help-guard.js
+      # Generic installer/version audits now accept the dedicated About credits configuration.
+      # R140 source and static guards must pass before launching the exact Electron DOM check.
+      - name: Check all candidate/admin screens and consistency of Admin build label
+        shell: pwsh
+        run: |
+          node scripts/kaloneo-r125-branding-guard.js
+          node scripts/kaloneo-r127-visible-brand-guard.js
+          node --check scripts/kaloneo-r128-taskbar-icon-guard.js
+          node scripts/kaloneo-r128-taskbar-icon-guard.js
+          node scripts/admin-build-label-guard.js
+      # Explicit check: official logo lives in left nav below About button, never in right pane.
+      - name: Actual Electron LEFT navigation logo DOM, structures and six viewports
+        run: npx electron --no-sandbox scripts/kaloneo-r140-about-left-electron-smoke-main.js
+      - name: Render both illustrated guides in real Electron; validate PNG, search, zoom and responsive widths
+        run: npx electron --no-sandbox scripts/kaloneo-r141-help-guides-electron-smoke-main.js
+      - name: Check candidate scoring, image library, import/export and V1
+        shell: pwsh
+        run: |
+          node scripts/kaloneo-units-score-audit-smoke.js
+          node scripts/kaloneo-image-library-smoke.js
+          node scripts/kaloneo-image-export-ui-smoke.js
+          node scripts/kaloneo-export-restaurant-r69-smoke.js
+          node scripts/kaloneo-edit-existing-test-smoke.js
+      - name: R155 real native Electron zoom and five screen sizes
+        run: npx electron --no-sandbox scripts/kaloneo-responsive-overflow-electron-smoke-main.js
+      - name: R155 shared zoom, diagnostics and selectable Builder preview
+        shell: pwsh
+        run: |
+          node scripts/kaloneo-layout-diagnostics-unit-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Overflow unit regression'}
+          node scripts/kaloneo-preview-resolution-r142-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Responsive formula / resolution selector regression'}
+      # About now has 8 credit/info cards; the original seven-card smoke was adjusted.
+      - name: Electron Builder fidelity, focus and resolution-switch behaviour
+        shell: pwsh
+        run: |
+          npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Builder fidelity / resolution-switch failed'}
+      - name: Electron candidate new questions, columns and table
+        run: npx electron --no-sandbox scripts/kaloneo-new-test-preview-electron-smoke-main.js
+      - name: Electron results strict candidate/test isolation
+        shell: pwsh
+        run: |
+          npx electron --no-sandbox scripts/kaloneo-results-strict-isolation-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Results isolation regression'}
+      - name: Electron results readable and bilan
+        run: npx electron --no-sandbox scripts/kaloneo-results-readable-formats-electron-smoke-main.js
+      - name: Electron full original candidate journey
+        shell: pwsh
+        run: |
+          npx electron --no-sandbox scripts/full-pilot-journey-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Candidate full journey regression'}
+      - name: Candidate security, persistence and import/export
+        run: |
+          npm run test:security
+          node scripts/candidate-catalog-smoke.js
+          node scripts/general-bilan-aggregation-smoke.js
+          node scripts/general-bilan-ipc-smoke.js
+          node scripts/candidate-private-transfer-smoke.js
+          node scripts/candidate-forward-anonymity-smoke.js
+          node scripts/candidate-deletion-index-privacy-smoke.js
+          node scripts/replay-direct-candidate-storage-smoke.js
+          node scripts/candidate-private-pending-smoke.js
+          node scripts/candidate-protected-download-smoke.js
+          node scripts/candidate-word-portability-smoke.js
+          node scripts/candidate-legacy-usb-private-smoke.js
+          node scripts/candidate-word-privacy-guard.js
+          node scripts/candidate-historical-privacy-smoke.js
+          node scripts/bilan-docx-smoke.js
+      # Interactive NSIS wizard must visibly show KALONEO during a real R125 upgrade.
+      # The UI callback detects the original installation through HKCU/HKLM before the NSIS mode variable is declared.
+      - name: Patch ONLY the pinned, supported NSIS assisted directory page
+        shell: pwsh
+        run: |
+          node scripts/kaloneo-nsis-directory-template.js
+          $nsis=Get-Content -Raw -Encoding UTF8 node_modules/app-builder-lib/templates/nsis/assistedInstaller.nsh
+          $config=Get-Content -Raw -Encoding UTF8 build/kaloneo-r155-single-institutional-link.yml
+          $custom=Get-Content -Raw -Encoding UTF8 build/installer.nsh
+          if($config -match '(?m)^\s*script:'){throw 'A custom NSIS main script would disable built-in uninstaller generation.'}
+          if($nsis -notmatch '(?s)!define MUI_PAGE_CUSTOMFUNCTION_PRE KaloneoDirectoryPre\s+!define MUI_PAGE_CUSTOMFUNCTION_SHOW KaloneoDirectoryShow\s+!insertmacro MUI_PAGE_DIRECTORY'){throw 'Directory PRE and SHOW callbacks missing in stock NSIS template'}
+          if($custom -notmatch 'Function KaloneoDirectoryPre' -or $custom -notmatch 'Function KaloneoDirectoryPostPage'){throw 'KALONEO directory and legacy migration handlers missing.'}
+          Write-Host 'Stock NSIS/uninstaller preserved; only official directory page has KALONEO callbacks.'
+      - name: Build R155 Windows installer after all video-mask and regression tests pass
+        run: npx electron-builder --win nsis --config build/kaloneo-r155-single-institutional-link.yml --publish never
+      # Test the actual persistent profile, and preserve any pre-existing custom installation directory.
+      - name: Verify clean installation, actual R125 folder migration, shortcuts, registry, and uninstall
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $setup=Join-Path (Resolve-Path dist) 'KALONEO-Setup-0.0.182.exe'
+          if(-not(Test-Path $setup)){throw 'Expected R155 installer missing'}
+          $backupDir=Join-Path $env:RUNNER_TEMP 'r125-setup'
+          New-Item -ItemType Directory -Force -Path $backupDir | Out-Null
+          gh release download seb-kaloneo-r125-identity-test --dir $backupDir --pattern 'KALONEO-Setup-0.0.154.exe'
+          if($LASTEXITCODE -ne 0){throw 'Previous R125 setup unavailable'}
+          $old=(Get-ChildItem $backupDir -Filter 'KALONEO-Setup-0.0.154.exe' | Select-Object -First 1)
+          if(-not $old){throw 'R125 setup missing after download'}
+          & ./scripts/kaloneo-r126-install-migration-windows-smoke.ps1 -Setup $setup -PreviousSetup $old.FullName
+          if($LASTEXITCODE -ne 0){throw 'Installation and migration regression failed'}
+      - name: SHA256 of validated Windows Setup
+        shell: pwsh
+        run: |
+          $item=Get-Item dist/KALONEO-Setup-0.0.182.exe
+          $sha=(Get-FileHash -Algorithm SHA256 $item.FullName).Hash.ToUpperInvariant()
+          "SETUP_PATH=$($item.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "SETUP_SHA256=$sha" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "KALONEO_R155_BUILD_158_SHA256=$sha"
+      - name: Verify executable icon is the same as the transparent candidate chameleon
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Drawing
+          $exe=Join-Path (Resolve-Path dist/win-unpacked) 'KALONEO.exe'
+          $resource=Join-Path (Resolve-Path dist/win-unpacked) 'resources/kaloneo-taskbar.ico'
+          if(-not(Test-Path $exe) -or -not(Test-Path $resource)){throw 'Windows exe or shared taskbar ICO missing'}
+          $extracted=[System.Drawing.Icon]::ExtractAssociatedIcon($exe)
+          if(-not $extracted){throw 'The KALONEO.exe does not have an associated Windows icon'}
+          $bitmap=$extracted.ToBitmap()
+          $corner=$bitmap.GetPixel(0,0)
+          if($corner.A -gt 8){throw 'Windows EXE icon not transparent (the full old wordmark may still be used)'}
+          Write-Host "KALONEO_R128_ICON=OK — KALONEO.exe has a transparent chameleon icon and Electron has its matching ICO"
+      # Stockage Actions saturé : le Setup Windows déjà validé est publié directement
+      # comme asset de Release, sans duplicata dans les artefacts temporaires.
+      - name: Require successful R60 full regression on this exact commit before releasing
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $deadline=(Get-Date).AddMinutes(18)
+          do {
+            $runs=gh api "repos/$env:GITHUB_REPOSITORY/actions/runs?head_sha=$env:GITHUB_SHA&per_page=100" | ConvertFrom-Json
+            if($LASTEXITCODE -ne 0){throw 'GitHub Actions regression status unavailable'}
+            $matches=@($runs.workflow_runs | Where-Object { $_.name -eq 'R60 V1 Admin edit and Tri cross-regression' })
+            if($matches.Count -gt 0){
+              $latest=$matches | Sort-Object created_at -Descending | Select-Object -First 1
+              if($latest.conclusion -eq 'success'){Write-Host "R60 = GREEN, same SHA $env:GITHUB_SHA";break}
+              if($latest.conclusion -in @('failure','cancelled','timed_out','action_required')){throw 'R60 regression failed: no publication'}
+            }
+            if((Get-Date) -gt $deadline){throw 'R60 is not confirmed GREEN: no publication'}
+            Start-Sleep -Seconds 20
+          }while($true)
+      - name: Publish unique R155 Windows Setup only after every security and Windows install test
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag='seb-kaloneo-r155-single-builder-link-test'
+          if(gh release view $tag 2>$null){throw 'Build 158 already published: no reuse'}
+          $title='KALONÉO — R155 / Build #158 — Liaison institutionnelle unique, V1 corrigées'
+          $notes=@"
+          Version 0.0.182 — R155 / Build #158 — POUR TESTS WINDOWS.
+          - Builder : pour un test inédit, choix obligatoire d'une seule ligne officielle parmi les 18 lignes institutionnelles, filtrée par catégorie.
+          - Notation automatique : pourcentage réel de bonnes réponses calculé à partir des points obtenus / possibles.
+          - Activités pratiques : niveau réservé à l'administrateur dans chaque pré-bilan, sans pourcentage fictif.
+          - Bilan individuel : 18 lignes officielles, aucun doublon ni catégorie ajoutée, uniquement pourcentage pour les lignes automatiques.
+          - Pré-bilan sauvegardé : points et maximum conservés par ligne en plus du niveau pour la consolidation future.
+          - Bilan général : même grille institutionnelle, résultats consolidés cumulés par ligne, niveaux en lecture seule, synthèse modifiable.
+          - Word général : exactement 3 sections et 18 lignes officielles, pas de TOTAL ni décompte de parcours.
+          - Données historiques sans points numériques identifiables signalées, jamais de note inventée.
+          - Contrôles Windows, tests inédits et V1, import/export, résultats, vidéo et installation exigés avant publication.
+          - Le bilan général reproduit le véritable tableau institutionnel HTML/CSS, exactement 3 sections, 18 lignes et 6 colonnes.
+          - Les commentaires sont ceux de la grille officielle, lecture seule avec le niveau consolidé.
+          - Les pourcentages automatiques sont accompagnés de « de réponses correctes. ».
+          - Les commentaires des activités pratiques viennent exclusivement du dernier pré-bilan administrateur.
+          - Export Word reprenant le même tableau et les commentaires.
+          - Test Electron dédié et non-régressions R60/R155 obligatoires avant publication.
+          - La catégorie affichée dans le Builder est uniquement « Compétences transversales », sans « Autres ».
+          - La ligne officielle est ajoutée en fin de « Savoirs fondamentaux », dans les bilans individuel et général et dans Word.
+          - Nouveau barème automatique : points obtenus / points possibles, avec cumul des différents parcours.
+          - Aucun changement dans les 17 critères antérieurs, les V1 ni les dossiers candidats.
+          - Correction du CSS qui réaffichait l'ancien bouton « + » et les paramètres techniques sous la liaison institutionnelle unique.
+          - Les anciennes sorties et liaisons historiques existent toujours dans les fichiers tests, mais elles ne sont plus visibles ni accessibles dans le Builder.
+          - Une seule sélection officielle du bilan dans le Builder ; aucune modification des 18 lignes ni des catégories.
+          - Test réel V1 protégée, sauvegarde V1, bouton de repli cliqué, pas de seconde liaison ni de perte de données.
+          - Test sur 1366×768 et 1200×800 et régressions strictes du parcours.
+          - R154 / Build #157 / 0.0.181 demeure disponible comme version de secours.
+          SHA256: $env:SETUP_SHA256
+          Commit: $env:GITHUB_SHA
+          "@
+          gh release create $tag "$env:SETUP_PATH" --target "$env:GITHUB_SHA" --title $title --notes $notes --prerelease
