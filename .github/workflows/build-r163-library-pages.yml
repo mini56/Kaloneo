@@ -103,7 +103,9 @@ jobs:
           }
           $tag=git ls-remote --tags origin refs/tags/seb-kaloneo-r163-library-pages-test
           if($LASTEXITCODE -ne 0 -or $tag){throw 'R163 release already exists'}
-          foreach($file in (git diff --name-only seb-kaloneo-r161-lazy-mask-performance-test HEAD)){
+          $protectedDiff=@(git diff --name-only seb-kaloneo-r162-compact-five-static-mask-test HEAD)
+          if($LASTEXITCODE -ne 0){throw 'Protected baseline comparison unavailable: release blocked'}
+          foreach($file in $protectedDiff){
             if($file -match '^(TESTS_VALIDES/|VALID2/|seb-evalpro/source/kaltest/tests/|images_tests/|kaloneo/icons-tests/)'){
               throw "Protected V1, image or candidate asset changed: $file"
             }
