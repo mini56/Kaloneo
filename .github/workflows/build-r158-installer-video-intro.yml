@@ -8,6 +8,7 @@ on:
       - 'seb-evalpro/build/installer.nsh'
       - 'seb-evalpro/scripts/r158-build-installer-intro.py'
       - 'seb-evalpro/scripts/r158-installer-intro-smoke.js'
+      - 'seb-evalpro/scripts/kaloneo-r127-interactive-wizard-windows-smoke.ps1'
       - 'video_ecran_mq/Chameleon_walking_laptop_53805_Seedance_20_Mini.mp4'
       - 'seb-evalpro/build/kaloneo-r158-installer-intro.yml'
       - 'seb-evalpro/src/preload.js'
