@@ -1001,16 +1001,17 @@ app.whenReady().then(async()=>{
       size.dispatchEvent(new Event('change',{bubbles:true}));
       const gridUpdated=!!document.querySelector('.exercise-block .cell-grid-editor');
       document.getElementById('new-test').click();
-      document.getElementById('add-output').click();
-      const output=document.querySelector('#outputs-editor .contract-row input');
-      output.focus();
-      output.value='variable_focus';
-      output.dispatchEvent(new Event('input',{bubbles:true}));
-      output.dispatchEvent(new Event('blur',{bubbles:true}));
-      const next=document.querySelector('#outputs-editor .contract-row select');
+      // R155 : la saisie dans le sélecteur institutionnel visible
+      // conserve le focus, les anciennes sorties n'étant plus accessibles.
+      const next=document.getElementById('bilan-simple-line');
+      const first=[...next.options].find(option=>option.value);
+      if(!first)return {ok:false,reason:'Liaison institutionnelle absente'};
       next.focus();
+      next.value=first.value;
+      next.dispatchEvent(new Event('change',{bubbles:true}));
       await new Promise(resolve=>setTimeout(resolve,30));
-      const nextKeepsFocus=document.activeElement===next&&next.isConnected;
+      const nextKeepsFocus=document.activeElement===next&&next.isConnected&&
+        next.value===first.value&&next.getClientRects().length>0;
       document.getElementById('new-test').click();
       return {ok:true,focusAfterInput,focusAfterPause,focusAfterFullMiniPreview,focusAfterPauseDiagnostic,updated,gridKeepsFocus,gridUpdated,nextKeepsFocus};
     })()`,true);
