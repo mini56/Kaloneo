@@ -49,6 +49,7 @@ function createKaloneoLibrary(options = {}) {
     : [];
   const now = typeof options.now === 'function' ? options.now : () => new Date();
   let imageSeedsEnsured = false;
+  let staticMaskEnsured = false;
   // Méta-images immuables jusqu'à un ajout via storeImageBuffer.
   // Évite de relire l'intégralité du disque pour chaque vignette.
   let cachedImageRecords = null;
@@ -783,29 +784,51 @@ function createKaloneoLibrary(options = {}) {
     };
   }
 
-  // Écran de démonstration prêt à utiliser : vidéo du dépôt, 3 secondes sur
-  // la dernière image et fondu vers le PNG. Les données restent dans le
-  // dossier de masque et voyagent avec les exports/imports de parcours.
-  function ensureFeaturedVideoMask() {
-    const id = 'kaloneo-video-image';
-    const version = '1.0.0';
+  // L'écran historique (identifiant inchangé pour les parcours déjà enregistrés)
+  // n'utilise désormais que l'image PNG, jamais une vidéo. Au premier accès,
+  // les anciennes configurations sont allégées sur disque sans toucher aux
+  // candidats, bilans ni aux références des parcours.
+  function ensureFeaturedStaticMask() {
+    if (staticMaskEnsured) return;
+    const id = 'kaloneo-video-image', version = '1.0.0';
     const target = maskFile(id, version);
-    if (fs.existsSync(target) || !seedMaskMediaRoot || !fs.existsSync(seedMaskMediaRoot)) return;
-    const entries = fs.readdirSync(seedMaskMediaRoot).sort();
-    const videoName = entries.find(item => /\.mp4$/i.test(item));
+    const existing = readJson(target);
+    const entries = seedMaskMediaRoot && fs.existsSync(seedMaskMediaRoot)
+      ? fs.readdirSync(seedMaskMediaRoot).sort() : [];
     const imageName = entries.find(item => /\.png$/i.test(item));
-    if (!videoName || !imageName) return;
-    const video = 'data:video/mp4;base64,' +
-      fs.readFileSync(path.join(seedMaskMediaRoot, videoName)).toString('base64');
-    const image = 'data:image/png;base64,' +
-      fs.readFileSync(path.join(seedMaskMediaRoot, imageName)).toString('base64');
-    const stamp = now().toISOString();
-    atomicWriteJson(target, {
-      format:'kaloneo-mask-screen', schemaVersion:2,
-      id, version, name:'KALONÉO — vidéo puis image', systemProvided:false,
-      createdAt:stamp, updatedAt:stamp,
-      content:{ text:'', image, imageName, video, videoName }
-    });
+    const fallbackImage = imageName
+      ? 'data:image/png;base64,' + fs.readFileSync(path.join(seedMaskMediaRoot, imageName)).toString('base64')
+      : '';
+    if (existing) {
+      if (existing.content?.video || existing.content?.videoName ||
+          /vidéo/i.test(String(existing.name||''))) {
+        const updated = {...existing, schemaVersion:1,
+          name:'KALONÉO — image fixe',
+          content:{...existing.content,
+            image:existing.content?.image||fallbackImage,
+            imageName:existing.content?.imageName||imageName||'image.png',
+            video:'', videoName:''}};
+        atomicWriteJson(target,updated);
+      }
+    } else if (fallbackImage) {
+      const stamp = now().toISOString();
+      atomicWriteJson(target, {
+        format:'kaloneo-mask-screen',schemaVersion:1,
+        id,version,name:'KALONÉO — image fixe',systemProvided:false,
+        createdAt:stamp,updatedAt:stamp,
+        content:{text:'',image:fallbackImage,imageName,video:'',videoName:''}
+      });
+    }
+    // Même règle pour les masques personnalisés ou importés précédemment.
+    for (const file of walkNamedFiles(maskScreensRoot, 'mask.json')) {
+      if (file === target) continue;
+      const record = readJson(file);
+      if (!record || record.format !== 'kaloneo-mask-screen' ||
+          (!record.content?.video && !record.content?.videoName)) continue;
+      atomicWriteJson(file, {...record,schemaVersion:1,
+        content:{...record.content,video:'',videoName:''}});
+    }
+    staticMaskEnsured = true;
   }
 
   function maskFile(id, version) {
@@ -889,14 +912,15 @@ function createKaloneoLibrary(options = {}) {
     const name = String(payload.name || '').trim();
     const text = String(payload.content?.text || '');
     const image = String(payload.content?.image || '');
-    const video = String(payload.content?.video || '');
+    // Les anciens paquets peuvent contenir une vidéo : on n'importe que leur image.
+    const video = '';
     const imageName = String(payload.content?.imageName || '').slice(0,180);
-    const videoName = String(payload.content?.videoName || '').slice(0,180);
+    const videoName = '';
 
     if (!id) return { ok:false, error:'ID de l’écran de masquage obligatoire.' };
     if (!version) return { ok:false, error:'Version de l’écran de masquage obligatoire.' };
     if (!name) return { ok:false, error:'Nom de l’écran de masquage obligatoire.' };
-    if (!text.trim() && !image.trim() && !video.trim()) return { ok:false, error:'Ajoutez un texte, une image, ou une vidéo.' };
+    if (!text.trim() && !image.trim()) return { ok:false, error:'Ajoutez un texte ou une image.' };
     if (video && !image) return { ok:false, error:'Une image finale est nécessaire après la vidéo.' };
     if (id === DEFAULT_MASK_ID) return { ok:false, error:'L’écran KALONÉO par défaut est protégé.' };
     if (image && !/^data:image\/(png|jpeg|webp|gif);base64,/i.test(image))
@@ -1025,7 +1049,7 @@ function createKaloneoLibrary(options = {}) {
       imageSeedsEnsured = true;
     }
     ensureDefaultMaskScreen();
-    ensureFeaturedVideoMask();
+    ensureFeaturedStaticMask();
     ensureBaseParcours();
     return true;
   }

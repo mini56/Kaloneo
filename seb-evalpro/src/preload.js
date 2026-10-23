@@ -2386,9 +2386,8 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
 
     layer.classList.remove('seb-final-privacy');
     if (mode === MODE_TEMP) {
-      // Même lecteur que l'éditeur : vidéo, 3 secondes sur dernière image,
-      // fondu vers le PNG, aucun rafraîchissement ne recommence la vidéo.
-      player?.show(privacyMaskScreen || {});
+      // Écran fixe : une seule image, aucune lecture vidéo ni fondu.
+      player?.show({...privacyMaskScreen, content:{...privacyMaskScreen?.content,video:'',videoName:''}});
     } else if (player?.active) {
       player.stop();
     }

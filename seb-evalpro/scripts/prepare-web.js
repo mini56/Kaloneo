@@ -65,7 +65,10 @@ copyTree(overridesDir,outputDir);
 // Le moteur média est partagé sans duplication entre Preload, Builder et aperçu.
 fs.copyFileSync(path.join(root,'src','kaloneo-mask-media.js'),path.join(outputDir,'js','kaloneo-mask-media.js'));
 // Les fichiers fournis par l'administrateur ne sont pas ajoutés à la bibliothèque d'images.
-copyTree(path.join(repoRoot,'video_ecran_mq'),path.join(outputDir,'mask-media-seed'));
+// N'embarquer que l'image statique. Le MP4 reste conservé sur GitHub
+// comme source historique, mais n'entre plus dans l'installateur Windows.
+copyTree(path.join(repoRoot,'video_ecran_mq'),path.join(outputDir,'mask-media-seed'),
+  new Set(fs.readdirSync(path.join(repoRoot,'video_ecran_mq')).filter(name=>! /\.png$/i.test(name))));
 // R160 comparison: do not package the five main TESTS_V1 exports.
 // The source files on GitHub are untouched; R159 keeps its own frozen Setup.
 if(process.env.KALONEO_SKIP_OFFICIAL_V1 === '1'){

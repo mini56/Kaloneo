@@ -1561,7 +1561,7 @@ ipcMain.handle('kaloneo-mask:open-preview', (_event, definition) => {
   }
   const text = String(definition.content?.text || '');
   const image = String(definition.content?.image || '');
-  const video = String(definition.content?.video || '');
+  const video = '';
   if (!text.trim() && !image.trim() && !video.trim()) {
     return { ok:false, error:'Ajoutez du texte, une image ou une vidéo avant l’aperçu.' };
   }

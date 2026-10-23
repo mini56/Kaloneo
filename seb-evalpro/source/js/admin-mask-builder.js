@@ -22,10 +22,10 @@
   function updatePreview() {
     previewPlayer.show({
       name:String($('mask-name').value||''),
-      content:{text:$('mask-text').value, image:state.image, video:state.video}
+      content:{text:$('mask-text').value, image:state.image, video:''}
     });
     $('mask-image-name').textContent=state.imageName||'';
-    $('mask-video-name').textContent=state.videoName||'';
+
   }
 
   function reset() {
@@ -43,8 +43,6 @@
     $('mask-text').readOnly=false;
     $('mask-image-file').disabled=false;
     $('remove-mask-image').disabled=false;
-    $('mask-video-file').disabled=false;
-    $('remove-mask-video').disabled=false;
     $('save-mask').disabled=false;
     setStatus('');
     updatePreview();
@@ -56,8 +54,8 @@
     state.editing=value.id?{id:value.id,version:value.version||'1.0.0',systemProvided:value.systemProvided===true}:null;
     state.image=String(value.content?.image||'');
     state.imageName=String(value.content?.imageName||'')||(state.image?'Image embarquée':'');
-    state.video=String(value.content?.video||'');
-    state.videoName=String(value.content?.videoName||'')||(state.video?'Vidéo embarquée':'');
+    state.video='';
+    state.videoName='';
     $('mask-name').value=String(value.name||'');
     $('mask-id').value=String(value.id||'');
     $('mask-version').value=String(value.version||'1.0.0');
@@ -68,8 +66,6 @@
     $('mask-text').readOnly=locked;
     $('mask-image-file').disabled=locked;
     $('remove-mask-image').disabled=locked;
-    $('mask-video-file').disabled=locked;
-    $('remove-mask-video').disabled=locked;
     $('save-mask').disabled=locked;
     setStatus(locked?'Écran KALONÉO par défaut — protégé':statusMessage);
     updatePreview();
@@ -92,7 +88,7 @@
       systemProvided:Boolean(state.editing?.systemProvided),
       content:{
         text:String($('mask-text').value||''),image:state.image,imageName:state.imageName,
-        video:state.video,videoName:state.videoName
+        video:'',videoName:''
       }
     };
   }
@@ -121,7 +117,7 @@
       const info=document.createElement('span');
       const modes=[];
       if(meta.hasText)modes.push('texte');
-      if(meta.hasVideo)modes.push('vidéo → 3 s → fondu');
+
       if(meta.hasImage)modes.push('image');
       info.textContent='v'+meta.version+' • '+modes.join(' + ')+(meta.systemProvided?' • par défaut':'');
       button.append(title,info);
@@ -148,24 +144,6 @@
     });
     state.image=data;
     state.imageName=file.name;
-    updatePreview();
-  }
-
-  async function loadVideo(file) {
-    if(!file)return;
-    const mime=String(file.type||'').toLowerCase();
-    if(!['video/mp4','video/webm','video/ogg'].includes(mime)&&!/\.(mp4|webm|ogg)$/i.test(file.name)) {
-      throw new Error('Choisissez une vidéo MP4, WEBM ou OGG.');
-    }
-    if(file.size>30*1024*1024) throw new Error('Vidéo trop volumineuse (maximum 30 Mo).');
-    const data=await new Promise((resolve,reject)=>{
-      const reader=new FileReader();
-      reader.onload=()=>resolve(String(reader.result||''));
-      reader.onerror=()=>reject(reader.error||new Error('Lecture de la vidéo impossible.'));
-      reader.readAsDataURL(file);
-    });
-    state.video=data;
-    state.videoName=file.name;
     updatePreview();
   }
 
@@ -209,15 +187,9 @@
       finally{$('mask-image-file').value='';}
     });
     $('remove-mask-image').addEventListener('click',()=>{
-      if(state.video)return setStatus('Retirez d’abord la vidéo avant de retirer son image finale.',true);
+
       state.image='';state.imageName='';updatePreview();
     });
-    $('mask-video-file').addEventListener('change',async()=>{
-      try{await loadVideo($('mask-video-file').files?.[0]);}
-      catch(error){setStatus(error?.message||String(error),true);}
-      finally{$('mask-video-file').value='';}
-    });
-    $('remove-mask-video').addEventListener('click',()=>{state.video='';state.videoName='';updatePreview();});
     $('save-mask').addEventListener('click',()=>{save().catch(error=>setStatus(error?.message||String(error),true));});
     $('open-real-mask-preview').addEventListener('click',()=>{openRealPreview().catch(error=>setStatus(error?.message||String(error),true));});
     reset();
