@@ -1182,7 +1182,7 @@ app.whenReady().then(async()=>{
        !setup.imagePresent||!setup.smallImageFits||!setup.imageAlignedRight||setup.blockFont!==''||!/238, 249, 242/.test(setup.blockBackground)||
        !setup.obsoleteButtonsAbsent||setup.previewScale>=1||
        !setup.viewportRect||!setup.pageRect||setup.pageRect.width>setup.viewportRect.width+1||setup.pageRect.height>setup.viewportRect.height+1||
-       setup.topLabels.join('|')!=='↶ Annuler|↷ Rétablir|Bibliothèque de tests|Nouveau test|Enregistrer|Fermer') return fail('ergonomie ou aperçu miniature Builder incorrect',setup);
+       setup.topLabels.join('|')!=='↶ Annuler|↷ Rétablir|Bibliothèque de tests|Bibliothèque d’images|Nouveau test|Enregistrer|Fermer') return fail('ergonomie ou aperçu miniature Builder incorrect',setup);
 
     // L'import passe désormais uniquement par Import / Export, pas par le bloc Image.
     if(savedImageCalls!==0) return fail('une importation directe depuis le bloc Image a réapparu',{savedImageCalls});
