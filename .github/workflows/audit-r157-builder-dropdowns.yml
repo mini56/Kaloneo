@@ -5,6 +5,10 @@ on:
     paths:
       - '.github/workflows/audit-r157-builder-dropdowns.yml'
       - '.github/workflows/build-r157-builder-menus.yml'
+      - '.github/workflows/build-r158-installer-video-intro.yml'
+      - 'seb-evalpro/build/installer.nsh'
+      - 'seb-evalpro/scripts/r158-build-installer-intro.py'
+      - 'seb-evalpro/scripts/r158-installer-intro-smoke.js'
       - 'kaloneo/test-builder.js'
       - 'kaloneo/test-builder.css'
       - 'kaloneo/test-builder.html'
