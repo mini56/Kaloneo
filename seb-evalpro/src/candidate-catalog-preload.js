@@ -604,9 +604,9 @@ function renderInstitutionalGeneralTable(host,lines) {
   const entries=Array.isArray(lines)?lines.filter(item=>item.kind==='row'):[];
   const originalRows=[...original.querySelectorAll('tbody tr[data-r]')];
   const mapped=new Map(entries.map(line=>[line.key,line]));
-  if(entries.length!==17||originalRows.length!==17||mapped.size!==17||
+  if(entries.length!==18||originalRows.length!==18||mapped.size!==18||
      originalRows.some(row=>!mapped.has(row.dataset.r)))
-    throw new Error('Le bilan général doit avoir les 17 lignes officielles.');
+    throw new Error('Le bilan général doit avoir les 18 lignes officielles.');
   original.id='seb-gb-institutional-table';
   original.setAttribute('aria-label','Bilan de parcour complet, lecture seule');
   for(const row of originalRows){
