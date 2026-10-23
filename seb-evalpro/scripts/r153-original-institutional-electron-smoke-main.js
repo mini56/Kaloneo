@@ -22,8 +22,8 @@ const evaluations=[
  ]}}}
 ];
 const rows=aggregateInstitutionalRows(evaluations).rows;
-assert.equal(rows.length,20);
-assert.equal(wordRows({institutionalRows:rows}).length,20);
+assert.equal(rows.length,21);
+assert.equal(wordRows({institutionalRows:rows}).length,21);
 const manual=rows.find(x=>x.key==='fabrication-decoupe');
 const math=rows.find(x=>x.key==='math-problemes');
 assert.equal(manual.comment,'II. Les découpes ne sont pas droites ou incomplètes.');
@@ -65,7 +65,7 @@ async function run(){
   assert.equal(actual.math.level,'II');assert.equal(actual.math.comment,math.comment);
   assert.equal(actual.math.detail,math.detail);assert(actual.math.disabled&&actual.allReadOnly);
   assert.notEqual(actual.sectionBlue,'rgba(0, 0, 0, 0)','Feuille institutionnelle absente');
-  console.log('KALONEO_R153_ORIGINAL_TABLE=OK — 6 colonnes, 17 lignes, 3 sections, commentaires, pourcentages et lecture seule');
+  console.log('KALONEO_R153_ORIGINAL_TABLE=OK — 6 colonnes, 18 lignes, 3 sections, commentaires, pourcentages et lecture seule');
  } finally {win.destroy()}
 }
 app.whenReady().then(()=>run().then(()=>{clearTimeout(timeout);app.quit()}).catch(e=>{console.error('KALONEO_R153_ORIGINAL_TABLE=FAIL',e.stack||e);app.exit(2)}));
