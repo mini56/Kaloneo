@@ -304,11 +304,18 @@ app.whenReady().then(async()=>{
         restaurantImage:document.querySelector('.kaltest-builder-media img')?.getAttribute('src')||''
       })
     `,true);
+    // Les nouvelles V1 officielles incorporent leurs images dans le JSON.
+    // Vérifier le visuel rendu sans imposer l'ancien chemin imageqcm R48.
+    const restaurantPictureOk=
+      planning.restaurantImage.includes('imageqcm/r48-cantine-cuisinieres.png')||
+      /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]{256}/.test(planning.restaurantImage);
     if(planning.current!=='planning_cantine' ||
        planning.next!=='kaltest-pilot2.html?fullParcours=1&segment=genre-nombre' ||
        planning.rows!==3 || planning.dropdowns!==15 ||
-       !planning.restaurantImage.includes('imageqcm/r48-cantine-cuisinieres.png')){
-      throw new Error('Planning KALTEST invalide: '+JSON.stringify(planning));
+       !restaurantPictureOk){
+      throw new Error('Planning KALTEST invalide: '+JSON.stringify({
+        ...planning,restaurantImage:planning.restaurantImage.slice(0,80)
+      }));
     }
 
     await win.webContents.executeJavaScript(
