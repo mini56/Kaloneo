@@ -2477,6 +2477,9 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
       hide.style.setProperty('display', 'block', 'important');
       hide.setAttribute('aria-hidden', 'false');
     } else if (privacyMode === MODE_FINAL && !adminUnlocked) {
+      // The final confidentiality screen also needs its saved media, but not
+      // during normal Admin navigation or while its overlay is hidden.
+      if (!privacyMaskLoaded) void loadPrivacyMask();
       renderPrivacyContent(layer, MODE_FINAL);
       toggle.style.setProperty('display', 'none', 'important');
       layer.style.zIndex = '2147483644';
