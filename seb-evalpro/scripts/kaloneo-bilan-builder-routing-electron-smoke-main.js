@@ -164,9 +164,9 @@ app.whenReady().then(async()=>{
       return fail('Résultat parasite ajouté au Bilan depuis un test absent du manifeste',before);
     if(before.generatedPerTest!==0) return fail('le Bilan est encore construit avec une ligne par exercice',before);
     if(before.textareas!==0) return fail('une zone texte supplémentaire est encore présente dans la colonne Commentaires',before);
-    const mustRows=["fabrication-plan","fabrication-tracage","fabrication-decoupe","fabrication-assemblage","fabrication-finition","briques-identification","briques-manipulation","carre","organisation","planning","tri-temps","tri-erreurs","texte","mail","expression","math-enonce","math-problemes"];
-    if(before.visibleRows.length!==17||mustRows.some(id=>!before.visibleRows.includes(id)))
-      return fail('Le Bilan doit montrer exactement les 17 lignes officielles',before);
+    const mustRows=["fabrication-plan","fabrication-tracage","fabrication-decoupe","fabrication-assemblage","fabrication-finition","briques-identification","briques-manipulation","carre","organisation","planning","tri-temps","tri-erreurs","texte","mail","expression","math-enonce","math-problemes","competences-transversales"];
+    if(before.visibleRows.length!==18||mustRows.some(id=>!before.visibleRows.includes(id)))
+      return fail('Le Bilan doit montrer exactement les 18 lignes officielles',before);
     if(before.visibleRows.some(id=>!mustRows.includes(id)))return fail('Ligne institutionnelle inventée',before);
     if(before.fabrication.length!==5||before.fabrication.some(x=>x.hidden)) return fail('grille manuelle Structure 3D incomplète',before);
     if(!before.visibleSections.includes('Compétences techniques')||!before.visibleSections.includes('Savoirs fondamentaux')) {
