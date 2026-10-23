@@ -620,7 +620,7 @@ function renderInstitutionalGeneralTable(host,lines) {
     if(select){
       const comment=String(line.comment||'');
       const selected=[...select.options].find(option=>option.value===comment&&option.dataset.l===level)
-        ||[...select.options].find(option=>option.dataset.l===level&&level!=='NE');
+        ||(line.mode==='manual'?null:[...select.options].find(option=>option.dataset.l===level&&level!=='NE'));
       select.selectedIndex=selected?selected.index:0;
       select.disabled=true;
       select.setAttribute('aria-label','Commentaire du bilan institutionnel (lecture seule)');
