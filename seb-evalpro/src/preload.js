@@ -2467,6 +2467,9 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
     }
 
     if (privacyMode === MODE_TEMP) {
+      // The masking media must be loaded only when the overlay is actually displayed.
+      // In particular, opening Tests / Parcours must not resolve the candidate runtime.
+      if (!privacyMaskLoaded) void loadPrivacyMask();
       renderPrivacyContent(layer, MODE_TEMP);
       toggle.style.setProperty('display', 'none', 'important');
       layer.style.zIndex = '2147483647';
@@ -2493,7 +2496,8 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
   function startPrivacy(){
     if (!document.body) return;
     ensurePrivacyStyle();
-    loadPrivacyMask();
+    // Do not preload videos/images or entire candidate tests behind Admin screens.
+    // refreshPrivacy() loads the mask lazily if the privacy overlay is active.
     refreshPrivacy();
 
     const observer = new MutationObserver(function(){

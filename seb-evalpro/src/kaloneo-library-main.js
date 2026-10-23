@@ -853,6 +853,18 @@ function createKaloneoLibrary(options = {}) {
   function findMaskScreen(id, version) {
     const wantedId = String(id || DEFAULT_MASK_ID);
     const wantedVersion = String(version || DEFAULT_MASK_VERSION);
+    // Normal masks are stored at maskFile(id, version): look there first.
+    // Scanning every mask for a default lookup parses the video+image Base64
+    // even when the caller never asked for that video.
+    const file = maskFile(wantedId, wantedVersion);
+    if (fs.existsSync(file)) {
+      const value = readJson(file);
+      if (value && value.format === 'kaloneo-mask-screen' &&
+          String(value.id) === wantedId && String(value.version) === wantedVersion) {
+        return { value, file };
+      }
+    }
+    // Compatibility with non-canonical historical mask paths.
     return scanMaskScreens().find(record =>
       String(record.value.id) === wantedId && String(record.value.version) === wantedVersion
     ) || null;

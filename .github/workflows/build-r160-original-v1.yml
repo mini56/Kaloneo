@@ -65,6 +65,7 @@ permissions:
   actions: read
 jobs:
   windows-installer-migration:
+    if: github.sha == '7dd37dc14fbb1b06b99739fed0b796080ca56646'
     env:
       KALONEO_SKIP_OFFICIAL_V1: '1'
     # Nouveau Build #163. La release R157 reste figée et disponible comme secours.

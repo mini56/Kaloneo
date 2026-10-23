@@ -2,7 +2,7 @@
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
 
-!define SEB_BUILD_NUMBER "163"
+!define SEB_BUILD_NUMBER "164"
 !define SEB_BUILD_LABEL "Build #${SEB_BUILD_NUMBER}"
 
 # R159 : No legacy migration, no profile import and no old registry lookup.

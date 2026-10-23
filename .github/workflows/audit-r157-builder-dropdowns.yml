@@ -8,6 +8,7 @@ on:
       - '.github/workflows/build-r158-installer-video-intro.yml'
       - '.github/workflows/build-r159-clean-kaloneo-five-tests.yml'
       - '.github/workflows/build-r160-original-v1.yml'
+      - '.github/workflows/build-r161-lazy-mask.yml'
       - 'seb-evalpro/scripts/prepare-web.js'
       - 'seb-evalpro/scripts/kaloneo-r125-branding.py'
       - 'seb-evalpro/package.json'
