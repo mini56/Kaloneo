@@ -1719,7 +1719,7 @@ app.whenReady().then(async()=>{
       indicationsEditor.value=indicationsEditor.value.replace('Jacqueline','JacquelinX');
       indicationsEditor.dispatchEvent(new Event('input',{bubbles:true}));
       if(!indicationsEditor.value.includes('JacquelinX'))return {ok:false,reason:'Saisie indications perdue'};
-      R155 : l'exercice conserve une seule liaison institutionnelle officielle.
+      // R155 : l'exercice conserve une seule liaison institutionnelle officielle.
       const selector=document.getElementById('bilan-simple-line');
       const planning=[...selector.options].find(option=>
         option.value==='bilan.competences_techniques.planning.repartition_taches');
