@@ -2,7 +2,7 @@
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
 
-!define SEB_BUILD_NUMBER "164"
+!define SEB_BUILD_NUMBER "165"
 !define SEB_BUILD_LABEL "Build #${SEB_BUILD_NUMBER}"
 
 # R162: Full application removal without deleting any other software's data.
