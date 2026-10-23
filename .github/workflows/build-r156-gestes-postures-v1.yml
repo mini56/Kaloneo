@@ -135,7 +135,7 @@ jobs:
           node scripts/general-bilan-aggregation-smoke.js
       - name: Verify mask-video portable data and 3-second frozen image
         run: node scripts/kaloneo-mask-video-smoke.js
-      - name: R156 - Exact Gestes et postures V1 1.0.0: answers unchanged, Transversales, 3/3 and real upgrade of installed V1
+      - name: R156 - Exact Gestes et postures V1 1.0.0, answers unchanged, Transversales, 3/3 and real upgrade of installed V1
         run: node scripts/r156-gestes-postures-v1-institutional-smoke.js
       - name: Generate original complete candidate parcours data
         run: node scripts/build-kaltest-pilot2-data.js
