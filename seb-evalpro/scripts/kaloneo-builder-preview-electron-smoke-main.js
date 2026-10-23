@@ -2709,6 +2709,25 @@ app.whenReady().then(async()=>{
       if(block?.classList.contains('is-collapsed'))block.querySelector('.toggle-block')?.click();
       await delay(70);
       const before=audit();
+      // Pour chaque menu du Builder (hors réglages volontairement grisés),
+      // vérifier que le clic active explicitement son vrai picker Electron,
+      // sans changer le contenu des options ni le focus des autres champs.
+      const opened=[];
+      const nativeShow=HTMLSelectElement.prototype.showPicker;
+      try{
+        HTMLSelectElement.prototype.showPicker=function(){
+          opened.push(this.id||this.className||this.closest('label')?.textContent.trim().slice(0,50));
+        };
+        for(const select of document.querySelectorAll('.builder-editor select')){
+          if(!visible(select)||select.disabled||select.options.length<2)continue;
+          const click=new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'mouse',button:0});
+          select.dispatchEvent(click);
+          if(!click.defaultPrevented)opened.push('NOT_PREVENTED:'+select.id);
+        }
+      }finally{HTMLSelectElement.prototype.showPicker=nativeShow;}
+      const actionable=before.filter(item=>!item.disabled&&item.count>=2);
+      const explicitPopup=opened.length===actionable.length&&
+        !opened.some(item=>String(item).startsWith('NOT_PREVENTED:'));
       const style=[...block.querySelectorAll('.block-style-editor label')]
         .find(n=>n.firstChild?.textContent.trim()==='Couleur du bloc');
       const color=style?.querySelector('select');
@@ -2725,12 +2744,14 @@ app.whenReady().then(async()=>{
       }
       const after=audit();
       return {ok:true,protectedVersion:document.getElementById('test-version')?.value,
-        before,after,color:props};
+        before,after,color:props,explicitPopup,popupCount:opened.length,
+        actionableCount:actionable.length};
     }.toString()+')()',true);
     if(!allBuilderDropdowns.ok||!allBuilderDropdowns.color.exists||
        allBuilderDropdowns.color.disabled||allBuilderDropdowns.color.count<2||
        !allBuilderDropdowns.color.hit||!allBuilderDropdowns.color.changed||
        !allBuilderDropdowns.color.focus||!allBuilderDropdowns.color.persisted||
+       !allBuilderDropdowns.explicitPopup||
        allBuilderDropdowns.before.some(s=>s.count===0||
          !s.hit||(s.disabled && s.id!=='test-scored'&&!/block-zone/.test(s.className))))
       return fail('R157 Audit déroulants V1 Builder : menus non accessibles ou bloqués',
