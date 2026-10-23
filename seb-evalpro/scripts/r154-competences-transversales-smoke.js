@@ -1,0 +1,56 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const root=path.resolve(__dirname,'..');
+const official=require('../src/institutional-bilan-grid');
+const routing=require('../source/js/kaloneo-bilan-routing');
+const simple=require('../../kaloneo/bilan-simple-link');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const html=read('overrides/admin-bilan.html');
+const originalRows=[...html.matchAll(/<tr[^>]*data-r="([^"]+)"/g)].map(m=>m[1]);
+const rowKeys=official.OFFICIAL.filter(x=>x.kind==='row').map(x=>x.key);
+assert.equal(rowKeys.length,18);
+assert.equal(official.OFFICIAL.filter(x=>x.kind==='section').length,3);
+assert.deepEqual(rowKeys,originalRows);
+assert.equal(rowKeys.at(-1),'competences-transversales');
+const line=official.officialRowDefinitions().get('competences-transversales');
+assert(line.module.includes('Compétences transversales'));
+assert(line.comments.I.includes('autonome'));
+assert(line.comments.II.includes('partiellement'));
+assert(line.comments.III.includes('accompagnement'));
+const catalogueContext={window:{}};
+vm.runInNewContext(fs.readFileSync(path.resolve(root,'..','kaloneo','bilan-catalog.js'),'utf8'),catalogueContext);
+const catalog=catalogueContext.window.KaloneoBilanCatalog;
+assert.equal(catalog.length,18);
+const selected=simple.options('competences_transversales',catalog);
+assert.equal(selected.length,1);
+assert.equal(selected[0].mode,'automatic');
+assert.equal(simple.contribution(selected[0],'competences_transversales').bindings.score,'score');
+assert(simple.validate('competences_transversales',[simple.contribution(selected[0],'competences_transversales')],catalog).ok);
+assert(!simple.validate('mathematiques',[simple.contribution(selected[0],'competences_transversales')],catalog).ok);
+assert.equal(routing.rowFor(selected[0].id),'competences-transversales');
+assert(routing.compatible('competences_transversales',selected[0].id));
+assert(!routing.compatible('mathematiques',selected[0].id));
+const linked={id:'test-transversal',title:'Test nouveau',category:'competences_transversales',adminModified:true,
+ bilanContributions:[simple.contribution(selected[0],'competences_transversales')]};
+const score=routing.collect([linked],()=>({result:{score:7,scoreMax:10}}));
+assert.deepEqual(score.entries.get('competences-transversales')[0].pair,{score:7,max:10});
+const archive=rows=>({document:{rows:rows.map(x=>({kind:'item',...x}))}});
+const consolidated=official.aggregateInstitutionalRows([
+ {date:'2026-10-18',archive:archive([{key:'competences-transversales',points:2,possible:5,level:'III'}])},
+ {date:'2026-10-19',archive:archive([{key:'competences-transversales',points:7,possible:10,level:'I'}])}
+]);
+const trans=consolidated.rows.find(x=>x.key==='competences-transversales');
+assert.equal(trans.points,9);assert.equal(trans.possible,15);assert.equal(trans.percent,60);
+assert.equal(trans.level,'II');assert(trans.comment.includes('Mobilise partiellement'));
+assert.equal(trans.detail,'60 % de réponses correctes.');
+const word=official.wordRows({institutionalRows:consolidated.rows});
+assert.equal(word.filter(x=>x.type==='row').length,18);
+assert.equal(word.filter(x=>x.type==='section').length,3);
+assert(word.find(x=>x.key==='competences-transversales').comment.includes('Mobilise partiellement'));
+const builder=fs.readFileSync(path.resolve(root,'..','kaloneo','test-builder.html'),'utf8');
+const builderJs=fs.readFileSync(path.resolve(root,'..','kaloneo','test-builder.js'),'utf8');
+assert(builder.includes('value="competences_transversales">Compétences transversales</option>'));
+assert(!builder.includes('Compétences transversales / Autres'));
+assert(!builderJs.includes('Compétences transversales / Autres'));
+console.log('KALONEO_R154_COMPETENCES_TRANSVERSALES=OK — 18 lignes, 3 sections, Builder, commentaire officiel, pourcentage et Word sans Autres');
