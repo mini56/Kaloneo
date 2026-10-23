@@ -10,6 +10,7 @@ const norm=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,
 function allowed(category,line){
  if(!line||!line.id)return false;
  const id=String(line.id),c=norm(category);
+ if(c==='competences_transversales')return id==='bilan.savoirs_fondamentaux.competences_transversales.mobiliser_competences'&&line.mode==='automatic';
  if(c==='mathematiques')return id.startsWith('bilan.savoirs_fondamentaux.mathematiques.');
  if(c==='francais')return id.startsWith('bilan.savoirs_fondamentaux.expression_ecrite.');
  if(c==='numerique')return id.startsWith('bilan.tic.');
