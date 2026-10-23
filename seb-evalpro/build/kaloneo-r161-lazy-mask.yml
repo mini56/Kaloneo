@@ -40,5 +40,5 @@ nsis:
   installerSidebar: build/pilot-resources/installerSidebar.bmp
   uninstallerSidebar: build/pilot-resources/installerSidebar.bmp
   include: build/installer.nsh
-  deleteAppDataOnUninstall: false
+  deleteAppDataOnUninstall: true
   artifactName: "KALONEO-Setup-0.0.188.${ext}"

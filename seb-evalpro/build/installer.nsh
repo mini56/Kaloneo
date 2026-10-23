@@ -5,10 +5,24 @@
 !define SEB_BUILD_NUMBER "164"
 !define SEB_BUILD_LABEL "Build #${SEB_BUILD_NUMBER}"
 
-# R159 : No legacy migration, no profile import and no old registry lookup.
-# Native NSIS uninstallation removes app binaries/shortcuts, not user files.
+# R162: Full application removal without deleting any other software's data.
+# Upgrades must NEVER erase candidates, bilans, or current user preferences.
+# Only the uninstaller of this NEW version will execute this new macro.
 !macro customUnInstall
-  DetailPrint "Désinstallation de KALONÉO"
+  DetailPrint "Désinstallation complète de KALONÉO"
+  ${IfNot} ${isUpdated}
+    # Electron setPath('userData') points here, irrespective of package.json.
+    # Also contains Documents, encrypted candidates, bilans, tests and images.
+    # For a machine-wide setup, use the current profile, not all-users AppData.
+    SetShellVarContext current
+    DetailPrint "Suppression du profil KALONEO et des dossiers de cache"
+    RMDir /r "$APPDATA\KALONEO"
+    RMDir /r "$LOCALAPPDATA\KALONEO"
+    # Restore electron-builder uninstall context for its remaining operations.
+    ${If} $installMode == "all"
+      SetShellVarContext all
+    ${EndIf}
+  ${EndIf}
 !macroend
 
 !ifndef BUILD_UNINSTALLER

@@ -66,6 +66,8 @@ permissions:
   actions: read
 jobs:
   windows-installer-migration:
+    # R161 was released at this commit: no republishing Build #164 on the moving branch.
+    if: github.sha == 'ee3cfa2ad84978d14b8a8dbbdf2925d4e1474f77'
     env:
       KALONEO_SKIP_OFFICIAL_V1: '1'
     # Nouveau Build #164. La release R157 reste figée et disponible comme secours.

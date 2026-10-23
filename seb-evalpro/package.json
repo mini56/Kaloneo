@@ -103,7 +103,7 @@
       "uninstallerIcon": "build/app-icon.ico",
       "installerHeader": "build/installerHeader.bmp",
       "include": "build/installer.nsh",
-      "deleteAppDataOnUninstall": false,
+      "deleteAppDataOnUninstall": true,
       "artifactName": "SEB-eval-PRO-${version}-Windows-Setup.${ext}"
     },
     "linux": {

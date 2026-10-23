@@ -60,11 +60,30 @@ if(-not $details.UninstallString -or $details.UninstallString -notmatch 'KALON[E
 Write-Host "KALONEO_R159_REGISTRY=OK — identity=$($details.Id) name=$($details.DisplayName) location=$target"
 $shortcut=Join-Path ([Environment]::GetFolderPath('Desktop')) 'KALONÉO.lnk'
 if(-not(Test-Path $shortcut)){throw "New KALONÉO desktop shortcut absent"}
+# Vérifier un désinstallateur NEUF avec des fichiers de test représentatifs
+# du profil KALONEO et des dossiers auxquels la désinstallation n'a PAS accès.
+$profile=Join-Path $env:APPDATA 'KALONEO'
+$cache=Join-Path $env:LOCALAPPDATA 'KALONEO'
+$outside=Join-Path $env:APPDATA 'KALONEO-DO-NOT-DELETE'
+New-Item -ItemType Directory -Path (Join-Path $profile 'Documents\KALONEO'),$cache,$outside -Force | Out-Null
+Set-Content -Path (Join-Path $profile 'Documents\KALONEO\bilan-test.docx') -Value 'test' -Encoding utf8
+Set-Content -Path (Join-Path $profile 'evaluation-state.json') -Value '{"fixture":true}' -Encoding utf8
+Set-Content -Path (Join-Path $cache 'cache-test.txt') -Value 'test' -Encoding utf8
+Set-Content -Path (Join-Path $outside 'keep.txt') -Value 'untouched' -Encoding utf8
 $uninstaller=Get-ChildItem $target -File -Filter '*Uninstall*.exe' | Select-Object -First 1
 if(-not $uninstaller){throw 'No clean KALONÉO uninstaller'}
 $uninst=Start-Process -FilePath $uninstaller.FullName -ArgumentList '/S','/currentuser' -Wait -PassThru
 if($uninst.ExitCode -ne 0){throw "Uninstall failed $($uninst.ExitCode)"}
 if(Test-Path $exe){throw 'KALONÉO executable not removed on uninstall'}
+for($i=0;$i -lt 20;$i++){
+  if(-not(Test-Path $target) -and -not(Test-Path $profile) -and -not(Test-Path $cache)){break}
+  Start-Sleep -Milliseconds 250
+}
+if(Test-Path $target){throw "KALONEO program folder remained after uninstall: $target"}
+if(Test-Path $profile){throw "KALONEO profile/candidates/bilans remained after uninstall: $profile"}
+if(Test-Path $cache){throw "KALONEO cache folder remained after uninstall: $cache"}
+if(-not(Test-Path (Join-Path $outside 'keep.txt'))){throw 'The uninstall unexpectedly deleted a neighbouring folder'}
+Remove-Item -LiteralPath $outside -Recurse -Force
 if(Test-Path $legacy){throw 'A legacy install tree was generated'}
 if(Test-Path $recovery){throw 'A legacy recovery profile was created'}
-Write-Host 'KALONEO_R159_WINDOWS_CLEAN_INSTALL=OK — correct path, native shortcuts, new registry identity, no SEB migration/recovery, clean uninstall'
+Write-Host 'KALONEO_R159_WINDOWS_CLEAN_INSTALL=OK — correct path, native shortcuts, new registry identity, no SEB migration/recovery, FULL clean uninstall + all app data, no collateral deletion'

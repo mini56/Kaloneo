@@ -1,0 +1,30 @@
+name: "KALONÉO - Audit désinstallation complète"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/audit-full-uninstall.yml'
+      - 'seb-evalpro/build/installer.nsh'
+      - 'seb-evalpro/build/kaloneo-r161-lazy-mask.yml'
+      - 'seb-evalpro/package.json'
+      - 'seb-evalpro/scripts/kaloneo-full-uninstall-policy.js'
+      - 'seb-evalpro/scripts/r159-clean-install-windows-smoke.ps1'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-uninstall-source:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Strict NSIS uninstall policy and no collateral deletion
+        run: node scripts/kaloneo-full-uninstall-policy.js
+      - name: Existing clean installer integration guard
+        run: node scripts/kaloneo-r126-install-path-guard.js
