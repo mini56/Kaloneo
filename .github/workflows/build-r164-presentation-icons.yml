@@ -8,6 +8,7 @@ on:
       - 'seb-evalpro/package.json'
       - 'seb-evalpro/src/kaloneo-default-test-icons.js'
       - 'seb-evalpro/scripts/r164-presentation-icons-smoke.js'
+      - 'seb-evalpro/scripts/kaloneo-candidate-icon-electron-smoke-main.js'
       - 'kaloneo/test-preview.js'
       - 'seb-evalpro/source/css/kaltest-pilot2.css'
       - 'seb-evalpro/source/bibliotheque-images/**'
@@ -192,6 +193,8 @@ jobs:
         run: npm run prepare:web
       - name: R164 verify page-presentation behaviour and icons without changing original V1
         run: node scripts/r164-presentation-icons-smoke.js
+      - name: R164 actual Electron icon reuse and no stale icon
+        run: npx electron --no-sandbox scripts/kaloneo-candidate-icon-electron-smoke-main.js
       - name: R164 verify five compact V1, 13 unique images, Builder, candidate, exports and test integrator
         shell: pwsh
         run: |

@@ -61,10 +61,15 @@ app.whenReady().then(async()=>{
   assert(seen.width>=25,'Icône trop petite dans l’en-tête');
   active={...base};
   let without=await open();
-  assert.equal(without.iconHidden,true,'Une icône ancienne persiste sur un test sans icône');
-  assert.equal(without.iconSrc,'','URL d’icône persiste sur un test sans icône');
+  // R164 : tous les tests possèdent une icône. La précédente icône
+  // personnalisée ne doit pas fuiter lors du changement de test.
+  assert.equal(without.iconHidden,false,'Icône de bibliothèque absente sur un test sans icône explicite');
+  assert.match(without.iconSrc,/^kaloneo-builder\/icons-tests\/test_[a-z_]+\.png$/,'Icône de remplacement non issue de la bibliothèque commune');
+  assert.notEqual(without.iconSrc,data,'L’icône personnalisée précédente persiste sur le test suivant');
+  assert(without.loaded,'Icône de remplacement non chargée dans Electron');
+  assert(without.width>=25,'Icône de remplacement trop petite dans l’en-tête');
   clearTimeout(timeout);
-  console.log('KALONEO_CANDIDATE_ICON: OK (selected test icon displayed, absent icon hidden)');
+  console.log('KALONEO_CANDIDATE_ICON: OK (icône choisie + icône par défaut commune, aucune fuite entre tests)');
   win.destroy();app.quit();
  }catch(error){fail(error);}
 }).catch(fail);

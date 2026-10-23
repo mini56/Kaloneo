@@ -18,6 +18,7 @@ on:
       - '.github/workflows/build-r163-library-pages.yml'
       - '.github/workflows/build-r164-presentation-icons.yml'
       - 'seb-evalpro/scripts/r164-presentation-icons-smoke.js'
+      - 'seb-evalpro/scripts/kaloneo-candidate-icon-electron-smoke-main.js'
       - 'seb-evalpro/src/kaloneo-default-test-icons.js'
       - 'seb-evalpro/scripts/supplied-images-library-smoke.js'
       - 'seb-evalpro/scripts/builder-special-parcours-pages-smoke.js'
