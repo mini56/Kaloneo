@@ -15,7 +15,7 @@ OUT.mkdir(parents=True,exist_ok=True)
 LOGO=Image.open(SOURCE).convert("RGBA")
 assert LOGO.size==(300,188),f"Official KALONÉO logo changed; inspect first: {LOGO.size}"
 VERSION=json.loads((ROOT/"package.json").read_text(encoding="utf-8"))
-assert VERSION["sebBuildNumber"]==162 and VERSION["sebReleaseVersion"]=="0.0.186", "R159 Build #162 and 0.0.186 must be unique and consistent"
+assert isinstance(VERSION.get("sebBuildNumber"),int) and VERSION["sebBuildNumber"]>=162 and re.fullmatch(r"\d+\.\d+\.\d+",str(VERSION.get("sebReleaseVersion",""))), "KALONEO Build and release version must be supplied by package.json"
 BLUE="#004e70"
 ORANGE="#f58422"
 
