@@ -1593,8 +1593,31 @@ app.whenReady().then(async()=>{
         saveLabel:String(save?.textContent||'').trim(),
         saveTitle:String(save?.title||''),
         title:document.getElementById('test-title')?.value||'',
-        hiddenLegacy
+        hiddenLegacy,
+        institutionPickerDisabled:document.getElementById('bilan-simple-line').disabled
       };
+      // Test de la régression signalée sur Gestes et postures :
+      // une V1 ouverte (bouton Enregistrer V1) doit permettre de changer
+      // catégorie puis de choisir réellement la 18e ligne.
+      const category=document.getElementById('test-category');
+      category.value='competences_transversales';
+      category.dispatchEvent(new Event('change',{bubbles:true}));
+      const picker=document.getElementById('bilan-simple-line');
+      const official='bilan.savoirs_fondamentaux.competences_transversales.mobiliser_competences';
+      const options=[...picker.options].filter(option=>option.value).map(option=>option.value);
+      const afterCategory={
+        category:category.value,
+        disabled:picker.disabled,
+        options,
+        cleared:picker.value==='',
+        oldLegacyHidden:document.getElementById('contract-section-content').getClientRects().length===0
+      };
+      if(!picker.disabled&&options.includes(official)){
+        picker.value=official;
+        picker.dispatchEvent(new Event('change',{bubbles:true}));
+      }
+      const afterSelection={value:picker.value,disabled:picker.disabled,
+        help:document.getElementById('bilan-simple-help').textContent};
       const scenario=document.getElementById('test-scenario');
       scenario.value=String(scenario.value||'')+' — modification smoke';
       scenario.dispatchEvent(new Event('input',{bubbles:true}));
@@ -1604,6 +1627,8 @@ app.whenReady().then(async()=>{
         ok:true,
         before,
         orgPreview,
+        afterCategory,
+        afterSelection,
         after:{
           version:version?.value||'',
           versionReadOnly:!!version?.readOnly,
@@ -1629,6 +1654,14 @@ app.whenReady().then(async()=>{
        !protectedV1.before.hiddenLegacy?.afterClickHidden||
        !protectedV1.before.hiddenLegacy?.inert||
        !protectedV1.before.hiddenLegacy?.singlePicker||
+       protectedV1.before.institutionPickerDisabled||
+       protectedV1.afterCategory?.disabled||
+       protectedV1.afterCategory?.options?.length!==1||
+       !protectedV1.afterCategory?.options?.[0]?.includes('competences_transversales')||
+       !protectedV1.afterCategory?.cleared||
+       !protectedV1.afterCategory?.oldLegacyHidden||
+       protectedV1.afterSelection?.value!=='bilan.savoirs_fondamentaux.competences_transversales.mobiliser_competences'||
+       !protectedV1.afterSelection?.help?.includes('calculée automatiquement')||
        protectedV1.before.saveLabel!=='Enregistrer V1'||
        !/copie de sécurité/i.test(protectedV1.before.saveTitle)||
        protectedV1.after.version!=='1.0.0'||
@@ -1637,6 +1670,11 @@ app.whenReady().then(async()=>{
        !savedLibraryDefinition||
        savedLibraryDefinition.id!=='organisation_demenagement'||
        savedLibraryDefinition.version!=='1.0.0'||
+       savedLibraryDefinition.category!=='competences_transversales'||
+       savedLibraryDefinition.bilanContributions?.length!==1||
+       savedLibraryDefinition.bilanContributions[0]?.lineId!=='bilan.savoirs_fondamentaux.competences_transversales.mobiliser_competences'||
+       savedLibraryDefinition.bilanContributions[0]?.bindings?.score!=='score'||
+       savedLibraryDefinition.bilanContributions[0]?.bindings?.score_max!=='score_max'||
        savedLibraryPayload?.overwrite!==true||
        !String(savedLibraryDefinition.scenario||'').includes('modification smoke')) {
       return fail('V1 administrateur : ouverture, édition ou sauvegarde sans Développeur incorrecte',{protectedV1,savedLibraryDefinition,savedLibraryPayload});
