@@ -10,7 +10,7 @@ const APP_NAME = 'KALONÉO';
 try {
   app.setName(APP_NAME);
   const appData = app.getPath('appData');
-  const isolatedRoot = path.join(appData, 'SEB EvalPro Kaloneo PILOTE 21');
+  const isolatedRoot = path.join(appData, 'KALONEO');
   app.setPath('userData', isolatedRoot);
   app.setPath('documents', path.join(isolatedRoot, 'Documents'));
 } catch (_) {}
