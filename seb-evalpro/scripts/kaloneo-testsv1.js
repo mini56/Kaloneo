@@ -28,7 +28,7 @@ function syncFromMainInCi(repoRoot){
     if(existing.endsWith('.json'))fs.rmSync(path.join(directory,existing),{force:true});
   }
   for(const file of entries){
-    if(!/^TESTS_V1\/[A-Za-z0-9_-]+\.json$/.test(file))continue;
+    if(!/^TESTS_V1\/[A-Za-z0-9_.-]+\.json$/.test(file))continue;
     const src=run(['show','FETCH_HEAD:'+file]);
     fs.writeFileSync(path.join(repoRoot,file),src,'utf8');
   }
