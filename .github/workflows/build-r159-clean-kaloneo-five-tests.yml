@@ -108,6 +108,9 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Logo generation failed'}
       - name: Install FFmpeg ONLY on Windows build runner (never on candidate PCs)
         uses: FedericoCarboni/setup-ffmpeg@v3
+        with:
+          # Version 9.0.2 existe sur GyanD/codexffmpeg ; éviter la requête fragile « latest release ».
+          ffmpeg-version: '9.0.2'
       - name: Convert original silent chameleon MP4 into local Windows NSIS animation
         shell: pwsh
         run: |
