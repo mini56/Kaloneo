@@ -4,6 +4,7 @@ on:
     branches: [fix-r60-tri-rearm-only-20261011]
     paths:
       - '.github/workflows/build-r163-library-pages.yml'
+      - '.github/workflows/audit-r157-builder-dropdowns.yml'
       - 'seb-evalpro/package.json'
       - 'seb-evalpro/source/bibliotheque-images/**'
       - 'seb-evalpro/src/kaloneo-supplied-images.js'
