@@ -23,9 +23,12 @@ assert(main.includes('le verrou dépend désormais du mode d\'exécution'), 'Mar
 for (const forbidden of ['Version Candidat','Version Administrateur','SebEditionCreate','SebEditionLeave']) {
   assert(!installer.includes(forbidden), 'Ancienne sélection d’édition encore présente: ' + forbidden);
 }
-assert(installer.includes('Delete "$INSTDIR\\edition-admin.flag"'), 'Nettoyage ancien marqueur Admin absent.');
-assert(installer.includes('Delete "$INSTDIR\\edition-candidate.flag"'), 'Nettoyage ancien marqueur Candidat absent.');
-assert(installer.includes('DeleteRegValue HKCU "Software\\SEB EvalPro" "Edition"'), 'Nettoyage ancien registre Edition absent.');
+// Nouveau Setup propre : unification interne, aucune migration des vieilles éditions.
+assert(installer.includes('!macro customInstall'));
+assert(!installer.includes('edition-admin.flag'));
+assert(!installer.includes('edition-candidate.flag'));
+assert(!installer.includes('DeleteRegValue HKCU "Software\\SEB EvalPro"'));
+assert(installer.includes('StrCpy $INSTDIR "$LOCALAPPDATA\\Programs\\KALONEO"'));
 
 assert(preload.includes("edition:'unified'"), 'Fallback preload non unifié.');
 assert(catalog.includes("edition:'unified'"), 'Fallback catalogue non unifié.');
