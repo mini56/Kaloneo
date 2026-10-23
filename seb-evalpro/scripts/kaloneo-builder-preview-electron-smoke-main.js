@@ -2674,6 +2674,63 @@ app.whenReady().then(async()=>{
       return fail('Texte fixe après la réponse incorrect dans Builder / rendu partagé',fixedSuffix);
     console.log('KALONEO_ANSWER_FIXED_SUFFIX_ELECTRON=OK',JSON.stringify(fixedSuffix));
 
+
+    // R157 — inventaire de TOUS les menus visibles et test du vrai
+    // gestionnaire de sélection sur une V1 protégée et un nouveau bloc.
+    const allBuilderDropdowns=await win.webContents.executeJavaScript('('+async function(){
+      const delay=ms=>new Promise(ok=>setTimeout(ok,ms));
+      const visible=el=>el&&el.getClientRects().length>0&&
+        getComputedStyle(el).visibility!=='hidden';
+      const audit=()=>[...document.querySelectorAll('.builder-editor select')].filter(visible).map(s=>{
+        const rect=s.getBoundingClientRect();
+        const at=document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2);
+        const closest=s.closest('label');
+        const label=closest?.childNodes?.[0]?.textContent?.trim()||s.id||s.className;
+        return {label,id:s.id,className:String(s.className),disabled:s.disabled,
+          count:s.options.length,value:s.value,hit:at===s||s.contains(at),
+          hitElement:at?.tagName,hitId:at?.id||'',hitClass:String(at?.className||'')};
+      });
+      window.confirm=()=>true;
+      document.getElementById('open-library-test').click();
+      await delay(200);
+      const row=[...document.querySelectorAll('.test-library-item')]
+        .find(n=>String(n.textContent||'').includes('v1.0.0'));
+      if(!row)return {ok:false,reason:'V1 non trouvée'};
+      row.querySelector('.test-library-item-actions button')?.click();
+      await delay(260);
+      const block=document.querySelector('.exercise-block');
+      if(block?.classList.contains('is-collapsed'))block.querySelector('.toggle-block')?.click();
+      await delay(70);
+      const before=audit();
+      const style=[...block.querySelectorAll('.block-style-editor label')]
+        .find(n=>n.firstChild?.textContent.trim()==='Couleur du bloc');
+      const color=style?.querySelector('select');
+      const props={exists:!!color,disabled:color?.disabled,count:color?.options?.length,
+        initial:color?.value,hit:before.find(n=>n.label==='Couleur du bloc')?.hit};
+      if(color){
+        color.focus();
+        color.value='#EEF9F2';
+        color.dispatchEvent(new Event('change',{bubbles:true}));
+        props.changed=color.value==='#EEF9F2'&&color.isConnected;
+        props.focus=document.activeElement===color;
+        await delay(420);
+        props.persisted=color.isConnected&&color.value==='#EEF9F2';
+      }
+      const after=audit();
+      return {ok:true,protectedVersion:document.getElementById('test-version')?.value,
+        before,after,color:props};
+    }.toString()+')()',true);
+    if(!allBuilderDropdowns.ok||!allBuilderDropdowns.color.exists||
+       allBuilderDropdowns.color.disabled||allBuilderDropdowns.color.count<2||
+       !allBuilderDropdowns.color.hit||!allBuilderDropdowns.color.changed||
+       !allBuilderDropdowns.color.focus||!allBuilderDropdowns.color.persisted||
+       allBuilderDropdowns.before.some(s=>s.count===0||
+         !s.hit||s.disabled && !/block-zone/.test(s.className)))
+      return fail('R157 Audit déroulants V1 Builder : menus non accessibles ou bloqués',
+        allBuilderDropdowns);
+    console.log('KALONEO_R157_ALL_DROPDOWNS_V1_AUDIT=OK',
+      JSON.stringify({count:allBuilderDropdowns.before.length,color:allBuilderDropdowns.color}));
+
     console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
     console.log('KALONEO_BUILDER_PREVIEW_ELECTRON=OK');
