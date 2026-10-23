@@ -1844,3 +1844,17 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 #candidate-preview-resolution:focus-visible{
   outline:2px solid #1474a5;outline-offset:2px;
 }
+
+
+/* R155 — Liaisons institutionnelles : une SEULE commande de liaison visible.
+   La règle générique .builder-editor .section-fold-btn { display:... !important }
+   réaffichait le bouton anciennement masqué (et ouvrait les sorties héritées),
+   particulièrement sur les V1. Les données historiques restent sérialisées,
+   seul l'ancien éditeur technique est rendu invisible et non interactif. */
+.builder-editor #toggle-contract-section,
+.builder-editor #add-output,
+.builder-editor #add-bilan-contribution,
+.builder-editor #contract-section-content {
+  display: none !important;
+  visibility: hidden !important;
+}
