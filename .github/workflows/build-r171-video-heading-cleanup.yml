@@ -214,7 +214,7 @@ jobs:
         run: npm run prepare:web
       - name: R171 audit MP4 nouveau parcours, source originale et dérivé léger
         run: node scripts/r170-intro-video-smoke.js
-      - name: R171 inspect video intro: no visible header, video and start button intact
+      - name: "R171 inspect video intro: no visible header, video and start button intact"
         shell: pwsh
         run: |
           $html=Get-Content -Raw -Encoding UTF8 source/kaltest-pilot2.html
