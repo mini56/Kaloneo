@@ -19,6 +19,18 @@ for(let i=0;i<COUNT;i++){
   presentation:{builderContent:[]}
  }), 'utf8');
 }
+// Deux pages indispensables en production : sinon le parcours de base serait
+// recalculé lors de chaque appel, faussant la mesure du chargement normal.
+for(const role of ['introduction','fin']){
+ const file=path.join(seed,'page_'+role,'1.0.0','test.json');
+ fs.mkdirSync(path.dirname(file),{recursive:true});
+ fs.writeFileSync(file,JSON.stringify({
+  kaltestFormat:1,id:'page_'+role,version:'1.0.0',title:'Page '+role,
+  category:role,pageRole:role,scored:false,questions:[],
+  presentation:{builderContent:[]}
+ }), 'utf8');
+}
+
 const original=fs.readFileSync;
 let seedReads=0,testReads=0;
 fs.readFileSync=function(p,...args){
@@ -33,7 +45,7 @@ try{
  const t0=performance.now();
  const lib=createKaloneoLibrary({dataRoot:data,seedTestsRoot:seed});
  const createdMs=performance.now()-t0;
- const tests=lib.listTests();
+ const tests=lib.listTests().filter(x=>x.role==='test');
  assert.equal(tests.length,COUNT);
  const initialSeedReads=seedReads;
  assert(initialSeedReads>=COUNT,'Les tests système doivent être identifiés au démarrage');
@@ -48,12 +60,12 @@ try{
  }
  const openMs=performance.now()-t1;
  assert.equal(seedReads,0,'La bibliothèque relit les V1 à chaque ouverture');
- assert(testReads<=OPEN_COUNT+1,'La bibliothèque parcourt les JSON à chaque ouverture');
+ assert(testReads<=OPEN_COUNT+1,'La bibliothèque parcourt les JSON à chaque ouverture : '+testReads+' lectures');
  seedReads=0;
  lib.ensureSeed();
  lib.ensureSeed();
  assert.equal(seedReads,0,'La synchronisation V1 a été répétée');
- const again=lib.listTests();
+ const again=lib.listTests().filter(x=>x.role==='test');
  assert.equal(again.length,COUNT);
  assert.equal(seedReads,0,'La lecture des V1 recommence lors de la liste');
  const known=lib.getTest('audit_0001','1.0.0');
@@ -70,7 +82,7 @@ try{
  assert.equal(deleted.ok,true,'Suppression personnelle impossible');
  assert.equal(lib.getTest(custom.id,custom.version).ok,false,'Ancien index non invalidé');
  const restart=createKaloneoLibrary({dataRoot:data,seedTestsRoot:seed});
- assert.equal(restart.listTests().length,COUNT,'Reprise après démarrage incohérente');
+ assert.equal(restart.listTests().filter(x=>x.role==='test').length,COUNT,'Reprise après démarrage incohérente');
  assert(restart.getTest('audit_0001','1.0.0').ok,'V1 perdue après redémarrage');
  const builder=original.call(fs,path.resolve(__dirname,'../../kaloneo/test-builder.js'),'utf8');
  const openBlock=builder.match(/function loadDefinition\([^]*?\n  async function importJsonFile/);
