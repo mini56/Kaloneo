@@ -2738,6 +2738,8 @@
     const focusSnapshot=rememberBlockFocus(host);
     host.innerHTML='';
     const split=$('test-layout').value!=='single';
+    // Calculer les groupes une seule fois et non deux fois par bloc.
+    const lineGroups=Workflow.lines(state.blocks);
 
     host.appendChild(makeInsertionControl(0));
     state.blocks.forEach((block,index)=>{
@@ -2797,9 +2799,9 @@
         else selectedBlockUids.delete(block.uid);
       });
       frag.querySelector('.duplicate-block').addEventListener('click',()=>cloneTo(index+1,[block]));
-      const groups=Workflow.lines(state.blocks);
-      const group=Workflow.groupAt(state.blocks,index);
-      const g=groups.findIndex(e=>e.start===group?.start);
+      const groups=lineGroups;
+      const g=groups.findIndex(e=>e.start<=index&&index<e.end);
+      const group=g>=0?groups[g]:null;
       for(const [selector,direction] of [['.move-line-up',-1],['.move-line-down',1]]){
         const button=frag.querySelector(selector);
         button.disabled=g+direction<0||g+direction>=groups.length;
@@ -3610,8 +3612,9 @@
     $('test-template').value=model.meta.template && Array.from($('test-template').options).some(o=>o.value===model.meta.template)
       ? model.meta.template : 'generic';
     saveDraft(false);
+    // renderBlocks appelle déjà refreshPreview, validation et capture Electron.
+    // Ne pas effectuer une seconde reconstruction du candidat à l'ouverture.
     renderBlocks();
-    refreshPreview();
     resetHistory({markSaved:options.markSaved!==false});
     transientStatus(statusLabel,1800);
   }

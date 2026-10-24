@@ -58,6 +58,12 @@ function createKaloneoLibrary(options = {}) {
   // Méta-images immuables jusqu'à un ajout via storeImageBuffer.
   // Évite de relire l'intégralité du disque pour chaque vignette.
   let cachedImageRecords = null;
+  // Un test déjà enregistré ne doit pas provoquer une recherche globale de tous
+  // les fichiers à chaque consultation. Ces index restent locaux au processus.
+  let cachedTestFiles = null;
+  let cachedSeedTests = null;
+  let seedTestsSynchronized = false;
+  const testKey = (id,version) => JSON.stringify([String(id||''),String(version||'')]);
 
   if (!dataRoot) throw new Error('dataRoot KALONÉO requis.');
 
@@ -560,11 +566,16 @@ function createKaloneoLibrary(options = {}) {
 
   function scanAllDefinitions() {
     const out = [];
+    const index = new Map();
     for (const file of walkTestFiles(testsRoot)) {
       const definition = readJson(file);
       if (!definition || !definition.id || !definition.version) continue;
       out.push({ definition, file });
+      index.set(testKey(definition.id,definition.version),file);
     }
+    // La bibliothèque vient d'être listée : le prochain « Ouvrir » accède
+    // directement au fichier retenu, sans rescanner toutes les définitions.
+    cachedTestFiles = index;
     return out;
   }
 
@@ -629,25 +640,32 @@ function createKaloneoLibrary(options = {}) {
   }
 
   function exactTestFile(id, version) {
-    const wantedId = String(id || '');
-    const wantedVersion = String(version || '');
-    for (const file of walkTestFiles(testsRoot)) {
-      const definition = readJson(file);
-      if (definition && String(definition.id) === wantedId && String(definition.version) === wantedVersion) return file;
-    }
+    const key=testKey(id,version);
+    if(!cachedTestFiles) scanAllDefinitions();
+    const file=cachedTestFiles.get(key);
+    // Une suppression exceptionnelle de fichier en dehors de KALONÉO ne doit
+    // jamais laisser une référence valide à tort.
+    if(file && fs.existsSync(file)) return file;
+    if(file)cachedTestFiles.delete(key);
     return '';
   }
 
+  function seedFileIndex() {
+    if(cachedSeedTests)return cachedSeedTests;
+    const index=new Map();
+    if(seedTestsRoot && fs.existsSync(seedTestsRoot)){
+      for(const file of walkTestFiles(seedTestsRoot)){
+        const definition=readJson(file);
+        if(definition?.id&&definition?.version)
+          index.set(testKey(definition.id,definition.version),file);
+      }
+    }
+    cachedSeedTests=index;
+    return index;
+  }
+
   function seedContainsTest(id, version) {
-    if (!seedTestsRoot || !fs.existsSync(seedTestsRoot)) return false;
-    const wantedId = String(id || '');
-    const wantedVersion = String(version || '');
-    return walkTestFiles(seedTestsRoot).some(file => {
-      const definition = readJson(file);
-      return definition &&
-        String(definition.id || '') === wantedId &&
-        String(definition.version || '') === wantedVersion;
-    });
+    return seedFileIndex().has(testKey(id,version));
   }
 
   function parcoursUsingTest(id, version) {
@@ -749,10 +767,7 @@ function createKaloneoLibrary(options = {}) {
     );
     if(isProtected){
       if(!existing)return {ok:false,error:'V1 protégée introuvable.'};
-      const seedFile=walkTestFiles(seedTestsRoot).find(file=>{
-        const test=readJson(file);
-        return test?.id===value.id && test?.version===value.version;
-      });
+      const seedFile=seedFileIndex().get(testKey(value.id,value.version));
       const seed=seedFile&&readJson(seedFile);
       if(!seed)return {ok:false,error:'Source V1 protégée introuvable.'};
       // Avant chaque remplacement : copie de sécurité dans le stockage interne.
@@ -766,6 +781,7 @@ function createKaloneoLibrary(options = {}) {
     }
     const compact=storeDefinitionImages(value);
     atomicWriteJson(target, compact);
+    if(cachedTestFiles)cachedTestFiles.set(testKey(value.id,value.version),target);
     const record = { definition:value, file:target };
     return { ok:true, replaced:Boolean(existing), test:toTestMetadata(record) };
   }
@@ -804,6 +820,7 @@ function createKaloneoLibrary(options = {}) {
 
     try {
       fs.unlinkSync(file);
+      if(cachedTestFiles)cachedTestFiles.delete(testKey(wantedId,wantedVersion));
       let directory = path.dirname(file);
       const stop = path.resolve(testsRoot);
       while (path.resolve(directory).startsWith(stop) && path.resolve(directory) !== stop) {
@@ -1100,7 +1117,16 @@ function createKaloneoLibrary(options = {}) {
     ensureDirectory(imagesRoot);
     ensureDirectory(parcoursRoot);
     ensureDirectory(maskScreensRoot);
-    if (seedTestsRoot && fs.existsSync(seedTestsRoot)) syncBundledSeedTests(seedTestsRoot, testsRoot);
+    // Toujours synchroniser au démarrage d'une NOUVELLE version du logiciel,
+    // mais une seule fois par processus. Les V1 personnalisées sont protégées
+    // par les sauvegardes et les règles de syncBundledSeedTests().
+    if (!seedTestsSynchronized) {
+      if (seedTestsRoot && fs.existsSync(seedTestsRoot))
+        syncBundledSeedTests(seedTestsRoot, testsRoot);
+      seedTestsSynchronized = true;
+      cachedTestFiles = null;
+      cachedSeedTests = null;
+    }
     if (!imageSeedsEnsured) {
       seedImageLibrary();
       seedImagesFromTests();
