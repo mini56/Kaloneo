@@ -10,7 +10,7 @@ const {CATEGORY,classify,loadSuppliedImages}=require('../src/kaloneo-supplied-im
 const gallery=require('../../kaloneo/image-library-gallery');
 const {createKaloneoLibrary}=require('../src/kaloneo-library-main');
 const manifest=JSON.parse(fs.readFileSync(path.join(source,'catalogue-images.json'),'utf8'));
-assert(manifest.schemaVersion===1&&manifest.files.length>=209,'Lot GitHub incomplet : 209 images attendues');
+assert(manifest.schemaVersion===1&&manifest.files.length>=208,'Lot GitHub incomplet : 208 images uniques attendues');
 const validExt=/\.(png|jpe?g|webp|gif|svg)$/i;
 const found=[];
 function walk(d,prefix=''){
@@ -81,8 +81,7 @@ try{
 finally{fs.rmSync(temp,{recursive:true,force:true});}
 
 // R165 : les deux illustrations sont également disponibles dans la bibliothèque commune.
-for(const name of ['tri-chevilles-kaloneo.png','dictee-bureau-soleil.png']){
- const rel='illustrations-tests/'+name;
+for(const rel of ['illustrations-tests/tri-chevilles-kaloneo.png','Bureau d’apprentissage au soleil.png']){
  assert(indexed.has(rel),'Illustration non référencée : '+rel);
- assert(fs.existsSync(path.join(shipped,'illustrations-tests',name)), 'Illustration absente du rendu : '+rel);
+ assert(fs.existsSync(path.join(shipped,...rel.split('/'))), 'Illustration absente du rendu : '+rel);
 }

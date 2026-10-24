@@ -2472,7 +2472,7 @@
     const dictationIllustration=document.createElement('img');
     dictationIllustration.className='kaltest-dictee-illustration';
     dictationIllustration.alt='Bureau au soleil, dictionnaires et cahier de dictée';
-    dictationIllustration.src='bibliotheque-images/illustrations-tests/dictee-bureau-soleil.png';
+    dictationIllustration.src='bibliotheque-images/Bureau d’apprentissage au soleil.png';
     dictationIllustration.loading='lazy';
     player.append(playerTitle, audio, controls, progressRow, count, audioStatus, dictationIllustration);
 

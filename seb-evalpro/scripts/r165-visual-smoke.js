@@ -6,9 +6,8 @@ const runtime=read('source/js/kaltest-pilot2-runtime.js');
 const css=read('source/css/kaltest-pilot2.css');
 const installer=read('build/installer.nsh');
 const catalog=JSON.parse(read('source/bibliotheque-images/catalogue-images.json'));
-assert.equal(catalog.files.length,209);
-for(const name of ['tri-chevilles-kaloneo.png','dictee-bureau-soleil.png']){
- const rel='illustrations-tests/'+name;
+assert.equal(catalog.files.length,208);
+for(const rel of ['illustrations-tests/tri-chevilles-kaloneo.png','Bureau d’apprentissage au soleil.png']){
  const file=path.resolve(root,'source/bibliotheque-images',rel);
  const record=catalog.files.find(x=>x.path===rel);
  assert(record,'Non cataloguée : '+rel);

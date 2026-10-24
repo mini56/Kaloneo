@@ -259,11 +259,11 @@ jobs:
         run: npx electron --no-sandbox scripts/kaloneo-r140-about-left-electron-smoke-main.js
       - name: Render both illustrated guides in real Electron; validate PNG, search, zoom and responsive widths
         run: npx electron --no-sandbox scripts/kaloneo-r141-help-guides-electron-smoke-main.js
-      - name: Check 209 supplied images, generated pages and existing image library
+      - name: Check 208 unique supplied images, generated pages and existing image library
         shell: pwsh
         run: |
           node scripts/supplied-images-library-smoke.js
-          if($LASTEXITCODE -ne 0){throw '209 supplied images invalid or missing from Electron package'}
+          if($LASTEXITCODE -ne 0){throw '208 unique supplied images invalid or missing from Electron package'}
           node scripts/builder-special-parcours-pages-smoke.js
           if($LASTEXITCODE -ne 0){throw 'Builder introduction and ending pages cannot be created or selected'}
       - name: Check candidate scoring, image library, import/export and V1
@@ -415,7 +415,7 @@ jobs:
           $title="KALONÉO — R167 / Build #170 — Images HD, Tri plein cadre et statut d’aperçu en haut à gauche"
           $notes=@"
           KALONÉO R167 / Build #170 / 0.0.194 — Vérifications et essai Windows.
-          - 209 illustrations (207 historiques + 2 nouvelles images) fournies avec le logiciel, 9 thèmes, images chargées à la demande sans duplication dans AppData.
+          - 208 illustrations uniques (la dictée réutilise un PNG déjà fourni) fournies avec le logiciel, 9 thèmes, images chargées à la demande sans duplication dans AppData.
           - Bibliothèque d'images accessible en haut du Builder et classement des séries de stage, objets, bandeaux et horaires.
           - Pages Introduction et Fin libres : pas de scénario ni consigne ni notation, bouton Suivant dans la barre.
           - Icônes adaptées à tous les tests, provenant de la bibliothèque d'icônes ; aucune modification des V1.
