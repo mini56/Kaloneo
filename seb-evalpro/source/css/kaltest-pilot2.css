@@ -3834,3 +3834,38 @@ body.kaloneo-real-candidate-preview-full #page-exercise .kaltest-progress{
   z-index:100;
   pointer-events:none;
 }
+
+/* R170 — vidéo réelle d'introduction : contenu conservé entier, aucun fond blanc.
+   Le cadre prend exactement la place de l'ancien décor CSS, y compris en 1200x800. */
+#page-intro .pilot2-intro-video{
+  background:#071827;
+  border-color:rgba(0,78,112,.3);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+#page-intro .pilot2-intro-video-media{
+  display:block;
+  width:100%;
+  height:100%;
+  min-height:0;
+  max-height:100%;
+  object-fit:contain;
+  background:#071827;
+}
+#page-intro .pilot2-intro-video-status{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  background:rgba(7,24,39,.93);
+  color:white;
+  padding:12px 18px;
+  border-radius:9px;
+  text-align:center;
+  font-size:16px;
+  max-width:85%;
+  z-index:10;
+}
+#page-intro .pilot2-intro-video-status[hidden]{display:none!important;}
+#page-intro .pilot2-intro-video.seb-video-finished .pilot2-video-end-message{pointer-events:none;}

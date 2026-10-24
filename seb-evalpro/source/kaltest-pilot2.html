@@ -179,35 +179,17 @@
         <span class="pilot2-video-symbol" aria-hidden="true">▶</span>
         <div>
           <strong>Vidéo d’introduction</strong>
-          <p>Votre arrivée dans l’entreprise démarre automatiquement une seule fois.</p>
+          <p>Votre vidéo de bienvenue démarre automatiquement une seule fois.</p>
         </div>
       </div>
-      <div id="pilot2-intro-video" class="pilot2-intro-video" role="img" aria-label="Animation d’une personne qui arrive à l’usine puis entre dans le bâtiment">
-        <div class="pilot2-video-sky"></div>
-        <div class="pilot2-video-tree pilot2-tree-left"></div>
-        <div class="pilot2-video-tree pilot2-tree-right"></div>
-        <div class="pilot2-video-factory">
-          <div class="pilot2-video-factory-wing"></div>
-          <div class="pilot2-video-sign">KALONÉO</div>
-          <div class="pilot2-video-door"><span></span></div>
-        </div>
-        <div class="pilot2-video-gate gate-left"></div>
-        <div class="pilot2-video-gate gate-right"></div>
-        <div class="pilot2-video-path"></div>
-        <div class="pilot2-video-road"></div>
-        <div class="pilot2-video-road-line line-a"></div>
-        <div class="pilot2-video-road-line line-b"></div>
-        <div class="pilot2-video-road-line line-c"></div>
-        <div class="pilot2-video-person" aria-hidden="true">
-          <span class="pilot2-person-head"></span>
-          <span class="pilot2-person-body"></span>
-          <span class="pilot2-person-backpack"></span>
-          <span class="pilot2-person-arm arm-left"></span>
-          <span class="pilot2-person-arm arm-right"></span>
-          <span class="pilot2-person-leg leg-left"></span>
-          <span class="pilot2-person-leg leg-right"></span>
-        </div>
+      <div id="pilot2-intro-video" class="pilot2-intro-video" role="group" aria-label="Présentation vidéo du parcours">
+        <video id="pilot2-intro-video-media" class="pilot2-intro-video-media"
+               playsinline muted preload="none"
+               poster="assets/debut_de_parcours-affiche.jpg"
+               data-src="assets/debut_de_parcours-lecture.mp4"
+               aria-label="Vidéo de bienvenue dans le parcours KALONÉO"></video>
         <div class="pilot2-video-end-message">Bienvenue</div>
+        <div id="pilot2-intro-video-status" class="pilot2-intro-video-status" role="status" aria-live="polite" hidden></div>
       </div>
     </div>
 

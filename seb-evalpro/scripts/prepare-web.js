@@ -60,7 +60,7 @@ assertCleanHtml(overridesDir,'overrides');
 
 fs.rmSync(outputDir,{recursive:true,force:true});
 fs.mkdirSync(outputDir,{recursive:true});
-copyTree(sourceDir,outputDir,new Set(['QCM.lnk','README.md']));
+copyTree(sourceDir,outputDir,new Set(['QCM.lnk','README.md','debut_de_parcours.mp4']));
 copyTree(overridesDir,outputDir);
 // Le moteur média est partagé sans duplication entre Preload, Builder et aperçu.
 fs.copyFileSync(path.join(root,'src','kaloneo-mask-media.js'),path.join(outputDir,'js','kaloneo-mask-media.js'));
@@ -86,6 +86,26 @@ if(process.env.KALONEO_SKIP_OFFICIAL_V1 === '1'){
 if (!fs.existsSync(kaloneoBuilderDir)) fail('générateur KALONÉO canonique absent: kaloneo/');
 copyTree(kaloneoBuilderDir,path.join(outputDir,'kaloneo-builder'));
 require('./kaloneo-r125-visible-branding').brandGeneratedWeb(outputDir);
+/* R170 — conserver les 26 Mo originaux sur GitHub, embarquer seulement la
+   version H.264 1280px optimisée et son affiche dans l'application candidate. */
+const introVideoOptimizer=spawnIntroVideo();
+function spawnIntroVideo(){
+  const {spawnSync}=require('node:child_process');
+  const python=process.platform==='win32'?'python':'python3';
+  const result=spawnSync(python,[path.join(root,'scripts','r170-optimize-intro-video.py')],{
+    cwd:root,encoding:'utf8',timeout:180000
+  });
+  if(result.stdout)process.stdout.write(result.stdout);
+  if(result.status!==0){
+    const message='KALONÉO vidéo du parcours non générée : '+String(result.stderr||result.error||'FFmpeg indisponible');
+    if(process.env.KALONEO_STRICT_INTRO_VIDEO==='1')fail(message);
+    console.warn(message+' ; copie originale réservée au développement.');
+    fs.copyFileSync(path.join(sourceDir,'assets','debut_de_parcours.mp4'),
+      path.join(outputDir,'assets','debut_de_parcours-lecture.mp4'));
+  }
+  return result.status===0;
+}
+
 // R168 : au lieu d'altérer des originaux, générer des copies d'affichage
 // WebP/photos et des ressources internes allégées APRÈS la copie de source/.
 const {spawnSync}=require('node:child_process');

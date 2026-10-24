@@ -1,0 +1,40 @@
+'use strict';
+// R170 : MP4 optimisé seulement dans Electron ; V1 et original conservés.
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const root=path.resolve(__dirname,'..');
+const read=p=>fs.readFileSync(path.resolve(root,p),'utf8');
+const html=read('source/kaltest-pilot2.html'),js=read('source/js/kaltest-pilot2-intro-video.js');
+const css=read('source/css/kaltest-pilot2.css'),prepare=read('scripts/prepare-web.js');
+const mp4=path.join(root,'source/assets/debut_de_parcours.mp4');
+assert(fs.existsSync(mp4),'Vidéo GitHub absente');
+assert(fs.statSync(mp4).size>=25_000_000,'Original HD inattendu');
+assert(html.includes('id="pilot2-intro-video-media"'),'Lecteur HTML5 manquant');
+assert(html.includes('data-src="assets/debut_de_parcours-lecture.mp4"'),'MP4 optimisé non lié');
+assert(html.includes('poster="assets/debut_de_parcours-affiche.jpg"'),'Affiche manquante');
+assert(!html.includes('pilot2-video-factory'),'Ancienne animation CSS présente');
+assert(html.includes('id="intro-next"'),'Bouton démarrage absent');
+assert(js.includes("video.addEventListener('ended'"),'Durée non déterminée par le MP4');
+assert(js.includes('video.muted = true')&&js.includes('video.play()'),'Autoplay silencieux Electron absent');
+assert(js.includes('video.pause()'),'Vidéo non arrêtée après sortie');
+assert(prepare.includes("'debut_de_parcours.mp4']"),'Original de 26Mo non exclu du Setup');
+assert(css.includes('#page-intro .pilot2-intro-video-media'),'Style responsive absent');
+assert(css.includes('object-fit:contain'),'Vidéo recadrée');
+if(process.env.KALONEO_STRICT_INTRO_VIDEO==='1'){
+ const output='app/web/assets/';
+ const video=path.join(root,output,'debut_de_parcours-lecture.mp4');
+ const poster=path.join(root,output,'debut_de_parcours-affiche.jpg');
+ const manifest=path.join(root,output,'debut_de_parcours-lecture.json');
+ assert(fs.existsSync(video)&&fs.existsSync(poster)&&fs.existsSync(manifest),'Vidéo/poster/manifeste manquant');
+ const m=JSON.parse(fs.readFileSync(manifest,'utf8'));
+ const original=fs.readFileSync(mp4);
+ assert.equal(m.originalBytes,original.length);
+ assert.equal(m.originalSha256,crypto.createHash('sha256').update(original).digest('hex'));
+ assert.equal(m.renderBytes,fs.statSync(video).size);
+ assert(fs.statSync(video).size<original.length*.7,'Optimisation MP4 insuffisante');
+ assert.equal(m.width,1280);
+ assert.equal(m.fps,24);
+ assert(m.durationSeconds>=7.5&&m.durationSeconds<=8.5,'Vidéo doit durer environ 8 secondes');
+ assert(!fs.existsSync(path.join(root,output,'debut_de_parcours.mp4')),'Original inutile inclus dans le Setup');
+}
+console.log('KALONEO_R170_INTRO_VIDEO_SMOKE=OK source HD protégée, H.264 24fps, autoplay, pas de V1 modifiée');
