@@ -86,6 +86,19 @@ if(process.env.KALONEO_SKIP_OFFICIAL_V1 === '1'){
 if (!fs.existsSync(kaloneoBuilderDir)) fail('générateur KALONÉO canonique absent: kaloneo/');
 copyTree(kaloneoBuilderDir,path.join(outputDir,'kaloneo-builder'));
 require('./kaloneo-r125-visible-branding').brandGeneratedWeb(outputDir);
+// R168 : au lieu d'altérer des originaux, générer des copies d'affichage
+// WebP/photos et des ressources internes allégées APRÈS la copie de source/.
+const {spawnSync}=require('node:child_process');
+const python=process.platform==='win32'?'python':'python3';
+const optimized=spawnSync(python,[path.join(root,'scripts','optimize-test-image-assets.py')],{
+  cwd:root,encoding:'utf8',timeout:120000
+});
+if(optimized.stdout)process.stdout.write(optimized.stdout);
+if(optimized.status!==0){
+  const message='KALONÉO : génération des images de rendu indisponible : '+String(optimized.stderr||optimized.error||'Pillow absent');
+  if(process.env.KALONEO_STRICT_RENDER_IMAGES==='1')fail(message);
+  console.warn(message+' (développement : les originaux restent utilisables).');
+}
 assertCleanHtml(outputDir,'app/web');
 
 console.log('SEB EvalPro: app/web reconstruit par copie des sources canoniques + générateur KALONÉO compilé, sans patch fonctionnel.');

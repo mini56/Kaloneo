@@ -11,6 +11,11 @@ const { createCandidateStore } = require('./candidate-store-main');
 const { createCandidateTransfer } = require('./candidate-transfer-main');
 const { createPrivateExportFolderName } = require('./candidate-anonymous-paths');
 const { createKaloneoLibrary } = require('./kaloneo-library-main');
+const { createRenderImageOptimizer } = require('./kaloneo-render-image-cache');
+// Copies réduites réservées au rendu ; ne pas les enregistrer dans les tests.
+const kaloneoRenderImages=createRenderImageOptimizer({
+  nativeImage,cacheRoot:path.join(app.getPath('userData'),'KALONEO-render-cache')
+});
 const { embedTestImages, validatePortableTest } = require('./kaloneo-test-portability');
 const { configureLocalKey, readJsonFile, encodeJson, migrateJsonFile, migrateJsonTree } = require('./candidate-data-crypto');
 const { persistSealedSidecar, ensurePortableCandidateWords } = require('./candidate-word-portability');
@@ -1513,7 +1518,7 @@ ipcMain.on('kaloneo-library:selected-runtime-sync', (event) => {
       event.sender === kaloneoMiniPreviewWorker.webContents &&
       /\/kaltest-pilot2\.html\?kaloneoPreview=1(?:&|$)/.test(url);
     if(isMini){
-      const def=JSON.parse(JSON.stringify(kaloneoMiniPreviewDefinition));
+      const def=kaloneoRenderImages.optimizeDefinition(JSON.parse(JSON.stringify(kaloneoMiniPreviewDefinition)));
       event.returnValue={ok:true,runtime:{
         id:'kaloneo-builder-mini-preview-only',
         title:'Miniature fidèle — '+String(def.title||'Nouveau test'),
@@ -1527,7 +1532,7 @@ ipcMain.on('kaloneo-library:selected-runtime-sync', (event) => {
       /\/kaltest-pilot2\.html\?kaloneoPreview=1(?:&|$)/.test(url) &&
       mainWindow && !mainWindow.isDestroyed() && event.sender===mainWindow.webContents;
     if(isPreview){
-      const def=JSON.parse(JSON.stringify(kaloneoBuilderPreviewDefinition));
+      const def=kaloneoRenderImages.optimizeDefinition(JSON.parse(JSON.stringify(kaloneoBuilderPreviewDefinition)));
       event.returnValue={ok:true,runtime:{
         id:'kaloneo-builder-preview-only',
         title:'Aperçu candidat — '+String(def.title||'Nouveau test'),
@@ -1537,7 +1542,13 @@ ipcMain.on('kaloneo-library:selected-runtime-sync', (event) => {
       }};
       return;
     }
-    event.returnValue = getKaloneoLibrary().resolveParcoursRuntime();
+    const selection=getKaloneoLibrary().resolveParcoursRuntime();
+    if(selection?.ok&&selection.runtime){
+      // Les originaux restent dans les JSON/exports ; seul cet objet temporaire
+      // destiné au candidat est optimisé, sans changer questions ou barèmes.
+      kaloneoRenderImages.optimizeDefinition(selection.runtime);
+    }
+    event.returnValue = selection;
   } catch (error) {
     event.returnValue = { ok:false, error:error && error.message ? error.message : String(error) };
   }

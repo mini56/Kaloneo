@@ -2027,7 +2027,11 @@
     const triIllustration=document.createElement('img');
     triIllustration.className='kaltest-tri-illustration';
     triIllustration.alt='Équipe KALONÉO triant des chevilles colorées';
-    triIllustration.src='bibliotheque-images/illustrations-tests/tri-chevilles-kaloneo.png';
+    triIllustration.src='kaltest-render-images/tri-chevilles-kaloneo.webp';
+    // Mode développement sans dérivés générés : retrouver la source originale.
+    triIllustration.addEventListener('error',()=>{
+      triIllustration.src='bibliotheque-images/illustrations-tests/tri-chevilles-kaloneo.png';
+    },{once:true});
     triIllustration.loading='lazy';
     guide.appendChild(triIllustration);
     left.appendChild(guide);
@@ -2472,7 +2476,10 @@
     const dictationIllustration=document.createElement('img');
     dictationIllustration.className='kaltest-dictee-illustration';
     dictationIllustration.alt='Bureau au soleil, dictionnaires et cahier de dictée';
-    dictationIllustration.src='bibliotheque-images/Bureau d’apprentissage au soleil.png';
+    dictationIllustration.src='kaltest-render-images/dictee-bureau-soleil.webp';
+    dictationIllustration.addEventListener('error',()=>{
+      dictationIllustration.src='bibliotheque-images/Bureau d’apprentissage au soleil.png';
+    },{once:true});
     dictationIllustration.loading='lazy';
     player.append(playerTitle, audio, controls, progressRow, count, audioStatus, dictationIllustration);
 

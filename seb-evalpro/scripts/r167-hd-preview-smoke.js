@@ -39,7 +39,9 @@ for(const obsolete of ['illustrations-tests/tri-chevilles-kaloneo.webp',
 }
 const runtime=read('source/js/kaltest-pilot2-runtime.js');
 const css=read('source/css/kaltest-pilot2.css');
+assert(runtime.includes("triIllustration.src='kaltest-render-images/tri-chevilles-kaloneo.webp'"));
 assert(runtime.includes("triIllustration.src='bibliotheque-images/illustrations-tests/tri-chevilles-kaloneo.png'"));
+assert(runtime.includes("dictationIllustration.src='kaltest-render-images/dictee-bureau-soleil.webp'"));
 assert(runtime.includes("dictationIllustration.src='bibliotheque-images/Bureau d’apprentissage au soleil.png'"));
 assert(runtime.includes('guide.appendChild(triIllustration)'),'Image Tri non limitée au bloc gauche');
 assert(runtime.includes('player.append(playerTitle, audio, controls, progressRow, count, audioStatus, dictationIllustration)'),
