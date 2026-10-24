@@ -18,6 +18,8 @@ on:
       - '.github/workflows/build-r163-library-pages.yml'
       - '.github/workflows/build-r164-presentation-icons.yml'
       - '.github/workflows/build-r165-visuals-installer.yml'
+      - '.github/workflows/build-r166-builder-fast-open.yml'
+      - 'seb-evalpro/scripts/r166-builder-open-performance-smoke.js'
       - 'kaloneo/test-preview.css'
       - 'kaloneo/test-builder.css'
       - 'seb-evalpro/scripts/r165-visual-smoke.js'
