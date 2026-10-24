@@ -10,7 +10,7 @@ on:
       - 'kaloneo/test-builder.css'
       - 'seb-evalpro/scripts/r165-visual-smoke.js'
       - 'seb-evalpro/src/kaloneo-default-test-icons.js'
-      - 'seb-evalpro/scripts/r165-visuals-installer-smoke.js'
+      - 'seb-evalpro/scripts/r164-presentation-icons-smoke.js'
       - 'seb-evalpro/scripts/kaloneo-candidate-icon-electron-smoke-main.js'
       - 'kaloneo/test-preview.js'
       - 'seb-evalpro/source/css/kaltest-pilot2.css'
@@ -197,7 +197,7 @@ jobs:
       - name: R165 verify visuals, image library and NSIS details
         run: node scripts/r165-visual-smoke.js
       - name: R165 verify page-presentation behaviour and icons without changing original V1
-        run: node scripts/r165-visuals-installer-smoke.js
+        run: node scripts/r164-presentation-icons-smoke.js
       - name: R165 actual Electron icon reuse and no stale icon
         run: npx electron --no-sandbox scripts/kaloneo-candidate-icon-electron-smoke-main.js
       - name: R165 verify five compact V1, 13 unique images, Builder, candidate, exports and test integrator
