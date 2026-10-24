@@ -2,12 +2,13 @@
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
 
-!define SEB_BUILD_NUMBER "167"
+!define SEB_BUILD_NUMBER "168"
 !define SEB_BUILD_LABEL "Build #${SEB_BUILD_NUMBER}"
 
 # R164 : montrer les opérations réelles de copie et de finalisation.
 ShowInstDetails show
 ShowUninstDetails show
+!define MUI_INSTFILESPAGE_SHOWDETAILS
 
 # R163: Full application removal without deleting any other software's data.
 # Upgrades must NEVER erase candidates, bilans, or current user preferences.
@@ -63,12 +64,26 @@ Function KaloneoDirectoryShow
   # Leave the MUI native directory field and any user choice intact.
 FunctionEnd
 
+!macro customPageAfterChangeDir
+  # Called by Electron assistedInstaller.nsh before MUI_PAGE_INSTFILES.
+  # R164 declared ShowInstDetails but did not expand the progress-page list.
+  !define MUI_PAGE_CUSTOMFUNCTION_SHOW KaloneoShowInstallDetails
+!macroend
+Function KaloneoShowInstallDetails
+  SetDetailsPrint both
+  SetDetailsView show
+  DetailPrint "Préparation des fichiers KALONÉO..."
+  DetailPrint "Extraction et copie des fichiers du programme..."
+FunctionEnd
+
 !macro customInstallMode
   StrCpy $perUserInstallationFolder "$LOCALAPPDATA\Programs\KALONEO"
   StrCpy $perMachineInstallationFolder "$PROGRAMFILES64\KALONEO"
 !macroend
 
 !macro customInstall
+  SetDetailsView show
+  DetailPrint "Fichiers KALONÉO installés."
   DetailPrint "Finalisation de KALONÉO et création des raccourcis Windows"
   # Ne jamais migrer les programmes historiques ni les dossiers candidats.
 !macroend

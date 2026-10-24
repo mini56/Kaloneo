@@ -2023,6 +2023,13 @@
       '<li>Effectuez entre <strong>3 et 5 tris</strong>.</li>' +
       '<li>À partir de 3 tris complets, affichez les résultats puis complétez l’autoévaluation.</li>' +
       '</ul>';
+    // R165 : image fournie, uniquement dans le bloc gauche du Tri.
+    const triIllustration=document.createElement('img');
+    triIllustration.className='kaltest-tri-illustration';
+    triIllustration.alt='Équipe KALONÉO triant des chevilles colorées';
+    triIllustration.src='bibliotheque-images/illustrations-tests/tri-chevilles-kaloneo.webp';
+    triIllustration.loading='lazy';
+    guide.appendChild(triIllustration);
     left.appendChild(guide);
 
     const auto = document.createElement('div');
@@ -2461,7 +2468,13 @@
       persist();
     });
 
-    player.append(playerTitle, audio, controls, progressRow, count, audioStatus);
+    // R165 : visuel statique après les commandes ; aucune modification audio.
+    const dictationIllustration=document.createElement('img');
+    dictationIllustration.className='kaltest-dictee-illustration';
+    dictationIllustration.alt='Bureau au soleil, dictionnaires et cahier de dictée';
+    dictationIllustration.src='bibliotheque-images/illustrations-tests/dictee-bureau-soleil.webp';
+    dictationIllustration.loading='lazy';
+    player.append(playerTitle, audio, controls, progressRow, count, audioStatus, dictationIllustration);
 
     const writing = document.createElement('section');
     writing.className = 'kaltest-dictee-writing';

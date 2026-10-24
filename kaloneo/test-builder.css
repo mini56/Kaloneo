@@ -1870,3 +1870,8 @@ body .test-library-dialog .mini-btn.danger:not(:disabled):hover{
 #builder-preview-heading[hidden],
 #builder-preview-context[hidden],
 #builder-scoring-field[hidden] { display:none!important; }
+
+/* R165 — icônes plus grandes dans le Builder. */
+.icon-picker{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));}
+.icon-choice{min-height:111px;}.icon-choice img{width:72px;height:72px;}
+.preview-test-icon{width:54px;height:54px;flex:0 0 54px;}

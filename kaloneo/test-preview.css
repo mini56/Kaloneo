@@ -289,3 +289,8 @@ body{font-family:Calibri,"Segoe UI",Arial,sans-serif;background:linear-gradient(
 .kaloneo-shared-question[data-kaloneo-answer-layout="below"]>.kaloneo-answer-with-suffix{
   flex:0 1 auto;
 }
+
+/* R165 — icônes d'aperçu lisibles. */
+.kb-heading{min-height:62px;}
+.kb-heading-icon{width:56px;height:56px;flex:0 0 56px;object-fit:contain;}
+@media(max-height:760px){.kb-heading{min-height:54px;}.kb-heading-icon{width:50px;height:50px;flex-basis:50px;}}

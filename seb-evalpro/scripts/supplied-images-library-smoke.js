@@ -10,7 +10,7 @@ const {CATEGORY,classify,loadSuppliedImages}=require('../src/kaloneo-supplied-im
 const gallery=require('../../kaloneo/image-library-gallery');
 const {createKaloneoLibrary}=require('../src/kaloneo-library-main');
 const manifest=JSON.parse(fs.readFileSync(path.join(source,'catalogue-images.json'),'utf8'));
-assert(manifest.schemaVersion===1&&manifest.files.length>=200,'Lot GitHub incomplet');
+assert(manifest.schemaVersion===1&&manifest.files.length>=209,'Lot GitHub incomplet : 209 images attendues');
 const validExt=/\.(png|jpe?g|webp|gif|svg)$/i;
 const found=[];
 function walk(d,prefix=''){
@@ -79,3 +79,10 @@ try{
     ' thèmes, '+bytes+' octets conservés, lecture ciblée, zéro duplication AppData');
 }catch(error){console.error('KALONEO_SUPPLIED_IMAGES=FAIL',error.stack||String(error));process.exitCode=2;}
 finally{fs.rmSync(temp,{recursive:true,force:true});}
+
+// R165 : les deux illustrations sont également disponibles dans la bibliothèque commune.
+for(const name of ['tri-chevilles-kaloneo.webp','dictee-bureau-soleil.webp']){
+ const rel='illustrations-tests/'+name;
+ assert(indexed.has(rel),'Illustration non référencée : '+rel);
+ assert(fs.existsSync(path.join(shipped,'illustrations-tests',name)), 'Illustration absente du rendu : '+rel);
+}

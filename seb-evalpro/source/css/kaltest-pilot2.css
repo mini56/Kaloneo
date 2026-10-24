@@ -3763,3 +3763,38 @@ body[data-seb-kaltest-id="traitement_texte_bureautique"] .toolbar-row2 .kaltest-
 /* Pages de présentation créées dans le Builder : pas de titre ni de contexte d'exercice. */
 body.seb-kaltest-builder-presentation #page-exercise .kaltest-heading,
 body.seb-kaltest-builder-presentation #page-exercise .kaltest-context-row {display:none!important}
+
+/* R165 — esthétique strictement isolée du système de notation. */
+#page-exercise .kaltest-heading #kaltest-test-icon{
+ flex:0 0 52px!important;width:52px!important;height:52px!important;object-fit:contain;
+}
+#page-exercise .kaltest-heading{min-height:56px!important;}
+/* Tri : aucune règle supplémentaire sur le bloc droit. */
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-left{
+ background:linear-gradient(155deg,#edf7ff 0%,#d6eaff 100%)!important;
+ border:2px solid #6fa9d4!important;color:#173e5b;
+}
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-illustration{
+ display:block;box-sizing:border-box;width:100%;height:auto;max-height:min(43vh,330px);
+ object-fit:contain;border:1px solid #9cbfdc;border-radius:10px;
+ margin:14px auto 4px;background:#fff;box-shadow:0 5px 14px rgba(0,78,112,.13);
+}
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-guide h3{color:#075287!important;}
+/* Dictée : cadres orange sans changement de leurs contrôles. */
+body[data-seb-kaltest-id="dictee_professionnelle"] .kaltest-dictee-player,
+body[data-seb-kaltest-id="dictee_professionnelle"] .kaltest-dictee-writing{
+ background:linear-gradient(145deg,#fff9ef 0%,#ffe7c8 100%)!important;
+ border:2px solid #edaa54!important;
+}
+body[data-seb-kaltest-id="dictee_professionnelle"] .kaltest-dictee-illustration{
+ display:block;box-sizing:border-box;width:100%;height:auto;max-height:min(44vh,345px);
+ object-fit:contain;margin:12px auto 0;border:1px solid #eab778;border-radius:10px;
+ background:#fff;box-shadow:0 5px 12px rgba(125,70,9,.12);
+}
+body[data-seb-kaltest-id="dictee_professionnelle"] .kaltest-dictee-player h3,
+body[data-seb-kaltest-id="dictee_professionnelle"] .kaltest-dictee-writing h3{color:#96500c!important;}
+body[data-seb-kaltest-id="dictee_professionnelle"] .kaltest-dictee-writing textarea{background:#fff!important;}
+@media(max-height:760px){
+ body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-illustration{max-height:29vh;margin-top:8px;}
+ body[data-seb-kaltest-id="dictee_professionnelle"] .kaltest-dictee-illustration{max-height:31vh;margin-top:6px;}
+}
