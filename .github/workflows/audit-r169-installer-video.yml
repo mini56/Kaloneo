@@ -1,0 +1,22 @@
+name: "KALONÉO — diagnostic flashes blancs vidéo installateur"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - 'seb-evalpro/scripts/r169-installer-video-audit.py'
+      - '.github/workflows/audit-r169-installer-video.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned image tools only on Windows runner
+        run: python -m pip install Pillow==11.3.0 imageio-ffmpeg==0.6.0
+      - name: Detect white flashes in unmodified approved MP4
+        run: python seb-evalpro/scripts/r169-installer-video-audit.py
