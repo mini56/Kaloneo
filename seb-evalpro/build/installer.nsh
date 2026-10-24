@@ -2,7 +2,7 @@
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
 
-!define SEB_BUILD_NUMBER "171"
+!define SEB_BUILD_NUMBER "172"
 !define SEB_BUILD_LABEL "Build #${SEB_BUILD_NUMBER}"
 
 # R164 : montrer les opérations réelles de copie et de finalisation.
@@ -33,7 +33,14 @@ ShowUninstDetails show
 !ifndef BUILD_UNINSTALLER
 Var SebBrandingWelcomeDialog
 Var SebBrandingWelcomeImage
+Var SebBrandingWelcomeImageBack
 Var SebBrandingWelcomeHandle
+Var SebBrandingWelcomeBackHandle
+Var SebIntroFrontIndex
+Var SebIntroTargetImage
+Var SebIntroOldImage
+Var SebIntroBuildLabel
+Var SebIntroNewBitmapFile
 Var SebBrandingFinishDialog
 Var SebBrandingFinishImage
 Var SebBrandingFinishHandle
@@ -100,21 +107,55 @@ FunctionEnd
   Page custom SebBrandingWelcomeCreate
 !macroend
 
-# Show the static KALONÉO logo immediately, with NO dissolve/fade.
-# The original installation pages and progress start only after "Suivant".
+# R169 — Double tampon pour éviter les écrans blancs lors des transitions.
+# Le nouveau bitmap est préparé sur une image MASQUÉE ; on l'affiche,
+# on force sa peinture, puis seulement on masque l'image précédente.
+# Il reste toujours une image visible, même si Windows est momentanément lent.
+Function SebIntroSwapBitmap
+  ${If} $SebIntroFrontIndex == 0
+    StrCpy $SebIntroTargetImage $SebBrandingWelcomeImageBack
+    StrCpy $SebIntroOldImage $SebBrandingWelcomeImage
+  ${Else}
+    StrCpy $SebIntroTargetImage $SebBrandingWelcomeImage
+    StrCpy $SebIntroOldImage $SebBrandingWelcomeImageBack
+  ${EndIf}
+  ${NSD_SetBitmap} $SebIntroTargetImage "$SebIntroNewBitmapFile" $SebIntroNewBitmapHandle
+  ${If} $SebIntroNewBitmapHandle == 0
+    Return
+  ${EndIf}
+  ${If} $SebIntroFrontIndex == 0
+    ${If} $SebBrandingWelcomeBackHandle != 0
+      ${NSD_FreeBitmap} $SebBrandingWelcomeBackHandle
+    ${EndIf}
+    StrCpy $SebBrandingWelcomeBackHandle $SebIntroNewBitmapHandle
+  ${Else}
+    ${If} $SebBrandingWelcomeHandle != 0
+      ${NSD_FreeBitmap} $SebBrandingWelcomeHandle
+    ${EndIf}
+    StrCpy $SebBrandingWelcomeHandle $SebIntroNewBitmapHandle
+  ${EndIf}
+  # SWP_NOSIZE|SWP_NOMOVE|SWP_NOACTIVATE : 0x13
+  System::Call 'user32::SetWindowPos(p $SebIntroTargetImage,p 0,i 0,i 0,i 0,i 0,i 0x13)i.r0'
+  ShowWindow $SebIntroTargetImage 1
+  System::Call 'user32::UpdateWindow(p $SebIntroTargetImage)i.r0'
+  ShowWindow $SebIntroOldImage 0
+  # Le numéro de Build doit toujours rester au-dessus de l'animation.
+  System::Call 'user32::SetWindowPos(p $SebIntroBuildLabel,p 0,i 0,i 0,i 0,i 0,i 0x13)i.r0'
+  IntOp $SebIntroFrontIndex $SebIntroFrontIndex ^ 1
+FunctionEnd
+
 Function SebIntroComplete
   ${If} $SebIntroActive != 1
     Return
   ${EndIf}
   StrCpy $SebIntroActive 0
   ${NSD_KillTimer} SebIntroTick
-  ${NSD_SetBitmap} $SebBrandingWelcomeImage "$PLUGINSDIR\kaloneo-branding.bmp" $SebIntroNewBitmapHandle
-  ${NSD_FreeBitmap} $SebBrandingWelcomeHandle
-  StrCpy $SebBrandingWelcomeHandle $SebIntroNewBitmapHandle
+  StrCpy $SebIntroNewBitmapFile "$PLUGINSDIR\kaloneo-branding.bmp"
+  Call SebIntroSwapBitmap
   EnableWindow $SebIntroNextButton 1
 FunctionEnd
 
-# Timer-driven BMP animation: no MP4 codec/player/window during installation.
+# Timer-driven BMP animation: 12 fps from the ORIGINAL MP4, no extra player.
 Function SebIntroTick
   ${If} $SebIntroActive != 1
     Return
@@ -128,9 +169,8 @@ Function SebIntroTick
   IfFileExists "$SebIntroFramePath" +3 0
     Call SebIntroComplete
     Return
-  ${NSD_SetBitmap} $SebBrandingWelcomeImage "$SebIntroFramePath" $SebIntroNewBitmapHandle
-  ${NSD_FreeBitmap} $SebBrandingWelcomeHandle
-  StrCpy $SebBrandingWelcomeHandle $SebIntroNewBitmapHandle
+  StrCpy $SebIntroNewBitmapFile "$SebIntroFramePath"
+  Call SebIntroSwapBitmap
 FunctionEnd
 
 Function SebBrandingWelcomeCreate
@@ -143,10 +183,16 @@ Function SebBrandingWelcomeCreate
 
   ${NSD_CreateBitmap} 0 0 100% 100% ""
   Pop $SebBrandingWelcomeImage
+  ${NSD_CreateBitmap} 0 0 100% 100% ""
+  Pop $SebBrandingWelcomeImageBack
+  ShowWindow $SebBrandingWelcomeImageBack 0
+  StrCpy $SebBrandingWelcomeHandle 0
+  StrCpy $SebBrandingWelcomeBackHandle 0
+  StrCpy $SebIntroFrontIndex 0
 
   ; Le Build reste affiché dans le Setup unique sans réintroduire de choix d'édition.
   ${NSD_CreateLabel} 8u 172u 92% 18u "KALONÉO — ${SEB_BUILD_LABEL}"
-  Pop $0
+  Pop $SebIntroBuildLabel
 
   GetDlgItem $SebIntroNextButton $HWNDPARENT 1
   SendMessage $SebIntroNextButton ${WM_SETTEXT} 0 "STR:Suivant >"
@@ -178,7 +224,12 @@ intro_show:
     ${NSD_KillTimer} SebIntroTick
     StrCpy $SebIntroActive 0
   ${EndIf}
-  ${NSD_FreeBitmap} $SebBrandingWelcomeHandle
+  ${If} $SebBrandingWelcomeHandle != 0
+    ${NSD_FreeBitmap} $SebBrandingWelcomeHandle
+  ${EndIf}
+  ${If} $SebBrandingWelcomeBackHandle != 0
+    ${NSD_FreeBitmap} $SebBrandingWelcomeBackHandle
+  ${EndIf}
 FunctionEnd
 
 !macro customFinishPage

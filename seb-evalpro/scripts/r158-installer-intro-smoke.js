@@ -13,7 +13,7 @@ assert(fs.statSync(video).size>10000);
 assert(fs.existsSync(logo),'Official original static logo required as fallback');
 const frameCount=Number(header.match(/!define KALONEO_INTRO_FRAME_COUNT (\d+)/)?.[1]);
 const frameMs=Number(header.match(/!define KALONEO_INTRO_FRAME_MS (\d+)/)?.[1]);
-assert(frameCount>=4&&frameCount<=240);assert(frameMs>=80&&frameMs<=250);
+assert(frameCount>=40&&frameCount<=360);assert(frameMs>=70&&frameMs<=90);
 assert(nsis.includes('!include "${BUILD_RESOURCES_DIR}\\intro-frames\\intro-meta.nsh"'));
 assert(nsis.includes('File "${BUILD_RESOURCES_DIR}\\intro-frames\\frame_*.bmp"'));
 assert(nsis.includes('EnableWindow $SebIntroNextButton 0'));

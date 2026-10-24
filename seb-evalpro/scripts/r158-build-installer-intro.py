@@ -15,7 +15,7 @@ from imageio_ffmpeg import get_ffmpeg_exe
 ROOT = Path(__file__).resolve().parents[1]
 VIDEO = ROOT.parent / "video_ecran_mq" / "Chameleon_walking_laptop_53805_Seedance_20_Mini.mp4"
 OUT = ROOT / "build" / "pilot-resources" / "intro-frames"
-FPS = 8
+FPS = 12
 MAX_DURATION = 30.0
 assert VIDEO.is_file() and VIDEO.stat().st_size > 10_000, f"Original video missing: {VIDEO}"
 # A pinned Python wheel bundles a self-contained FFmpeg executable on the
@@ -40,8 +40,8 @@ if OUT.exists():
     shutil.rmtree(OUT)
 OUT.mkdir(parents=True)
 filter_graph = (
-    f"fps={FPS},scale=450:228:force_original_aspect_ratio=decrease,"
-    "pad=450:228:(ow-iw)/2:(oh-ih)/2:color=white"
+    f"fps={FPS},scale=450:228:force_original_aspect_ratio=increase,"
+    "crop=450:228"
 )
 subprocess.run(
     [ffmpeg_bin, "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
