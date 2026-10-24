@@ -23,6 +23,7 @@ on:
       - '.github/workflows/build-r168-test-image-optimization.yml'
       - '.github/workflows/build-r169-installer-video-fluid.yml'
       - '.github/workflows/build-r170-new-parcours-intro-video.yml'
+      - '.github/workflows/build-r171-video-heading-cleanup.yml'
       - 'seb-evalpro/scripts/r170-optimize-intro-video.py'
       - 'seb-evalpro/scripts/r170-intro-video-smoke.js'
       - 'seb-evalpro/source/js/kaltest-pilot2-intro-video.js'
