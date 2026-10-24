@@ -7,12 +7,13 @@ const css=read('source/css/kaltest-pilot2.css');
 const installer=read('build/installer.nsh');
 const catalog=JSON.parse(read('source/bibliotheque-images/catalogue-images.json'));
 assert.equal(catalog.files.length,209);
-for(const name of ['tri-chevilles-kaloneo.webp','dictee-bureau-soleil.webp']){
+for(const name of ['tri-chevilles-kaloneo.png','dictee-bureau-soleil.png']){
  const rel='illustrations-tests/'+name;
  const file=path.resolve(root,'source/bibliotheque-images',rel);
  const record=catalog.files.find(x=>x.path===rel);
  assert(record,'Non cataloguée : '+rel);
  const b=fs.readFileSync(file);
+ assert(b.length>1000000,'Image de qualité insuffisante : '+rel);
  assert.equal(b.length,record.bytes,'Taille altérée : '+rel);
  const digest=crypto.createHash('sha1').update(Buffer.from('blob '+b.length+'\0')).update(b).digest('hex');
  assert.equal(digest,record.sha1,'SHA1 incorrect : '+rel);

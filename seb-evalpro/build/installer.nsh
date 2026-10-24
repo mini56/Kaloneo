@@ -2,7 +2,7 @@
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
 
-!define SEB_BUILD_NUMBER "169"
+!define SEB_BUILD_NUMBER "170"
 !define SEB_BUILD_LABEL "Build #${SEB_BUILD_NUMBER}"
 
 # R164 : montrer les opérations réelles de copie et de finalisation.

@@ -1,0 +1,44 @@
+appId: fr.sauvegarde56.kaloneo
+# Nouvelle identité Windows autonome : aucune reprise d'anciens chemins ni inscriptions SEB.
+productName: "KALONÉO"
+asar: true
+compression: store
+
+directories:
+  buildResources: build/pilot-resources
+
+extraMetadata:
+  main: src/kaltest-pilot21-main.js
+  version: 0.0.194
+
+files:
+  - src/**/*
+  - app/**/*
+  - package.json
+
+# Exact same 40px candidate-bar chameleon, prepared as multiresolution .ico.
+# Windows executable resource, shell shortcuts and Electron window all match.
+extraResources:
+  - from: build/pilot-resources/kaloneo.ico
+    to: kaloneo-taskbar.ico
+
+win:
+  target:
+    - nsis
+  icon: build/pilot-resources/kaloneo.ico
+  executableName: KALONEO
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: "KALONÉO"
+  installerIcon: build/pilot-resources/kaloneo.ico
+  uninstallerIcon: build/pilot-resources/kaloneo.ico
+  installerHeader: build/pilot-resources/installerHeader.bmp
+  installerSidebar: build/pilot-resources/installerSidebar.bmp
+  uninstallerSidebar: build/pilot-resources/installerSidebar.bmp
+  include: build/installer.nsh
+  deleteAppDataOnUninstall: true
+  artifactName: "KALONEO-Setup-0.0.194.${ext}"

@@ -81,7 +81,7 @@ try{
 finally{fs.rmSync(temp,{recursive:true,force:true});}
 
 // R165 : les deux illustrations sont également disponibles dans la bibliothèque commune.
-for(const name of ['tri-chevilles-kaloneo.webp','dictee-bureau-soleil.webp']){
+for(const name of ['tri-chevilles-kaloneo.png','dictee-bureau-soleil.png']){
  const rel='illustrations-tests/'+name;
  assert(indexed.has(rel),'Illustration non référencée : '+rel);
  assert(fs.existsSync(path.join(shipped,'illustrations-tests',name)), 'Illustration absente du rendu : '+rel);

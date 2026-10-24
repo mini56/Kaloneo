@@ -3798,3 +3798,39 @@ body[data-seb-kaltest-id="dictee_professionnelle"] .kaltest-dictee-writing texta
  body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-illustration{max-height:29vh;margin-top:8px;}
  body[data-seb-kaltest-id="dictee_professionnelle"] .kaltest-dictee-illustration{max-height:31vh;margin-top:6px;}
 }
+
+/* R167 — Intégration des originaux HD ; aucune bande blanche latérale dans le Tri.
+   L'image couvre le cadre sans étirement (léger rognage possible aux bords). */
+body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-illustration{
+  width:100%!important;
+  height:clamp(170px,39vh,340px)!important;
+  max-height:none!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+  background:transparent!important;
+}
+@media(max-height:760px){
+  body[data-seb-kaltest-id="tri_chevilles"] .kaltest-tri-illustration{
+    height:clamp(150px,33vh,270px)!important;
+  }
+}
+/* Mode aperçu réel uniquement : texte de statut superposé en haut à gauche
+   plutôt que sous le titre, sans modifier l'espace candidat ni la miniature. */
+body.kaloneo-real-candidate-preview-full #page-exercise .kaltest-progress{
+  position:fixed!important;
+  top:8px!important;
+  left:12px!important;
+  right:auto!important;
+  width:max-content;
+  max-width:min(36vw,350px);
+  margin:0!important;
+  padding:2px 5px!important;
+  text-align:left!important;
+  font-size:12px!important;
+  line-height:1.15!important;
+  color:#526676!important;
+  background:rgba(255,255,255,.85);
+  border-radius:4px;
+  z-index:100;
+  pointer-events:none;
+}

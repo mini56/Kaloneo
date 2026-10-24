@@ -2027,7 +2027,7 @@
     const triIllustration=document.createElement('img');
     triIllustration.className='kaltest-tri-illustration';
     triIllustration.alt='Équipe KALONÉO triant des chevilles colorées';
-    triIllustration.src='bibliotheque-images/illustrations-tests/tri-chevilles-kaloneo.webp';
+    triIllustration.src='bibliotheque-images/illustrations-tests/tri-chevilles-kaloneo.png';
     triIllustration.loading='lazy';
     guide.appendChild(triIllustration);
     left.appendChild(guide);
@@ -2472,7 +2472,7 @@
     const dictationIllustration=document.createElement('img');
     dictationIllustration.className='kaltest-dictee-illustration';
     dictationIllustration.alt='Bureau au soleil, dictionnaires et cahier de dictée';
-    dictationIllustration.src='bibliotheque-images/illustrations-tests/dictee-bureau-soleil.webp';
+    dictationIllustration.src='bibliotheque-images/illustrations-tests/dictee-bureau-soleil.png';
     dictationIllustration.loading='lazy';
     player.append(playerTitle, audio, controls, progressRow, count, audioStatus, dictationIllustration);
 
@@ -4364,6 +4364,9 @@
         close.title='Retourner dans le Test Builder, sans enregistrer de réponse';
         close.classList.add('kaloneo-preview-close');
       }
+      // R167 : panneau informatif fixé en haut à gauche, hors du flux de la page.
+      // La miniature Electron reste strictement identique au rendu candidat.
+      document.body.classList.add('kaloneo-real-candidate-preview-full');
       document.getElementById('kaltest-progress').textContent='APERÇU CANDIDAT RÉEL — aucune réponse enregistrée';
     }
 

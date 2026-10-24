@@ -1039,14 +1039,14 @@
       "sha1": "e0c984fcda5a3e66a2bef3456a9315c47e91cbab"
     },
     {
-      "path": "illustrations-tests/tri-chevilles-kaloneo.webp",
-      "bytes": 4546,
-      "sha1": "ee57185153faa5634527e60c0d9ca91086cbaddd"
+      "path": "illustrations-tests/tri-chevilles-kaloneo.png",
+      "bytes": 3362583,
+      "sha1": "83f53321ff704a90a1b7a7be7af6fadec6ecd9c7"
     },
     {
-      "path": "illustrations-tests/dictee-bureau-soleil.webp",
-      "bytes": 2294,
-      "sha1": "9e41dc9a3c5e4d102af8e9b90fb1a6985c286799"
+      "path": "illustrations-tests/dictee-bureau-soleil.png",
+      "bytes": 2211210,
+      "sha1": "0dbf6c2e5eda368f3653c95d8db3ec253915f683"
     }
   ]
 }
