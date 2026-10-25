@@ -89,6 +89,8 @@ jobs:
         run: node scripts/build-kaltest-pilot2-data.js
       - name: Prepare authentic KALTEST candidate application
         run: npm run prepare:web
+      - name: Real Electron : PNG Genre-Nombre, double fond bleu et phrases sur une ligne à 1200/1366
+        run: npx electron --no-sandbox scripts/kaloneo-genre-nombre-banner-electron-smoke-main.js
       - name: Verify portable test exports carry their images intact
         run: node scripts/kaloneo-export-restaurant-r69-smoke.js
       - name: Verify Admin V1 save backups and persistence across app upgrades
