@@ -1,7 +1,6 @@
 name: "KALONÉO R148 - Setup écran de masquage vidéo et image"
 on:
   workflow_dispatch:
-  workflow_dispatch:
 concurrency:
   group: kaloneo-r148-mask-video-setup-${{ github.ref }}
   cancel-in-progress: true

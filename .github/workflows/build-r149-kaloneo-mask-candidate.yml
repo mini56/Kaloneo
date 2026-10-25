@@ -1,7 +1,6 @@
 name: "KALONÉO R149 - Setup écran de masquage vidéo et image"
 on:
   workflow_dispatch:
-  workflow_dispatch:
 concurrency:
   group: kaloneo-r149-mask-candidate-setup-${{ github.ref }}
   cancel-in-progress: true
