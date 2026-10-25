@@ -1,0 +1,161 @@
+name: "KALONÉO R174 - Licence, Puzzle et grilles, conservation des données"
+on:
+  push:
+    branches:
+      - fix-r60-tri-rearm-only-20261011
+    paths:
+      - '.github/workflows/audit-r174-final-setup.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: kaloneo-r174-data-protection-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  dpapi-cross-process:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install local Electron runtime
+        run: npm install --no-audit --no-fund
+      - name: Seed DPAPI and real encrypted candidate folders under isolated Windows profile
+        shell: pwsh
+        run: |
+          $env:KALONEO_R172_MANIFEST=Join-Path $env:RUNNER_TEMP 'r174-dpapi-roundtrip.json'
+          & npx electron --no-sandbox scripts/r172-update-fixture-electron-main.js --seed
+          if($LASTEXITCODE -ne 0){throw 'Original DPAPI encryption failed'}
+          & npx electron --no-sandbox scripts/r172-update-fixture-electron-main.js --verify
+          if($LASTEXITCODE -ne 0){throw 'Cross-process Windows DPAPI cannot reopen a candidate: stop the build'}
+  audit-real-upgrade-windows:
+    needs: dpapi-cross-process
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    env:
+      KALONEO_SKIP_OFFICIAL_V1: '0'
+      KALONEO_STRICT_RENDER_IMAGES: '1'
+      KALONEO_STRICT_INTRO_VIDEO: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Original KALONEO artwork and video optimized without changes
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check Pillow==11.3.0 imageio-ffmpeg==0.6.0
+          python scripts/kaloneo-r125-branding.py
+          python scripts/r158-build-installer-intro.py
+          node scripts/r158-installer-intro-smoke.js
+          node scripts/r169-installer-animation-smoke.js
+      - name: Install Node dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build candidate pages and validate existing core
+        shell: pwsh
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          npm run prepare:web
+          if($LASTEXITCODE -ne 0){throw 'Preparation failed'}
+          node scripts/kaloneo-full-uninstall-policy.js
+          if($LASTEXITCODE -ne 0){throw 'Default-preservation policy invalid'}
+          node scripts/r170-intro-video-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Video regression'}
+          node scripts/candidate-local-protection-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'DPAPI protection regression'}
+          node scripts/candidate-loss-prevention-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Candidate import/export regression'}
+          node scripts/kaloneo-genre-nombre-font-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Deux tableaux V1 et bandeau pleine largeur perdus'}
+          node scripts/r162-static-mask-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Écran de masquage image fixe du parcours de base perdu'}
+          node scripts/kaloneo-number-grid-v1-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Nouvelles grilles mathematiques V1 invalides'}
+      - name: "R174 gates - full licence, square number grids and Puzzle Electron 1200/1366"
+        shell: pwsh
+        run: |
+          node scripts/r174-license-about-nsis-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'KALONEO licence regression'}
+          node scripts/kaloneo-number-grid-v1-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Number grid V1 regression'}
+          & npx electron --no-sandbox scripts/kaloneo-number-grid-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Real Electron 40/60 grid regression'}
+          & npx electron --no-sandbox scripts/r173-puzzle-example-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Real Electron Puzzle example regression'}
+      - name: Patch pinned NSIS directory-page callbacks only
+        run: node scripts/kaloneo-nsis-directory-template.js
+      - name: Build unpublished R174 test installer, Build #177 unique
+        run: npx electron-builder --win nsis --config build/kaloneo-r174-final-setup.yml --publish never
+      - name: Retrieve real published R173 installer for migration
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          New-Item -ItemType Directory -Path dist/previous -Force | Out-Null
+          gh release download seb-kaloneo-r173-puzzle-grilles-test --pattern 'KALONEO-Setup-0.0.200.exe' --dir dist/previous --clobber
+          if($LASTEXITCODE -ne 0 -or -not(Test-Path dist/previous/KALONEO-Setup-0.0.200.exe)){throw 'Baseline R172 setup missing'}
+      - name: REAL Windows R173 to R174 upgrade, DPAPI candidate and Word preservation, default uninstall, reinstall, forbidden switch
+        shell: pwsh
+        run: |
+          & ./scripts/r174-real-upgrade-windows-smoke.ps1 -PreviousSetup (Resolve-Path dist/previous/KALONEO-Setup-0.0.200.exe) -NewSetup (Resolve-Path dist/KALONEO-Setup-0.0.201.exe)
+          if($LASTEXITCODE -ne 0){throw 'R174 real upgrade lost candidate or builder data'}
+      - name: Validate full R60 V1 regression on the exact commit before publication
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $deadline=(Get-Date).AddMinutes(18)
+          do {
+            $runs=gh api "repos/$env:GITHUB_REPOSITORY/actions/runs?head_sha=$env:GITHUB_SHA&per_page=100" | ConvertFrom-Json
+            if($LASTEXITCODE -ne 0){throw 'V1 regression status unavailable'}
+            $matches=@($runs.workflow_runs | Where-Object { $_.name -eq 'R60 V1 Admin edit and Tri cross-regression' })
+            if($matches.Count -gt 0){
+              $latest=$matches | Sort-Object created_at -Descending | Select-Object -First 1
+              if($latest.conclusion -eq 'success'){Write-Host 'R60 V1 REGRESSION=SUCCESS on exact commit';break}
+              if($latest.conclusion -in @('failure','cancelled','timed_out','action_required')){throw 'R60 V1 failed; R174 Setup publication blocked'}
+            }
+            if((Get-Date) -gt $deadline){throw 'R60 not confirmed GREEN; no publication'}
+            Start-Sleep -Seconds 20
+          }while($true)
+      - name: Publish single R174 Build 177 Windows Setup after all tests
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag='seb-kaloneo-r174-licence-puzzle-grilles-test'
+          if(gh release view $tag 2>$null){throw 'R174 Setup already published; never reuse a build'}
+          $item=Get-Item 'dist/KALONEO-Setup-0.0.201.exe'
+          if(-not $item -or $item.Length -lt 40MB){throw 'Windows Setup missing or unexpectedly small'}
+          $hash=(Get-FileHash -Algorithm SHA256 $item.FullName).Hash.ToUpperInvariant()
+          $title='KALONÉO — R174 / Build #177 — Puzzle exemple et deux nouvelles grilles V1'
+          $notes=@"
+          KALONÉO R174 / Build #177 / 0.0.201 — Setup Windows de test.
+          - Bouton « Voir l’exemple » dans le premier bloc bleu du Puzzle Gratte-ciel ; ouvre une fenêtre secondaire interne avec l'image fournie, sans perte des saisies ni du chronomètre.
+          - Fenêtre secondaire accessible au clavier, Fermer restaure le focus ; PNG externe de 123 Ko, non dupliqué dans le JSON.
+          - Deux nouvelles V1 construites avec les grilles du Builder : Grille d’opérations (2 solutions admises) et Carré magique 15 (8 solutions admises), neuf points chacune.
+          - Genre et nombre V1 : deux blocs bleu clair et image bandeau.
+          - Descriptions de la page Tests / Parcours raccourcies, bibliothèque d'images.
+          - Licence complète consultable dans À propos et acceptation explicite par case initialement non cochée dans le Setup.
+          - Puzzle « Voir l’exemple » : bouton bleu KALONÉO à droite, fenêtre secondaire accessible.
+          - Deux nouveaux tests V1 : images à gauche 40 %, grilles carrées à droite 60 %, calculatrice activée.
+          - Conservation des données et clés de chiffrement lors de mise à jour R173 → R174, désinstallation et réinstallation.
+          - Publication conditionnée aux contrôles stricts R60 V1 et Puzzle Electron sur exactement le même commit.
+          SHA256: $hash
+          Commit: $env:GITHUB_SHA
+          "@
+          gh release create $tag $item.FullName --target "$env:GITHUB_SHA" --title $title --notes $notes --prerelease
+          if($LASTEXITCODE -ne 0){throw 'GitHub Release failed — Setup not published'}
