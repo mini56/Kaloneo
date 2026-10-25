@@ -363,6 +363,14 @@
       (def.questions||[]).filter(q=>averageIds.has(q.id)).forEach(q=>blocks.push(questionToBlock(q,'right')));
     } else if(Array.isArray(def.presentation?.tables)){
       blocks.push(...tablesToBlocks(def));
+      // Les ajouts libres sont éditables après les tableaux historiques, sans
+      // transformer les tableaux V1 ni leurs questions en nouveaux tableaux.
+      if(Array.isArray(def.presentation?.builderExtras)){
+        blocks.push(...builderContentToBlocks({
+          questions:def.questions||[],
+          presentation:{builderContent:def.presentation.builderExtras}
+        }));
+      }
     } else {
       (def.questions||[]).forEach(q=>blocks.push(questionToBlock(q,'left')));
       if(def.presentation?.responseTable) blocks.push(responseTableBlock(def));
@@ -865,6 +873,24 @@
             if(style) table.builderStyle=style;
             else if(Object.prototype.hasOwnProperty.call(table,'builderStyle')) delete table.builderStyle;
           });
+        }
+        if(Array.isArray(def.presentation.tables)){
+          const extras=(model.blocks||[]).filter(block=>
+            block.type!=='multiple-tables' && block.uid!=='visual');
+          const extraContent=genericPresentation({meta:model.meta,blocks:extras}).builderContent;
+          if(extraContent.length) def.presentation.builderExtras=extraContent;
+          else delete def.presentation.builderExtras;
+          // Conserver les questions/barèmes historiques, même si une nouvelle
+          // question est insérée dans un bloc supplémentaire.
+          const addedQuestions=collectBuilderQuestions(extras);
+          if(addedQuestions.length){
+            const original=Array.isArray(def.questions)?def.questions:[];
+            const addedById=new Map(addedQuestions.map(q=>[String(q.id),q]));
+            def.questions=[
+              ...original.map(q=>addedById.has(String(q.id))?{...q,...addedById.get(String(q.id))}:q),
+              ...addedQuestions.filter(q=>!original.some(old=>String(old.id)===String(q.id)))
+            ];
+          }
         }
         updateImportedQuestions(def,model);
       }
