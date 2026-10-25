@@ -84,6 +84,10 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'DPAPI protection regression'}
           node scripts/candidate-loss-prevention-smoke.js
           if($LASTEXITCODE -ne 0){throw 'Candidate import/export regression'}
+          node scripts/kaloneo-genre-nombre-font-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Deux tableaux V1 et bandeau pleine largeur perdus'}
+          node scripts/r162-static-mask-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Écran de masquage image fixe du parcours de base perdu'}
       - name: Patch pinned NSIS directory-page callbacks only
         run: node scripts/kaloneo-nsis-directory-template.js
       - name: Build unpublished R172 test installer, Build #175 unique
