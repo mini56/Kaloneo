@@ -9,11 +9,6 @@
       "sha1": "f383e59023e299b9c299ea1281855f43fa8c41b1"
     },
     {
-      "path": "02.png",
-      "bytes": 673214,
-      "sha1": "e9f409935ef953a557da206dd567cd340f71126a"
-    },
-    {
       "path": "02_fin_stage_01/01.png",
       "bytes": 578717,
       "sha1": "d3175a075ea68b13389191f4562231962f6b24b6"
@@ -84,9 +79,9 @@
       "sha1": "3cc2a4d150f5db2e74ffd9f748334091b4cccfa6"
     },
     {
-      "path": "03.png",
-      "bytes": 570330,
-      "sha1": "07ff34c132b54e98512a4100395ebbe9794f4c53"
+      "path": "02.png",
+      "bytes": 673214,
+      "sha1": "e9f409935ef953a557da206dd567cd340f71126a"
     },
     {
       "path": "03_fin_stage_02/01.png",
@@ -189,9 +184,9 @@
       "sha1": "e4aa12cdab65f934e2eafe71295d5b57fbe27845"
     },
     {
-      "path": "04.png",
-      "bytes": 457818,
-      "sha1": "f5ccc591d292dc81c12cd61b2d428c1bd4fccf9e"
+      "path": "03.png",
+      "bytes": 570330,
+      "sha1": "07ff34c132b54e98512a4100395ebbe9794f4c53"
     },
     {
       "path": "04_activites_entreprise_01/03.png",
@@ -239,9 +234,9 @@
       "sha1": "a4bc15752b83a5437fb7aef126786f3027513717"
     },
     {
-      "path": "05.png",
-      "bytes": 465131,
-      "sha1": "ef647540a96aab133deafbcd52f331d6ca0881ae"
+      "path": "04.png",
+      "bytes": 457818,
+      "sha1": "f5ccc591d292dc81c12cd61b2d428c1bd4fccf9e"
     },
     {
       "path": "05_activites_entreprise_02/02.png",
@@ -284,9 +279,9 @@
       "sha1": "f1767da945497298d33c2c2db32a9cdacd834fe3"
     },
     {
-      "path": "06.png",
-      "bytes": 410281,
-      "sha1": "4e38227f318ebb73097d05d3f51e357cd738276a"
+      "path": "05.png",
+      "bytes": 465131,
+      "sha1": "ef647540a96aab133deafbcd52f331d6ca0881ae"
     },
     {
       "path": "06_activites_entreprise_03/02.png",
@@ -329,9 +324,9 @@
       "sha1": "80c1a4f915d0a6c7e133e157a4ec00a8ad071f77"
     },
     {
-      "path": "07.png",
-      "bytes": 344200,
-      "sha1": "ba9c60820f4354dc87a73e07643a75b8f7620543"
+      "path": "06.png",
+      "bytes": 410281,
+      "sha1": "4e38227f318ebb73097d05d3f51e357cd738276a"
     },
     {
       "path": "07_stage_comptable_magasinier/01.png",
@@ -394,6 +389,11 @@
       "sha1": "fb0f9c027959c8b857dd345450f4fdfe1884d8f1"
     },
     {
+      "path": "07.png",
+      "bytes": 344200,
+      "sha1": "ba9c60820f4354dc87a73e07643a75b8f7620543"
+    },
+    {
       "path": "08.png",
       "bytes": 594869,
       "sha1": "91128173f2df93615c83ba70cc51e9d77d0a9f25"
@@ -444,6 +444,46 @@
       "sha1": "99cff457c73660cb10dac29cb1305b76bd253347"
     },
     {
+      "path": "bandeaux/01_etude_style_A.png",
+      "bytes": 1920913,
+      "sha1": "6b36e866fbee8d67bc4e8579affca51f36982c06"
+    },
+    {
+      "path": "bandeaux/02_etude_style_B.png",
+      "bytes": 1944463,
+      "sha1": "6f3ed37150969aa7dd5c96c8c6ebe062f5137a62"
+    },
+    {
+      "path": "bandeaux/03_etude_style_C.png",
+      "bytes": 1954839,
+      "sha1": "7b288a0710dbea964b2439ed46d31ef185cba0fd"
+    },
+    {
+      "path": "bandeaux/04_etude_style_D.png",
+      "bytes": 1951034,
+      "sha1": "c959b4b659d58f3c4bd8e30e53a2cffde490f0f9"
+    },
+    {
+      "path": "bandeaux/05_ferroviaire.png",
+      "bytes": 2160664,
+      "sha1": "7801f3b25ef0edd9e2d441479f793e6bd0bbb081"
+    },
+    {
+      "path": "bandeaux/06_paysage.png",
+      "bytes": 2229398,
+      "sha1": "e5046786b6a0b82481c7192705446faa1ac93167"
+    },
+    {
+      "path": "bandeaux/07_urbain.png",
+      "bytes": 2174105,
+      "sha1": "b8f65517a696016b080dad9579ccfe7f772e4dba"
+    },
+    {
+      "path": "bandeaux/08_fleuve.png",
+      "bytes": 2191005,
+      "sha1": "0c3d755734208c3cdd1b9715d02b301023a05f7e"
+    },
+    {
       "path": "Bureau d’apprentissage au soleil.png",
       "bytes": 2211210,
       "sha1": "0dbf6c2e5eda368f3653c95d8db3ec253915f683"
@@ -452,6 +492,11 @@
       "path": "Bureau d’étude chaleureux et organisé.png",
       "bytes": 1739201,
       "sha1": "276c496605a65ca9345bd5e48e2be4938d32ca3d"
+    },
+    {
+      "path": "carre-magique-15-adultes.png",
+      "bytes": 1880546,
+      "sha1": "94eda360104f70e8ec3f698687893bcf2bd3706a"
     },
     {
       "path": "Couple au rayon bricolage.png",
@@ -759,44 +804,9 @@
       "sha1": "632f4e65fd78523402cce195ee224e0e486a5a53"
     },
     {
-      "path": "bandeaux/01_etude_style_A.png",
-      "bytes": 1920913,
-      "sha1": "6b36e866fbee8d67bc4e8579affca51f36982c06"
-    },
-    {
-      "path": "bandeaux/02_etude_style_B.png",
-      "bytes": 1944463,
-      "sha1": "6f3ed37150969aa7dd5c96c8c6ebe062f5137a62"
-    },
-    {
-      "path": "bandeaux/03_etude_style_C.png",
-      "bytes": 1954839,
-      "sha1": "7b288a0710dbea964b2439ed46d31ef185cba0fd"
-    },
-    {
-      "path": "bandeaux/04_etude_style_D.png",
-      "bytes": 1951034,
-      "sha1": "c959b4b659d58f3c4bd8e30e53a2cffde490f0f9"
-    },
-    {
-      "path": "bandeaux/05_ferroviaire.png",
-      "bytes": 2160664,
-      "sha1": "7801f3b25ef0edd9e2d441479f793e6bd0bbb081"
-    },
-    {
-      "path": "bandeaux/06_paysage.png",
-      "bytes": 2229398,
-      "sha1": "e5046786b6a0b82481c7192705446faa1ac93167"
-    },
-    {
-      "path": "bandeaux/07_urbain.png",
-      "bytes": 2174105,
-      "sha1": "b8f65517a696016b080dad9579ccfe7f772e4dba"
-    },
-    {
-      "path": "bandeaux/08_fleuve.png",
-      "bytes": 2191005,
-      "sha1": "0c3d755734208c3cdd1b9715d02b301023a05f7e"
+      "path": "grille-operations-adultes.png",
+      "bytes": 1748679,
+      "sha1": "38331f085095a3203d30b21bf43df30ff914240f"
     },
     {
       "path": "horaires/01_12h00.png",
