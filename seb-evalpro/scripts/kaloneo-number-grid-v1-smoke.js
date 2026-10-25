@@ -30,7 +30,7 @@ for(const entry of expected){
  assert(original.features.includes('host.calculator'));
  assert(original.features.includes('layout.split'));
  const content=original.presentation.builderContent[1];
- assert.equal(content.type,'table-grid');assert.equal(content.zone,'left');
+ assert.equal(content.type,'table-grid');assert.equal(content.zone,'right');
  assert.equal(content.table.rows,entry.rows);
  assert.equal(content.table.cols,entry.cols);
  assert.equal(content.table.cells.flat().filter(c=>c.kind==='candidate-answer').length,9);
@@ -83,6 +83,6 @@ for(const entry of expected){
  assert.equal(Engine.evaluate(config,empty).correct,0,'Blanc accepté');
  const duplicate=Object.fromEntries(config.questionIds.map(id=>[id,'1']));
  assert(Engine.evaluate(config,duplicate).correct<9,'Répétition acceptée');
- console.log('KALONEO_NUMBER_GRID_V1='+entry.id+';BUILDER_ROUNDTRIP=OK;BILAN=OK;SOLUTIONS='+entry.solutions+';IMAGE=NONE');
+ console.log('KALONEO_NUMBER_GRID_V1='+entry.id+';BUILDER_ROUNDTRIP=OK;BILAN=OK;SOLUTIONS='+entry.solutions+';LIBRARY_IMAGE_REUSED=YES');
 }
 console.log('KALONEO_NUMBER_GRID_V1_ALL=SUCCESS');
