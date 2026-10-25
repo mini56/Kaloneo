@@ -2,7 +2,7 @@
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
 
-!define SEB_BUILD_NUMBER "174"
+!define SEB_BUILD_NUMBER "175"
 !define SEB_BUILD_LABEL "Build #${SEB_BUILD_NUMBER}"
 
 # R164 : montrer les opérations réelles de copie et de finalisation.
@@ -10,22 +10,78 @@ ShowInstDetails show
 ShowUninstDetails show
 !define MUI_INSTFILESPAGE_SHOWDETAILS
 
-# R163: Full application removal without deleting any other software's data.
-# Upgrades must NEVER erase candidates, bilans, or current user preferences.
-# Only the uninstaller of this NEW version will execute this new macro.
+# R172 - Conservation des donnees PAR DEFAUT (desinstallation ET mise a jour).
+# L'effacement n'est disponible qu'en mode interactif : case decochee
+# initialement + deuxieme confirmation explicite. /S conserve toujours.
+Var KaloneoDeleteDataConfirmed
+Var KaloneoDeleteDataCheckbox
+Var KaloneoDeleteDataDialog
+
+!macro customUnInit
+  StrCpy $KaloneoDeleteDataConfirmed "0"
+  # La commande --delete-app-data native d'electron-builder contourne le
+  # dialogue : elle est bloquee au demarrage avant toute suppression.
+  ClearErrors
+  ${GetParameters} $R0
+  ${GetOptions} $R0 "--delete-app-data" $R1
+  ${IfNot} ${Errors}
+    MessageBox MB_OK|MB_ICONSTOP "KALONÉO : suppression automatique des données interdite. Lancez la désinstallation interactive et confirmez explicitement la suppression."
+    Abort
+  ${EndIf}
+!macroend
+
+!macro customUnWelcomePage
+  !insertmacro MUI_UNPAGE_WELCOME
+  UninstPage custom un.KaloneoDataPageCreate un.KaloneoDataPageLeave
+!macroend
+
+Function un.KaloneoDataPageCreate
+  # Ne jamais afficher d'ecran de choix pendant une mise a jour.
+  ${If} ${Silent}
+    Abort
+  ${EndIf}
+  ${If} ${isUpdated}
+    Abort
+  ${EndIf}
+  nsDialogs::Create 1018
+  Pop $KaloneoDeleteDataDialog
+  ${If} $KaloneoDeleteDataDialog == error
+    Abort
+  ${EndIf}
+  ${NSD_CreateLabel} 0 5u 100% 49u "Par défaut, KALONÉO conserve tous vos candidats, parcours, tests, images, résultats, bilans, documents et clés de chiffrement lors de la désinstallation. Vous pourrez les retrouver en réinstallant KALONÉO sous le même compte Windows."
+  Pop $0
+  ${NSD_CreateCheckbox} 0 62u 100% 28u "Je demande la SUPPRESSION DÉFINITIVE de toutes les données KALONÉO de ce compte Windows."
+  Pop $KaloneoDeleteDataCheckbox
+  ${NSD_Uncheck} $KaloneoDeleteDataCheckbox
+  ${NSD_CreateLabel} 0 105u 100% 40u "ATTENTION : si vous cochez cette option, les candidats, parcours et bilans seront irrécupérables sans sauvegarde extérieure complète. Laissez la case vide pour conserver toutes vos données."
+  Pop $0
+  nsDialogs::Show
+FunctionEnd
+
+Function un.KaloneoDataPageLeave
+  StrCpy $KaloneoDeleteDataConfirmed "0"
+  ${NSD_GetState} $KaloneoDeleteDataCheckbox $0
+  ${If} $0 == ${BST_CHECKED}
+    MessageBox MB_YESNO|MB_ICONSTOP|MB_DEFBUTTON2 "DERNIÈRE CONFIRMATION : voulez-vous effacer DÉFINITIVEMENT toutes les données KALONÉO de ce compte Windows (candidats, évaluations, bilans, Word, parcours, tests, images et clés de chiffrement) ? Cette opération est irréversible sans sauvegarde. Non = retour au choix." IDYES +2
+    Abort
+    StrCpy $KaloneoDeleteDataConfirmed "1"
+  ${EndIf}
+FunctionEnd
+
 !macro customUnInstall
-  DetailPrint "Désinstallation complète de KALONÉO"
-  ${IfNot} ${isUpdated}
-    # Electron setPath('userData') points here, irrespective of package.json.
-    # Also contains Documents, encrypted candidates, bilans, tests and images.
-    # For a machine-wide setup, use the current profile, not all-users AppData.
-    SetShellVarContext current
-    DetailPrint "Suppression du profil KALONEO et des dossiers de cache"
-    RMDir /r "$APPDATA\KALONEO"
-    RMDir /r "$LOCALAPPDATA\KALONEO"
-    # Restore electron-builder uninstall context for its remaining operations.
-    ${If} $installMode == "all"
-      SetShellVarContext all
+  ${If} ${isUpdated}
+    DetailPrint "Mise à jour KALONÉO : toutes les données utilisateur sont conservées."
+  ${Else}
+    ${If} $KaloneoDeleteDataConfirmed == "1"
+      SetShellVarContext current
+      DetailPrint "SUPPRESSION EXPLICITEMENT CONFIRMÉE : effacement des données KALONÉO de ce compte."
+      RMDir /r "$APPDATA\\KALONEO"
+      RMDir /r "$LOCALAPPDATA\\KALONEO"
+      ${If} $installMode == "all"
+        SetShellVarContext all
+      ${EndIf}
+    ${Else}
+      DetailPrint "Désinstallation du programme UNIQUEMENT : candidats, parcours, bilans et paramètres conservés."
     ${EndIf}
   ${EndIf}
 !macroend

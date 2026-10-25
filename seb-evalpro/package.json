@@ -103,7 +103,7 @@
       "uninstallerIcon": "build/app-icon.ico",
       "installerHeader": "build/installerHeader.bmp",
       "include": "build/installer.nsh",
-      "deleteAppDataOnUninstall": true,
+      "deleteAppDataOnUninstall": false,
       "artifactName": "SEB-eval-PRO-${version}-Windows-Setup.${ext}"
     },
     "linux": {
@@ -114,6 +114,6 @@
       "artifactName": "SEB-eval-PRO-${version}-Linux.${ext}"
     }
   },
-  "sebBuildNumber": 174,
-  "sebReleaseVersion": "0.0.198"
+  "sebBuildNumber": 175,
+  "sebReleaseVersion": "0.0.199"
 }

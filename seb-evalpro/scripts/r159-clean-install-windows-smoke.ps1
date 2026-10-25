@@ -76,14 +76,16 @@ $uninst=Start-Process -FilePath $uninstaller.FullName -ArgumentList '/S','/curre
 if($uninst.ExitCode -ne 0){throw "Uninstall failed $($uninst.ExitCode)"}
 if(Test-Path $exe){throw 'KALONÉO executable not removed on uninstall'}
 for($i=0;$i -lt 20;$i++){
-  if(-not(Test-Path $target) -and -not(Test-Path $profile) -and -not(Test-Path $cache)){break}
+  if(-not(Test-Path $target)){break}
   Start-Sleep -Milliseconds 250
 }
 if(Test-Path $target){throw "KALONEO program folder remained after uninstall: $target"}
-if(Test-Path $profile){throw "KALONEO profile/candidates/bilans remained after uninstall: $profile"}
-if(Test-Path $cache){throw "KALONEO cache folder remained after uninstall: $cache"}
+if(-not(Test-Path (Join-Path $profile 'Documents\\KALONEO\\bilan-test.docx'))){throw 'Candidate Word vanished during default uninstall'}
+if(-not(Test-Path (Join-Path $profile 'evaluation-state.json'))){throw 'Candidate evaluation disappeared during default uninstall'}
+if(-not(Test-Path (Join-Path $cache 'cache-test.txt'))){throw 'Cache was erased without explicit consent'}
+Write-Host 'PRESERVED_ON_UNINSTALL=OK - profil, bilan, evaluation and cache preserved'
 if(-not(Test-Path (Join-Path $outside 'keep.txt'))){throw 'The uninstall unexpectedly deleted a neighbouring folder'}
 Remove-Item -LiteralPath $outside -Recurse -Force
 if(Test-Path $legacy){throw 'A legacy install tree was generated'}
 if(Test-Path $recovery){throw 'A legacy recovery profile was created'}
-Write-Host 'KALONEO_R159_WINDOWS_CLEAN_INSTALL=OK — correct path, native shortcuts, new registry identity, no SEB migration/recovery, FULL clean uninstall + all app data, no collateral deletion'
+Write-Host 'KALONEO_R159_WINDOWS_CLEAN_INSTALL=OK — correct path, native shortcuts, new registry identity, no SEB migration/recovery, uninstall preserves ALL user data by default, no collateral deletion'
