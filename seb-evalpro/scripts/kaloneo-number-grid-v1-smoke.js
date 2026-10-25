@@ -23,6 +23,13 @@ for(const entry of expected){
  assert(original.presentation.builderContent[0].resource.data.startsWith('bibliotheque-images/'));
  assert.equal(original.presentation.builderContent[1].type,'table-grid');
  assert.equal(original.presentation.builderContent[1].zone,'right');
+ const expectedImage=entry.id==='grille_operations'?'grille-operations-adultes.png':'carre-magique-15-adultes.png';
+ const originalUpload=entry.id==='grille_operations'?'Grille d’opérations — chiffres de 1 à 9.png':'Carré magique — total 15.png';
+ assert.equal(original.presentation.builderContent[0].resource.data,'bibliotheque-images/'+expectedImage);
+ assert.equal(original.presentation.builderContent[0].style?.backgroundColor,'#EAF5FB');
+ const canonicalImage=fs.readFileSync(path.join(root,'../..',original.presentation.builderContent[0].resource.data));
+ const userUpload=fs.readFileSync(path.resolve(root,'../../../../images_tests',originalUpload));
+ assert(canonicalImage.equals(userUpload),'Illustration KALONÉO différente de celle téléversée par l utilisateur');
  assert(original.presentation.builderContent[0].resource.data.endsWith('.png'));
  assert(fs.existsSync(path.join(root,'../..',original.presentation.builderContent[0].resource.data)),'Illustration de la bibliothèque manquante');
  assert.equal(original.calculator.compatible,true);

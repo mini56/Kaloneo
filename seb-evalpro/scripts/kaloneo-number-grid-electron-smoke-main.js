@@ -73,6 +73,10 @@ app.whenReady().then(async()=>{
      square:firstCell?{w:firstCell.width,h:firstCell.height}:null,
      mediaImageLoaded:!!(mediaImage?.complete&&mediaImage?.naturalWidth>0),
      mediaSrc:mediaImage?.getAttribute('src')||'',
+     leftBackground:getComputedStyle(zones[0]).backgroundColor,
+     rightBackground:getComputedStyle(zones[1]).backgroundColor,
+     leftImageWidth:mediaImage?.getBoundingClientRect().width||0,
+     firstRowGridWidth:rows[0]?.getBoundingClientRect().width||0,
      calculatorVisible:!!calc&&!calc.hidden,
      overflowX:!!el&&el.scrollWidth>el.clientWidth+3,
      engineLoaded:typeof window.KaloneoNumberGrid?.evaluate==='function'
@@ -95,7 +99,15 @@ app.whenReady().then(async()=>{
    assert(observed.square&&Math.abs(observed.square.w-observed.square.h)<3,
      'Cases de la grille non carrees '+JSON.stringify(observed));
    assert(observed.mediaImageLoaded,'L illustration de la bibliothèque doit s afficher dans les 40%');
-   assert(observed.mediaSrc.includes('bibliotheque-images/'),'La mauvaise illustration a été sélectionnée');
+   const expectedImage=def.id==='grille_operations'?'grille-operations-adultes.png':'carre-magique-15-adultes.png';
+   assert(observed.mediaSrc.endsWith('bibliotheque-images/'+expectedImage),
+     'La mauvaise illustration a été sélectionnée '+observed.mediaSrc);
+   assert.equal(observed.leftBackground,'rgb(234, 245, 251)','Bloc gauche sans fond bleu clair');
+   assert.equal(observed.rightBackground,'rgb(234, 245, 251)','Bloc droit sans fond bleu clair');
+   assert(observed.leftImageWidth>observed.leftWidth*.80,
+     'Illustration trop petite dans les 40% '+JSON.stringify(observed));
+   assert(observed.square.w>=(def.id==='grille_operations'?58:44),
+     'Grille trop petite sur écran candidat '+JSON.stringify(observed));
    assert(observed.calculatorVisible,'Calculatrice désactivée');
    assert(!observed.overflowX,'Débordement horizontal dans le parcours candidat '+JSON.stringify(observed));
    assert(observed.engineLoaded,'Moteur de correction externe non chargé');

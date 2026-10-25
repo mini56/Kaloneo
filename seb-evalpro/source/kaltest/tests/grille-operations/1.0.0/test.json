@@ -35,10 +35,13 @@
         "type": "image",
         "zone": "left",
         "resource": {
-          "name": "Bureau d’apprentissage au soleil.png",
+          "name": "grille-operations-adultes.png",
           "mime": "image/png",
-          "data": "bibliotheque-images/Bureau d’apprentissage au soleil.png",
-          "alt": "Bureau d’apprentissage au soleil"
+          "data": "bibliotheque-images/grille-operations-adultes.png",
+          "alt": "Illustration professionnelle de calcul et de réflexion"
+        },
+        "style": {
+          "backgroundColor": "#EAF5FB"
         }
       },
       {

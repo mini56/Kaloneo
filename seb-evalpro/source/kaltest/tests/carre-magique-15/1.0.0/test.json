@@ -35,10 +35,13 @@
         "type": "image",
         "zone": "left",
         "resource": {
-          "name": "Bureau d’étude chaleureux et organisé.png",
+          "name": "carre-magique-15-adultes.png",
           "mime": "image/png",
-          "data": "bibliotheque-images/Bureau d’étude chaleureux et organisé.png",
-          "alt": "Bureau d’étude chaleureux et organisé"
+          "data": "bibliotheque-images/carre-magique-15-adultes.png",
+          "alt": "Illustration professionnelle de logique, grille vierge et nombres"
+        },
+        "style": {
+          "backgroundColor": "#EAF5FB"
         }
       },
       {

@@ -3972,3 +3972,95 @@ body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_ma
   body[data-seb-kaltest-id="grille_operations"] {--kaloneo-grid-square:38px}
   body[data-seb-kaltest-id="carre_magique_15"] {--kaloneo-grid-square:35px}
 }
+
+/* Présentation adulte des deux grilles KALONÉO.
+   Deux panneaux bleu clair 40/60, illustration à gauche, véritable grille carrée
+   à droite. Aucun impact sur les V1 historiques ni sur les autres KALTEST. */
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-context{
+  background-color:#EAF5FB!important;
+}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) #kaltest-content{
+  background-color:#EAF5FB;
+  border-radius:12px;
+}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-runtime-layout{
+  grid-template-columns:minmax(0,2fr) minmax(0,3fr)!important;
+  gap:12px;
+  align-items:stretch;
+}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-runtime-zone{
+  box-sizing:border-box;
+  height:100%;
+  min-height:0;
+  overflow:hidden;
+  padding:12px;
+  border:1px solid #C0DDEC;
+  border-radius:13px;
+  background-color:#EAF5FB!important;
+  align-items:center;
+  justify-content:center;
+}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-runtime-zone:first-child{
+  padding:7px;
+}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-runtime-zone:first-child>.kaltest-builder-media{
+  display:flex;
+  width:100%;
+  height:100%;
+  min-height:0;
+  overflow:hidden;
+  background-color:#EAF5FB;
+  border-radius:10px;
+}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-runtime-zone:first-child>.kaltest-builder-media img{
+  display:block;
+  margin:0;
+  width:100%;
+  height:100%;
+  max-width:none;
+  max-height:none;
+  object-fit:cover;
+  object-position:center center;
+  border-radius:9px;
+}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-runtime-zone:nth-child(2) .kaltest-builder-grid-wrap{
+  box-sizing:border-box;
+  flex:0 0 auto;
+  width:max-content;
+  max-width:100%;
+  max-height:100%;
+  height:auto;
+  min-height:0;
+  overflow:auto;
+  margin:auto;
+  padding:4px;
+  border:1px solid #8DAFC6;
+  border-radius:10px;
+  background-color:#DDF0FB;
+}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-runtime-zone:nth-child(2) .kaltest-builder-grid{
+  width:max-content!important;
+  min-width:max-content!important;
+  max-width:none!important;
+  height:auto!important;
+  margin:auto;
+}
+body[data-seb-kaltest-id="grille_operations"]{--kaloneo-grid-square:clamp(44px,min(6.3vw,10.3vh),79px)}
+body[data-seb-kaltest-id="carre_magique_15"]{--kaloneo-grid-square:clamp(39px,min(5.4vw,7.4vh),58px)}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-grid td{
+  height:var(--kaloneo-grid-square)!important;
+  min-height:var(--kaloneo-grid-square)!important;
+  max-height:var(--kaloneo-grid-square)!important;
+  width:var(--kaloneo-grid-square)!important;
+  min-width:var(--kaloneo-grid-square)!important;
+  max-width:var(--kaloneo-grid-square)!important;
+  font-size:clamp(17px,2vw,27px);
+}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-grid td input{
+  height:calc(var(--kaloneo-grid-square) - 4px)!important;
+  font-size:clamp(18px,2.1vw,27px);
+}
+@media(max-height:710px){
+  body[data-seb-kaltest-id="grille_operations"]{--kaloneo-grid-square:clamp(36px,9.5vh,65px)}
+  body[data-seb-kaltest-id="carre_magique_15"]{--kaloneo-grid-square:clamp(32px,6.8vh,48px)}
+}
