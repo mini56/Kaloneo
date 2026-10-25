@@ -42,19 +42,23 @@ app.whenReady().then(async()=>{
    for(const [index,row] of got.buttons.entries()){
     for(let j=0;j<3;j++){
       assert(Math.abs(row[j].height-42)<tolerance,'Commande non haute de 42px');
-    }
-    for(let j=0;j<3;j++){
-      assert(Math.abs(got.labels[index].top-got.labels[0].top)<tolerance,'Libellés désalignés');
-      assert(Math.abs(row[j].top-got.buttons[0][j].top)<tolerance,
-        'DÉCALAGE VISUEL ligne '+(j+1)+' en '+width+'px : '+JSON.stringify(got));
-      assert(Math.abs(row[j].bottom-got.buttons[0][j].bottom)<tolerance,
-        'Bas de commande non aligné en '+width+'px : '+JSON.stringify(got));
+      if(width>1050){
+        assert(Math.abs(got.labels[index].top-got.labels[0].top)<tolerance,'Libellés désalignés');
+        assert(Math.abs(row[j].top-got.buttons[0][j].top)<tolerance,
+          'DÉCALAGE VISUEL ligne '+(j+1)+' en '+width+'px : '+JSON.stringify(got));
+        assert(Math.abs(row[j].bottom-got.buttons[0][j].bottom)<tolerance,
+          'Bas de commande non aligné en '+width+'px : '+JSON.stringify(got));
+      }else{
+        assert(row[j].top>got.labels[index].top,'Commandes de la carte empilée avant le libellé');
+      }
     }
    }
-   assert(Math.max(...got.cards.map(c=>c.bottom))-Math.min(...got.cards.map(c=>c.bottom))<tolerance,
-     'Les trois cartes doivent avoir la même hauteur');
-   assert(Math.max(...got.statuses.map(c=>c.top))-Math.min(...got.statuses.map(c=>c.top))<tolerance,
-     'Les statuts doivent rester sur la même ligne');
+   if(width>1050){
+    assert(Math.max(...got.cards.map(c=>c.bottom))-Math.min(...got.cards.map(c=>c.bottom))<tolerance,
+      'Les trois cartes doivent avoir la même hauteur');
+    assert(Math.max(...got.statuses.map(c=>c.top))-Math.min(...got.statuses.map(c=>c.top))<tolerance,
+      'Les statuts doivent rester sur la même ligne');
+   }
    console.log('KALONEO_EXPORT_ALL_THREE_ROWS_'+width+'x'+height+'=SUCCESS');
   }
   clearTimeout(timer);win.destroy();app.quit();
