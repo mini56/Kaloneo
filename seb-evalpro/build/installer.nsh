@@ -40,9 +40,8 @@ Function un.KaloneoDataPageCreate
   ${If} ${Silent}
     Abort
   ${EndIf}
-  ${If} ${isUpdated}
-    Abort
-  ${EndIf}
+  ; Le programme de mise a jour appelle le desinstallateur en mode silencieux.
+  ; L'uninstall silencieux ne presente jamais de question de suppression.
   nsDialogs::Create 1018
   Pop $KaloneoDeleteDataDialog
   ${If} $KaloneoDeleteDataDialog == error
