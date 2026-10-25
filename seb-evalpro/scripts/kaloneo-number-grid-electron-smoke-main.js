@@ -52,6 +52,12 @@ app.whenReady().then(async()=>{
     const second=model.evaluateTest(test,{answers:toAnswers(alternative),units:{}});
     const bad=model.evaluateTest(test,{answers:toAnswers(Array(9).fill(1)),units:{}});
     const el=document.getElementById('kaltest-content');
+    const layout=document.querySelector('.kaltest-builder-runtime-layout');
+    const zones=[...layout?.querySelectorAll(':scope>.kaltest-builder-runtime-zone')||[]];
+    const firstCell=rows[0]?.cells[0]?.getBoundingClientRect();
+    const gridWidth=zones[0]?.getBoundingClientRect().width||0;
+    const media=zones[1]?.querySelector('.kaltest-builder-media');
+    const calc=document.getElementById('kaltest-calculator');
     return {
      id:test.id,inputs:inputs.length,
      uniqueInputIds:new Set(inputs.map(i=>i.dataset.questionId)).size,
@@ -59,7 +65,13 @@ app.whenReady().then(async()=>{
      good:{score:good.score,max:good.scoreMax,percentage:good.percentage},
      second:{score:second.score,max:second.scoreMax},
      bad:{score:bad.score,max:bad.scoreMax},
-     tableVisible:!!table&&table.getBoundingClientRect().width>400,
+     tableVisible:!!table&&table.getBoundingClientRect().width>160,
+     split:zones.length===2,
+     columns:getComputedStyle(layout).gridTemplateColumns,
+     leftWidth:gridWidth,rightWidth:zones[1]?.getBoundingClientRect().width||0,
+     square:firstCell?{w:firstCell.width,h:firstCell.height}:null,
+     mediaPlaceholder:media?.textContent?.trim()||'',
+     calculatorVisible:!!calc&&!calc.hidden,
      overflowX:!!el&&el.scrollWidth>el.clientWidth+3,
      engineLoaded:typeof window.KaloneoNumberGrid?.evaluate==='function'
     };
@@ -75,6 +87,13 @@ app.whenReady().then(async()=>{
    assert.equal(observed.second.score,9,'Deuxième disposition valide rejetée');
    assert(observed.bad.score<9,'Grille incorrecte acceptée');
    assert(observed.tableVisible,'Grille absente');
+   assert(observed.split,'Les deux zones 40/60 manquent');
+   assert(Math.abs(observed.leftWidth/(observed.leftWidth+observed.rightWidth)-.4)<.04,
+     'Ratio 40/60 non respecte '+JSON.stringify(observed));
+   assert(observed.square&&Math.abs(observed.square.w-observed.square.h)<3,
+     'Cases de la grille non carrees '+JSON.stringify(observed));
+   assert(observed.mediaPlaceholder.includes('Illustration à ajouter'),'Le bloc image 60% est absent');
+   assert(observed.calculatorVisible,'Calculatrice désactivée');
    assert(!observed.overflowX,'Débordement horizontal dans le parcours candidat '+JSON.stringify(observed));
    assert(observed.engineLoaded,'Moteur de correction externe non chargé');
    console.log('KALONEO_NUMBER_GRID_ELECTRON_'+def.id+'_'+w+'x'+h+'=OK');
