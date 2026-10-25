@@ -1855,13 +1855,13 @@ app.whenReady().then(async()=>{
       open.click();
       await new Promise(resolve=>setTimeout(resolve,210));
       const blocks=[...document.querySelectorAll('.exercise-block')];
-      if(blocks.length!==2||blocks.some(x=>x.querySelector('.block-type')?.value!=='multiple-tables')){
-        return {ok:false,reason:'Genre et nombre : tableaux historiques non conservés',blocks:blocks.length};
+      if(blocks.length!==3||blocks.slice(0,2).some(x=>x.querySelector('.block-type')?.value!=='multiple-tables')||blocks[2]?.querySelector('.block-type')?.value!=='image'){
+        return {ok:false,reason:'Genre et nombre : deux tableaux historiques et bandeau image non conservés',blocks:blocks.length};
       }
       if(blocks.some(x=>!x.classList.contains('is-collapsed')||!x.querySelector('.block-body')?.hidden)){
         return {ok:false,reason:'Les blocs du test ouvert ne sont pas repliés par défaut'};
       }
-      blocks.forEach(block=>block.querySelector('.toggle-block').click());
+      blocks.slice(0,2).forEach(block=>block.querySelector('.toggle-block').click());
       const rendererLoaded=typeof window.KaloneoBuilderLegacyTablePreview?.render==='function';
       if(!rendererLoaded)return {ok:false,reason:'Module autonome des tableaux historiques non chargé'};
       const grammarTables=[...document.querySelectorAll('#preview-exercise .preview-grammar-table')];
@@ -1953,7 +1953,9 @@ app.whenReady().then(async()=>{
     if(previewDefinition?.id!=='genre_nombre'||
        previewDefinition.presentation?.tables?.[0]?.builderStyle?.fontSize!==24||
        previewDefinition.presentation?.builderContent!==undefined||
-       previewDefinition.presentation?.tables?.[1]?.builderStyle!==undefined ||
+       previewDefinition.presentation?.tables?.[1]?.builderStyle?.fontSize!==undefined ||
+       previewDefinition.presentation?.tables?.[1]?.builderStyle?.backgroundColor!=='#EAF5FB' ||
+       previewDefinition.presentation?.builderExtras?.[0]?.resource?.data!=='kaltest/tests/genre-nombre/1.0.0/genre_et_nombre_V1.png' ||
        previewDefinition.presentation?.tables?.[0]?.title!=='Singulier Pluriel modifié' ||
        previewDefinition.presentation?.tables?.[1]?.title!=='Masculin Féminin modifié' ||
        previewDefinition.questions?.length!==genreNombreFixture.questions.length) {
