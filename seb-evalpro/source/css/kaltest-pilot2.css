@@ -3926,22 +3926,29 @@ body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_ma
   overflow:auto;
 }
 body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-grid {
-  width:max-content;
-  max-width:100%;
-  table-layout:fixed;
+  /* Le mode equal-auto générique impose width:100%!important :
+     ici uniquement, neutraliser cet étirement pour garder les vrais carrés. */
+  width:max-content!important;
+  min-width:max-content!important;
+  max-width:none!important;
+  table-layout:fixed!important;
   border-collapse:separate;
   border-spacing:3px;
   background:transparent;
 }
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-grid col{
+  width:var(--kaloneo-grid-square)!important;
+  min-width:var(--kaloneo-grid-square)!important;
+}
 body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-grid td {
   box-sizing:border-box;
   padding:2px;
-  width:var(--kaloneo-grid-square);
-  min-width:var(--kaloneo-grid-square);
-  max-width:var(--kaloneo-grid-square);
-  height:var(--kaloneo-grid-square);
-  min-height:var(--kaloneo-grid-square);
-  max-height:var(--kaloneo-grid-square);
+  width:var(--kaloneo-grid-square)!important;
+  min-width:var(--kaloneo-grid-square)!important;
+  max-width:var(--kaloneo-grid-square)!important;
+  height:var(--kaloneo-grid-square)!important;
+  min-height:var(--kaloneo-grid-square)!important;
+  max-height:var(--kaloneo-grid-square)!important;
   border-radius:5px;
   text-align:center;
   font-size:clamp(15px,1.6vw,21px);
@@ -3952,8 +3959,8 @@ body[data-seb-kaltest-id="carre_magique_15"] {--kaloneo-grid-square:clamp(40px,3
 body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-grid td input {
   box-sizing:border-box;
   width:100%;
-  height:100%;
-  min-height:0;
+  height:calc(var(--kaloneo-grid-square) - 4px)!important;
+  min-height:0!important;
   border:1.5px solid #8398b0;
   border-radius:4px;
   text-align:center;
