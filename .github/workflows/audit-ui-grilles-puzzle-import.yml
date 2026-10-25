@@ -1,0 +1,45 @@
+name: "KALONÉO - Audit sans Setup : images grilles, bouton Puzzle, Import / Export"
+on:
+  push:
+    branches:
+      - fix-r60-tri-rearm-only-20261011
+    paths:
+      - '.github/workflows/audit-ui-grilles-puzzle-import.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ui-existing-installation:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install image tooling (no Setup)
+        run: python -m pip install --disable-pip-version-check Pillow==11.3.0 imageio-ffmpeg==0.6.0
+      - name: Install Electron
+        run: npm install --no-audit --no-fund
+      - name: Prepare real candidate and preview pages
+        shell: pwsh
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          npm run prepare:web
+          if($LASTEXITCODE -ne 0){throw 'Page generation failed'}
+      - name: R174 old local definitions upgraded to pictured V1 without overwriting admin
+        run: node scripts/kaloneo-math-grid-upgrade-smoke.js
+      - name: Real Electron both square math grids with loaded images at 1200 and 1366
+        run: npx electron --no-sandbox scripts/kaloneo-number-grid-electron-smoke-main.js
+      - name: Real Electron Puzzle - KALONEO button and example at 1200 and 1366
+        run: npx electron --no-sandbox scripts/r173-puzzle-example-electron-smoke-main.js
+      - name: Real Electron Import / Export - aligned columns at 1200 and 1366
+        run: npx electron --no-sandbox scripts/r175-import-export-layout-electron-smoke-main.js
+      - name: Full V1 scoring and unchanged tests
+        run: node scripts/kaloneo-number-grid-v1-smoke.js
