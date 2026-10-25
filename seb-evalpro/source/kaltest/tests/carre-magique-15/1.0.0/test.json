@@ -1,0 +1,659 @@
+{
+  "kaltestFormat": 1,
+  "minSebEvalPro": "0.3.10",
+  "builderVersion": "2.0.0",
+  "id": "carre_magique_15",
+  "version": "1.0.0",
+  "title": "Carré magique — total 15",
+  "category": "mathematiques",
+  "pageRole": "test",
+  "kind": "questionnaire",
+  "scored": true,
+  "features": [
+    "runtime.basic",
+    "questionnaire.basic",
+    "questionnaire.table",
+    "questionnaire.grid",
+    "layout.single"
+  ],
+  "scenario": "Défi de logique : retrouvez les neuf chiffres du carré magique.",
+  "instruction": "Complétez les neuf cases avec les chiffres de 1 à 9, chacun une seule fois. Toutes les lignes, toutes les colonnes et les deux diagonales doivent totaliser 15.",
+  "calculator": {
+    "compatible": false,
+    "defaultEnabled": false,
+    "brandLabel": "KALONÉO"
+  },
+  "chrono": {
+    "enabled": false,
+    "engine": null
+  },
+  "presentation": {
+    "layout": "single",
+    "builderContent": [
+      {
+        "type": "table-grid",
+        "zone": "full",
+        "table": {
+          "title": "Carré magique : lignes, colonnes, diagonales = 15",
+          "rows": 7,
+          "cols": 7,
+          "columns": [
+            {
+              "id": "c1",
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c2",
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c3",
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c4",
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c5",
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c6",
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c7",
+              "align": "center",
+              "remainder": true
+            }
+          ],
+          "cells": [
+            [
+              {
+                "kind": "candidate-answer",
+                "questionId": "carre15_r1c1",
+                "prompt": "Case carre15_r1c1",
+                "responseType": "number",
+                "acceptedAnswers": "4",
+                "points": 1,
+                "backgroundColor": "#FFFFFF",
+                "textColor": "#034763"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "+",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "candidate-answer",
+                "questionId": "carre15_r1c2",
+                "prompt": "Case carre15_r1c2",
+                "responseType": "number",
+                "acceptedAnswers": "9",
+                "points": 1,
+                "backgroundColor": "#FFFFFF",
+                "textColor": "#034763"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "+",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "candidate-answer",
+                "questionId": "carre15_r1c3",
+                "prompt": "Case carre15_r1c3",
+                "responseType": "number",
+                "acceptedAnswers": "2",
+                "points": 1,
+                "backgroundColor": "#FFFFFF",
+                "textColor": "#034763"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "=",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "15",
+                "backgroundColor": "#DDF2FC",
+                "textColor": "#07577D"
+              }
+            ],
+            [
+              {
+                "kind": "fixed-text",
+                "value": "+",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "+",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "+",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              }
+            ],
+            [
+              {
+                "kind": "candidate-answer",
+                "questionId": "carre15_r2c1",
+                "prompt": "Case carre15_r2c1",
+                "responseType": "number",
+                "acceptedAnswers": "3",
+                "points": 1,
+                "backgroundColor": "#FFFFFF",
+                "textColor": "#034763"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "+",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "candidate-answer",
+                "questionId": "carre15_r2c2",
+                "prompt": "Case carre15_r2c2",
+                "responseType": "number",
+                "acceptedAnswers": "5",
+                "points": 1,
+                "backgroundColor": "#FFFFFF",
+                "textColor": "#034763"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "+",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "candidate-answer",
+                "questionId": "carre15_r2c3",
+                "prompt": "Case carre15_r2c3",
+                "responseType": "number",
+                "acceptedAnswers": "7",
+                "points": 1,
+                "backgroundColor": "#FFFFFF",
+                "textColor": "#034763"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "=",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "15",
+                "backgroundColor": "#DDF2FC",
+                "textColor": "#07577D"
+              }
+            ],
+            [
+              {
+                "kind": "fixed-text",
+                "value": "+",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "+",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "+",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              }
+            ],
+            [
+              {
+                "kind": "candidate-answer",
+                "questionId": "carre15_r3c1",
+                "prompt": "Case carre15_r3c1",
+                "responseType": "number",
+                "acceptedAnswers": "8",
+                "points": 1,
+                "backgroundColor": "#FFFFFF",
+                "textColor": "#034763"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "+",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "candidate-answer",
+                "questionId": "carre15_r3c2",
+                "prompt": "Case carre15_r3c2",
+                "responseType": "number",
+                "acceptedAnswers": "1",
+                "points": 1,
+                "backgroundColor": "#FFFFFF",
+                "textColor": "#034763"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "+",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "candidate-answer",
+                "questionId": "carre15_r3c3",
+                "prompt": "Case carre15_r3c3",
+                "responseType": "number",
+                "acceptedAnswers": "6",
+                "points": 1,
+                "backgroundColor": "#FFFFFF",
+                "textColor": "#034763"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "=",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "15",
+                "backgroundColor": "#DDF2FC",
+                "textColor": "#07577D"
+              }
+            ],
+            [
+              {
+                "kind": "fixed-text",
+                "value": "=",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "=",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "=",
+                "backgroundColor": "#FFC84D",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              }
+            ],
+            [
+              {
+                "kind": "fixed-text",
+                "value": "15",
+                "backgroundColor": "#DDF2FC",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "15",
+                "backgroundColor": "#DDF2FC",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "15",
+                "backgroundColor": "#DDF2FC",
+                "textColor": "#07577D"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              },
+              {
+                "kind": "empty",
+                "value": "",
+                "backgroundColor": "#F0F6FA"
+              }
+            ]
+          ],
+          "compact": true
+        },
+        "style": {
+          "fontSize": 20,
+          "backgroundColor": "#EAF5FB"
+        }
+      }
+    ]
+  },
+  "evaluation": {
+    "validArrangements": {
+      "questionIds": [
+        "carre15_r1c1",
+        "carre15_r1c2",
+        "carre15_r1c3",
+        "carre15_r2c1",
+        "carre15_r2c2",
+        "carre15_r2c3",
+        "carre15_r3c1",
+        "carre15_r3c2",
+        "carre15_r3c3"
+      ],
+      "solutions": [
+        [
+          4,
+          9,
+          2,
+          3,
+          5,
+          7,
+          8,
+          1,
+          6
+        ],
+        [
+          2,
+          9,
+          4,
+          7,
+          5,
+          3,
+          6,
+          1,
+          8
+        ],
+        [
+          8,
+          3,
+          4,
+          1,
+          5,
+          9,
+          6,
+          7,
+          2
+        ],
+        [
+          4,
+          3,
+          8,
+          9,
+          5,
+          1,
+          2,
+          7,
+          6
+        ],
+        [
+          6,
+          1,
+          8,
+          7,
+          5,
+          3,
+          2,
+          9,
+          4
+        ],
+        [
+          8,
+          1,
+          6,
+          3,
+          5,
+          7,
+          4,
+          9,
+          2
+        ],
+        [
+          2,
+          7,
+          6,
+          9,
+          5,
+          1,
+          4,
+          3,
+          8
+        ],
+        [
+          6,
+          7,
+          2,
+          1,
+          5,
+          9,
+          8,
+          3,
+          4
+        ]
+      ]
+    }
+  },
+  "navigation": {
+    "next": "host",
+    "abandon": "host-common"
+  },
+  "runtime": {
+    "start": true,
+    "save": true,
+    "restore": true,
+    "finish": true
+  },
+  "questions": [
+    {
+      "id": "carre15_r1c1",
+      "prompt": "Case 1 de la grille",
+      "response": {
+        "type": "number"
+      },
+      "acceptedAnswers": [
+        "4"
+      ],
+      "points": 1
+    },
+    {
+      "id": "carre15_r1c2",
+      "prompt": "Case 2 de la grille",
+      "response": {
+        "type": "number"
+      },
+      "acceptedAnswers": [
+        "9"
+      ],
+      "points": 1
+    },
+    {
+      "id": "carre15_r1c3",
+      "prompt": "Case 3 de la grille",
+      "response": {
+        "type": "number"
+      },
+      "acceptedAnswers": [
+        "2"
+      ],
+      "points": 1
+    },
+    {
+      "id": "carre15_r2c1",
+      "prompt": "Case 4 de la grille",
+      "response": {
+        "type": "number"
+      },
+      "acceptedAnswers": [
+        "3"
+      ],
+      "points": 1
+    },
+    {
+      "id": "carre15_r2c2",
+      "prompt": "Case 5 de la grille",
+      "response": {
+        "type": "number"
+      },
+      "acceptedAnswers": [
+        "5"
+      ],
+      "points": 1
+    },
+    {
+      "id": "carre15_r2c3",
+      "prompt": "Case 6 de la grille",
+      "response": {
+        "type": "number"
+      },
+      "acceptedAnswers": [
+        "7"
+      ],
+      "points": 1
+    },
+    {
+      "id": "carre15_r3c1",
+      "prompt": "Case 7 de la grille",
+      "response": {
+        "type": "number"
+      },
+      "acceptedAnswers": [
+        "8"
+      ],
+      "points": 1
+    },
+    {
+      "id": "carre15_r3c2",
+      "prompt": "Case 8 de la grille",
+      "response": {
+        "type": "number"
+      },
+      "acceptedAnswers": [
+        "1"
+      ],
+      "points": 1
+    },
+    {
+      "id": "carre15_r3c3",
+      "prompt": "Case 9 de la grille",
+      "response": {
+        "type": "number"
+      },
+      "acceptedAnswers": [
+        "6"
+      ],
+      "points": 1
+    }
+  ],
+  "outputs": [
+    {
+      "id": "score",
+      "type": "number"
+    },
+    {
+      "id": "score_max",
+      "type": "number"
+    },
+    {
+      "id": "pourcentage",
+      "type": "number"
+    },
+    {
+      "id": "status",
+      "type": "string"
+    }
+  ],
+  "bilanContributions": [
+    {
+      "lineId": "bilan.savoirs_fondamentaux.mathematiques.resoudre_problemes",
+      "bindings": {
+        "score": "score",
+        "score_max": "score_max"
+      }
+    }
+  ]
+}
