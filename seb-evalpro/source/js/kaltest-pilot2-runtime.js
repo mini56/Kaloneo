@@ -506,6 +506,15 @@
       };
     }
 
+    if(test.evaluation?.validArrangements){
+      const numberEngine=window.KaloneoNumberGrid;
+      if(!numberEngine?.evaluate)
+        throw new Error('Moteur de correction des grilles KALONÉO indisponible');
+      const validated=numberEngine.evaluate(test.evaluation.validArrangements,testState.answers);
+      for(const [id,correct] of Object.entries(validated.details))
+        if(details[id])details[id].correct=correct;
+    }
+
     for (const group of test.evaluation?.uniqueGroups || []) {
       const allowed = new Set((group.allowedValues || []).map(normalizeText));
       const seen = new Set();
