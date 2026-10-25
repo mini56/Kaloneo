@@ -32,8 +32,18 @@
     "layout": "40-60",
     "builderContent": [
       {
-        "type": "table-grid",
+        "type": "image",
         "zone": "left",
+        "resource": {
+          "name": "Bureau d’apprentissage au soleil.png",
+          "mime": "image/png",
+          "data": "bibliotheque-images/Bureau d’apprentissage au soleil.png",
+          "alt": "Bureau d’apprentissage au soleil"
+        }
+      },
+      {
+        "type": "table-grid",
+        "zone": "right",
         "table": {
           "title": "Calculs croisés",
           "rows": 5,
@@ -260,17 +270,6 @@
         "style": {
           "fontSize": 20,
           "backgroundColor": "#EAF5FB"
-        }
-      },
-      {
-        "type": "image",
-        "zone": "right",
-        "resource": {
-          "name": "",
-          "mime": "",
-          "data": "",
-          "alt": "Illustration du test",
-          "placeholder": "Illustration à ajouter dans le Builder"
         }
       }
     ]

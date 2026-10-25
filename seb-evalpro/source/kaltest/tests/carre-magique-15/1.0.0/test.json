@@ -32,8 +32,18 @@
     "layout": "40-60",
     "builderContent": [
       {
-        "type": "table-grid",
+        "type": "image",
         "zone": "left",
+        "resource": {
+          "name": "Bureau d’étude chaleureux et organisé.png",
+          "mime": "image/png",
+          "data": "bibliotheque-images/Bureau d’étude chaleureux et organisé.png",
+          "alt": "Bureau d’étude chaleureux et organisé"
+        }
+      },
+      {
+        "type": "table-grid",
+        "zone": "right",
         "table": {
           "title": "Carré magique : lignes, colonnes, diagonales = 15",
           "rows": 7,
@@ -410,17 +420,6 @@
         "style": {
           "fontSize": 20,
           "backgroundColor": "#EAF5FB"
-        }
-      },
-      {
-        "type": "image",
-        "zone": "right",
-        "resource": {
-          "name": "",
-          "mime": "",
-          "data": "",
-          "alt": "Illustration du test",
-          "placeholder": "Illustration à ajouter dans le Builder"
         }
       }
     ]

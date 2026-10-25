@@ -3907,7 +3907,7 @@ body.kaloneo-real-candidate-preview-full #page-exercise .kaltest-progress{
 }
 
 
-/* Deux nouvelles V1 Builder - grille carrée à gauche (40%), illustration à droite (60%).
+/* Deux nouvelles V1 Builder - illustration à gauche (40%), grille carrée à droite (60%).
    Les dimensions restent de vrais carrés en définition 1366 et 1200, sans débordement. */
 body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-runtime-layout {
   grid-template-columns:minmax(0,40fr) minmax(0,60fr);
