@@ -13,7 +13,8 @@ on:
       - 'seb-evalpro/package.json'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
+  actions: read
 concurrency:
   group: kaloneo-r172-data-protection-${{ github.ref }}
   cancel-in-progress: true
@@ -105,3 +106,47 @@ jobs:
         run: |
           & ./scripts/r172-real-upgrade-windows-smoke.ps1 -PreviousSetup (Resolve-Path dist/previous/KALONEO-Setup-0.0.198.exe) -NewSetup (Resolve-Path dist/KALONEO-Setup-0.0.199.exe)
           if($LASTEXITCODE -ne 0){throw 'R172 real upgrade lost candidate or builder data'}
+      - name: Validate full R60 V1 regression on the exact commit before publication
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $deadline=(Get-Date).AddMinutes(18)
+          do {
+            $runs=gh api "repos/$env:GITHUB_REPOSITORY/actions/runs?head_sha=$env:GITHUB_SHA&per_page=100" | ConvertFrom-Json
+            if($LASTEXITCODE -ne 0){throw 'V1 regression status unavailable'}
+            $matches=@($runs.workflow_runs | Where-Object { $_.name -eq 'R60 V1 Admin edit and Tri cross-regression' })
+            if($matches.Count -gt 0){
+              $latest=$matches | Sort-Object created_at -Descending | Select-Object -First 1
+              if($latest.conclusion -eq 'success'){Write-Host 'R60 V1 REGRESSION=SUCCESS on exact commit';break}
+              if($latest.conclusion -in @('failure','cancelled','timed_out','action_required')){throw 'R60 V1 failed; R172 Setup publication blocked'}
+            }
+            if((Get-Date) -gt $deadline){throw 'R60 not confirmed GREEN; no publication'}
+            Start-Sleep -Seconds 20
+          }while($true)
+      - name: Publish single R172 Build 175 Windows Setup after all tests
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag='seb-kaloneo-r172-data-preservation-builder-test'
+          if(gh release view $tag 2>$null){throw 'R172 Setup already published; never reuse a build'}
+          $item=Get-Item 'dist/KALONEO-Setup-0.0.199.exe'
+          if(-not $item -or $item.Length -lt 40MB){throw 'Windows Setup missing or unexpectedly small'}
+          $hash=(Get-FileHash -Algorithm SHA256 $item.FullName).Hash.ToUpperInvariant()
+          $title='KALONÉO — R172 / Build #175 — Conservation candidats et correctifs Builder'
+          $notes=@"
+          KALONÉO R172 / Build #175 / 0.0.199 — Setup Windows de test.
+          - Désinstallation normale : conservation des données candidats, parcours, bilans et clés. Effacement définitif uniquement sur demande avec double avertissement.
+          - Audit réel Windows R171 -> R172, désinstallation et réinstallation, 27 fichiers SHA256 identiques, clé DPAPI utilisable, deux dossiers candidats et bilan général retrouvés.
+          - Parcours de base : écran de masquage KALONÉO — image fixe.
+          - Éditeur de masque : bouton Fermer au lieu de Tests/Parcours.
+          - Bibliothèque : clarification du message de regroupement des images.
+          - Miniature Builder : retrait de la ligne Exercice 1/1 sans toucher au candidat.
+          - Genre et nombre : permettre de conserver deux fonds colorés et une image en bandeau pleine largeur, sans altérer les 20 questions de la V1.
+          - Régressions V1 et Tri R60 exigées vertes sur exactement ce commit.
+          SHA256: $hash
+          Commit: $env:GITHUB_SHA
+          "@
+          gh release create $tag $item.FullName --target "$env:GITHUB_SHA" --title $title --notes $notes --prerelease
+          if($LASTEXITCODE -ne 0){throw 'GitHub Release failed — Setup not published'}
