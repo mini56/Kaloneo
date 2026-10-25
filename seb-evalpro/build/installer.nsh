@@ -17,6 +17,7 @@ Var KaloneoDeleteDataConfirmed
 Var KaloneoDeleteDataCheckbox
 Var KaloneoDeleteDataDialog
 
+!ifdef BUILD_UNINSTALLER
 !macro customUnInit
   StrCpy $KaloneoDeleteDataConfirmed "0"
   # La commande --delete-app-data native d'electron-builder contourne le
@@ -66,6 +67,7 @@ Function un.KaloneoDataPageLeave
     StrCpy $KaloneoDeleteDataConfirmed "1"
   ${EndIf}
 FunctionEnd
+!endif
 
 !macro customUnInstall
   ${If} ${isUpdated}
