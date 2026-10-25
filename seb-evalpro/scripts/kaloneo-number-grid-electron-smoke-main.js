@@ -81,8 +81,8 @@ app.whenReady().then(async()=>{
    assert.equal(observed.id,def.id,JSON.stringify(observed));
    assert.equal(observed.inputs,9,JSON.stringify(observed));
    assert.equal(observed.uniqueInputIds,9);
-   assert.equal(observed.rows,def.presentation.builderContent[0].table.rows);
-   assert.equal(observed.cols,def.presentation.builderContent[0].table.cols);
+   assert.equal(observed.rows,def.presentation.builderContent[1].table.rows);
+   assert.equal(observed.cols,def.presentation.builderContent[1].table.cols);
    assert.equal(observed.good.score,9,JSON.stringify(observed));
    assert.equal(observed.good.max,9);
    assert.equal(observed.good.percentage,100);
