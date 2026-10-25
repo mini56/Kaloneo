@@ -1,18 +1,6 @@
 name: "KALONÉO R148 - Setup écran de masquage vidéo et image"
 on:
-  push:
-    branches: [fix-r60-tri-rearm-only-20261011]
-    paths:
-      - '.github/workflows/build-r148-kaloneo-mask-video.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-r148-mask-video.yml'
-      - 'seb-evalpro/scripts/kaloneo-r125-branding.py'
-      - 'seb-evalpro/scripts/kaloneo-r125-branding-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r126-install-path-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r128-taskbar-icon-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r127-visible-brand-guard.js'
-      - 'seb-evalpro/scripts/admin-build-label-guard.js'
+  workflow_dispatch:
   workflow_dispatch:
 concurrency:
   group: kaloneo-r148-mask-video-setup-${{ github.ref }}

@@ -1,22 +1,6 @@
 name: "KALONÉO R145 - Bilan général multi-parcours"
 on:
-  push:
-    branches: [fix-r60-tri-rearm-only-20261011]
-    paths:
-      - '.github/workflows/build-r145-kaloneo-bilan-general.yml'
-      - 'seb-evalpro/src/candidate-bilan-current.js'
-      - 'seb-evalpro/src/candidate-catalog-main.js'
-      - 'seb-evalpro/src/bilan-history-main.js'
-      - 'seb-evalpro/src/candidate-private-documents.js'
-      - 'seb-evalpro/scripts/candidate-catalog-smoke.js'
-      - 'seb-evalpro/src/general-bilan-aggregation.js'
-      - 'seb-evalpro/scripts/general-bilan-aggregation-smoke.js'
-      - 'seb-evalpro/scripts/general-bilan-ipc-smoke.js'
-      - 'seb-evalpro/src/candidate-catalog-preload.js'
-      - 'seb-evalpro/scripts/kaloneo-r125-branding.py'
-      - 'seb-evalpro/scripts/kaloneo-r125-branding-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r127-visible-brand-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r128-taskbar-icon-guard.js'
+  workflow_dispatch:
 concurrency:
   group: kaloneo-r145-general-bilan-setup-${{ github.ref }}
   cancel-in-progress: true

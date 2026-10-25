@@ -1,20 +1,6 @@
 name: "KALONÉO R149 - Setup écran de masquage vidéo et image"
 on:
-  push:
-    branches: [fix-r60-tri-rearm-only-20261011]
-    paths:
-      - '.github/workflows/build-r149-kaloneo-mask-candidate.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-r149-mask-candidate.yml'
-      - 'seb-evalpro/src/preload.js'
-      - 'seb-evalpro/scripts/kaloneo-mask-candidate-electron-smoke-main.js'
-      - 'seb-evalpro/scripts/kaloneo-r125-branding.py'
-      - 'seb-evalpro/scripts/kaloneo-r125-branding-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r126-install-path-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r128-taskbar-icon-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r127-visible-brand-guard.js'
-      - 'seb-evalpro/scripts/admin-build-label-guard.js'
+  workflow_dispatch:
   workflow_dispatch:
 concurrency:
   group: kaloneo-r149-mask-candidate-setup-${{ github.ref }}
