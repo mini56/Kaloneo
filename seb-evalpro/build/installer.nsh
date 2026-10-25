@@ -1,6 +1,7 @@
 !include "nsDialogs.nsh"
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
+!include "FileFunc.nsh"
 
 !define SEB_BUILD_NUMBER "176"
 !define SEB_BUILD_LABEL "Build #${SEB_BUILD_NUMBER}"
@@ -110,6 +111,7 @@ Var SebIntroFramePath
 Var SebIntroNextButton
 Var SebIntroNewBitmapHandle
 Var KaloneoCleanPathInitialized
+Var KaloneoLicenseExplicitlyAccepted
 
 !include "${BUILD_RESOURCES_DIR}\intro-frames\intro-meta.nsh"
 
@@ -149,6 +151,14 @@ FunctionEnd
 
 !macro customInstall
   SetDetailsView show
+  # On consigne l'acceptation explicite seulement après une installation réussie.
+  # Le texte correspondant est inclus dans le programme et consultable dans À propos.
+  ${If} $KaloneoLicenseExplicitlyAccepted == "1"
+    ${GetTime} "" "L" $0 $1 $2 $3 $4 $5 $6
+    WriteRegStr HKCU "Software\KALONEO" "LicenseAcceptedRevision" "2026-10-25-licence-completee-1"
+    WriteRegStr HKCU "Software\KALONEO" "LicenseAcceptedDate" "$2-$1-$0 $4:$5:$6"
+    DetailPrint "Licence KALONÉO acceptée explicitement ; date et version conservées."
+  ${EndIf}
   DetailPrint "Fichiers KALONÉO installés."
   DetailPrint "Finalisation de KALONÉO et création des raccourcis Windows"
   # Ne jamais migrer les programmes historiques ni les dossiers candidats.
@@ -164,7 +174,20 @@ FunctionEnd
 
 !macro customWelcomePage
   Page custom SebBrandingWelcomeCreate
+  # Page native MUI2 : la licence complète est lisible et l'acceptation
+  # est une CASE initialement NON cochée. Sans coche, Suivant est désactivé.
+  # Elle est proposée aussi pendant une mise à jour, après l'introduction.
+  !define MUI_LICENSEPAGE_CHECKBOX
+  !define MUI_LICENSEPAGE_CHECKBOX_TEXT "J'ai lu et j'accepte la licence d'utilisation de KALONÉO"
+  !define MUI_LICENSEPAGE_TEXT_TOP "Veuillez lire la licence complète avant de poursuivre."
+  !define MUI_PAGE_CUSTOMFUNCTION_LEAVE KaloneoLicensePageLeave
+  !insertmacro MUI_PAGE_LICENSE "${BUILD_RESOURCES_DIR}\KALONEO-LICENCE.txt"
+  !undef MUI_PAGE_CUSTOMFUNCTION_LEAVE
 !macroend
+
+Function KaloneoLicensePageLeave
+  StrCpy $KaloneoLicenseExplicitlyAccepted "1"
+FunctionEnd
 
 # R169 — Double tampon pour éviter les écrans blancs lors des transitions.
 # Le nouveau bitmap est préparé sur une image MASQUÉE ; on l'affiche,
@@ -233,6 +256,7 @@ Function SebIntroTick
 FunctionEnd
 
 Function SebBrandingWelcomeCreate
+  StrCpy $KaloneoLicenseExplicitlyAccepted "0"
   nsDialogs::Create 1018
   Pop $SebBrandingWelcomeDialog
   ${If} $SebBrandingWelcomeDialog == error
