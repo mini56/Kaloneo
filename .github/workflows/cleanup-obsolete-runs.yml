@@ -1,12 +1,13 @@
 name: "KALONÉO — Nettoyage unique des anciens runs GitHub Actions"
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - '.github/workflows/cleanup-obsolete-runs.yml'
-    # La suppression n'est exécutée que pour un commit d'autorisation explicite.
+  # Nettoyage manuel uniquement : aucune purge sur un commit normal.
   workflow_dispatch:
+    inputs:
+      confirmer_suppression:
+        description: "Supprimer jusqu'à 700 anciens runs non essentiels (irréversible)"
+        required: true
+        type: boolean
+        default: false
 permissions:
   contents: read
   actions: write
@@ -15,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   nettoyage-controle:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[cleanup-approved]')
+    if: inputs.confirmer_suppression == true
     runs-on: ubuntu-latest
     timeout-minutes: 80
     env:
