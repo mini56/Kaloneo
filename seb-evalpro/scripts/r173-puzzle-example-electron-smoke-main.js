@@ -70,12 +70,18 @@ app.whenReady().then(async()=>{
      button.focus();button.click();
      return {button:button.textContent,inFirstBlueBlock:!!left&&exampleBox===left.querySelector('.example'),
        buttonVisible:getComputedStyle(button).display!=='none',
+       buttonBackground:getComputedStyle(button).backgroundColor,
+       buttonFont:getComputedStyle(button).fontFamily,
+       buttonRight:Math.abs(button.getBoundingClientRect().right-exampleBox.getBoundingClientRect().right)<20,
        inputCount:cells.length,answerBefore:cells[0].value};
    })()`,true);
    assert(!info.error,JSON.stringify(info));
    assert.equal(info.button,'Voir l’exemple');
    assert.equal(info.inFirstBlueBlock,true,'Bouton mal situé');
    assert.equal(info.buttonVisible,true);
+   assert.equal(info.buttonBackground,'rgb(5, 113, 166)','Bouton hors du style KALONÉO');
+   assert(info.buttonFont.includes('Segoe UI'),'Police KALONÉO non appliquée');
+   assert.equal(info.buttonRight,true,'Le bouton doit être aligné à droite du premier bloc bleu');
    assert.equal(info.inputCount,16);
    await pause(400);
    const state=await win.webContents.executeJavaScript(`(()=>{
