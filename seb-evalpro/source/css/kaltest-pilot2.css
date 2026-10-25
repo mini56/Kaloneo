@@ -3947,8 +3947,8 @@ body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_ma
   font-size:clamp(15px,1.6vw,21px);
   font-weight:700;
 }
-body[data-seb-kaltest-id="grille_operations"] {--kaloneo-grid-square:clamp(32px,3.65vw,50px)}
-body[data-seb-kaltest-id="carre_magique_15"] {--kaloneo-grid-square:clamp(30px,3.25vw,44px)}
+body[data-seb-kaltest-id="grille_operations"] {--kaloneo-grid-square:clamp(42px,4.15vw,54px)}
+body[data-seb-kaltest-id="carre_magique_15"] {--kaloneo-grid-square:clamp(40px,3.85vw,51px)}
 body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-grid td input {
   box-sizing:border-box;
   width:100%;

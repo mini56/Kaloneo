@@ -55,8 +55,9 @@ app.whenReady().then(async()=>{
     const layout=document.querySelector('.kaltest-builder-runtime-layout');
     const zones=[...layout?.querySelectorAll(':scope>.kaltest-builder-runtime-zone')||[]];
     const firstCell=rows[0]?.cells[0]?.getBoundingClientRect();
-    const gridWidth=zones[0]?.getBoundingClientRect().width||0;
-    const media=zones[1]?.querySelector('.kaltest-builder-media');
+    const gridWidth=zones[1]?.getBoundingClientRect().width||0;
+    const media=zones[0]?.querySelector('.kaltest-builder-media');
+    const mediaImage=media?.querySelector('img');
     const calc=document.getElementById('kaltest-calculator');
     return {
      id:test.id,inputs:inputs.length,
@@ -68,9 +69,10 @@ app.whenReady().then(async()=>{
      tableVisible:!!table&&table.getBoundingClientRect().width>160,
      split:zones.length===2,
      columns:getComputedStyle(layout).gridTemplateColumns,
-     leftWidth:gridWidth,rightWidth:zones[1]?.getBoundingClientRect().width||0,
+     leftWidth:zones[0]?.getBoundingClientRect().width||0,rightWidth:gridWidth,
      square:firstCell?{w:firstCell.width,h:firstCell.height}:null,
-     mediaPlaceholder:media?.textContent?.trim()||'',
+     mediaImageLoaded:!!(mediaImage?.complete&&mediaImage?.naturalWidth>0),
+     mediaSrc:mediaImage?.getAttribute('src')||'',
      calculatorVisible:!!calc&&!calc.hidden,
      overflowX:!!el&&el.scrollWidth>el.clientWidth+3,
      engineLoaded:typeof window.KaloneoNumberGrid?.evaluate==='function'
@@ -92,7 +94,8 @@ app.whenReady().then(async()=>{
      'Ratio 40/60 non respecte '+JSON.stringify(observed));
    assert(observed.square&&Math.abs(observed.square.w-observed.square.h)<3,
      'Cases de la grille non carrees '+JSON.stringify(observed));
-   assert(observed.mediaPlaceholder.includes('Illustration à ajouter'),'Le bloc image 60% est absent');
+   assert(observed.mediaImageLoaded,'L illustration de la bibliothèque doit s afficher dans les 40%');
+   assert(observed.mediaSrc.includes('bibliotheque-images/'),'La mauvaise illustration a été sélectionnée');
    assert(observed.calculatorVisible,'Calculatrice désactivée');
    assert(!observed.overflowX,'Débordement horizontal dans le parcours candidat '+JSON.stringify(observed));
    assert(observed.engineLoaded,'Moteur de correction externe non chargé');

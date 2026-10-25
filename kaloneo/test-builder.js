@@ -2967,7 +2967,7 @@
         className:'preview-media-block',imageClass:'preview-media',
         videoClass:'preview-media',
         emptyText:block.mediaPlaceholder||'Aucun média sélectionné',
-        resolveSource:src=>/^(?:imageqcm\/|kaltest\/tests\/)/.test(src)?'../'+src:src
+        resolveSource:src=>/^(?:imageqcm\/|bibliotheque-images\/|kaltest\/tests\/)/.test(src)?'../'+src:src
       });
       if(block.type==='audio'){
         const audio=node.querySelector('audio');
