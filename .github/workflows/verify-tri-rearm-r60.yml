@@ -107,6 +107,8 @@ jobs:
         run: npx electron --no-sandbox scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
       - name: Check Briques 0-99 including 12/99 and Admin persistence in Electron
         run: npx electron --no-sandbox scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
+      - name: "R173 Puzzle - voir l exemple en vrai Electron, fermeture et reprise (1200/1366)"
+        run: npx electron --no-sandbox scripts/r173-puzzle-example-electron-smoke-main.js
       - name: Check full candidate parcours transitions in real Electron
         id: full_journey
         continue-on-error: true
