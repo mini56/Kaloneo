@@ -1,42 +1,5 @@
 name: "KALONÉO R155 - Une seule liaison visible dans le Builder V1 et futur"
 on:
-  push:
-    branches: [fix-r60-tri-rearm-only-20261011]
-    paths:
-      - '.github/workflows/build-r155-single-builder-link.yml'
-      - 'seb-evalpro/package.json'
-      - 'seb-evalpro/build/installer.nsh'
-      - 'seb-evalpro/build/kaloneo-r155-single-institutional-link.yml'
-      - 'seb-evalpro/src/preload.js'
-      - 'seb-evalpro/src/candidate-catalog-preload.js'
-      - 'seb-evalpro/src/institutional-bilan-grid.js'
-      - 'seb-evalpro/scripts/r153-original-institutional-electron-smoke-main.js'
-      - 'seb-evalpro/scripts/r154-competences-transversales-smoke.js'
-      - 'seb-evalpro/scripts/r152-institutional-grid-and-builder-smoke.js'
-      - 'seb-evalpro/scripts/r152-builder-simple-link-electron-smoke-main.js'
-      - 'kaloneo/test-builder.js'
-      - 'kaloneo/test-builder.html'
-      - 'kaloneo/test-builder.css'
-      - 'seb-evalpro/scripts/kaloneo-builder-preview-electron-smoke-main.js'
-      - 'kaloneo/bilan-simple-link.js'
-      - 'kaloneo/bilan-catalog.js'
-      - 'seb-evalpro/src/general-bilan-aggregation.js'
-      - 'seb-evalpro/src/candidate-catalog-main.js'
-      - 'seb-evalpro/src/kaloneo-library-main.js'
-      - 'seb-evalpro/source/js/admin-bilan-kaloneo.js'
-      - 'seb-evalpro/source/js/kaloneo-bilan-routing.js'
-      - 'seb-evalpro/overrides/admin-bilan.html'
-      - 'seb-evalpro/scripts/kaloneo-bilan-builder-routing-smoke.js'
-      - 'seb-evalpro/scripts/kaloneo-bilan-builder-routing-electron-smoke-main.js'
-      - 'seb-evalpro/scripts/candidate-identity-privacy-smoke.js'
-      - 'seb-evalpro/scripts/general-bilan-ipc-smoke.js'
-      - 'seb-evalpro/scripts/kaloneo-mask-candidate-electron-smoke-main.js'
-      - 'seb-evalpro/scripts/kaloneo-r125-branding.py'
-      - 'seb-evalpro/scripts/kaloneo-r125-branding-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r126-install-path-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r128-taskbar-icon-guard.js'
-      - 'seb-evalpro/scripts/kaloneo-r127-visible-brand-guard.js'
-      - 'seb-evalpro/scripts/admin-build-label-guard.js'
   workflow_dispatch:
 concurrency:
   group: kaloneo-r155-single-builder-link-setup-${{ github.ref }}
