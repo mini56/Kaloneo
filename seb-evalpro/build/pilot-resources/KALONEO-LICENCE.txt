@@ -1,13 +1,6 @@
-KALONÉO Licence propriétaire d’utilisation
-Projet à compléter avant diffusion
-Les zones à remplir sont en rouge sur fond jaune.
-Version de travail du 25 octobre 2026 — À compléter et valider avant diffusion
-Ce document est une proposition contractuelle destinée à un usage professionnel ou associatif. Il n’est pas
-encore la licence applicable au logiciel. Les champs entre crochets et les conditions particulières doivent
-être complétés. Une relecture juridique est recommandée avant utilisation.
+﻿KALONÉO Licence propriétaire d’utilisation
 
-
-CONDITIONS PARTICULIÈRES À COMPLÉTER
+CONDITIONS PARTICULIÈRES :
 Concédant proposé : Claude LESPAGNOL.
 Contact pour la licence et l’assistance: abmc56@free.fr
 Créateur du logiciel : Claude LESPAGNOL. Les droits des tiers sur leurs composants et contenus restent
@@ -41,7 +34,6 @@ d’évaluation, de gestion des résultats et de production de bilans.
 Elle s’applique au programme exécutable, à ses composants propres, à sa documentation et aux contenus
 fournis par le Concédant dans la mesure des droits qu’il détient. Les composants et contenus tiers sont
 régis par l’article 8.
-
 La licence constitue un droit d’utilisation. Elle ne transfère ni la propriété du logiciel ni les droits de
 propriété intellectuelle sur les éléments fournis par le Concédant.
 
@@ -49,6 +41,7 @@ propriété intellectuelle sur les éléments fournis par le Concédant.
 2. DROIT D’UTILISATION ACCORDÉ
 Sous réserve des conditions particulières, le Concédant accorde au Bénéficiaire un droit personnel à sa
 structure, non exclusif et non transférable sans accord écrit préalable, permettant :
+
 — d’installer et d’exécuter KALONÉO sur les postes autorisés ;
 — de permettre son usage par les professionnels habilités et aux candidats accompagnés dans le cadre
 des activités du Bénéficiaire ;
@@ -87,12 +80,14 @@ La correction des erreurs du programme est réservée au Concédant dans la mesu
 réservation. Elle ne crée pas une obligation de maintenance au-delà des engagements expressément
 souscrits.
 
+
 5. TESTS, PARCOURS, BILANS ET CONTENUS DES UTILISATEURS
 La présente licence ne transfère au Concédant aucun droit sur les données des candidats, les réponses,
 les bilans ni les contenus originaux créés ou importés par le Bénéficiaire ou ses utilisateurs. Les droits
 éventuels restent à leurs titulaires respectifs.
 Le Bénéficiaire peut utiliser, adapter et exporter ses propres créations au moyen des fonctions prévues.
 Lorsqu’une création contient des images, modèles, tests ou autres éléments fournis avec KALONÉO, les
+
 droits sur ces éléments ne sont pas transférés ; leur réutilisation reste soumise aux conditions qui leur sont
 applicables.
 Le Bénéficiaire vérifie qu’il dispose des autorisations nécessaires pour les textes, images, vidéos, polices
@@ -134,12 +129,12 @@ tests doivent être précisés dans la documentation de la version concernée.
 8. COMPOSANTS TIERS ET LICENCES LIBRES
 KALONÉO peut inclure des bibliothèques, outils, polices, médias ou autres composants appartenant à des
 tiers. La liste et les notices correspondantes doivent être fournies dans un document de mentions tierces,
-
 par exemple THIRD_PARTY_NOTICES.txt, avec les textes et offres de code source requis, le cas
 échéant.
 La présente licence ne remplace pas ces licences et ne réduit aucun droit qu’elles accordent sur leurs
 composants. Les obligations de conservation des notices, d’attribution, de fourniture du code source ou
 autres obligations applicables doivent être respectées.
+
 La qualification de KALONÉO comme logiciel propriétaire reste subordonnée à la compatibilité des
 composants réellement distribués et aux autorisations détenues. Cette licence ne retire pas
 rétroactivement les droits valablement accordés sur des versions antérieures.
@@ -182,7 +177,6 @@ effectif dans le dommage.
 Les scores, résultats, propositions de synthèse et bilans produits par KALONÉO doivent être contrôlés et
 interprétés par un professionnel habilité avant toute communication ou décision. Ils ne doivent pas
 constituer le seul fondement d’une décision d’orientation, d’accès à une formation ou d’accompagnement
-
 d’une personne. La structure conserve la responsabilité des décisions qu’elle prend dans l’exercice de ses
 missions, sans préjudice de la responsabilité éventuelle du Concédant pour ses propres manquements.
 Dans la mesure permise par la loi, la responsabilité contractuelle du Concédant est limitée aux dommages
@@ -190,6 +184,7 @@ directs, certains et prévisibles lors de l’acceptation de la licence, dont le
 causalité avec un manquement imputable au Concédant. Les dommages indirects sont exclus dans les
 mêmes limites légales. La qualification d’un dommage dépend de ses circonstances et ne résulte pas de
 sa seule désignation comme perte de données, perte d’exploitation ou perte de chance.
+
 Le Concédant ne répond pas des dommages dans la mesure où ils sont causés par une utilisation
 contraire à la documentation ou au périmètre autorisé, une modification non autorisée, un équipement
 défectueux ou l’intervention d’un tiers dont il ne répond pas. Ces circonstances ne constituent pas une
@@ -231,7 +226,6 @@ La licence est soumise au droit français, sous réserve des règles impérative
 Les parties cherchent une solution amiable avant de saisir les juridictions compétentes selon les règles de
 droit commun. Aucune compétence territoriale exclusive n’est imposée par le présent projet.
 Code de la propriété intellectuelle, article L. 122-6-1 :
-
 https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000028345224/
 ACCEPTATION DE LA LICENCE
 La présente licence est proposée par Claude LESPAGNOL, concédant de KALONÉO.
