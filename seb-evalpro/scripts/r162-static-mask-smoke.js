@@ -12,7 +12,8 @@ try{
    'MP4 toujours embarqué dans le programme');
  fs.writeFileSync(path.join(seed,png),original);
  const dataRoot=path.join(root,'data');
- const lib=createKaloneoLibrary({dataRoot,seedMaskMediaRoot:seed});
+ const lib=createKaloneoLibrary({dataRoot,seedMaskMediaRoot:seed,
+   seedTestsRoot:path.join(app,'source','kaltest','tests')});
  const ref={id:'kaloneo-video-image',version:'1.0.0'};
  let mask=lib.getMaskScreen(ref);
  assert(mask.ok&&mask.maskScreen.content.image.startsWith('data:image/png;base64,'));
@@ -34,7 +35,24 @@ try{
  assert(mask.ok&&!mask.maskScreen.content.video&&!mask.maskScreen.content.videoName);
  assert.equal(Buffer.from(mask.maskScreen.content.image.split(',')[1],'base64').equals(original),true,
    'L image du masquage ne correspond plus au PNG original');
+ const base=lib.getParcoursDetails('parcours-de-base');
+ assert(base.ok,'Parcours de base absent du catalogue de test');
+ assert.equal(base.details.maskScreen.id,'kaloneo-video-image',
+   'Le parcours de base doit sélectionner KALONÉO — image fixe');
+ assert.equal(base.details.maskScreenMeta.name,'KALONÉO — image fixe');
+ // Simuler une ancienne référence de masque sur un modèle existant.
+ const baseFile=path.join(dataRoot,'KALONEO','Parcours','parcours-de-base.json');
+ const savedBase=JSON.parse(fs.readFileSync(baseFile,'utf8'));
+ savedBase.maskScreen={id:'kaloneo-default',version:'1.0.0'};
+ fs.writeFileSync(baseFile,JSON.stringify(savedBase));
+ const upgradedBase=createKaloneoLibrary({dataRoot,seedMaskMediaRoot:seed});
+ const migrated=upgradedBase.getParcoursDetails('parcours-de-base');
+ assert.equal(migrated.details.maskScreen.id,'kaloneo-video-image',
+   'Ancienne référence du masque non corrigée lors de la mise à jour');
+ assert.equal(migrated.details.maskScreenMeta.name,'KALONÉO — image fixe');
  const ui=fs.readFileSync(path.join(app,'app','web','admin-mask-builder.html'),'utf8');
+ assert(ui.includes('id="back-tests-parcours" class="seb-action-btn seb-btn-functional" type="button">Fermer</button>'),
+   'Bouton de retour masque non renommé Fermer');
  assert(!ui.includes('id="mask-video-file"'),'Bouton import vidéo toujours visible');
  console.log('KALONEO_R162_IMAGE_ONLY=OK — PNG seul, anciennes vidéos vidées, profil candidat conservé');
 }finally{fs.rmSync(root,{recursive:true,force:true});}
