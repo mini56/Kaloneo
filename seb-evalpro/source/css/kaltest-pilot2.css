@@ -3869,3 +3869,39 @@ body.kaloneo-real-candidate-preview-full #page-exercise .kaltest-progress{
 }
 #page-intro .pilot2-intro-video-status[hidden]{display:none!important;}
 #page-intro .pilot2-intro-video.seb-video-finished .pilot2-video-end-message{pointer-events:none;}
+
+/* Une V1 avec tableaux historiques garde sa structure en deux colonnes,
+   et peut recevoir sous eux un bloc image pleine largeur du Builder.
+   Aucune conséquence sur les tests sans ajout. */
+#kaltest-content.kaltest-legacy-tables-with-extras{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  overflow:auto;
+}
+#kaltest-content.kaltest-legacy-tables-with-extras>.kaltest-two-tables{
+  height:auto;
+  flex:0 0 auto;
+  min-height:0;
+}
+#kaltest-content>.kaltest-legacy-extras{
+  flex:0 0 auto;
+  width:100%;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+#kaltest-content .kaltest-legacy-extras>.kaltest-builder-media{
+  width:100%;
+  height:auto;
+  max-height:160px;
+  min-height:0;
+}
+#kaltest-content .kaltest-legacy-extras>.kaltest-builder-media img{
+  display:block;
+  width:100%;
+  height:auto;
+  max-height:160px;
+  object-fit:contain;
+}
