@@ -85,6 +85,8 @@ jobs:
           node scripts/kaloneo-library-unified-future-smoke.js
       - name: Verify Genre et nombre font persistence without changing original V1
         run: node scripts/kaloneo-genre-nombre-font-smoke.js
+      - name: "Two new V1 number grids - Builder roundtrip, 10 valid solutions and official scoring"
+        run: node scripts/kaloneo-number-grid-v1-smoke.js
       - name: Generate historical KALTEST pilot data
         run: node scripts/build-kaltest-pilot2-data.js
       - name: Prepare authentic KALTEST candidate application
