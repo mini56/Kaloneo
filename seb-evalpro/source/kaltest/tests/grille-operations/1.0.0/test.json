@@ -14,13 +14,14 @@
     "questionnaire.basic",
     "questionnaire.table",
     "questionnaire.grid",
-    "layout.single"
+    "layout.split",
+    "host.calculator"
   ],
   "scenario": "Défi de logique : reconstituez les calculs de la grille.",
   "instruction": "Complétez les neuf cases avec les chiffres de 1 à 9. Chaque chiffre est utilisé une seule fois. Les trois calculs horizontaux et le calcul vertical de droite doivent être exacts.",
   "calculator": {
-    "compatible": false,
-    "defaultEnabled": false,
+    "compatible": true,
+    "defaultEnabled": true,
     "brandLabel": "KALONÉO"
   },
   "chrono": {
@@ -28,11 +29,11 @@
     "engine": null
   },
   "presentation": {
-    "layout": "single",
+    "layout": "40-60",
     "builderContent": [
       {
         "type": "table-grid",
-        "zone": "full",
+        "zone": "left",
         "table": {
           "title": "Calculs croisés",
           "rows": 5,
@@ -259,6 +260,17 @@
         "style": {
           "fontSize": 20,
           "backgroundColor": "#EAF5FB"
+        }
+      },
+      {
+        "type": "image",
+        "zone": "right",
+        "resource": {
+          "name": "",
+          "mime": "",
+          "data": "",
+          "alt": "Illustration du test",
+          "placeholder": "Illustration à ajouter dans le Builder"
         }
       }
     ]

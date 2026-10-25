@@ -14,13 +14,14 @@
     "questionnaire.basic",
     "questionnaire.table",
     "questionnaire.grid",
-    "layout.single"
+    "layout.split",
+    "host.calculator"
   ],
   "scenario": "Défi de logique : retrouvez les neuf chiffres du carré magique.",
   "instruction": "Complétez les neuf cases avec les chiffres de 1 à 9, chacun une seule fois. Toutes les lignes, toutes les colonnes et les deux diagonales doivent totaliser 15.",
   "calculator": {
-    "compatible": false,
-    "defaultEnabled": false,
+    "compatible": true,
+    "defaultEnabled": true,
     "brandLabel": "KALONÉO"
   },
   "chrono": {
@@ -28,11 +29,11 @@
     "engine": null
   },
   "presentation": {
-    "layout": "single",
+    "layout": "40-60",
     "builderContent": [
       {
         "type": "table-grid",
-        "zone": "full",
+        "zone": "left",
         "table": {
           "title": "Carré magique : lignes, colonnes, diagonales = 15",
           "rows": 7,
@@ -409,6 +410,17 @@
         "style": {
           "fontSize": 20,
           "backgroundColor": "#EAF5FB"
+        }
+      },
+      {
+        "type": "image",
+        "zone": "right",
+        "resource": {
+          "name": "",
+          "mime": "",
+          "data": "",
+          "alt": "Illustration du test",
+          "placeholder": "Illustration à ajouter dans le Builder"
         }
       }
     ]

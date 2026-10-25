@@ -116,24 +116,30 @@
            dialogue secondaire que celui des tests générés dans le Builder. */
         #puzzle-view-example { display:none; }
         body.kaltest-embedded-puzzle #puzzle-view-example {
-            display:inline-flex;
+            display:flex;
             justify-content:center;
             align-items:center;
-            margin-top:12px;
-            padding:8px 16px;
-            border:1px solid #254d91;
-            border-radius:8px;
-            background:#244f93;
-            color:#fff;
-            font:600 15px Calibri,Arial,sans-serif;
-            cursor:pointer;
+            width:max-content;
             max-width:100%;
+            margin:14px 0 0 auto;
+            padding:10px 19px;
+            border:1px solid #0571a6;
+            border-radius:9px;
+            background:#0571a6;
+            color:#fff;
+            font:700 15px "Segoe UI",Calibri,Arial,sans-serif;
+            letter-spacing:0;
+            line-height:1.25;
+            cursor:pointer;
+            box-shadow:0 3px 9px rgba(0,78,112,.16);
         }
-        body.kaltest-embedded-puzzle #puzzle-view-example:hover,
+        body.kaltest-embedded-puzzle #puzzle-view-example:hover {
+            background:#045b86;
+            border-color:#045b86;
+        }
         body.kaltest-embedded-puzzle #puzzle-view-example:focus-visible {
-            background:#17386b;
-            outline:2px solid #fff;
-            outline-offset:2px;
+            outline:3px solid #e5b64a;
+            outline-offset:3px;
         }
         
         .example-yellow {

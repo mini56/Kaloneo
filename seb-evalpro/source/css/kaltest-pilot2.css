@@ -3905,3 +3905,63 @@ body.kaloneo-real-candidate-preview-full #page-exercise .kaltest-progress{
   max-height:160px;
   object-fit:contain;
 }
+
+
+/* Deux nouvelles V1 Builder - grille carrée à gauche (40%), illustration à droite (60%).
+   Les dimensions restent de vrais carrés en définition 1366 et 1200, sans débordement. */
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-runtime-layout {
+  grid-template-columns:minmax(0,40fr) minmax(0,60fr);
+  align-items:stretch;
+  gap:14px;
+}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-runtime-zone {
+  min-width:0;
+  padding:5px;
+  align-items:center;
+  justify-content:flex-start;
+}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-grid-wrap {
+  width:max-content;
+  max-width:100%;
+  overflow:auto;
+}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-grid {
+  width:max-content;
+  max-width:100%;
+  table-layout:fixed;
+  border-collapse:separate;
+  border-spacing:3px;
+  background:transparent;
+}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-grid td {
+  box-sizing:border-box;
+  padding:2px;
+  width:var(--kaloneo-grid-square);
+  min-width:var(--kaloneo-grid-square);
+  max-width:var(--kaloneo-grid-square);
+  height:var(--kaloneo-grid-square);
+  min-height:var(--kaloneo-grid-square);
+  max-height:var(--kaloneo-grid-square);
+  border-radius:5px;
+  text-align:center;
+  font-size:clamp(15px,1.6vw,21px);
+  font-weight:700;
+}
+body[data-seb-kaltest-id="grille_operations"] {--kaloneo-grid-square:clamp(32px,3.65vw,50px)}
+body[data-seb-kaltest-id="carre_magique_15"] {--kaloneo-grid-square:clamp(30px,3.25vw,44px)}
+body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_magique_15"]) .kaltest-builder-grid td input {
+  box-sizing:border-box;
+  width:100%;
+  height:100%;
+  min-height:0;
+  border:1.5px solid #8398b0;
+  border-radius:4px;
+  text-align:center;
+  font-size:clamp(17px,1.6vw,23px);
+  font-weight:700;
+  padding:0 2px;
+}
+@media(max-width:1050px), (max-height:760px){
+  body[data-seb-kaltest-id="grille_operations"] {--kaloneo-grid-square:38px}
+  body[data-seb-kaltest-id="carre_magique_15"] {--kaloneo-grid-square:35px}
+}
