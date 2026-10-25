@@ -34,6 +34,8 @@
     .status{min-height:24px;margin:12px 0 0;padding:7px 9px;border-radius:7px;background:#f6f8fa;color:#53636f}
     .status.ok{background:#eef9f2;color:#1f6b3a}
     .status.error{background:#fff0f0;color:#9b2424}
+    /* Quand le descriptif occupe 2 ou 3 lignes, réserver la même hauteur dans les trois cartes. */
+    @media(min-width:1051px) and (max-width:1300px){.grid>.card>p{min-height:calc(3 * 1.35em)}}
     @media(max-width:1050px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
   </style>
 </head>

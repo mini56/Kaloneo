@@ -65,6 +65,7 @@ jobs:
           node scripts/r169-installer-animation-smoke.js
       - name: Install Node dependencies
         run: npm install --no-audit --no-fund
+      # La page Import / Export est vérifiée à deux résolutions et le Setup s'arrête au moindre décalage.
       - name: Build candidate pages and validate existing core
         shell: pwsh
         run: |
