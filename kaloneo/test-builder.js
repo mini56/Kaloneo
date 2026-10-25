@@ -1806,7 +1806,7 @@
       status.textContent=shown+' image'+(shown>1?'s':'')+' affichée'+(shown>1?'s':'')+
         (items.length>shown?' sur '+items.length+' disponibles':'')+
         (gallery.hiddenTechnical?', '+gallery.hiddenTechnical+' image'+(gallery.hiddenTechnical>1?'s':'')+' du programme masquée'+(gallery.hiddenTechnical>1?'s':''):'')+
-        (gallery.duplicates?', '+gallery.duplicates+' doublon'+(gallery.duplicates>1?'s':'')+' regroupé'+(gallery.duplicates>1?'s':''):'')+
+        (gallery.duplicates?', '+gallery.duplicates+' fichiers d’image du programme portant le même nom, regroupés à l’écran (sans suppression)':'')+
         (state.imageLibraryTargetUid?' — choisissez une image pour le bloc courant.':' — bibliothèque générale.');
     }
 
