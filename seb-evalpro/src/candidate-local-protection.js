@@ -79,9 +79,22 @@ function createCandidateLocalProtection(options = {}) {
   }
 
   function encryptedCandidateDataExists() {
-    if (fileStartsEncrypted(primaryStatePath) || fileStartsEncrypted(backupStatePath)) return true;
-    if (!fs.existsSync(candidatesRoot)) return false;
-    const stack = [candidatesRoot];
+    // Inclure également les bilans généraux et les anciens fichiers chiffrés :
+    // une installation peut contenir des données sans candidat visible.
+    for (const pathname of [
+      primaryStatePath, backupStatePath, path.join(userDataPath, 'active-candidate.json')
+    ]) {
+      if (fileStartsEncrypted(pathname)) return true;
+    }
+    const scanRoots = [
+      candidatesRoot,
+      path.join(sebRoot, 'BilansGeneraux'),
+      path.join(sebRoot, 'Bilans'),
+      path.join(sebRoot, 'parcours'),
+      path.join(sebRoot, 'Corbeille'),
+      path.join(sebRoot, 'System')
+    ].filter(dir => fs.existsSync(dir));
+    const stack = [...scanRoots];
     while (stack.length) {
       const dir = stack.pop();
       let entries = [];
@@ -162,16 +175,22 @@ function createCandidateLocalProtection(options = {}) {
         }
       }
 
+      // NE JAMAIS remplacer une clé locale si un ancien profil ou des
+      // fichiers candidats/bilans chiffrés existent : la création d'une
+      // nouvelle clé ferait paraître ces données définitivement illisibles.
+      // Les deux originaux et les copies Recovery sont conservés.
+      if (primaryError || backupError || hadEncryptedData) {
+        throw new Error(
+          'Clé de chiffrement Windows indisponible : vos données et les anciennes clés ' +
+          'ont été conservées sans modification. Ne désinstallez pas KALONÉO. ' +
+          'Réouvrez-le sous le même compte Windows ou restaurez la clé d’origine. ' +
+          'Aucune nouvelle clé ne sera créée automatiquement.'
+        );
+      }
+
       key = cryptoModule.randomBytes(32);
       writeProtectedKey(primaryKeyPath, key);
       copyAtomic(primaryKeyPath, backupKeyPath);
-
-      if (primaryError || backupError || hadEncryptedData) {
-        console.warn(
-          'SEB EvalPro 0.3.8 : ancienne clé locale inutilisable. ' +
-          'Les anciennes données chiffrées restent intactes ; une nouvelle clé locale a été créée.'
-        );
-      }
     } else {
       // Copie de récupération interne au profil de l'application.
       copyAtomic(primaryKeyPath, backupKeyPath);

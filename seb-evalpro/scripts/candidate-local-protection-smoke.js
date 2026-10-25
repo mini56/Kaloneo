@@ -75,10 +75,18 @@ try {
     dataRoot,
     safeStorage:fakeSafeStorage()
   });
-  const key3 = third.initializeKey();
-  assert(Buffer.isBuffer(key3) && key3.length === 32, 'Une nouvelle clé doit permettre au programme de continuer.');
-  assert(fs.existsSync(third.paths.primaryKeyPath), 'La nouvelle clé principale doit être créée.');
-  assert(fs.existsSync(third.paths.backupKeyPath), 'La nouvelle copie interne doit être créée.');
+  assert.throws(
+    () => third.initializeKey(),
+    /Clé de chiffrement Windows indisponible/i,
+    'Une clé illisible ne doit JAMAIS être remplacée si des données existent.'
+  );
+  assert(!fs.existsSync(third.paths.primaryKeyPath),
+    'Aucune nouvelle clé ne doit être créée sur un profil chiffré illisible.');
+  assert.strictEqual(
+    fs.readFileSync(third.paths.backupKeyPath, 'utf8'),
+    'SAUVEGARDE-CLE-ILLISIBLE',
+    'La copie de clé d origine doit être strictement conservée.'
+  );
   assert.strictEqual(
     fs.readFileSync(path.join(candidateDir, 'manifest.json'), 'utf8'),
     orphanEncrypted,
@@ -90,11 +98,11 @@ try {
     fs.readdirSync(recoveryDir).some((name) => name.startsWith('backup-key-unreadable-')),
     'La sauvegarde de clé illisible doit être archivée et non supprimée.'
   );
-  key3.fill(0);
+  console.log('LOST_KEY_FAIL_CLOSED_NO_REKEY=OK');
 
   console.log('CANDIDATE_KEY_INTERNAL_BACKUP_RESTORE=OK');
   console.log('CANDIDATE_STATE_INTERNAL_BACKUP_RESTORE=OK');
-  console.log('UNREADABLE_BACKUP_KEY_DOES_NOT_BLOCK_APP=OK');
+  console.log('UNREADABLE_BACKUP_KEY_BLOCKS_UNSAFE_WRITE=OK');
   console.log('ORPHAN_ENCRYPTED_CANDIDATE_PRESERVED=OK');
   console.log('Candidate Local Protection Test: OK');
 } finally {
