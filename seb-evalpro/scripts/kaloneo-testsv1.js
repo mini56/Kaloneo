@@ -17,7 +17,13 @@ function fail(msg){throw new Error('TESTS_V1: '+msg);}
 
 function syncFromMainInCi(repoRoot){
   if(process.env.GITHUB_ACTIONS!=='true')return {synced:false};
-  const run=(args)=>cp.execFileSync('git',args,{cwd:repoRoot,encoding:'utf8',maxBuffer:20*1024*1024});
+  // Ne jamais laisser un runner Windows bloqué par git fetch réseau/identification.
+  // En cas d'indisponibilité de main : échec explicite, aucune Release.
+  const run=(args)=>cp.execFileSync('git',args,{
+    cwd:repoRoot,encoding:'utf8',maxBuffer:20*1024*1024,
+    timeout:120000,
+    env:{...process.env,GIT_TERMINAL_PROMPT:'0',GCM_INTERACTIVE:'never'}
+  });
   run(['fetch','--no-tags','--depth=1','origin','main']);
   const revision=run(['rev-parse','FETCH_HEAD']).trim();
   const entries=run(['ls-tree','-r','--name-only','FETCH_HEAD','TESTS_V1'])

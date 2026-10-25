@@ -65,31 +65,52 @@ jobs:
           node scripts/r169-installer-animation-smoke.js
       - name: Install Node dependencies
         run: npm install --no-audit --no-fund
-      # La page Import / Export est vérifiée à deux résolutions et le Setup s'arrête au moindre décalage.
-      - name: Build candidate pages and validate existing core
+      - name: Prepare official KALTEST seeds (git network timeout 120s)
         shell: pwsh
         run: |
+          Write-Host 'R176_PHASE=BUILD_KALTEST_DATA'
           node scripts/build-kaltest-pilot2-data.js
+          if($LASTEXITCODE -ne 0){throw 'Synchronisation V1 interrompue ou impossible'}
+      - name: Generate candidate pages and optimized media
+        shell: pwsh
+        run: |
+          Write-Host 'R176_PHASE=PREPARE_WEB'
           npm run prepare:web
-          if($LASTEXITCODE -ne 0){throw 'Preparation failed'}
+          if($LASTEXITCODE -ne 0){throw 'Preparation des pages impossible'}
+      - name: Verify data safety and uninstall rules
+        shell: pwsh
+        run: |
+          Write-Host 'R176_PHASE=DATA_SAFETY'
           node scripts/kaloneo-full-uninstall-policy.js
-          if($LASTEXITCODE -ne 0){throw 'Default-preservation policy invalid'}
-          node scripts/r170-intro-video-smoke.js
-          if($LASTEXITCODE -ne 0){throw 'Video regression'}
+          if($LASTEXITCODE -ne 0){throw 'Conservation des donnees invalide'}
           node scripts/candidate-local-protection-smoke.js
-          if($LASTEXITCODE -ne 0){throw 'DPAPI protection regression'}
+          if($LASTEXITCODE -ne 0){throw 'Protection DPAPI invalide'}
           node scripts/candidate-loss-prevention-smoke.js
-          if($LASTEXITCODE -ne 0){throw 'Candidate import/export regression'}
+          if($LASTEXITCODE -ne 0){throw 'Export/import de candidats invalide'}
+      - name: Verify video, masks and official legacy presentation
+        shell: pwsh
+        run: |
+          Write-Host 'R176_PHASE=VISUAL_REGRESSIONS'
+          node scripts/r170-intro-video-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Regression video'}
           node scripts/kaloneo-genre-nombre-font-smoke.js
-          if($LASTEXITCODE -ne 0){throw 'Deux tableaux V1 et bandeau pleine largeur perdus'}
+          if($LASTEXITCODE -ne 0){throw 'Regression Genre Nombre'}
           node scripts/r162-static-mask-smoke.js
-          if($LASTEXITCODE -ne 0){throw 'Écran de masquage image fixe du parcours de base perdu'}
+          if($LASTEXITCODE -ne 0){throw 'Ecran de masquage manquant'}
+      - name: Verify math grids and old installed V1 upgrade
+        shell: pwsh
+        run: |
+          Write-Host 'R176_PHASE=GRID_UPGRADE'
           node scripts/kaloneo-number-grid-v1-smoke.js
-          if($LASTEXITCODE -ne 0){throw 'Nouvelles grilles mathematiques V1 invalides'}
+          if($LASTEXITCODE -ne 0){throw 'Barèmes des grilles invalides'}
           node scripts/kaloneo-math-grid-upgrade-smoke.js
-          if($LASTEXITCODE -ne 0){throw 'Ancienne installation conservant la vieille V1 locale : images non corrigées'}
-          & npx electron --no-sandbox scripts/r176-import-export-layout-electron-smoke-main.js
-          if($LASTEXITCODE -ne 0){throw 'Import / Export UI electron misaligned'}
+          if($LASTEXITCODE -ne 0){throw 'Une ancienne V1 locale ne récupère pas ses illustrations'}
+      - name: Electron Import / Export alignment 1366 and 1200
+        shell: pwsh
+        run: |
+          Write-Host 'R176_PHASE=IMPORT_EXPORT'
+          & npx electron --no-sandbox scripts/r175-import-export-layout-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Import / Export non aligne'}
       - name: "R176 gates - full licence, NSIS 6155 guard, square grids and Puzzle Electron 1200/1366"
         shell: pwsh
         run: |
@@ -105,14 +126,14 @@ jobs:
         run: node scripts/kaloneo-nsis-directory-template.js
       - name: Build unpublished R176 test installer, Build #179 unique
         run: npx electron-builder --win nsis --config build/kaloneo-r176-final-setup.yml --publish never
-      - name: Retrieve real published R173 installer for migration
+      - name: Retrieve real published R175 installer for migration
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           New-Item -ItemType Directory -Path dist/previous -Force | Out-Null
           gh release download seb-kaloneo-r175-import-export-images-layout-test --pattern 'KALONEO-Setup-0.0.202.exe' --dir dist/previous --clobber
-          if($LASTEXITCODE -ne 0 -or -not(Test-Path dist/previous/KALONEO-Setup-0.0.202.exe)){throw 'Baseline R172 setup missing'}
+          if($LASTEXITCODE -ne 0 -or -not(Test-Path dist/previous/KALONEO-Setup-0.0.202.exe)){throw 'Baseline R175 setup missing'}
       - name: REAL Windows R175 to R176 upgrade, DPAPI candidate and Word preservation, default uninstall, reinstall, forbidden switch
         shell: pwsh
         run: |
