@@ -112,6 +112,29 @@
         .example strong {
             font-weight: 600;
         }
+        /* Bouton uniquement dans le parcours KALTEST : ouverture du même
+           dialogue secondaire que celui des tests générés dans le Builder. */
+        #puzzle-view-example { display:none; }
+        body.kaltest-embedded-puzzle #puzzle-view-example {
+            display:inline-flex;
+            justify-content:center;
+            align-items:center;
+            margin-top:12px;
+            padding:8px 16px;
+            border:1px solid #254d91;
+            border-radius:8px;
+            background:#244f93;
+            color:#fff;
+            font:600 15px Calibri,Arial,sans-serif;
+            cursor:pointer;
+            max-width:100%;
+        }
+        body.kaltest-embedded-puzzle #puzzle-view-example:hover,
+        body.kaltest-embedded-puzzle #puzzle-view-example:focus-visible {
+            background:#17386b;
+            outline:2px solid #fff;
+            outline-offset:2px;
+        }
         
         .example-yellow {
             background: #fef3c7;
@@ -360,6 +383,7 @@
                     Pour la rangée <strong>[2, 4, 3, 1]</strong> :<br>
                     👈 Depuis la <strong>gauche</strong>, on voit <strong>2 bâtons</strong> (le 2 et le 4, car le 4 cache le 3 et le 1)<br>
                     👉 Depuis la <strong>droite</strong>, on voit <strong>3 bâtons</strong> (le 1, le 3 et le 4)
+                    <button id="puzzle-view-example" class="puzzle-example-button" type="button">Voir l’exemple</button>
                 </div>
                 
                 <div class="example example-yellow">

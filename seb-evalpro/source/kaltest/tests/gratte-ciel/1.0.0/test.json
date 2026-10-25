@@ -32,7 +32,18 @@
         "script": ""
       }
     ],
-    "legacyFullPage": true
+    "legacyFullPage": true,
+    "supplementaryWindows": [
+      {
+        "id": "puzzle_exemple_gratte_ciel",
+        "title": "Exemple — Puzzle Gratte-ciel",
+        "type": "image",
+        "text": "",
+        "imageData": "kaltest/tests/gratte-ciel/1.0.0/ex_carre_ magique.png",
+        "imageName": "ex_carre_ magique.png",
+        "imageAlt": "Exemple du puzzle Gratte-ciel avec les bâtons visibles"
+      }
+    ]
   },
   "behavior": {
     "validateBeforeAdvance": true,

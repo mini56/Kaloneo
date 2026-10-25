@@ -269,6 +269,10 @@
         return;
       }
 
+      if (message.type === 'supplementary-closed') {
+        document.getElementById('puzzle-view-example')?.focus();
+        return;
+      }
       if (message.type !== 'restore') return;
       applyEmbeddedState(message);
     });
@@ -276,6 +280,7 @@
   }
 
   function prepareEmbeddedAppearance() {
+    if (EMBEDDED) document.body.classList.add('kaltest-embedded-puzzle');
     // En mode KALTEST, le contenu visuel historique reste intact.
     // Seuls les boutons de navigation sont masqués dans l'iframe, car ils sont
     // reproduits dans la barre candidat extérieure par le pont interactif.
@@ -294,6 +299,9 @@
     document.querySelector('.btn-reset')?.addEventListener('click', resetPuzzle);
     document.getElementById('btnValidate')?.addEventListener('click', validatePuzzle);
     document.getElementById('btnNext')?.addEventListener('click', navigateNext);
+    document.getElementById('puzzle-view-example')?.addEventListener('click', () => {
+      postToKaltest('open-supplementary', { windowId:'puzzle_exemple_gratte_ciel' });
+    });
     installEmbeddedBridge();
     publishEmbeddedActions();
   }

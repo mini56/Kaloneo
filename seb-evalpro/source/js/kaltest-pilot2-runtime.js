@@ -3228,6 +3228,16 @@
         return;
       }
 
+      // Ouvre le dialogue documentaire STANDARD du moteur KALTEST depuis
+      // le premier bloc bleu du Puzzle ; pas de fenêtre Windows supplémentaire.
+      if (test.id === 'gratte_ciel' && message.type === 'open-supplementary') {
+        const id = String(message.windowId || '');
+        if (supplementaryWindowsFor(test).some(window => window.id === id)) {
+          openSupplementaryWindow(test,id);
+        }
+        return;
+      }
+
       if (test.id === 'ranger_stock' && message.type === 'stock-state') {
         syncStockPositionsFromLegacy(test, message.positions);
         return;
@@ -3469,7 +3479,8 @@
       title.textContent=String(entry.title||'Document complémentaire');
       content.replaceChildren();
       const type=String(entry.type||'text');
-      if(type==='image'&&/^(?:data:image\/|(?:\.\/)?(?:imageqcm|assets)\/)/i.test(String(entry.imageData||''))){
+      if(type==='image'&&(/^(?:data:image\/|(?:\.\/)?(?:imageqcm|assets)\/)/i.test(String(entry.imageData||'')) ||
+        /^kaltest\/tests\/[a-z0-9_-]+\/\d+\.\d+\.\d+\/[a-z0-9_ -]+\.(?:png|jpe?g|webp)$/i.test(String(entry.imageData||'')))){
         const image=document.createElement('img');
         image.src=String(entry.imageData);
         image.alt=String(entry.imageAlt||entry.title||'Document');
@@ -3508,6 +3519,12 @@
     close.onclick=()=>dialog.close();
     dialog.onclose=()=>{
       if(supplementaryReturnFocus?.isConnected)supplementaryReturnFocus.focus();
+      // Le déclencheur peut être situé DANS l'iframe du Puzzle.
+      if(test.id==='gratte_ciel'&&activeInteractiveFrame?.contentWindow){
+        try {activeInteractiveFrame.contentWindow.postMessage({
+          source:'seb-kaltest-host',testId:test.id,type:'supplementary-closed'
+        },'*');}catch(_){}
+      }
       supplementaryReturnFocus=null;
     };
     draw();
