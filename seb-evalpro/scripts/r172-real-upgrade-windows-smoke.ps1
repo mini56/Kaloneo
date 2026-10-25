@@ -34,7 +34,12 @@ Write-Host 'R172_BEGIN_DEFAULT_SILENT_UNINSTALL'
 $p=Start-Process -FilePath $uninstaller.FullName -ArgumentList @('/S','/currentuser') -PassThru
 if(-not $p.WaitForExit(120000)){try{Stop-Process -Id $p.Id -Force}catch{};throw 'Désinstallation normale bloquée'}
 if($p.ExitCode -ne 0){throw 'Désinstallation normale échouée'}
-if(Test-Path $exe){throw 'Binaire encore présent après désinstallation'}
+# NSIS lance un processus enfant de nettoyage : attendre la suppression réelle.
+for($i=0;$i -lt 60;$i++){
+  if(-not(Test-Path $exe)){break}
+  Start-Sleep -Milliseconds 500
+}
+if(Test-Path $exe){throw 'Binaire encore présent 30 secondes après désinstallation'}
 Verify-Data 'DEFAULT_UNINSTALL'
 Run-Setup $NewSetup
 Verify-Data 'REINSTALL'
