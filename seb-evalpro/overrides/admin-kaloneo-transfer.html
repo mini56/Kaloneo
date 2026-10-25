@@ -23,7 +23,8 @@
     .card .status{margin-top:auto}
     .card .actions{flex-direction:column}
     .card .actions button{flex:0 0 auto;width:100%}
-    .image-export-note{font-size:13px;color:#586b77;margin:0 0 2px;min-height:22px}
+    .image-card .image-export-placeholder{display:block;height:42px;min-height:42px;width:100%}
+    .image-card .image-export-label{color:#004E70;font-weight:700}
     .card h2{margin:0 0 7px;color:#004E70;font-size:23px}
     .card p{margin:0 0 18px;color:#5d6b75;line-height:1.35}
     label{display:flex;flex-direction:column;gap:6px;color:#004E70;font-weight:700}
@@ -72,10 +73,12 @@
         </div>
         <div id="parcours-status" class="status" aria-live="polite"></div>
       </article>
-      <article class="card">
+      <article class="card image-card">
         <h2>Images</h2>
         <p>Transférer vos images personnelles entre deux PC ou ajouter des images à la bibliothèque KALONÉO.</p>
-        <div class="image-export-note">Export ZIP par thèmes, sans les images déjà fournies avec le programme.</div>
+        <label class="image-export-label">Export ZIP
+          <span class="image-export-placeholder" aria-hidden="true"></span>
+        </label>
         <div class="actions">
           <button id="export-images" class="primary" type="button">Exporter des images</button>
           <button id="import-images" type="button">Importer des images</button>
