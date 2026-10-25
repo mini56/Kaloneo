@@ -1,0 +1,91 @@
+name: "KALONÉO R172 - Audit réel des données à l'installation et désinstallation"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/audit-r172-data-preservation.yml'
+      - 'seb-evalpro/build/installer.nsh'
+      - 'seb-evalpro/build/kaloneo-r172-data-preservation.yml'
+      - 'seb-evalpro/scripts/kaloneo-full-uninstall-policy.js'
+      - 'seb-evalpro/scripts/r159-clean-install-windows-smoke.ps1'
+      - 'seb-evalpro/scripts/r172-real-upgrade-windows-smoke.ps1'
+      - 'seb-evalpro/scripts/r172-update-fixture-electron-main.js'
+      - 'seb-evalpro/package.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: kaloneo-r172-data-protection-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  audit-real-upgrade-windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    env:
+      KALONEO_SKIP_OFFICIAL_V1: '0'
+      KALONEO_STRICT_RENDER_IMAGES: '1'
+      KALONEO_STRICT_INTRO_VIDEO: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Original KALONEO artwork and video optimized without changes
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check Pillow==11.3.0 imageio-ffmpeg==0.6.0
+          python scripts/kaloneo-r125-branding.py
+          python scripts/r158-build-installer-intro.py
+          node scripts/r158-installer-intro-smoke.js
+          node scripts/r169-installer-animation-smoke.js
+      - name: Install Node dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build candidate pages and validate existing core
+        shell: pwsh
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          npm run prepare:web
+          if($LASTEXITCODE -ne 0){throw 'Preparation failed'}
+          node scripts/kaloneo-full-uninstall-policy.js
+          if($LASTEXITCODE -ne 0){throw 'Default-preservation policy invalid'}
+          node scripts/r170-intro-video-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Video regression'}
+          node scripts/candidate-local-protection-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'DPAPI protection regression'}
+          node scripts/candidate-loss-prevention-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Candidate import/export regression'}
+      - name: Patch pinned NSIS directory-page callbacks only
+        run: node scripts/kaloneo-nsis-directory-template.js
+      - name: Build unpublished R172 test installer, Build #175 unique
+        run: npx electron-builder --win nsis --config build/kaloneo-r172-data-preservation.yml --publish never
+      - name: Retrieve real published R171 installer for migration
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          New-Item -ItemType Directory -Path dist/previous -Force | Out-Null
+          gh release download seb-kaloneo-r171-video-heading-cleanup-test --pattern 'KALONEO-Setup-0.0.198.exe' --dir dist/previous --clobber
+          if($LASTEXITCODE -ne 0 -or -not(Test-Path dist/previous/KALONEO-Setup-0.0.198.exe)){throw 'Baseline R171 setup missing'}
+      - name: REAL Windows R171 to R172 upgrade, DPAPI candidate and Word preservation, default uninstall, reinstall, forbidden switch
+        shell: pwsh
+        run: |
+          & ./scripts/r172-real-upgrade-windows-smoke.ps1 -PreviousSetup (Resolve-Path dist/previous/KALONEO-Setup-0.0.198.exe) -NewSetup (Resolve-Path dist/KALONEO-Setup-0.0.199.exe)
+          if($LASTEXITCODE -ne 0){throw 'R172 real upgrade lost candidate or builder data'}
+      - name: Check default uninstall on a fresh install with dummy Word and evaluation state
+        shell: pwsh
+        run: |
+          $target=Join-Path $env:LOCALAPPDATA 'Programs\KALONEO'
+          $uninstall=Get-ChildItem $target -File -Filter 'Uninstall*.exe' | Select-Object -First 1
+          if(-not $uninstall){throw 'R172 uninstall missing'}
+          & $uninstall.FullName /S /currentuser
+          if($LASTEXITCODE -ne 0){throw 'Cleanup uninstall after upgrade smoke failed'}
+          & ./scripts/r159-clean-install-windows-smoke.ps1 -Setup (Resolve-Path dist/KALONEO-Setup-0.0.199.exe)
+          if($LASTEXITCODE -ne 0){throw 'R172 fresh installation / uninstall retention failed'}
