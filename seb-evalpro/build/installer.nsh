@@ -13,11 +13,10 @@ ShowUninstDetails show
 # R172 - Conservation des donnees PAR DEFAUT (desinstallation ET mise a jour).
 # L'effacement n'est disponible qu'en mode interactif : case decochee
 # initialement + deuxieme confirmation explicite. /S conserve toujours.
+!ifdef BUILD_UNINSTALLER
 Var KaloneoDeleteDataConfirmed
 Var KaloneoDeleteDataCheckbox
 Var KaloneoDeleteDataDialog
-
-!ifdef BUILD_UNINSTALLER
 !macro customUnInit
   StrCpy $KaloneoDeleteDataConfirmed "0"
   # La commande --delete-app-data native d'electron-builder contourne le
