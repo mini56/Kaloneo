@@ -60,7 +60,10 @@
           "singulier_pluriel_8",
           "singulier_pluriel_9",
           "singulier_pluriel_10"
-        ]
+        ],
+        "builderStyle": {
+          "backgroundColor": "#EAF5FB"
+        }
       },
       {
         "id": "masculin_feminin",
@@ -80,7 +83,22 @@
           "masculin_feminin_8",
           "masculin_feminin_9",
           "masculin_feminin_10"
-        ]
+        ],
+        "builderStyle": {
+          "backgroundColor": "#EAF5FB"
+        }
+      }
+    ],
+    "builderExtras": [
+      {
+        "type": "image",
+        "zone": "full",
+        "resource": {
+          "name": "genre_et_nombre_V1.png",
+          "mime": "image/png",
+          "data": "kaltest/tests/genre-nombre/1.0.0/genre_et_nombre_V1.png",
+          "alt": "Illustration de genre et nombre"
+        }
       }
     ]
   },
