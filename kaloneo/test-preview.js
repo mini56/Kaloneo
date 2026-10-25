@@ -237,7 +237,7 @@ function renderMedia(block){
     className:'kb-block kb-media-block',imageClass:'kb-media',
     videoClass:'kb-media',
     emptyText:'',
-    resolveSource:value=>value.startsWith('imageqcm/')?'../'+value:value
+    resolveSource:value=>/^(?:imageqcm\/|kaltest\/tests\/)/.test(value)?'../'+value:value
   });
   if(!source)wrap.appendChild(el('div','kb-empty',block.mediaPlaceholder||'Aucun média sélectionné'));
   if(block.type==='audio'){
