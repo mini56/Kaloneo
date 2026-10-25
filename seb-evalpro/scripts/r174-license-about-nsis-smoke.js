@@ -53,6 +53,8 @@ assert(nsis.includes('!define MUI_PAGE_CUSTOMFUNCTION_LEAVE KaloneoLicensePageLe
  'Pas de confirmation de consentement en fin de page');
 assert(nsis.includes('StrCpy $KaloneoLicenseExplicitlyAccepted "0"'),
  'Acceptation initiale non refusee');
+assert(!nsis.includes('!undef MUI_PAGE_CUSTOMFUNCTION_LEAVE'),
+ 'La macro MUI_PAGE_LICENSE supprime automatiquement ce define; tout !undef supplémentaire provoque le warning NSIS 6155 bloquant.');
 assert(nsis.includes('LicenseAcceptedDate'));
 assert(nsis.includes('LicenseAcceptedRevision'));
 assert(yaml.includes('buildResources: build/pilot-resources'),

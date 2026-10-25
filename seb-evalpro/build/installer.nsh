@@ -182,7 +182,6 @@ FunctionEnd
   !define MUI_LICENSEPAGE_TEXT_TOP "Veuillez lire la licence complète avant de poursuivre."
   !define MUI_PAGE_CUSTOMFUNCTION_LEAVE KaloneoLicensePageLeave
   !insertmacro MUI_PAGE_LICENSE "${BUILD_RESOURCES_DIR}\KALONEO-LICENCE.txt"
-  !undef MUI_PAGE_CUSTOMFUNCTION_LEAVE
 !macroend
 
 Function KaloneoLicensePageLeave

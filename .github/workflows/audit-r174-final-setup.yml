@@ -85,7 +85,7 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Écran de masquage image fixe du parcours de base perdu'}
           node scripts/kaloneo-number-grid-v1-smoke.js
           if($LASTEXITCODE -ne 0){throw 'Nouvelles grilles mathematiques V1 invalides'}
-      - name: "R174 gates - full licence, square number grids and Puzzle Electron 1200/1366"
+      - name: "R174 gates - full licence, NSIS 6155 guard, square grids and Puzzle Electron 1200/1366"
         shell: pwsh
         run: |
           node scripts/r174-license-about-nsis-smoke.js
