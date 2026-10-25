@@ -1,0 +1,240 @@
+KALONÉO Licence propriétaire d’utilisation
+Projet à compléter avant diffusion
+Les zones à remplir sont en rouge sur fond jaune.
+Version de travail du 25 octobre 2026 — À compléter et valider avant diffusion
+Ce document est une proposition contractuelle destinée à un usage professionnel ou associatif. Il n’est pas
+encore la licence applicable au logiciel. Les champs entre crochets et les conditions particulières doivent
+être complétés. Une relecture juridique est recommandée avant utilisation.
+
+
+CONDITIONS PARTICULIÈRES À COMPLÉTER
+Concédant proposé : Claude LESPAGNOL.
+Contact pour la licence et l’assistance: abmc56@free.fr
+Créateur du logiciel : Claude LESPAGNOL. Les droits des tiers sur leurs composants et contenus restent
+réservés.
+Structure bénéficiaire : la structure au nom de laquelle la personne habilitée installe et accepte la présente
+licence.
+Sites et établissements autorisés : Sauvegarde56.
+Nombre de postes et/ou d’utilisateurs autorisés : illimité dans la structure.
+Version initialement concernée : Toutes versions.
+Durée du droit d’utilisation : indéterminée.
+Conditions financières : gratuité.
+Accès aux mises à jour et à l’assistance : les mises à jour et l’aide ponctuelle sont proposées gratuitement
+aux structures autorisées, selon les disponibilités du Concédant, sans garantie de fréquence de publication
+ni de délai d’intervention.
+Les éventuels frais de connexion, de matériel, d’intervention ou de prestation complémentaire sont à la
+charge de la structure bénéficiaire. Toute prestation payante du Concédant devra faire l’objet d’un
+devis ou d’un accord préalable accepté par la structure. Aucun frais ne sera engagé en son nom sans
+son accord.
+Date d’effet : 1/10/2026.
+Mode d’acceptation retenu : acceptation électronique lors de l’installation de KALONÉO, par une case non
+précochée « J’ai lu et j’accepte la licence d’utilisation de KALONÉO ». L’installation ne peut se poursuivre
+sans cette acceptation.Les conditions particulières acceptées prévalent sur les conditions générales ci-
+dessous en cas de contradiction, sous réserve des règles impératives et des licences des composants
+tiers.
+
+
+1. OBJET ET PÉRIMÈTRE
+La présente licence définit les conditions dans lesquelles le Concédant autorise la structure bénéficiaire,
+ci-après « le Bénéficiaire », à utiliser KALONÉO, logiciel de création et de réalisation de parcours
+d’évaluation, de gestion des résultats et de production de bilans.
+Elle s’applique au programme exécutable, à ses composants propres, à sa documentation et aux contenus
+fournis par le Concédant dans la mesure des droits qu’il détient. Les composants et contenus tiers sont
+régis par l’article 8.
+
+La licence constitue un droit d’utilisation. Elle ne transfère ni la propriété du logiciel ni les droits de
+propriété intellectuelle sur les éléments fournis par le Concédant.
+
+
+2. DROIT D’UTILISATION ACCORDÉ
+Sous réserve des conditions particulières, le Concédant accorde au Bénéficiaire un droit personnel à sa
+structure, non exclusif et non transférable sans accord écrit préalable, permettant :
+— d’installer et d’exécuter KALONÉO sur les postes autorisés ;
+— de permettre son usage par les professionnels habilités et aux candidats accompagnés dans le cadre
+des activités du Bénéficiaire ;
+— de créer et d’adapter des tests et parcours au moyen des fonctions du Builder ;
+— d’enregistrer, de consulter et d’exporter les résultats et bilans dans le cadre des usages autorisés.
+L’utilisation de ces fonctions ne constitue pas une autorisation de modifier le code du programme. Les
+actes techniques nécessaires à l’utilisation autorisée restent permis dans les limites de la loi et de la
+présente licence.
+Aucune utilisation sur un nombre de postes, dans des établissements ou pour une durée non couverts par
+les conditions particulières n’est accordée implicitement. Une utilisation gratuite, si elle est convenue, ne
+rend pas le logiciel libre.
+
+
+3. COPIES, DIFFUSION ET RESTRICTIONS
+Sauf accord écrit du Concédant, droits impératifs ou dispositions des licences tierces applicables, le
+Bénéficiaire ne peut pas :
+— vendre, louer, sous-licencier ou mettre le programme à disposition d’une autre personne morale ou du
+public ;
+— publier ou redistribuer les installateurs, les mises à jour déchiffrées ou les éléments propres de
+KALONÉO ;
+— modifier, traduire, adapter le code ou distribuer une version dérivée du programme ;
+— retirer les mentions de droits, d’origine ou de licence ;
+— extraire la bibliothèque fournie pour constituer un produit ou une banque de contenus indépendante,
+sauf autorisation spécifique ou licence tierce le permettant.
+Les copies nécessaires à l’installation sur les postes autorisés et les copies de sauvegarde légalement
+permises sont autorisées. Les sauvegardes doivent rester protégées et ne pas servir à étendre le
+périmètre de la licence.
+
+
+4. DROITS LÉGAUX PRÉSERVÉS
+Aucune clause ne limite les droits qui ne peuvent être écartés contractuellement, notamment ceux prévus
+par l’article L. 122-6-1 du Code de la propriété intellectuelle concernant la copie de sauvegarde
+nécessaire, l’observation, l’étude ou le test du fonctionnement ou de la sécurité, ainsi que les actes
+indispensables à l’interopérabilité dans les conditions légales.
+La correction des erreurs du programme est réservée au Concédant dans la mesure où la loi permet cette
+réservation. Elle ne crée pas une obligation de maintenance au-delà des engagements expressément
+souscrits.
+
+5. TESTS, PARCOURS, BILANS ET CONTENUS DES UTILISATEURS
+La présente licence ne transfère au Concédant aucun droit sur les données des candidats, les réponses,
+les bilans ni les contenus originaux créés ou importés par le Bénéficiaire ou ses utilisateurs. Les droits
+éventuels restent à leurs titulaires respectifs.
+Le Bénéficiaire peut utiliser, adapter et exporter ses propres créations au moyen des fonctions prévues.
+Lorsqu’une création contient des images, modèles, tests ou autres éléments fournis avec KALONÉO, les
+droits sur ces éléments ne sont pas transférés ; leur réutilisation reste soumise aux conditions qui leur sont
+applicables.
+Le Bénéficiaire vérifie qu’il dispose des autorisations nécessaires pour les textes, images, vidéos, polices
+et autres contenus qu’il importe. Aucune autorisation générale de publication ou de redistribution des
+contenus intégrés au logiciel ne résulte de leur présence dans le Builder.
+
+
+6. MISES À JOUR ET MOTS DE PASSE
+L’accès aux mises à jour dépend des conditions particulières. Toute compilation de test n’est pas une
+version destinée à la diffusion. Seules les versions expressément validées et publiées par le Concédant
+sont proposées comme mises à jour officielles.
+Si un paquet est distribué sous forme chiffrée, le mot de passe ou la clé de déchiffrement est communiqué
+séparément aux destinataires autorisés. Ces derniers ne doivent pas le publier ni le transmettre hors du
+périmètre autorisé. Ils signalent sans délai toute divulgation connue.
+L’accessibilité publique d’un paquet chiffré ou d’une page de téléchargement n’accorde aucun droit
+supplémentaire d’utilisation, de modification ou de redistribution sur le logiciel. Elle ne supprime pas les
+droits impératifs ni les autorisations effectivement consenties.
+Le retrait d’un accès aux futures mises à jour n’entraîne pas, à lui seul, l’expiration du droit d’utiliser une
+version déjà autorisée. Ce droit dépend de la durée et des conditions particulières convenues.
+Le Bénéficiaire sauvegarde ses données avant toute installation et organise les mises à jour hors des
+parcours en cours. Aucune suppression automatique de ses données n’est autorisée par la présente
+licence.
+Cette clause décrit les conditions d’un éventuel service de mise à jour ; elle ne garantit pas que ce service
+est déjà disponible dans une version donnée.
+
+
+7. BIBLIOTHÈQUE D’IMAGES ET CONTENUS TÉLÉCHARGEABLES
+Lorsque cette fonction est disponible, certaines vignettes peuvent être présentes localement tandis que les
+originaux sont téléchargés à la demande. Les conditions d’accès et d’utilisation de chaque contenu restent
+applicables, même si son adresse est publique.
+Le téléchargement d’un original ne transfère pas ses droits de propriété intellectuelle. Les licences tierces,
+les autorisations spécifiques et les éventuelles limitations d’usage doivent être indiquées dans le catalogue
+ou les notices associés.
+La disponibilité en ligne ne constitue pas un engagement de conservation illimitée, sauf accord spécifique.
+Les engagements de fonctionnement hors connexion et de conservation des ressources utilisées dans les
+tests doivent être précisés dans la documentation de la version concernée.
+
+
+8. COMPOSANTS TIERS ET LICENCES LIBRES
+KALONÉO peut inclure des bibliothèques, outils, polices, médias ou autres composants appartenant à des
+tiers. La liste et les notices correspondantes doivent être fournies dans un document de mentions tierces,
+
+par exemple THIRD_PARTY_NOTICES.txt, avec les textes et offres de code source requis, le cas
+échéant.
+La présente licence ne remplace pas ces licences et ne réduit aucun droit qu’elles accordent sur leurs
+composants. Les obligations de conservation des notices, d’attribution, de fourniture du code source ou
+autres obligations applicables doivent être respectées.
+La qualification de KALONÉO comme logiciel propriétaire reste subordonnée à la compatibilité des
+composants réellement distribués et aux autorisations détenues. Cette licence ne retire pas
+rétroactivement les droits valablement accordés sur des versions antérieures.
+
+
+9. DONNÉES ET RESPONSABILITÉS D’USAGE
+Le Bénéficiaire organise les habilitations, la confidentialité, les sauvegardes et la conservation des
+données dont il assure le traitement. Il définit les finalités et les bases légales applicables à ses usages et
+informe les personnes concernées lorsque cela est requis.
+La présente licence ne tient lieu ni de politique de confidentialité ni d’accord de sous-traitance de données.
+Si le Concédant accède à des données personnelles pour l’assistance, l’hébergement ou un autre service,
+les rôles et obligations correspondants doivent être définis séparément avant cet accès.
+Les conditions et flux techniques des recherches de mises à jour ou téléchargements doivent être
+expliqués dans une notice distincte conforme au fonctionnement réel. La licence n’autorise pas, par elle-
+même, l’envoi des dossiers candidats à un service extérieur.
+KALONÉO est un outil d’aide au travail des professionnels. Les résultats, propositions de synthèse et
+bilans doivent être vérifiés et interprétés par les personnes habilitées ; ils ne remplacent pas leur
+appréciation professionnelle.
+
+
+10. ASSISTANCE, GARANTIES ET RESPONSABILITÉ
+KALONÉO est mis à disposition gratuitement, dans le périmètre défini par les conditions particulières.
+Cette gratuité ne constitue ni une renonciation aux droits du Concédant ni une exonération des
+responsabilités qui ne peuvent légalement être exclues.
+Les prestations d’assistance, de correction et d’évolution sont limitées aux engagements expressément
+convenus dans les conditions particulières ou dans un accord distinct. Sauf engagement écrit contraire,
+aucune maintenance permanente, fréquence de mise à jour, durée minimale de disponibilité d’un service
+en ligne ni délai de réponse ou de correction n’est garanti. Toute prestation payante reste soumise à
+l’accord préalable de la structure dans les conditions prévues ci-dessus.
+Le Concédant ne garantit ni l’absence totale d’anomalies, ni un fonctionnement ininterrompu, ni la
+compatibilité avec tout équipement ou tout usage particulier. Les configurations prises en charge et les
+limites connues doivent être précisées dans la documentation. Le Bénéficiaire vérifie l’adéquation du
+logiciel à ses besoins avant sa mise en service et teste les nouvelles versions dans un contexte adapté
+avant leur utilisation opérationnelle.
+Le Bénéficiaire organise des sauvegardes régulières, indépendantes et vérifiées de ses données,
+notamment avant toute mise à jour. Il protège ses postes et ses accès, forme ses utilisateurs et prévoit les
+moyens de poursuivre son activité en cas d’indisponibilité. Un défaut de sauvegarde ne libère pas
+automatiquement le Concédant de toute responsabilité ; ses conséquences sont appréciées selon son rôle
+effectif dans le dommage.
+Les scores, résultats, propositions de synthèse et bilans produits par KALONÉO doivent être contrôlés et
+interprétés par un professionnel habilité avant toute communication ou décision. Ils ne doivent pas
+constituer le seul fondement d’une décision d’orientation, d’accès à une formation ou d’accompagnement
+
+d’une personne. La structure conserve la responsabilité des décisions qu’elle prend dans l’exercice de ses
+missions, sans préjudice de la responsabilité éventuelle du Concédant pour ses propres manquements.
+Dans la mesure permise par la loi, la responsabilité contractuelle du Concédant est limitée aux dommages
+directs, certains et prévisibles lors de l’acceptation de la licence, dont le Bénéficiaire établit le lien de
+causalité avec un manquement imputable au Concédant. Les dommages indirects sont exclus dans les
+mêmes limites légales. La qualification d’un dommage dépend de ses circonstances et ne résulte pas de
+sa seule désignation comme perte de données, perte d’exploitation ou perte de chance.
+Le Concédant ne répond pas des dommages dans la mesure où ils sont causés par une utilisation
+contraire à la documentation ou au périmètre autorisé, une modification non autorisée, un équipement
+défectueux ou l’intervention d’un tiers dont il ne répond pas. Ces circonstances ne constituent pas une
+exonération pour un dommage provenant de ses propres manquements.
+Les limitations ci-dessus ne s’appliquent pas en cas de dol ou de faute lourde du Concédant, de dommage
+corporel, ni dans les autres cas où la loi interdit une exclusion ou une limitation. Elles ne peuvent priver
+une obligation essentielle de sa substance, écarter une garantie impérative ni supprimer tout recours.
+Aucun plafond égal au prix payé ne s’applique du seul fait de la gratuité du logiciel.
+Le Bénéficiaire signale les anomalies dès leur découverte, décrit les circonstances utiles et prend les
+mesures raisonnables pour éviter leur aggravation, sans transmettre de données personnelles non
+nécessaires. Ce signalement ne remplace pas les formalités légales et ne conditionne pas les recours que
+la loi lui reconnaît.
+
+
+11. MANQUEMENT ET FIN DE LICENCE
+En cas de manquement suffisamment grave, la partie lésée peut mettre l’autre partie en demeure, par un
+moyen permettant d’en conserver la preuve, de régulariser la situation dans un délai de trente jours. La
+mise en demeure identifie les manquements et précise les conséquences d’une absence de régularisation,
+notamment la résolution envisagée. Les autres modes de résolution et recours prévus par la loi restent
+applicables.
+À l’expiration ou à la résolution effective de son droit d’utilisation, le Bénéficiaire cesse d’utiliser le
+programme et supprime les copies qui ne sont plus autorisées, sous réserve des obligations légales de
+conservation.
+Il conserve les droits qu’il détient sur ses données et créations. Les modalités de récupération doivent être
+organisées avant l’arrêt effectif, sans suppression des dossiers candidats du seul fait d’un refus de mise à
+jour ou d’une erreur de mot de passe.
+
+
+12. ACCEPTATION ET ÉVOLUTION DES CONDITIONS
+Le texte complet et les conditions particulières sont remis avant l’acceptation. L’accord est recueilli auprès
+d’une personne habilitée à engager le Bénéficiaire et conservé par un procédé permettant de retrouver le
+texte accepté et sa date.
+Une révision de licence ne modifie pas rétroactivement les droits déjà accordés. Toute nouvelle condition
+nécessitant un accord est présentée avant l’acceptation de la version ou du service concerné.
+
+
+13. DROIT APPLICABLE
+La licence est soumise au droit français, sous réserve des règles impératives éventuellement applicables.
+Les parties cherchent une solution amiable avant de saisir les juridictions compétentes selon les règles de
+droit commun. Aucune compétence territoriale exclusive n’est imposée par le présent projet.
+Code de la propriété intellectuelle, article L. 122-6-1 :
+
+https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000028345224/
+ACCEPTATION DE LA LICENCE
+La présente licence est proposée par Claude LESPAGNOL, concédant de KALONÉO.
+La personne qui installe le logiciel pour la structure bénéficiaire confirme être habilitée à accepter cette
+licence en son nom. Elle manifeste son accord en cochant la case non précochée “J’ai lu et j’accepte la
+licence d’utilisation de KALONÉO”, avant de poursuivre l’installation.
