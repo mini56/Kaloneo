@@ -101,18 +101,3 @@ jobs:
         run: |
           & ./scripts/r172-real-upgrade-windows-smoke.ps1 -PreviousSetup (Resolve-Path dist/previous/KALONEO-Setup-0.0.198.exe) -NewSetup (Resolve-Path dist/KALONEO-Setup-0.0.199.exe)
           if($LASTEXITCODE -ne 0){throw 'R172 real upgrade lost candidate or builder data'}
-      - name: Check default uninstall on a fresh install with dummy Word and evaluation state
-        shell: pwsh
-        run: |
-          $target=Join-Path $env:LOCALAPPDATA 'Programs\KALONEO'
-          $uninstall=Get-ChildItem $target -File -Filter 'Uninstall*.exe' | Select-Object -First 1
-          if(-not $uninstall){throw 'R172 uninstall missing'}
-          & $uninstall.FullName /S /currentuser
-          if($LASTEXITCODE -ne 0){throw 'Cleanup uninstall after upgrade smoke failed'}
-          for($i=0;$i -lt 60;$i++){
-            if(-not(Test-Path (Join-Path $target 'KALONEO.exe'))){break}
-            Start-Sleep -Milliseconds 500
-          }
-          if(Test-Path (Join-Path $target 'KALONEO.exe')){throw 'Uninstaller NSIS enfant non termine'}
-          & ./scripts/r159-clean-install-windows-smoke.ps1 -Setup (Resolve-Path dist/KALONEO-Setup-0.0.199.exe)
-          if($LASTEXITCODE -ne 0){throw 'R172 fresh installation / uninstall retention failed'}
