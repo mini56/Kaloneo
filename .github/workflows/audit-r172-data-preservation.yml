@@ -18,7 +18,29 @@ concurrency:
   group: kaloneo-r172-data-protection-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  dpapi-cross-process:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install local Electron runtime
+        run: npm install --no-audit --no-fund
+      - name: Seed DPAPI and real encrypted candidate folders under isolated Windows profile
+        shell: pwsh
+        run: |
+          $env:KALONEO_R172_MANIFEST=Join-Path $env:RUNNER_TEMP 'r172-dpapi-roundtrip.json'
+          & npx electron --no-sandbox scripts/r172-update-fixture-electron-main.js --seed
+          if($LASTEXITCODE -ne 0){throw 'Original DPAPI encryption failed'}
+          & npx electron --no-sandbox scripts/r172-update-fixture-electron-main.js --verify
+          if($LASTEXITCODE -ne 0){throw 'Cross-process Windows DPAPI cannot reopen a candidate: stop the build'}
   audit-real-upgrade-windows:
+    needs: dpapi-cross-process
     runs-on: windows-latest
     timeout-minutes: 60
     defaults:

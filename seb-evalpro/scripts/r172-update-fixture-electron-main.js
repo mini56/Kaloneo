@@ -108,5 +108,9 @@ app.whenReady().then(()=>{
   if(!readJsonFile(path.join(storage,'BilansGeneraux','PERS-1234567890ABCDEF12345678','bilan-general.json')))throw Error('Bilan general illisible');
   console.log('KALONEO_R172_DATA_PRESERVED=OK; '+Object.keys(manifest.files).length+' fichiers SHA256 identiques, 2 candidats, parcours actif et bilan général DPAPI déchiffrables');
  }
- app.exit(0);
-}).catch(error=>{console.error(error.stack||error);app.exit(1)});
+ // app.exit() court-circuite la fermeture Chromium et peut perdre
+ // l'enregistrement asynchrone de la clé OSCrypt dans "Local State".
+ // app.quit() effectue le cycle normal d'arret de l'application Windows.
+ console.log('R172_DPAPI_PROFILE='+app.getPath('userData')+'; Local State='+fs.existsSync(path.join(root,'Local State')));
+ setTimeout(()=>app.quit(),1000);
+}).catch(error=>{console.error(error.stack||error);setTimeout(()=>app.exit(1),300)});
