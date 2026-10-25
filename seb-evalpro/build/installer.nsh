@@ -75,8 +75,8 @@ FunctionEnd
     ${If} $KaloneoDeleteDataConfirmed == "1"
       SetShellVarContext current
       DetailPrint "SUPPRESSION EXPLICITEMENT CONFIRMÉE : effacement des données KALONÉO de ce compte."
-      RMDir /r "$APPDATA\\KALONEO"
-      RMDir /r "$LOCALAPPDATA\\KALONEO"
+      RMDir /r "$APPDATA\KALONEO"
+      RMDir /r "$LOCALAPPDATA\KALONEO"
       ${If} $installMode == "all"
         SetShellVarContext all
       ${EndIf}

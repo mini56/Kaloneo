@@ -20,8 +20,8 @@ for(const expected of [
  'NSD_Uncheck',
  'MB_YESNO|MB_ICONSTOP|MB_DEFBUTTON2',
  'KaloneoDeleteDataConfirmed',
- 'RMDir /r "$APPDATA\\KALONEO"',
- 'RMDir /r "$LOCALAPPDATA\\KALONEO"'
+ 'RMDir /r "$APPDATA'+String.fromCharCode(92)+'KALONEO"',
+ 'RMDir /r "$LOCALAPPDATA'+String.fromCharCode(92)+'KALONEO"'
 ]){
  assert(nsis.includes(expected),'Protection NSIS manquante : '+expected);
 }
