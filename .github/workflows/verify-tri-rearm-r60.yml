@@ -1,8 +1,6 @@
 name: R60 V1 Admin edit and Tri cross-regression
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
+  # Vérification disponible à la demande ; contrôles automatisés réunis dans le Setup R177.
   workflow_dispatch:
 
 concurrency:

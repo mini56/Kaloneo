@@ -1,12 +1,6 @@
 name: "KALONÉO - Audit sans Setup : images grilles, bouton Puzzle, Import / Export"
 on:
-  push:
-    branches:
-      - fix-r60-tri-rearm-only-20261011
-    paths:
-      - '.github/workflows/audit-ui-grilles-puzzle-import.yml'
-      - 'seb-evalpro/overrides/admin-kaloneo-transfer.html'
-      - 'seb-evalpro/scripts/r175-import-export-layout-electron-smoke-main.js'
+  # Vérification disponible à la demande ; contrôles automatisés réunis dans le Setup R177.
   workflow_dispatch:
 permissions:
   contents: read
