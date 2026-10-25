@@ -17,27 +17,33 @@
     button{min-height:40px;padding:7px 15px;border:1.5px solid #004E70;border-radius:9px;background:#fff;color:#004E70;cursor:pointer}
     button:hover{background:#f3f8fb}
     .primary{border-color:#198754;color:#198754}
-    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
-    .card{padding:22px;border:1px solid #d3dce4;border-radius:12px;background:#fff;box-shadow:0 5px 18px rgba(0,0,0,.08)}
-    .card{display:flex;flex-direction:column}
-    /* Chaque carte conserve les mêmes lignes verticales pour descriptions,
-       champs/commandes et les 2 premières actions. */
-    @media(min-width:1051px){.card>p{height:3.9em;min-height:3.9em;margin-bottom:18px}}
-    .card .status{margin-top:auto}
-    .card .actions{flex-direction:column}
-    .card .actions button{flex:0 0 auto;width:100%}
-    /* Boutons Images alignés sur : liste Parcours, Exporter, Importer.
-       Aucun faux champ vide au-dessus du premier bouton. */
-    .image-card .image-export-label{color:#004E70;font-weight:700}
-    .image-card .actions{margin-top:4px}
-    .image-card .actions button:first-child{margin-bottom:8px}
-    .card h2{margin:0 0 7px;color:#004E70;font-size:23px}
-    .card p{margin:0 0 18px;color:#5d6b75;line-height:1.35}
-    label{display:flex;flex-direction:column;gap:6px;color:#004E70;font-weight:700}
-    select{width:100%;min-height:42px;padding:7px 10px;border:1px solid #aebbc7;border-radius:8px;background:#fff;color:#27313a}
-    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-    .actions button{flex:1 1 180px}
-    .status{min-height:24px;margin:12px 0 0;padding:7px 9px;border-radius:7px;background:#f6f8fa;color:#53636f}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:stretch}
+    /* Une grille DE LIGNES explicite et identique pour chaque carte.
+       Ligne 1 : titre, 2 : présentation, 3 : libellé, 4/5/6 : commandes.
+       La 1re commande du bloc Images prend la place d'un menu déroulant.
+       Aucune marge artificielle ni case invisible ne déplace les boutons. */
+    .card{
+      display:grid;
+      grid-template-columns:minmax(0,1fr);
+      grid-template-rows:28px minmax(68px,auto) 20px repeat(3,42px) minmax(24px,1fr);
+      row-gap:10px;
+      min-height:418px;
+      padding:22px;
+      border:1px solid #d3dce4;
+      border-radius:12px;
+      background:#fff;
+      box-shadow:0 5px 18px rgba(0,0,0,.08)
+    }
+    .card h2{grid-row:1;margin:0;color:#004E70;font-size:23px}
+    .card>p{grid-row:2;margin:0;color:#5d6b75;line-height:1.35}
+    .card .field-label{grid-row:3;display:block;align-self:end;color:#004E70;font-weight:700}
+    .card .actions{display:contents}
+    .card .control-row-1{grid-row:4}
+    .card .control-row-2{grid-row:5}
+    .card .control-row-3{grid-row:6}
+    .card :is(select,.actions button){box-sizing:border-box;width:100%;height:42px;min-height:42px;min-width:0}
+    select{padding:7px 10px;border:1px solid #aebbc7;border-radius:8px;background:#fff;color:#27313a}
+    .card .status{grid-row:7;align-self:end;min-height:24px;margin:0;padding:7px 9px;border-radius:7px;background:#f6f8fa;color:#53636f}
     .status.ok{background:#eef9f2;color:#1f6b3a}
     .status.error{background:#fff0f0;color:#9b2424}
     @media(max-width:1050px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
@@ -57,12 +63,11 @@
       <article class="card">
         <h2>Tests</h2>
         <p>Exporter un test de la bibliothèque ou importer un fichier <strong>test.json</strong>.</p>
-        <label>Test à exporter
-          <select id="test-select"></select>
-        </label>
+        <label class="field-label" for="test-select">Test à exporter</label>
+        <select id="test-select" class="control-row-1"></select>
         <div class="actions">
-          <button id="export-test" class="primary" type="button">Exporter le test</button>
-          <button id="import-test" type="button">Importer un test</button>
+          <button id="export-test" class="primary control-row-2" type="button">Exporter le test</button>
+          <button id="import-test" class="control-row-3" type="button">Importer un test</button>
         </div>
         <div id="test-status" class="status" aria-live="polite"></div>
       </article>
@@ -70,23 +75,22 @@
       <article class="card">
         <h2>Parcours</h2>
         <p>Le paquet de parcours contient le parcours, ses tests et son écran de masquage pour faciliter le transfert.</p>
-        <label>Parcours à exporter
-          <select id="parcours-select"></select>
-        </label>
+        <label class="field-label" for="parcours-select">Parcours à exporter</label>
+        <select id="parcours-select" class="control-row-1"></select>
         <div class="actions">
-          <button id="export-parcours" class="primary" type="button">Exporter le parcours</button>
-          <button id="import-parcours" type="button">Importer un parcours</button>
+          <button id="export-parcours" class="primary control-row-2" type="button">Exporter le parcours</button>
+          <button id="import-parcours" class="control-row-3" type="button">Importer un parcours</button>
         </div>
         <div id="parcours-status" class="status" aria-live="polite"></div>
       </article>
       <article class="card image-card">
         <h2>Images</h2>
         <p>Transférer vos images personnelles entre deux PC ou ajouter des images à la bibliothèque KALONÉO.</p>
-        <label class="image-export-label">Export ZIP</label>
+        <span class="field-label">Export ZIP</span>
         <div class="actions">
-          <button id="export-images" class="primary" type="button">Exporter des images</button>
-          <button id="import-images" type="button">Importer des images</button>
-          <button id="import-image-zip" type="button">Importer un ZIP par thèmes</button>
+          <button id="export-images" class="primary control-row-1" type="button">Exporter des images</button>
+          <button id="import-images" class="control-row-2" type="button">Importer des images</button>
+          <button id="import-image-zip" class="control-row-3" type="button">Importer un ZIP par thèmes</button>
         </div>
         <input id="image-files" type="file" accept="image/*" multiple hidden>
         <div id="image-status" class="status" aria-live="polite"></div>
