@@ -1170,6 +1170,20 @@
     }
 
     host.appendChild(layout);
+
+    // Les ajouts du Builder sur les anciens tableaux sont rendus en dessous,
+    // sans remplacer les 2 tableaux et les 20 questions de la V1.
+    const extras=test.presentation?.builderExtras;
+    if(Array.isArray(extras) && extras.length){
+      host.classList.add('kaltest-legacy-tables-with-extras');
+      const panel=document.createElement('section');
+      panel.className='kaltest-legacy-extras';
+      for(const item of extras){
+        const node=renderBuilderContentWithDocuments(test,item);
+        if(node)panel.appendChild(node);
+      }
+      host.appendChild(panel);
+    }
   }
 
   function renderChoiceTable(test, host) {
@@ -3913,8 +3927,18 @@
       testIcon.src='kaloneo-builder/icons-tests/'+builtin+'.png';
       testIcon.hidden=false;
     }
-    document.getElementById('kaltest-progress').textContent =
-      'Exercice ' + (state.testIndex + 1) + ' / ' + ACTIVE_TESTS.length;
+    const progress=document.getElementById('kaltest-progress');
+    if(BUILDER_MINI_PREVIEW_MODE){
+      // Sur la miniature seulement : libérer la ligne sous le titre.
+      // Le vrai parcours candidat et l'Aperçu interactif restent inchangés.
+      progress.textContent='';
+      progress.hidden=true;
+      progress.style.setProperty('display','none','important');
+    }else{
+      progress.hidden=false;
+      progress.style.removeProperty('display');
+      progress.textContent='Exercice ' + (state.testIndex + 1) + ' / ' + ACTIVE_TESTS.length;
+    }
     renderRichContext(document.getElementById('kaltest-scenario'), test.scenario || '');
     // Corriger la consigne affichée sans altérer la V1 historique protégée.
     const visibleInstruction=test.id==='tri_chevilles'
