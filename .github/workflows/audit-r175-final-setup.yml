@@ -91,7 +91,7 @@ jobs:
       - name: "R175 gates - full licence, NSIS 6155 guard, square grids and Puzzle Electron 1200/1366"
         shell: pwsh
         run: |
-          node scripts/r175-license-about-nsis-smoke.js
+          node scripts/r174-license-about-nsis-smoke.js
           if($LASTEXITCODE -ne 0){throw 'KALONEO licence regression'}
           node scripts/kaloneo-number-grid-v1-smoke.js
           if($LASTEXITCODE -ne 0){throw 'Number grid V1 regression'}
