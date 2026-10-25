@@ -72,6 +72,8 @@ app.whenReady().then(async()=>{
        buttonVisible:getComputedStyle(button).display!=='none',
        buttonBackground:getComputedStyle(button).backgroundColor,
        buttonFont:getComputedStyle(button).fontFamily,
+       buttonColor:getComputedStyle(button).color,
+       buttonBorder:getComputedStyle(button).borderColor,
        buttonRight:Math.abs(button.getBoundingClientRect().right-exampleBox.getBoundingClientRect().right)<20,
        inputCount:cells.length,answerBefore:cells[0].value};
    })()`,true);
@@ -79,8 +81,10 @@ app.whenReady().then(async()=>{
    assert.equal(info.button,'Voir l’exemple');
    assert.equal(info.inFirstBlueBlock,true,'Bouton mal situé');
    assert.equal(info.buttonVisible,true);
-   assert.equal(info.buttonBackground,'rgb(5, 113, 166)','Bouton hors du style KALONÉO');
-   assert(info.buttonFont.includes('Segoe UI'),'Police KALONÉO non appliquée');
+   assert.equal(info.buttonBackground,'rgb(255, 255, 255)','Bouton non conforme aux boutons blancs KALONÉO');
+   assert.equal(info.buttonColor,'rgb(0, 78, 112)','Couleur du bouton incohérente');
+   assert.equal(info.buttonBorder,'rgb(0, 78, 112)','Bordure KALONÉO manquante');
+   assert(/Calibri|Segoe UI/.test(info.buttonFont),'Police KALONÉO non appliquée');
    assert.equal(info.buttonRight,true,'Le bouton doit être aligné à droite du premier bloc bleu');
    assert.equal(info.inputCount,16);
    await pause(400);

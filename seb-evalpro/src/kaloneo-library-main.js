@@ -472,6 +472,15 @@ function createKaloneoLibrary(options = {}) {
     }
   }
 
+  // Ces deux V1 ont été livrées avant leurs illustrations définitives.
+  // Les premières installations conservent l'ancien test.json local si on
+  // ne synchronise que les fichiers manquants. Les autres V1 sont intouchables.
+  const MATH_GRIDS_TO_REFRESH = new Set(['grille_operations','carre_magique_15']);
+  function isBundledMathGrid(definition) {
+    return MATH_GRIDS_TO_REFRESH.has(String(definition?.id||'')) &&
+      String(definition?.version||'')==='1.0.0';
+  }
+
   function isBundledMigratedTest(definition) {
     const id = String(definition?.id || '');
     return BASE_TEST_ORDER.includes(id) &&
@@ -499,7 +508,8 @@ function createKaloneoLibrary(options = {}) {
     for (const seedFile of walkTestFiles(source)) {
       const seedDefinition = readJson(seedFile);
       if(!official.has(String(seedDefinition?.id||'')) &&
-        !isBundledMigratedTest(seedDefinition)) continue;
+        !isBundledMigratedTest(seedDefinition) &&
+        !isBundledMathGrid(seedDefinition)) continue;
 
       const relative = path.relative(source, seedFile);
       const targetFile = path.join(destination, relative);
@@ -513,6 +523,11 @@ function createKaloneoLibrary(options = {}) {
       const seedJson = JSON.stringify(seedDefinition);
       const key=v1DraftKey(seedDefinition);
       const draft=developerDrafts[key];
+      // Les corrections des deux grilles doivent atteindre un PC qui avait
+      // déjà les anciens JSON, mais jamais écraser des saisies Admin.
+      // Cette exception est strictement limitée à ces deux V1.
+      if(isBundledMathGrid(seedDefinition) &&
+          currentDefinition?.kaloneoLibrary?.adminModified===true)continue;
       // Pendant les corrections V1, un enregistrement Admin accompagné de
       // sa sauvegarde ne doit pas être effacé silencieusement par un Setup.
       // Le verrouillage final des V1 sera une décision explicite.

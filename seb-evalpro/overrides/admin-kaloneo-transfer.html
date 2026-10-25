@@ -20,6 +20,9 @@
     .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
     .card{padding:22px;border:1px solid #d3dce4;border-radius:12px;background:#fff;box-shadow:0 5px 18px rgba(0,0,0,.08)}
     .card{display:flex;flex-direction:column}
+    /* Chaque carte conserve les mêmes lignes verticales pour descriptions,
+       champs/commandes et les 2 premières actions. */
+    @media(min-width:1051px){.card>p{height:3.9em;min-height:3.9em;margin-bottom:18px}}
     .card .status{margin-top:auto}
     .card .actions{flex-direction:column}
     .card .actions button{flex:0 0 auto;width:100%}
@@ -34,8 +37,6 @@
     .status{min-height:24px;margin:12px 0 0;padding:7px 9px;border-radius:7px;background:#f6f8fa;color:#53636f}
     .status.ok{background:#eef9f2;color:#1f6b3a}
     .status.error{background:#fff0f0;color:#9b2424}
-    /* Quand le descriptif occupe 2 ou 3 lignes, réserver la même hauteur dans les trois cartes. */
-    @media(min-width:1051px) and (max-width:1300px){.grid>.card>p{min-height:calc(3 * 1.35em)}}
     @media(max-width:1050px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
   </style>
 </head>
