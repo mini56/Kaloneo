@@ -5,6 +5,8 @@ on:
       - fix-r60-tri-rearm-only-20261011
     paths:
       - '.github/workflows/audit-ui-grilles-puzzle-import.yml'
+      - 'seb-evalpro/overrides/admin-kaloneo-transfer.html'
+      - 'seb-evalpro/scripts/r175-import-export-layout-electron-smoke-main.js'
   workflow_dispatch:
 permissions:
   contents: read

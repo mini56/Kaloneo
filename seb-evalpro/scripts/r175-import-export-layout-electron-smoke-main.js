@@ -18,21 +18,24 @@ app.whenReady().then(async()=>{
       unwantedNote:im.textContent.includes('Export ZIP par thèmes, sans les images déjà fournies'),
       desc:im.querySelector('p')?.textContent.trim(),
       buttons:buttons.map(x=>x.textContent.trim()),
-      test:[y('export-test'),y('import-test')],
-      parcours:[y('export-parcours'),y('import-parcours')],
+      test:[y('test-select'),y('export-test'),y('import-test')],
+      parcours:[y('parcours-select'),y('export-parcours'),y('import-parcours')],
       image:buttons.map(x=>x.getBoundingClientRect().top),
       bottoms:c.map(x=>x.getBoundingClientRect().bottom),
       statusBottoms:c.map(x=>x.querySelector('.status').getBoundingClientRect().bottom),
-      spacer:im.querySelector('.image-export-placeholder')?.getBoundingClientRect().height,
+      spacerPresent:!!im.querySelector('.image-export-placeholder'),
       testSelect:!!document.getElementById('test-select'),parcoursSelect:!!document.getElementById('parcours-select'),
       overflow:document.documentElement.scrollWidth>window.innerWidth+3};})()`,true);
    assert.deepEqual(obs.titles,['Tests','Parcours','Images']);
    assert.equal(obs.imageLabel,'Export ZIP');assert(!obs.unwantedNote);
    assert(obs.desc.startsWith('Transférer vos images personnelles'));
    assert.deepEqual(obs.buttons,['Exporter des images','Importer des images','Importer un ZIP par thèmes']);
-   assert(obs.testSelect&&obs.parcoursSelect);assert.equal(obs.spacer,42);
-   for(let j=0;j<2;j++){assert(Math.abs(obs.test[j]-obs.parcours[j])<4,'Tests/Parcours '+JSON.stringify(obs));
-    assert(Math.abs(obs.test[j]-obs.image[j])<4,'Images non alignées '+JSON.stringify(obs));}
+   assert(obs.testSelect&&obs.parcoursSelect);assert.equal(obs.spacerPresent,false,'Ancienne zone vide persistante');
+   // Comparer les TROIS boutons Images avec les TROIS lignes de commandes
+   // des cartes voisines (liste déroulante, Exporter, Importer).
+   for(let j=0;j<3;j++){assert(Math.abs(obs.test[j]-obs.parcours[j])<4,'Tests/Parcours '+JSON.stringify(obs));
+    assert(Math.abs(obs.image[j]-obs.parcours[j])<4,'Images décalées sur la ligne '+j+' '+JSON.stringify(obs));}
+   assert(obs.image[0]<obs.parcours[1],'Le premier bouton Images est encore trop bas');
    assert(obs.image[2]>obs.image[1]);assert(Math.max(...obs.bottoms)-Math.min(...obs.bottoms)<3);
    assert(Math.max(...obs.statusBottoms)-Math.min(...obs.statusBottoms)<3);
    assert(!obs.overflow,'Débordement '+JSON.stringify(obs));
