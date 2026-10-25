@@ -8,6 +8,15 @@ const {createCandidateLocalProtection}=require('../src/candidate-local-protectio
 const {createCandidateStore}=require('../src/candidate-store-main');
 const mode=process.argv.includes('--seed')?'seed':process.argv.includes('--verify')?'verify':'';
 if(!mode)throw Error('Utiliser --seed ou --verify');
+// Reproduire exactement le profil Windows du KALONEO.exe, pas Electron/ par defaut.
+// Sinon Chromium peut chiffrer sous une identite et relire sous une autre.
+app.setName('KALONÉO');
+const actualRoot=path.join(app.getPath('appData'),'KALONEO');
+const actualDocuments=path.join(actualRoot,'Documents');
+fs.mkdirSync(actualDocuments,{recursive:true});
+app.setPath('userData',actualRoot);
+app.setPath('documents',actualDocuments);
+if(process.platform==='win32')app.setAppUserModelId('fr.sauvegarde56.kaloneo');
 const markerFile=process.env.KALONEO_R172_MANIFEST||path.join(process.env.RUNNER_TEMP||process.env.TEMP,'r172-profile-manifest.json');
 const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
 const put=(p,v)=>{fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,v);};
@@ -38,6 +47,16 @@ app.whenReady().then(()=>{
  if(!safeStorage.isEncryptionAvailable())throw Error('DPAPI Windows indisponible');
  if(mode==='seed'){
   if(fs.existsSync(path.join(root,'storage','Candidats')))throw Error('Profil test non vierge: ne pas ecraser les donnees');
+ }
+ if(mode==='verify'){
+  const source=path.join(root,'candidate-local-key.sebkey');
+  const backup=path.join(storage,'System','candidate-local-key.sebkey');
+  if(!fs.existsSync(source)||!fs.existsSync(backup))throw Error('Clé chiffrement manquante avant verification');
+  try{
+   const wrapper=JSON.parse(fs.readFileSync(source,'utf8'));
+   const secret=safeStorage.decryptString(Buffer.from(String(wrapper.protectedKey),'base64'));
+   if(Buffer.from(secret,'base64').length!==32)throw Error('Longueur de cle non valide');
+  }catch(err){throw Error('DPAPI illisible AVANT migration/reinitialisation: '+(err.message||err));}
  }
  const key=protection.initializeKey();configureLocalKey(key);key.fill(0);
  const store=createCandidateStore({documentsPath:documents,userDataPath:root,dataRoot:storage});
