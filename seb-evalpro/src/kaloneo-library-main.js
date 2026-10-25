@@ -1064,6 +1064,14 @@ function createKaloneoLibrary(options = {}) {
     return { id:DEFAULT_MASK_ID, version:DEFAULT_MASK_VERSION };
   }
 
+  // Le parcours de base est livré avec le masque KALONÉO en image fixe.
+  // Les références des autres parcours restent intactes.
+  function baseParcoursMaskRef() {
+    return findMaskScreen('kaloneo-video-image', '1.0.0')
+      ? {id:'kaloneo-video-image',version:'1.0.0'}
+      : defaultMaskRef();
+  }
+
   function ensureBaseParcours() {
     const existing = readAllParcours().find(item => item && item.id === 'parcours-de-base');
     if (existing) {
@@ -1074,7 +1082,19 @@ function createKaloneoLibrary(options = {}) {
         existing.creator = 'KALONÉO';
         updated = true;
       }
-      if (!existing.maskScreen) {
+      const currentMask = existing.maskScreen;
+      const previousSystemMask = !currentMask ||
+        (String(currentMask.id) === DEFAULT_MASK_ID &&
+         String(currentMask.version || DEFAULT_MASK_VERSION) === DEFAULT_MASK_VERSION);
+      if (existing.systemProvided === true && previousSystemMask) {
+        const wantedMask = baseParcoursMaskRef();
+        if (!currentMask || String(currentMask.id) !== wantedMask.id ||
+            String(currentMask.version) !== wantedMask.version) {
+          existing.maskScreen = wantedMask;
+          existing.schemaVersion = Math.max(2, Number(existing.schemaVersion) || 1);
+          updated = true;
+        }
+      } else if (!currentMask) {
         existing.maskScreen = defaultMaskRef();
         existing.schemaVersion = Math.max(2, Number(existing.schemaVersion) || 1);
         updated = true;
@@ -1103,7 +1123,7 @@ function createKaloneoLibrary(options = {}) {
       systemProvided:true,
       createdAt:stamp,
       updatedAt:stamp,
-      maskScreen:defaultMaskRef(),
+      maskScreen:baseParcoursMaskRef(),
       introduction:refFor(introRecord.definition),
       tests,
       fin:refFor(finRecord.definition)
