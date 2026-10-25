@@ -1,0 +1,33 @@
+name: "KALONÉO — Nettoyage unique des anciens runs GitHub Actions"
+on:
+  push:
+    branches:
+      - fix-r60-tri-rearm-only-20261011
+    paths:
+      - '.github/workflows/cleanup-obsolete-runs.yml'
+    # La suppression n'est exécutée que pour un commit d'autorisation explicite.
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+concurrency:
+  group: kaloneo-cleanup-once
+  cancel-in-progress: false
+jobs:
+  nettoyage-controle:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[cleanup-approved]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      KALONEO_MAX_DELETE: '700'
+      KALONEO_DRY_RUN: 'false'
+    steps:
+      - name: Recuperer la branche de KALONÉO sans changer les versions
+        uses: actions/checkout@v4
+      - name: Runtime Python pour suppression limitee
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Auditer, protéger les releases et nettoyer les runs anciens non essentiels
+        run: python .github/scripts/prune-obsolete-runs.py
