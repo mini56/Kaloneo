@@ -25,7 +25,10 @@ Var KaloneoDeleteDataDialog
   ${GetParameters} $R0
   ${GetOptions} $R0 "--delete-app-data" $R1
   ${IfNot} ${Errors}
-    MessageBox MB_OK|MB_ICONSTOP "KALONÉO : suppression automatique des données interdite. Lancez la désinstallation interactive et confirmez explicitement la suppression."
+    ; Aucun dialogue ne doit bloquer une commande de maintenance /S.
+    ${IfNot} ${Silent}
+      MessageBox MB_OK|MB_ICONSTOP "KALONÉO : suppression automatique des données interdite. Lancez la désinstallation interactive et confirmez explicitement la suppression."
+    ${EndIf}
     Abort
   ${EndIf}
 !macroend
