@@ -101,6 +101,8 @@ jobs:
         run: node scripts/kaloneo-edit-existing-test-smoke.js
       - name: Verify V1 can be modified and saved in the real Electron Builder
         run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
+      - name: Real candidate Electron - two math grids, all scoring and 1200/1366 rendering
+        run: npx electron --no-sandbox scripts/kaloneo-number-grid-electron-smoke-main.js
       - name: Check Tri first attempt error and next chrono in real Electron
         run: npx electron --no-sandbox scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
       - name: Check Briques 0-99 including 12/99 and Admin persistence in Electron
