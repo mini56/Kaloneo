@@ -30,7 +30,7 @@ for(const entry of expected){
  assert(original.features.includes('host.calculator'));
  assert(original.features.includes('layout.split'));
  const content=original.presentation.builderContent[1];
- assert.equal(content.type,'table-grid');assert.equal(content.zone,'full');
+ assert.equal(content.type,'table-grid');assert.equal(content.zone,'left');
  assert.equal(content.table.rows,entry.rows);
  assert.equal(content.table.cols,entry.cols);
  assert.equal(content.table.cells.flat().filter(c=>c.kind==='candidate-answer').length,9);
