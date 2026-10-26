@@ -30,6 +30,7 @@ const replayMain = read('src/replay-main.js');
 const replayPreload = read('src/replay-preload.js');
 const historyMain = read('src/bilan-history-main.js');
 const historyPreload = read('src/bilan-history-preload.js');
+const historyTable = read('src/bilan-table-view.js');
 const preload = read('src/preload.js');
 
 const required = [
@@ -51,7 +52,8 @@ const required = [
   [historyMain, 'function historicalWordPath(filename)', 'Word courant unique'],
   [historyPreload, "safe(candidate.date || '') + '.doc';", 'nom Word courant sans suffixe de révision'],
   [historyPreload, 'let revisionSaveInFlight = false;', 'protection double clic révision'],
-  [historyPreload, "comment.value = chosen ? String(chosen.value || '') : '';", 'synchronisation commentaire/niveau'],
+  [historyTable, "select.addEventListener('change',()=>setLevel(select.options[select.selectedIndex]?.dataset.l||''))", 'synchronisation commentaire/niveau'],
+  [historyPreload, "preset:select ? String(select.value || '') : ''", 'conservation du commentaire choisi'],
   [historyPreload, 'SEB_WORD_EQUAL_LEVEL_WIDTHS', 'largeurs Word égales']
 ];
 for (const [text, token, label] of required) {
@@ -71,6 +73,7 @@ for (const [label, code] of [
   ['replay-preload.js', replayPreload],
   ['bilan-history-main.js', historyMain],
   ['bilan-history-preload.js', historyPreload],
+  ['bilan-table-view.js', historyTable],
   ['replay-navigation-capture.js', read('src/replay-navigation-capture.js')],
   ['preload.js', read('src/preload.js')]
 ]) {

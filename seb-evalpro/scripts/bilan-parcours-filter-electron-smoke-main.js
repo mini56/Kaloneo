@@ -81,6 +81,7 @@ app.whenReady().then(async()=>{
    document.querySelector('#bilan').style.width='1100px';
    document.querySelector('#triTimes').innerText=${JSON.stringify(times)};
    document.querySelector('#triAvg').textContent='00:08';document.querySelector('#triErr').textContent='2 erreurs';
+   const reliability=document.querySelector('[data-r="tri-erreurs"] .csel');reliability.value=[...reliability.options].find(o=>o.dataset.l==='I').value;reliability.dispatchEvent(new Event('change',{bubbles:true}));
    document.querySelector('[data-r="briques-identification"] .detail').textContent='Temps : 06:23';
    document.querySelector('[data-r="briques-manipulation"] .detail').textContent='1 erreur';
    document.getElementById('save').click();
@@ -97,12 +98,17 @@ app.whenReady().then(async()=>{
    assert.deepEqual(after,before,'La grille enregistrée doit conserver exactement la géométrie et la mise en forme validées.');
    const tri=await win.webContents.executeJavaScript(`(()=>{const table=document.querySelector('#seb-bh-institutional-table');return {times:table.querySelector('#triTimes').innerText,average:table.querySelector('#triAvg').textContent,errors:table.querySelector('#triErr').textContent,errorColumn:table.querySelector('#triErr').closest('td').cellIndex,emptyTextareas:table.querySelectorAll('textarea').length}})()`);
    assert.deepEqual(tri,{times,average:'00:08',errors:'2 erreurs',errorColumn:0,emptyTextareas:0});
+   for(const level of ['II','I']){
+    const selection=await win.webContents.executeJavaScript(`(()=>{const r=document.querySelector('#seb-bh-institutional-table [data-r="tri-erreurs"]'),s=r.querySelector('select');s.value=[...s.options].find(o=>o.dataset.l==='${level}').value;s.dispatchEvent(new Event('change',{bubbles:true}));return r.querySelector('.level.on').dataset.l})()`);
+    assert.equal(selection,level,'Le changement de commentaire synchronise le niveau.');
+   }
    await win.webContents.executeJavaScript("document.getElementById('seb-bh-save-revision').click()");await pause();
    assert.equal(revision.rows.find(r=>r.key==='tri-temps').triTimes,times);
    assert.equal(revision.rows.find(r=>r.key==='tri-erreurs').triErrors,'2 erreurs');
    assert.equal(revision.rows.find(r=>r.key==='briques-identification').detail,'Temps : 06:23');
    await win.webContents.executeJavaScript("document.getElementById('seb-bh-export').click()");await pause();
    assert(wordHtml.includes('00:08')&&wordHtml.includes('2 erreurs'));
+   assert(wordHtml.includes(revision.rows.find(r=>r.key==='tri-erreurs').preset),'Le commentaire validé doit rester dans le Word.');
    for(const line of times.split('\n'))assert(wordHtml.includes(line),'Le Word doit garder chaque temps : '+line);
    archived=JSON.parse(JSON.stringify(revision));
    await win.webContents.executeJavaScript("document.getElementById('seb-bilan-history-editor').remove()");

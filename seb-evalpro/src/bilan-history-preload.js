@@ -515,7 +515,15 @@ function exportHistoricalWord(card, candidate, originalBuild, revision) {
     });
 
     const select = tr.querySelector('.csel');
-    if (select) select.remove();
+    if (select) {
+      const comment=parsed.createElement('div');
+      comment.style.whiteSpace='pre-wrap';
+      comment.textContent=String(row.preset||row.comment||'');
+      select.replaceWith(comment);
+      if(row.comment&&row.comment!==row.preset&&row.preset){
+        const note=parsed.createElement('div');note.style.whiteSpace='pre-wrap';note.textContent=row.comment;comment.after(note);
+      }
+    }
 
     const textarea = tr.querySelector('.ctxt');
     if (textarea) {
