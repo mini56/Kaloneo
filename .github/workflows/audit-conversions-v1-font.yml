@@ -5,6 +5,7 @@ on:
       - fix-r60-tri-rearm-only-20261011
     paths:
       - '.github/workflows/audit-conversions-v1-font.yml'
+      - 'seb-evalpro/scripts/kaloneo-conversions-v1-font-electron-smoke-main.js'
   workflow_dispatch:
 permissions:
   contents: read

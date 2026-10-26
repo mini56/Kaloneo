@@ -47,7 +47,12 @@ app.whenReady().then(async()=>{
     ' lineHeight:list?parseFloat(getComputedStyle(list).lineHeight):0,items:items.length,',
     ' tableRows:table?.tBodies?.[0]?.rows?.length||0, imageLoaded:!!(img?.complete&&img?.naturalWidth>0),',
     ' list:rect(list),table:rect(table),left:rect(left),',
-    ' overflowX:content.scrollWidth>content.clientWidth+4};',
+    ' overflowX:content.scrollWidth>content.clientWidth+4,',
+    'selectorMatched:list?.matches(\'body[data-seb-kaltest-id="conversions_atelier_expedition"] .kaltest-conversions-work .kaltest-question-list\'),',
+    'inlineStyle:list?.getAttribute("style"),',
+    'stylesheets:[...document.styleSheets].map(ss=>({href:ss.href,',
+    '  matches:[...ss.cssRules].filter(r=>r.cssText?.includes("amélioration ciblée V1")||r.selectorText?.includes("conversions_atelier_expedition")).slice(-5).map(r=>r.cssText?.slice(0,240))})).filter(ss=>ss.matches.length),',
+    'linkState:[...document.querySelectorAll("link[rel=stylesheet]")].map(l=>({href:l.getAttribute("href"),sheet:!!l.sheet}))};',
     '})()'
   ].join('\n');
   for(const [width,height] of [[1649,928],[1366,768],[1200,800]]){
@@ -55,6 +60,7 @@ app.whenReady().then(async()=>{
    await win.loadFile(path.join(root,'app/web/kaltest-pilot2.html'),{query:{kaloneoPreview:'1'}});
    await pause(500);
    const info=await win.webContents.executeJavaScript(inspect,true);
+   console.log('CONVERSIONS_V1_DIAGNOSTIC_'+width+'x'+height,JSON.stringify(info));
    assert.equal(info.id,original.id,JSON.stringify(info));
    assert.equal(info.items,10,'Liste des 10 questions manquante');
    assert(info.tableRows>=10,'Tableau des 10 réponses manquant');
