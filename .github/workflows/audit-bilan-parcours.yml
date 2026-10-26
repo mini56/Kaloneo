@@ -49,18 +49,18 @@ jobs:
           node scripts/candidate-local-protection-smoke.js
           if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
       - name: Vrais écrans Windows, capture, réouverture et Word filtré
-        run: npx electron --no-sandbox scripts/bilan-parcours-filter-electron-smoke-main.js
+        run: node scripts/run-bilan-electron-check.js scripts/bilan-parcours-filter-electron-smoke-main.js "BILAN_FILTER_ELECTRON=OK"
       - name: Synthèse générale et bouton visible
         run: |
           node scripts/general-bilan-synthesis-smoke.js
           if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
           if($LASTEXITCODE -ne 0){throw 'Synthese invalide'}
-          npx electron --no-sandbox scripts/general-bilan-synthesis-electron-smoke-main.js
+          node scripts/run-bilan-electron-check.js scripts/general-bilan-synthesis-electron-smoke-main.js "GENERAL_SYNTHESIS_ELECTRON=OK"
           if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
           if($LASTEXITCODE -ne 0){throw 'Ecran general invalide'}
       - name: Régression des V1 et des liaisons Builder
         run: |
-          npx electron --no-sandbox scripts/kaloneo-bilan-dynamic-smoke-main.js
+          node scripts/run-bilan-electron-check.js scripts/kaloneo-bilan-dynamic-smoke-main.js "KALONEO_BILAN_INSTITUTIONAL_SMOKE: OK"
           if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
-          npx electron --no-sandbox scripts/kaloneo-bilan-builder-routing-electron-smoke-main.js
+          node scripts/run-bilan-electron-check.js scripts/kaloneo-bilan-builder-routing-electron-smoke-main.js "KALONEO_R151_BUILDER_BILAN_ELECTRON=OK"
           if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}

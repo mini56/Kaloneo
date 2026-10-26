@@ -39,6 +39,6 @@ jobs:
           npm run prepare:web
           if($LASTEXITCODE -ne 0){throw 'Preparation des pages impossible'}
       - name: Bouton visible, génération, modification, sauvegarde et Word en vrai Electron
-        run: npx electron --no-sandbox scripts/general-bilan-synthesis-electron-smoke-main.js
+        run: node scripts/run-bilan-electron-check.js scripts/general-bilan-synthesis-electron-smoke-main.js "GENERAL_SYNTHESIS_ELECTRON=OK"
       - name: Régression des bilans courants filtrés et des points
-        run: npx electron --no-sandbox scripts/bilan-parcours-filter-electron-smoke-main.js
+        run: node scripts/run-bilan-electron-check.js scripts/bilan-parcours-filter-electron-smoke-main.js "BILAN_FILTER_ELECTRON=OK"

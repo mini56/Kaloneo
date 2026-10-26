@@ -27,6 +27,8 @@ ipcMain.handle('bilan-history:save-current',(_event,payload)=>{captured=payload.
 ipcMain.handle('bilan-history:save-revision',(_event,payload)=>{revision=payload.document;return{ok:true,filename:'test.json',revision:0}});
 ipcMain.on('bilan-history:get-word-template-sync',event=>{event.returnValue={ok:true,html:fs.readFileSync(path.join(__dirname,'..','app','web','admin-bilan.html'),'utf8')}});
 ipcMain.on('bilan-history:write-word-sync',(event,payload)=>{wordHtml=payload.html;event.returnValue={ok:true,filename:'test.sebdoc'}});
+app.on('window-all-closed',()=>{}); // Plusieurs fenêtres testées successivement.
+ipcMain.handle('candidate:active',()=>null);
 app.commandLine.appendSwitch('disable-gpu');
 const pause=()=>new Promise(resolve=>setTimeout(resolve,700));
 app.whenReady().then(async()=>{

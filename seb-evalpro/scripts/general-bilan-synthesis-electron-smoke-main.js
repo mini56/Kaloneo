@@ -39,6 +39,8 @@ ipcMain.handle('candidate-catalog:generate-general-synthesis',async(_event,id,di
 ipcMain.handle('candidate-catalog:save-general-bilan',(_event,id,summary)=>{savedSummary=summary;return{ok:true}});
 ipcMain.handle('candidate-catalog:export-general-bilan',(_event,id,summary)=>{savedSummary=summary;exportedSummary=summary;return{ok:true}});
 ipcMain.handle('candidate-catalog:open-general-word',()=>({ok:true}));
+app.on('window-all-closed',()=>{}); // Plusieurs fenêtres testées successivement.
+ipcMain.handle('candidate:active',()=>null);
 app.commandLine.appendSwitch('disable-gpu');
 const pause=()=>new Promise(resolve=>setTimeout(resolve,350));
 app.whenReady().then(async()=>{
