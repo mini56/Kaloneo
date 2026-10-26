@@ -2043,7 +2043,7 @@
       '<li>Arrêtez-le lorsque le tri est terminé : Minutes et Secondes sont remplis automatiquement.</li>' +
       '<li>Saisissez ensuite le nombre d’erreurs, même s’il est égal à <strong>0</strong>.</li>' +
       '<li>Le compteur revient ensuite à <strong>00:00</strong>.</li>' +
-      '<li>Effectuez entre <strong>3 et 5 tris</strong>.</li>' +
+      '<li>Effectuez <strong>5 tris</strong>.</li>' +
       '<li>À partir de 3 tris complets, affichez les résultats puis complétez l’autoévaluation.</li>' +
       '</ul>';
     // R165 : image fournie, uniquement dans le bloc gauche du Tri.

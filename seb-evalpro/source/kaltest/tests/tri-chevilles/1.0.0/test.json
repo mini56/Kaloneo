@@ -31,7 +31,7 @@
   },
   "autoevaluation": true,
   "scenario": "Une mauvaise manipulation a provoqué la chute d’une caisse entière de chevilles au chargement du camion, semant le désordre : tout est mélangé. Un client important attend sa commande en urgence et la production est à l’arrêt. Toute l’équipe est mobilisée pour remettre de l’ordre, trier les boîtes de chevilles par couleurs et permettre à la livraison d’être honorée dans les temps. Chacun des employés doit trier de trois à cinq boîtes de chevilles, selon le temps disponible, et noter les temps passés.",
-  "instruction": "Pour chaque boîte, démarrez le compteur au début du tri puis arrêtez-le à la fin. Le temps est reporté automatiquement. Saisissez ensuite le nombre d’erreurs, même s’il est égal à 0. Effectuez entre 3 et 5 tris, puis affichez les résultats et complétez l’autoévaluation.",
+  "instruction": "Pour chaque boîte, démarrez le compteur au début du tri puis arrêtez-le à la fin. Le temps est reporté automatiquement. Saisissez ensuite le nombre d’erreurs, même s’il est égal à 0. Effectuez 5 tris, puis affichez les résultats et complétez l’autoévaluation.",
   "presentation": {
     "layout": "50-50",
     "triStation": {
