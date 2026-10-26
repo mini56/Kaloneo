@@ -4083,20 +4083,23 @@ body[data-seb-kaltest-id="conversions_atelier_expedition"]
 @media (max-height:820px){
   body[data-seb-kaltest-id="conversions_atelier_expedition"]
     .kaltest-conversions-work .kaltest-question-list{
-    font-size:16.5px!important;
-    line-height:1.22!important;
-    padding-top:2px!important;
-    padding-bottom:2px!important;
+    font-size:16px!important;
+    line-height:1.14!important;
+    padding-top:0!important;
+    padding-bottom:0!important;
   }
   body[data-seb-kaltest-id="conversions_atelier_expedition"]
-    .kaltest-conversions-work .kaltest-question-list li{margin:3px 0!important}
+    .kaltest-conversions-work .kaltest-question-list li{margin:1px 0!important}
+  /* Deux pixels gagnés par ligne du tableau, sans changer la hauteur des champs. */
+  body[data-seb-kaltest-id="conversions_atelier_expedition"]
+    .kaltest-conversions-table td{padding:0 3px!important}
 }
 @media (max-height:740px){
   body[data-seb-kaltest-id="conversions_atelier_expedition"]
     .kaltest-conversions-work .kaltest-question-list{
-    font-size:16px!important;
-    line-height:1.18!important;
+    font-size:15.5px!important;
+    line-height:1.12!important;
   }
   body[data-seb-kaltest-id="conversions_atelier_expedition"]
-    .kaltest-conversions-work .kaltest-question-list li{margin:2px 0!important}
+    .kaltest-conversions-work .kaltest-question-list li{margin:1px 0!important}
 }
