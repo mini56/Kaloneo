@@ -78,6 +78,8 @@ app.whenReady().then(async()=>{
   metadata=[];smokeState={version:1,sessionStorage:{candidat_data:JSON.stringify({nom:'TEST',prenom:'GRILLE'})},localStorage:{},lastPage:'admin-bilan.html'};
   win=new BrowserWindow({show:false,width:1366,height:900,webPreferences:{preload:path.join(__dirname,'bilan-parcours-filter-test-preload.js'),contextIsolation:true,nodeIntegration:false,sandbox:false}});
   await win.loadFile(path.join(__dirname,'..','app','web','admin-bilan.html'));await pause();
+  const initialPlacement=await win.webContents.executeJavaScript(`(()=>{const tr=document.querySelector('[data-r="tri-erreurs"]'),e=document.getElementById('triErr');const tools=document.querySelector('.bilan-bottom-actions .tools');return {column:e.closest('td').cellIndex,title:tr.cells[0].textContent.trim(),errors:e.textContent,position:getComputedStyle(document.querySelector('.bilan-bottom-actions')).position,buttons:[...tools.querySelectorAll('button')].map(b=>b.id)}})()`);
+  assert.deepEqual(initialPlacement,{column:5,title:'Nombre d’erreurs effectuées',errors:'0 erreur',position:'fixed',buttons:['auto','save','word','close-bilan-top']},'Compteur à droite, barre des actions fixée en bas.');
   const times=[5,8,11,7,9].map((s,i)=>'N°'+(i+1)+' : 00 min '+String(s).padStart(2,'0')+' s').join('\n');
   await win.webContents.executeJavaScript(`(()=>{
    document.querySelector('#bilan').style.width='1100px';
@@ -100,7 +102,7 @@ app.whenReady().then(async()=>{
    const after=await win.webContents.executeJavaScript(`(${measure})(document.querySelector('#seb-bh-institutional-table'))`);
    assert.deepEqual(after,before,'La grille enregistrée doit conserver exactement la géométrie et la mise en forme validées.');
    const tri=await win.webContents.executeJavaScript(`(()=>{const table=document.querySelector('#seb-bh-institutional-table');return {times:table.querySelector('#triTimes').innerText,average:table.querySelector('#triAvg').textContent,errors:table.querySelector('#triErr').textContent,errorColumn:table.querySelector('#triErr').closest('td').cellIndex,emptyTextareas:table.querySelectorAll('textarea').length}})()`);
-   assert.deepEqual(tri,{times,average:'00:08',errors:'2 erreurs',errorColumn:0,emptyTextareas:0});
+   assert.deepEqual(tri,{times,average:'00:08',errors:'2 erreurs',errorColumn:5,emptyTextareas:0});
    for(const level of ['II','I']){
     const selection=await win.webContents.executeJavaScript(`(()=>{const r=document.querySelector('#seb-bh-institutional-table [data-r="tri-erreurs"]'),s=r.querySelector('select');s.value=[...s.options].find(o=>o.dataset.l==='${level}').value;s.dispatchEvent(new Event('change',{bubbles:true}));return r.querySelector('.level.on').dataset.l})()`);
     assert.equal(selection,level,'Le changement de commentaire synchronise le niveau.');
@@ -108,9 +110,16 @@ app.whenReady().then(async()=>{
    await win.webContents.executeJavaScript("document.getElementById('seb-bh-save-revision').click()");await pause();
    assert.equal(revision.rows.find(r=>r.key==='tri-temps').triTimes,times);
    assert.equal(revision.rows.find(r=>r.key==='tri-erreurs').triErrors,'2 erreurs');
+   const footer=await win.webContents.executeJavaScript(`(()=>{const w=document.querySelector('.seb-bh-editor-card'),body=w.querySelector('.seb-bh-editor-body'),f=w.querySelector('.seb-bh-editor-foot');body.scrollTop=body.scrollHeight;return {footerVisible:f.getBoundingClientRect().bottom<=innerHeight,bodyScroll:body.scrollTop,footerBelowBody:f.getBoundingClientRect().top>=body.getBoundingClientRect().bottom-1}})()`);
+   assert(footer.footerVisible&&footer.footerBelowBody,'Les boutons enregistrer / Word / fermer restent visibles en bas du bilan enregistré.');
    assert.equal(revision.rows.find(r=>r.key==='briques-identification').detail,'Temps : 06:23');
    await win.webContents.executeJavaScript("document.getElementById('seb-bh-export').click()");await pause();
    assert(wordHtml.includes('00:08')&&wordHtml.includes('2 erreurs'));
+   const wordRow=wordHtml.match(/<tr[^>]*data-r="tri-erreurs"[^>]*>([\\s\\S]*?)<\\/tr>/i)?.[1]||'';
+   assert(/<div[^>]*id="triErr"[^>]*>2 erreurs<\\/div>/i.test(wordRow),
+    'Le Word doit placer le compteur dans la colonne Commentaires.');
+   assert(!/Nombre d.erreurs effectuées<\\/b><br>/i.test(wordRow),
+    'La première colonne Word ne doit pas contenir un saut suivi du compteur.');
    assert(wordHtml.includes(revision.rows.find(r=>r.key==='tri-erreurs').preset),'Le commentaire validé doit rester dans le Word.');
    for(const line of times.split('\n'))assert(wordHtml.includes(line),'Le Word doit garder chaque temps : '+line);
    archived=JSON.parse(JSON.stringify(revision));

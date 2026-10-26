@@ -2,6 +2,7 @@
 // Le bilan enregistré reprend le vrai modèle institutionnel, jamais une grille
 // recomposée à partir de textes aplatis ou de zones de saisie supplémentaires.
 const {institutionalTableSource}=require('./institutional-bilan-grid');
+const {normalizeErrorCounts}=require('./bilan-error-count');
 function pruneEmptySections(table){
  let section=null,hasRows=false;
  for(const row of [...table.querySelectorAll('tbody tr')]){
@@ -17,7 +18,7 @@ function applyTriValues(table,rows){
  const avg=table.querySelector('#triAvg'),times=table.querySelector('#triTimes'),errors=table.querySelector('#triErr');
  if(avg)avg.textContent=timesRow?.triAverage||String(timesRow?.moduleText||timesRow?.latestModule||'').match(/Moyenne\s+(\d{1,3}:\d{2})/i)?.[1]||'—';
  if(times){times.textContent=timesRow?.triTimes||timesRow?.extra||'Non renseigné';times.style.whiteSpace='pre-line'}
- if(errors)errors.textContent=errorsRow?.triErrors||String(errorsRow?.moduleText||errorsRow?.latestModule||'').match(/\b\d+\s+erreurs?\b/i)?.[0]||'Non renseigné';
+ if(errors)errors.textContent=normalizeErrorCounts(errorsRow?.triErrors||String(errorsRow?.moduleText||errorsRow?.latestModule||'').match(/\b\d+\s+erreurs?\b/i)?.[0]||'Non renseigné');
 }
 function officialEditorStyles(css,scope){
  const sheet=new CSSStyleSheet();sheet.replaceSync(css);
@@ -61,7 +62,7 @@ function createEditorTable(documentState){
    if(chosen)select.value=chosen.value;
    select.addEventListener('change',()=>setLevel(select.options[select.selectedIndex]?.dataset.l||''));
   }
-  const detail=tr.querySelector('.detail');if(detail){detail.classList.add('seb-bh-detail');detail.textContent=row.detail||''}
+  const detail=tr.querySelector('.detail');if(detail){detail.classList.add('seb-bh-detail');detail.textContent=normalizeErrorCounts(row.detail||'')}
   if(row.comment&&row.comment!==row.preset&&!row.options?.some(o=>o.value===row.comment)){
    const note=document.createElement('div');note.className='seb-bh-saved-comment';note.style.whiteSpace='pre-wrap';note.textContent=row.comment;tr.lastElementChild.appendChild(note);
   }

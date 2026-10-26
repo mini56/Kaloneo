@@ -14,6 +14,7 @@ const {
   ShadingType,
   BorderStyle
 } = require('docx');
+const {normalizeErrorCounts}=require('./bilan-error-count');
 
 const COLORS = Object.freeze({
   blue:'0070C0',
@@ -31,7 +32,7 @@ const COLORS = Object.freeze({
 const LEVEL_COLOR = Object.freeze({NE:COLORS.ne,I:COLORS.i,II:COLORS.ii,III:COLORS.iii});
 
 function clean(value) {
-  return String(value == null ? '' : value).replace(/\r\n?/g, '\n').trim();
+  return normalizeErrorCounts(String(value == null ? '' : value).replace(/\r\n?/g, '\n')).trim();
 }
 
 function safeLines(value) {

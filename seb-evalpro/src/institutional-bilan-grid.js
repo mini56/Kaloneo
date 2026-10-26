@@ -77,7 +77,7 @@ const OFFICIAL=Object.freeze([
   {
     "kind": "row",
     "key": "tri-erreurs",
-    "label": "Nombre d’erreurs effectuées — 0 erreur",
+    "label": "Nombre d’erreurs effectuées",
     "mode": "automatic"
   },
   {
@@ -127,6 +127,7 @@ const OFFICIAL=Object.freeze([
 ]);
 
 const fs=require('fs'),path=require('path');
+const {normalizeErrorCounts}=require('./bilan-error-count');
 // Une seule source de libellés, choix de commentaires et tableau : le bilan
 // institutionnel existant. app/web est embarqué dans l'installateur Windows.
 function institutionalTableSource(){
@@ -202,7 +203,7 @@ function aggregateInstitutionalRows(evaluations){
    const src=rows.find(row=>row?.kind==='item'&&row.key===line.key);
    if(!src)continue;
    if(src.moduleText)latestModule=String(src.moduleText);
-   triValues={triTimes:src.triTimes||'',triAverage:src.triAverage||'',triErrors:src.triErrors||''};
+   triValues={triTimes:src.triTimes||'',triAverage:src.triAverage||'',triErrors:normalizeErrorCounts(src.triErrors||String(src.moduleText||'').match(/\b\d+\s+erreurs?\b/i)?.[0]||'')};
    const obtained=src.points,maximum=src.possible;
    const isNumeric=obtained!==null&&obtained!==undefined&&maximum!==null&&maximum!==undefined&&
      Number.isFinite(Number(obtained))&&Number.isFinite(Number(maximum))&&
@@ -241,10 +242,10 @@ function wordRows(general){
  const entries=Array.isArray(general?.institutionalRows)?general.institutionalRows:[];
  return entries.map(line=>line.kind==='section'
    ?{type:'section',text:line.label,strong:line.label==='Compétences techniques'}
-   :{type:'row',key:line.key,module:line.key==='tri-temps'?(line.moduleText||'').replace(/Moyenne\s+\d{1,3}:\d{2}/,'Moyenne '+(line.triAverage||'—')):line.key==='tri-erreurs'?(line.moduleText||'').replace(/\b\d+\s+erreurs?\b/,line.triErrors||'Non renseigné'):line.moduleText||officialRowDefinitions().get(line.key)?.module||line.label,
-     extra:line.key==='tri-temps'?line.triTimes||'':'',
+   :{type:'row',key:line.key,module:line.key==='tri-temps'?(line.moduleText||'').replace(/Moyenne\s+\d{1,3}:\d{2}/,'Moyenne '+(line.triAverage||'—')):line.key==='tri-erreurs'?'Nombre d’erreurs effectuées':line.moduleText||officialRowDefinitions().get(line.key)?.module||line.label,
+     extra:line.key==='tri-temps'?line.triTimes||'':line.key==='tri-erreurs'?normalizeErrorCounts(line.triErrors||'Non renseigné'):'',
      level:line.level||'NE',levelTexts:officialRowDefinitions().get(line.key)?.levelTexts||{},
      alternate:!!officialRowDefinitions().get(line.key)?.alternate,
-     comment:line.comment||'',detail:line.detail||''});
+     comment:normalizeErrorCounts(line.comment||''),detail:normalizeErrorCounts(line.detail||'')});
 }
 module.exports={OFFICIAL,aggregateInstitutionalRows,wordRows,percentLevel,institutionalTableSource,officialRowDefinitions};

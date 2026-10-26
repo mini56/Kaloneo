@@ -36,8 +36,8 @@ function addStyle() {
   style.textContent = `
     #seb-evalpro-open-candidate{background:#fff!important;color:#0070c0!important;border:2px solid #0070c0!important;font-weight:700}
     #seb-general-bilan{position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif}
-    #seb-general-bilan .seb-gb-card{width:min(1500px,97vw);max-height:95vh}
-    #seb-general-bilan .seb-cc-detail-actions{gap:9px;display:flex;flex-wrap:wrap;padding:12px;background:#fff}
+    #seb-general-bilan .seb-gb-card{width:min(1500px,97vw);max-height:95vh;min-height:0}
+    #seb-general-bilan .seb-cc-detail-actions{gap:9px;display:flex;flex:none;flex-wrap:wrap;padding:12px;background:#fff}
     .seb-gb-table{width:100%;border-collapse:collapse;background:#fff;font:14px Arial,sans-serif}
     .seb-gb-table th,.seb-gb-table td{border:1px solid #ccd5e0;padding:9px;text-align:left;vertical-align:top}
     .seb-gb-category th{background:#deebfa;font-size:16px;color:#15476b}
@@ -222,14 +222,17 @@ function showProtectedLegacyWord(html) {
   header.textContent='Bilan historique — consultation protegee dans KALONEO';
   const close=document.createElement('button');
   close.type='button';close.textContent='Fermer';close.addEventListener('click',()=>overlay.remove());
-  header.appendChild(close);
+  const footer=document.createElement('div');
+  footer.style.cssText='padding:12px 16px;display:flex;flex:none;justify-content:flex-end;align-items:center;border-top:1px solid #cad3dc;background:#f8f8f8';
+  close.style.cssText='font:700 14px Arial,sans-serif;padding:9px 18px;border:2px solid #0070c0;border-radius:6px;background:#fff;color:#0070c0;cursor:pointer';
+  footer.appendChild(close);
   const viewer=document.createElement('iframe');
   // Iframe sans scripts ni meme origine : le contenu Word HTML reste isole.
   viewer.setAttribute('sandbox','');
   viewer.setAttribute('title','Bilan historique en lecture seule');
   viewer.style.cssText='width:100%;flex:1;border:0;background:#fff';
   viewer.srcdoc=String(html||'');
-  panel.appendChild(header);panel.appendChild(viewer);overlay.appendChild(panel);
+  panel.appendChild(header);panel.appendChild(viewer);panel.appendChild(footer);overlay.appendChild(panel);
   document.body.appendChild(overlay);
 }
 

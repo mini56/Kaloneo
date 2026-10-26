@@ -1,4 +1,5 @@
 const {projectDocument}=require('./bilan-parcours');
+const {normalizeErrorCounts}=require('./bilan-error-count');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -79,15 +80,15 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
         kind: row && row.kind === 'section' ? 'section' : 'item',
         key: String((row && row.key) || `row-${index + 1}`),
         className: String((row && row.className) || ''),
-        moduleText: String((row && row.moduleText) || ''),
+        moduleText: normalizeErrorCounts(String((row && row.moduleText) || '')),
         sectionText: String((row && row.sectionText) || ''),
         level: ['NE', 'I', 'II', 'III'].includes(String(row && row.level)) ? String(row.level) : '',
         preset: String((row && row.preset) || ''),
-        comment: String((row && row.comment) || ''),
-        detail: String((row && row.detail) || ''),
+        comment: normalizeErrorCounts(String((row && row.comment) || '')),
+        detail: normalizeErrorCounts(String((row && row.detail) || '')),
         triTimes:String(row?.triTimes||''),
         triAverage:String(row?.triAverage||''),
-        triErrors:String(row?.triErrors||''),
+        triErrors:normalizeErrorCounts(row?.triErrors||''),
         assessmentMode:row?.assessmentMode==='level'?'level':'',
         points: row?.points!==null && row?.points!==undefined &&
           Number.isFinite(Number(row.points))?Number(row.points):null,

@@ -3,6 +3,7 @@
 const fs=require('fs'),path=require('path');
 const bundled=path.join(__dirname,'..','app','web','js','kaloneo-bilan-routing.js');
 const routing=require(fs.existsSync(bundled)?bundled:'../source/js/kaloneo-bilan-routing');
+const {normalizeErrorCounts}=require('./bilan-error-count');
 function decode(value){if(value&&typeof value==='object')return value;try{return JSON.parse(value||'null')}catch(_){return null}}
 function statesFrom(session){
   for(const [key,value] of Object.entries(session||{})){
@@ -62,7 +63,7 @@ function restoreTri(document,session){
   if(row.key==='tri-temps')return {...row,
    triTimes:row.triTimes||(attempts.length?attempts.map((r,i)=>'N°'+(i+1)+' : '+pad(Math.floor(r.seconds/60))+' min '+pad(r.seconds%60)+' s').join('\n'):''),
    triAverage:row.triAverage||String(row.moduleText||'').match(/Moyenne\s+(\d{1,3}:\d{2})/i)?.[1]||(seconds!==null?pad(Math.floor(seconds/60))+':'+pad(seconds%60):'')};
-  if(row.key==='tri-erreurs')return {...row,triErrors:row.triErrors||String(row.moduleText||'').match(/\b\d+\s+erreurs?\b/i)?.[0]||(total!==null?total+' erreur'+(total===1?'':'s'):'')};
+  if(row.key==='tri-erreurs')return {...row,triErrors:normalizeErrorCounts(row.triErrors||String(row.moduleText||'').match(/\b\d+\s+erreurs?\b/i)?.[0]||(total!==null?total+' erreur'+(total===1?'':'s'):''))};
   return row;
  })};
 }
