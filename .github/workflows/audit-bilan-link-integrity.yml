@@ -12,6 +12,8 @@ on:
       - 'seb-evalpro/scripts/bilan-tri-word-footer-smoke.js'
       - 'seb-evalpro/scripts/bilan-parcours-filter-electron-smoke-main.js'
       - 'seb-evalpro/scripts/bilan-parcours-filter-smoke.js'
+      - 'seb-evalpro/scripts/kaloneo-ergonomics-library-smoke.js'
+      - 'seb-evalpro/scripts/kaloneo-parcours-builder-smoke.js'
       - 'seb-evalpro/src/bilan-error-count.js'
       - 'seb-evalpro/src/bilan-table-view.js'
       - 'seb-evalpro/src/bilan-history-main.js'
@@ -41,6 +43,12 @@ jobs:
         run: node scripts/kaloneo-bilan-link-integrity-smoke.js
       - name: Placement droite du tri, singulier/pluriel et boutons bas du bilan et Word
         run: node scripts/bilan-tri-word-footer-smoke.js
+      - name: Ergonomie de la bibliotheque, import/export et creation de parcours avec liaison obligatoire
+        run: |
+          node scripts/kaloneo-ergonomics-library-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Liaison Builder manquante dans le smoke ergonomie'}
+          node scripts/kaloneo-parcours-builder-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Liaison Builder manquante dans le smoke parcours'}
       - name: Non regression des liaisons Builder, pourcentages et versions V1
         run: node scripts/kaloneo-bilan-builder-routing-smoke.js
       - name: Non regression grille 18 lignes et Word

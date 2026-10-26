@@ -32,6 +32,9 @@ try{
     category:'mathematiques',
     pageRole:'test',
     scored:true,
+    outputs:[{id:'score',type:'number'},{id:'score_max',type:'number'}],
+    bilanContributions:[{lineId:'bilan.savoirs_fondamentaux.mathematiques.resoudre_problemes',
+      bindings:{score:'score',score_max:'score_max'}}],
     scenario:'Scénario',
     instruction:'Consigne',
     questions:[{

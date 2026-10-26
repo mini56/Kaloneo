@@ -28,9 +28,9 @@ try {
   const normal = tests.filter(item => item.role === 'test');
   const fins = tests.filter(item => item.role === 'fin');
 
-  assert.strictEqual(tests.length, 24, '24 éléments attendus : 1 introduction + 21 tests du parcours de base + 1 activité pratique + 1 fin');
+  assert.strictEqual(tests.length, 26, '26 éléments attendus dans la bibliothèque : 24 pages de test, une introduction et une fin, sans altérer le parcours de base.');
   assert.strictEqual(intro.length, 1, 'une introduction de base attendue');
-  assert.strictEqual(normal.length, 22, '22 éléments intermédiaires attendus, dont Structure 3D en papier');
+  assert.strictEqual(normal.length, 24, '24 tests actuellement disponibles, dont Structure 3D en papier et les deux nouvelles grilles V1');
   assert.strictEqual(fins.length, 1, 'une page de fin attendue');
   const practical = normal.find(item => item.id === 'structure_3d_papier');
   assert.ok(practical, 'Structure 3D en papier absente de la bibliothèque');
@@ -59,6 +59,12 @@ try {
   generated.id = 'test_genere_smoke';
   generated.version = '1.0.0';
   generated.title = 'Test généré smoke';
+  generated.category='mathematiques';
+  generated.pageRole='test';
+  generated.scored=true;
+  generated.outputs=[{id:'score',type:'number'},{id:'score_max',type:'number'}];
+  generated.bilanContributions=[{lineId:'bilan.savoirs_fondamentaux.mathematiques.resoudre_problemes',
+    bindings:{score:'score',score_max:'score_max'}}];
   const savedTest = library.saveTest(generated);
   assert.strictEqual(savedTest.ok, true, savedTest.error || 'nouveau test non enregistré');
   assert.ok(library.listTests().some(item => item.id === generated.id), 'nouveau test absent de la bibliothèque');
