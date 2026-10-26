@@ -7,7 +7,7 @@ function sebIaAbandons(){
 }
 function sebIaRow(key){
   const row=document.querySelector('tr[data-r="'+key+'"]');
-  if(!row)return{key,level:'',comment:'',detail:'',moduleText:''};
+  if(!row||row.hidden||row.dataset.sebKaloneoExcluded==='1')return{key,level:'',comment:'',detail:'',moduleText:''};
   return{
     key,
     level:String(row.dataset.level||row.querySelector('.level.on')?.dataset.l||''),

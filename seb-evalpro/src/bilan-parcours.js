@@ -26,7 +26,7 @@ function testsFrom(document,session,metadata=[]){
 function validPair(row){return row?.points!==null&&row?.points!==undefined&&row?.possible!==null&&row?.possible!==undefined&&Number.isFinite(Number(row.points))&&Number.isFinite(Number(row.possible))&&Number(row.possible)>0&&Number(row.points)>=0&&Number(row.points)<=Number(row.possible)}
 function resultState(states,id){
   const state=states[id];
-  return /ABANDON|SKIP|PENDING|NOT_STARTED/i.test(String(state?.status||''))?null:state;
+  return routing.nonEvaluated(state)?null:state;
 }
 function rowScores(tests,states){
   const sums=new Map();
@@ -53,7 +53,7 @@ function projectDocument(document,session={},metadata=[]){
     if(section&&!sectionAdded){rows.push({...section});sectionAdded=true}
     const row={...original};
     const sources=tests.filter(t=>routing.selectedRows([t]).has(row.key));
-    const abandoned=sources.length&&sources.every(t=>/ABANDON|SKIP/i.test(String(states[t.id]?.status||'')));
+    const abandoned=sources.length&&sources.every(t=>/ABANDON|SKIP/i.test(String(states[t.id]?.status||''))&&routing.nonEvaluated(states[t.id]));
     if(abandoned){row.level='NE';row.points=null;row.possible=null;row.preset='';row.comment='';row.detail='Exercice abandonné.'}
     const pair=scores.get(row.key);
     if(!validPair(row)&&pair){row.points=pair.score;row.possible=pair.max}
@@ -67,4 +67,4 @@ function projectDocument(document,session={},metadata=[]){
 function projectArchive(archive,session,metadata){
   return {...archive,document:projectDocument(archive.document,session,metadata)};
 }
-module.exports={projectDocument,projectArchive,testsFrom,statesFrom,rowScores,validPair};
+module.exports={projectDocument,projectArchive,testsFrom,statesFrom,rowScores,validPair,nonEvaluated:routing.nonEvaluated};

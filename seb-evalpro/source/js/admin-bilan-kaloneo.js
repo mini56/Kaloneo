@@ -168,7 +168,7 @@ function fmtSeconds(value){
   return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
 }
 function scorePair(id){
-  if(!has(id)||/ABANDON|SKIP|PENDING|NOT_STARTED/.test(statusFor(id)))return null;
+  if(!has(id)||window.KaloneoBilanRouting.nonEvaluated(stateFor(id)))return null;
   const result=resultFor(id);
   if(!result)return null;
   const score=Number(result.score),max=Number(result.scoreMax);
@@ -610,7 +610,7 @@ function autoInstitutional(){
 
   for(const key of window.KaloneoBilanRouting.selectedRows(context.tests)){
     const sources=context.tests.filter(test=>window.KaloneoBilanRouting.selectedRows([test]).has(key));
-    if(sources.length&&sources.every(test=>/ABANDON|SKIP/.test(statusFor(test.id))))
+    if(sources.length&&sources.every(test=>/ABANDON|SKIP/.test(statusFor(test.id))&&window.KaloneoBilanRouting.nonEvaluated(stateFor(test.id))))
       applyInstitutional(key,'NE','Exercice abandonné.');
   }
   persist();

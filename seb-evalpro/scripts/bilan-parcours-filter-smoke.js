@@ -51,6 +51,11 @@ const onlyAbandoned=aggregateGeneralBilan([{candidateId:'ab',session:{...session
 assert.equal(onlyAbandoned.institutionalRows.find(r=>r.key==='math-problemes').level,'NE');
 assert.equal(onlyAbandoned.institutionalWarnings.length,0);
 assert.equal(onlyAbandoned.testCount,0,'Un résultat résiduel abandonné ne doit pas être compté.');
+const evaluatedAbandonSession={...session,seb_kaloneo_results_manifest:JSON.stringify({tests:[custom('abandon-futur')]}),
+ seb_kaltest_pilot2_state_v1:JSON.stringify({tests:{'abandon-futur':{status:'ABANDONED_EVALUATED',result:{score:1,scoreMax:2}}}})};
+const evaluatedAbandon=aggregateGeneralBilan([{candidateId:'ab-evaluated',session:evaluatedAbandonSession,archive:{document:full()}}]);
+assert.equal(evaluatedAbandon.institutionalRows.find(r=>r.key==='math-problemes').percent,50,'Un abandon explicitement évalué conserve sa vraie note.');
+assert.equal(evaluatedAbandon.testCount,1);
 // Enregistrement/réouverture/réenregistrement via les vrais handlers chiffrés.
 const {configureLocalKey,clearLocalKey,writeJsonFile,readJsonFile,isEncryptedJsonFile}=require('../src/candidate-data-crypto');
 const {codedFolderName}=require('../src/candidate-folder-utils');

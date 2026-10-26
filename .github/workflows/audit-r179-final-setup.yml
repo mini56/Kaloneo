@@ -1,0 +1,329 @@
+name: "KALONÉO R179 - Bilans par parcours, abandons et consolidation - Setup unique"
+on:
+  push:
+    branches:
+      - fix-r60-tri-rearm-only-20261011
+    paths:
+      - '.github/workflows/audit-r179-final-setup.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: kaloneo-r179-data-protection-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  r60-integrated:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - name: Checkout isolated Tri correction
+        uses: actions/checkout@v4
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check restored Tri runtime and smoke syntax
+        run: |
+          node --check source/js/kaltest-pilot2-runtime.js
+          node --check ../kaloneo/builder-core.js
+          node --check ../kaloneo/test-preview.js
+          node --check ../kaloneo/test-builder.js
+          node --check scripts/kaloneo-builder-preview-electron-smoke-main.js
+          node --check scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
+          node --check scripts/kaloneo-catalog-roundtrip-score-guard.js
+          node --check scripts/kaloneo-results-strict-isolation-electron-smoke-main.js
+          node --check scripts/kaloneo-results-readable-formats-electron-smoke-main.js
+          node --check scripts/kaloneo-new-test-preview-electron-smoke-main.js
+          node --check scripts/kaloneo-shared-html-candidate-electron-smoke-main.js
+          node --check scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
+          node --check scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
+      - name: Validate portable AI KALTEST kit against real Builder core
+        run: |
+          node --check ../docs/ia-kaloneo/valider-test.js
+          node --check ../docs/ia-kaloneo/test-validateur.js
+          node ../docs/ia-kaloneo/test-validateur.js
+          node ../docs/ia-kaloneo/valider-test.js ../docs/ia-kaloneo/exemples/calculs-stock-demo.test.json
+      - name: Verify inactive Electron preview workers are always released
+        run: node scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
+      - name: Check new tests with all Builder block formats and unique question IDs
+        run: node scripts/kaloneo-builder-future-roundtrip-smoke.js
+      - name: Verify the three answer layouts, widths, V1 preservation and KALTEST round trips
+        run: |
+          node --check scripts/kaloneo-answer-layout-roundtrip-smoke.js
+          node scripts/kaloneo-answer-layout-roundtrip-smoke.js
+      - name: Verify unit scoring independent of numeric answer on future KALTEST
+        run: |
+          node --check scripts/kaloneo-units-score-audit-smoke.js
+          node scripts/kaloneo-units-score-audit-smoke.js
+      - name: Audit every current and future catalog KALTEST without modifying files
+        run: node scripts/kaloneo-catalog-roundtrip-score-guard.js
+      - name: Verify gallery contains test illustrations only, without deleting images
+        run: |
+          node --check ../kaloneo/image-library-gallery.js
+          node --check ../kaloneo/test-builder.js
+          node scripts/kaloneo-image-gallery-visibility-smoke.js
+      - name: Verify image library ZIP export/import between two PCs and UI wiring
+        run: |
+          node --check src/kaloneo-image-export.js
+          node --check source/js/admin-kaloneo-transfer.js
+          node --check scripts/kaloneo-image-export-ui-smoke.js
+          node scripts/kaloneo-image-export-ui-smoke.js
+          node scripts/kaloneo-image-library-smoke.js
+          node scripts/kaloneo-ergonomics-library-smoke.js
+      - name: Verify unified image library, icon theme and future custom tests
+        run: |
+          node --check ../kaloneo/image-library-gallery.js
+          node --check ../kaloneo/test-builder.js
+          node --check scripts/kaloneo-library-unified-future-smoke.js
+          node scripts/kaloneo-image-gallery-visibility-smoke.js
+          node scripts/kaloneo-library-unified-future-smoke.js
+      - name: Verify Genre et nombre font persistence without changing original V1
+        run: node scripts/kaloneo-genre-nombre-font-smoke.js
+      - name: "R174 Licence complete - About et acceptation explicite NSIS"
+        run: node scripts/r174-license-about-nsis-smoke.js
+      - name: "Two new V1 number grids - Builder roundtrip, 10 valid solutions and official scoring"
+        run: node scripts/kaloneo-number-grid-v1-smoke.js
+      - name: Generate historical KALTEST pilot data
+        run: node scripts/build-kaltest-pilot2-data.js
+      - name: Prepare authentic KALTEST candidate application
+        run: npm run prepare:web
+      - name: Strict Tri V1 wording, scoring, 3–5 historical limits and update simulation
+        run: node scripts/kaloneo-r178-tri-instruction-smoke.js
+      - name: Real Electron enlarged Help A and B, fullscreen and 100 percent
+        run: npx electron --no-sandbox scripts/kaloneo-help-fullscreen-electron-smoke-main.js
+      - name: Real Electron readable Conversions V1 on 1649/1366/1200
+        run: npx electron --no-sandbox scripts/kaloneo-conversions-v1-font-electron-smoke-main.js
+      - name: Validate Puzzle V1 referenced image within Builder without changing any scoring
+        run: node scripts/kaloneo-puzzle-builder-window-validation-smoke.js
+      - name: "Real Electron : PNG Genre-Nombre, double fond bleu et phrases sur une ligne à 1200/1366"
+        run: npx electron --no-sandbox scripts/kaloneo-genre-nombre-banner-electron-smoke-main.js
+      - name: Verify portable test exports carry their images intact
+        run: node scripts/kaloneo-export-restaurant-r69-smoke.js
+      - name: Verify Admin V1 save backups and persistence across app upgrades
+        run: node scripts/kaloneo-testsv1-developer-smoke.js
+      - name: Verify original V1 and V2 coexist without delete regression
+        run: node scripts/kaloneo-edit-existing-test-smoke.js
+      - name: Verify V1 can be modified and saved in the real Electron Builder
+        run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
+      - name: Real candidate Electron - two math grids, all scoring and 1200/1366 rendering
+        run: npx electron --no-sandbox scripts/kaloneo-number-grid-electron-smoke-main.js
+      - name: Check Tri first attempt error and next chrono in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-tri-rearm-r60-electron-smoke-main.js
+      - name: Check Briques 0-99 including 12/99 and Admin persistence in Electron
+        run: npx electron --no-sandbox scripts/kaloneo-brique-errors-r61-electron-smoke-main.js
+      - name: "R173 Puzzle - voir l exemple en vrai Electron, fermeture et reprise (1200/1366)"
+        run: npx electron --no-sandbox scripts/r173-puzzle-example-electron-smoke-main.js
+      - name: Check full candidate parcours transitions in real Electron
+        id: full_journey
+        continue-on-error: true
+        run: npx electron --no-sandbox scripts/full-pilot-journey-smoke-main.js
+      - name: Check selected parcours execution in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-selected-parcours-electron-smoke-main.js
+      - name: Check validated NWTEXT exercise in real Electron
+        run: npx electron --no-sandbox scripts/nwtexte-functional-smoke-main.js
+      - name: Check e-mail exercise in real Electron
+        run: npx electron --no-sandbox scripts/nvmail-functional-smoke-main.js
+      - name: Display meaningful text, comments, times and errors in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-results-readable-formats-electron-smoke-main.js
+      - name: Reject mixed Mail and other results in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-results-strict-isolation-electron-smoke-main.js
+      - name: Check dynamic evaluation results and Bilan in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-bilan-dynamic-smoke-main.js
+      - name: Check validated Builder R48.10 auto columns in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-builder-r48-10-generic-columns-electron-smoke-main.js
+      - name: Check synthetic HTML/JS in the real candidate Electron engine
+        run: npx electron --no-sandbox scripts/kaloneo-shared-html-candidate-electron-smoke-main.js
+      - name: Check novel KALTEST tables and image in standalone Electron preview
+        run: npx electron --no-sandbox scripts/kaloneo-new-test-preview-electron-smoke-main.js
+      - name: Check test icons in real Electron
+        run: npx electron --no-sandbox scripts/kaloneo-candidate-icon-electron-smoke-main.js
+      - name: Check preserved validated R48.10 / NWTEXT R55 / icons
+        run: node scripts/kaloneo-consolidation-regression.js
+      - name: Final gate - do not mask any full journey regression
+        if: always()
+        shell: pwsh
+        run: |
+          if ('${{ steps.full_journey.outcome }}' -ne 'success') {
+            throw 'Parcours complet non valide : la publication reste bloquee, meme si les autres controles passent.'
+          }
+  dpapi-cross-process:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install local Electron runtime
+        run: npm install --no-audit --no-fund
+      - name: Seed DPAPI and real encrypted candidate folders under isolated Windows profile
+        shell: pwsh
+        run: |
+          $env:KALONEO_R172_MANIFEST=Join-Path $env:RUNNER_TEMP 'r179-dpapi-roundtrip.json'
+          & npx electron --no-sandbox scripts/r172-update-fixture-electron-main.js --seed
+          if($LASTEXITCODE -ne 0){throw 'Original DPAPI encryption failed'}
+          & npx electron --no-sandbox scripts/r172-update-fixture-electron-main.js --verify
+          if($LASTEXITCODE -ne 0){throw 'Cross-process Windows DPAPI cannot reopen a candidate: stop the build'}
+  audit-real-upgrade-windows:
+    needs: [dpapi-cross-process, r60-integrated]
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    env:
+      KALONEO_SKIP_OFFICIAL_V1: '0'
+      KALONEO_STRICT_RENDER_IMAGES: '1'
+      KALONEO_STRICT_INTRO_VIDEO: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Original KALONEO artwork and video optimized without changes
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check Pillow==11.3.0 imageio-ffmpeg==0.6.0
+          python scripts/kaloneo-r125-branding.py
+          python scripts/r158-build-installer-intro.py
+          node scripts/r158-installer-intro-smoke.js
+          node scripts/r169-installer-animation-smoke.js
+      - name: Install Node dependencies
+        run: npm install --no-audit --no-fund
+      - name: Prepare official KALTEST seeds (git network timeout 120s)
+        shell: pwsh
+        run: |
+          Write-Host 'R179_PHASE=BUILD_KALTEST_DATA'
+          node scripts/build-kaltest-pilot2-data.js
+          if($LASTEXITCODE -ne 0){throw 'Synchronisation V1 interrompue ou impossible'}
+      - name: Generate candidate pages and optimized media
+        shell: pwsh
+        run: |
+          Write-Host 'R179_PHASE=PREPARE_WEB'
+          npm run prepare:web
+          if($LASTEXITCODE -ne 0){throw 'Preparation des pages impossible'}
+      - name: Verify data safety and uninstall rules
+        shell: pwsh
+        run: |
+          Write-Host 'R179_PHASE=DATA_SAFETY'
+          node scripts/kaloneo-full-uninstall-policy.js
+          if($LASTEXITCODE -ne 0){throw 'Conservation des donnees invalide'}
+          node scripts/candidate-local-protection-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Protection DPAPI invalide'}
+          node scripts/candidate-loss-prevention-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Export/import de candidats invalide'}
+      - name: Verify video, masks and official legacy presentation
+        shell: pwsh
+        run: |
+          Write-Host 'R179_PHASE=VISUAL_REGRESSIONS'
+          node scripts/r170-intro-video-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Regression video'}
+          node scripts/kaloneo-genre-nombre-font-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Regression Genre Nombre'}
+          node scripts/r162-static-mask-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Ecran de masquage manquant'}
+      - name: Verify math grids, Tri wording and old installed V1 upgrade
+        shell: pwsh
+        run: |
+          Write-Host 'R179_PHASE=GRID_UPGRADE'
+          node scripts/kaloneo-number-grid-v1-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Barèmes des grilles invalides'}
+          node scripts/kaloneo-math-grid-upgrade-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Une ancienne V1 locale ne récupère pas ses illustrations'}
+          node scripts/kaloneo-r178-tri-instruction-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Une ancienne V1 locale conserve une consigne obsolète'}
+      - name: Electron Import / Export alignment 1366 and 1200
+        shell: pwsh
+        run: |
+          Write-Host 'R179_PHASE=IMPORT_EXPORT'
+          & npx electron --no-sandbox scripts/r175-import-export-layout-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Import / Export non aligne'}
+      - name: "R179 gates - full licence, NSIS 6155 guard, square grids and Puzzle Electron 1200/1366"
+        shell: pwsh
+        run: |
+          node scripts/r174-license-about-nsis-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'KALONEO licence regression'}
+          node scripts/kaloneo-number-grid-v1-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Number grid V1 regression'}
+          & npx electron --no-sandbox scripts/kaloneo-number-grid-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Real Electron 40/60 grid regression'}
+          & npx electron --no-sandbox scripts/r173-puzzle-example-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Real Electron Puzzle example regression'}
+      - name: Patch pinned NSIS directory-page callbacks only
+        run: node scripts/kaloneo-nsis-directory-template.js
+      - name: Bilans par parcours, anciens points et consolidation avant compilation
+        run: |
+          node scripts/bilan-parcours-filter-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Controle des bilans en echec : publication bloquee'}
+          node scripts/general-bilan-aggregation-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Controle des bilans en echec : publication bloquee'}
+          node scripts/general-bilan-ipc-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Controle des bilans en echec : publication bloquee'}
+          node scripts/r152-institutional-grid-and-builder-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Controle des bilans en echec : publication bloquee'}
+          node scripts/kaloneo-bilan-builder-routing-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Controle des bilans en echec : publication bloquee'}
+          npx electron --no-sandbox scripts/bilan-parcours-filter-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Controle des bilans en echec : publication bloquee'}
+          npx electron --no-sandbox scripts/kaloneo-bilan-builder-routing-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Controle des bilans en echec : publication bloquee'}
+      - name: Build unpublished R179 test installer, Build #182 unique
+        run: npx electron-builder --win nsis --config build/kaloneo-r179-final-setup.yml --publish never
+      - name: Retrieve real published R175 installer for migration
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          New-Item -ItemType Directory -Path dist/previous -Force | Out-Null
+          gh release download seb-kaloneo-r178-tri-consigne-aide-conversions-test --pattern 'KALONEO-Setup-0.0.205.exe' --dir dist/previous --clobber
+          if($LASTEXITCODE -ne 0 -or -not(Test-Path dist/previous/KALONEO-Setup-0.0.205.exe)){throw 'Baseline R178 setup missing'}
+      - name: REAL Windows R178 to R179 upgrade, DPAPI candidate and Word preservation, default uninstall, reinstall, forbidden switch
+        shell: pwsh
+        run: |
+          & ./scripts/r179-real-upgrade-windows-smoke.ps1 -PreviousSetup (Resolve-Path dist/previous/KALONEO-Setup-0.0.205.exe) -NewSetup (Resolve-Path dist/KALONEO-Setup-0.0.206.exe)
+          if($LASTEXITCODE -ne 0){throw 'R179 real upgrade lost candidate or builder data'}
+      - name: Verify integrated R60 is mandatory and green
+        shell: pwsh
+        run: |
+          Write-Host 'R60_V1_COMPLETE_REGRESSION=SUCCESS: required workflow job r60-integrated already green'
+      - name: Publish single R179 Build 182 Windows Setup after all tests
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag='seb-kaloneo-r179-bilans-parcours-consolidation-test'
+          if(gh release view $tag 2>$null){throw 'R179 Setup already published; never reuse a build'}
+          $item=Get-Item 'dist/KALONEO-Setup-0.0.206.exe'
+          if(-not $item -or $item.Length -lt 40MB){throw 'Windows Setup missing or unexpectedly small'}
+          $hash=(Get-FileHash -Algorithm SHA256 $item.FullName).Hash.ToUpperInvariant()
+          $title='KALONÉO — R179 / Build #182 — bilans par parcours et consolidation'
+          $notes=@"
+          KALONÉO R179 / Build #182 / 0.0.206 — Setup Windows de test.
+          - Chaque bilan affiche et exporte seulement les lignes et sections liées aux tests de son parcours.
+          - Les tests abandonnés restent présents ; les abandons non évalués restent NE, sans zéro fictif. Les abandons explicitement évalués conservent leur note.
+          - L'éditeur du bilan courant conserve les points et barèmes lors de la réouverture et du réenregistrement.
+          - Les points manquants des anciens bilans sont récupérés à partir des résultats enregistrés lorsqu'ils sont disponibles.
+          - Le bilan général et son Word réunissent les seules lignes concernées par les parcours, avec recalcul sur les points réels.
+          - Contrôles Windows Electron : parcours de maths, abandon seul, liaisons Builder, enregistrement, réouverture et Word filtré.
+          - Correctifs précédents conservés : aides A/B agrandies, Puzzle, police des conversions et consigne des cinq tris.
+          - Tests V1 et barèmes inchangés. Un seul nouveau Setup, numéro de Build inédit.
+          - Mise à jour réelle R178 vers R179, conservation des données chiffrées, désinstallation et réinstallation contrôlées avant publication.
+          SHA256: $hash
+          Commit: $env:GITHUB_SHA
+          "@
+          gh release create $tag $item.FullName --target "$env:GITHUB_SHA" --title $title --notes $notes --prerelease
+          if($LASTEXITCODE -ne 0){throw 'GitHub Release failed — Setup not published'}

@@ -45,6 +45,10 @@
     'math-problemes':['horaires_reception_controle','fractions_preparation_lots','conversions_atelier_expedition'],
     'competences-transversales':[]
   });
+  function nonEvaluated(state){
+    const status=String(state?.status||'').toUpperCase();
+    return (status.startsWith('ABANDON')&&status!=='ABANDONED_EVALUATED')||/SKIP|PENDING|NOT_STARTED/.test(status);
+  }
   function selectedRows(tests){
     const selected=new Set();
     for(const test of tests||[]){
@@ -120,7 +124,7 @@
         }
         if(!entries.has(rowId))entries.set(rowId,[]);
         const state=typeof stateFor==='function'?stateFor(test.id):null;
-        const result=/ABANDON|SKIP|PENDING|NOT_STARTED/i.test(String(state?.status||''))?null:state?.result;
+        const result=nonEvaluated(state)?null:state?.result;
         const pair=scoreOf(result,link.bindings);
         entries.get(rowId).push({testId:test.id,title:test.title||test.id,pair,
           manual:!link.bindings||!Object.keys(link.bindings).length});
@@ -130,5 +134,5 @@
     }
     return {entries,warnings};
   }
-  return Object.freeze({rowFor,compatible,links,scoreOf,collect,LEGACY,selectedRows});
+  return Object.freeze({rowFor,compatible,links,scoreOf,collect,LEGACY,selectedRows,nonEvaluated});
 });
