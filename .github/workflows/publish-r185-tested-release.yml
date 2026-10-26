@@ -1,0 +1,59 @@
+name: "KALONÉO R185 — Publication Release depuis Setup Windows validé"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/publish-r185-tested-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish-validated-r185:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check that the prior audit is successful
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $run=gh api repos/mini56/Kaloneo/actions/runs/40374351460 | ConvertFrom-Json
+          if($LASTEXITCODE -ne 0 -or $run.conclusion -ne 'success'){throw 'Windows audit R185 must be SUCCESS.'}
+          $jobs=gh api 'repos/mini56/Kaloneo/actions/runs/40374351460/jobs?per_page=100' | ConvertFrom-Json
+          if($LASTEXITCODE -ne 0 -or @($jobs.jobs | Where-Object { $_.conclusion -ne 'success' }).Count -ne 0){throw 'Every R185 test job must pass.'}
+      - name: Download the exact tested R185 Windows Setup
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          New-Item -ItemType Directory -Path release -Force | Out-Null
+          gh run download 40374351460 --repo mini56/Kaloneo --name KALONEO-Setup-0.0.212-windows-valide --dir release
+          if($LASTEXITCODE -ne 0){throw 'Tested Windows artifact unavailable'}
+          $file=Get-Item release/KALONEO-Setup-0.0.212.exe -ErrorAction Stop
+          if($file.Length -lt 300MB){throw 'Unexpected setup size'}
+          $hash=(Get-FileHash -Algorithm SHA256 $file.FullName).Hash.ToUpperInvariant()
+          if($hash -ne '4CB68087A68940AE214FCCEBC66BC2B9DC13FFBD8F76B7C2D2E664AB83CC1AD5'){throw "Unexpected setup SHA256: $hash"}
+          Write-Host "R185_SETUP_VERIFIED=OK bytes=$($file.Length) SHA256=$hash"
+      - name: Publish actual GitHub Release R185 with checked executable
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag='seb-kaloneo-r185-demarrage-windows-valide-test'
+          $target='a14a9810710458afece02deed6cd99eb9c67c799'
+          $existing=gh release view $tag --repo mini56/Kaloneo --json url 2>$null
+          if($LASTEXITCODE -eq 0){throw 'R185 release already exists; do not create duplicates'}
+          $notes=@'
+          KALONÉO R185 — Build #188 — 0.0.212
+          Installateur Windows vérifié en conditions réelles (audit #40374351460, SUCCESS).
+          - Correction du démarrage Electron : chargement des modules de bilan depuis app.asar.
+          - Installation Windows, mise à jour R182 vers R185 et deux démarrages effectifs vérifiés.
+          - Protection DPAPI et données candidats/Word conservées.
+          - Tri de chevilles, pluriels, commandes fixes des bilans, liaisons Builder et scores institutionnels.
+          SHA256 installateur : 4CB68087A68940AE214FCCEBC66BC2B9DC13FFBD8F76B7C2D2E664AB83CC1AD5
+          '@
+          gh release create $tag release/KALONEO-Setup-0.0.212.exe --repo mini56/Kaloneo --target $target --title 'KALONÉO R185 — Build #188 — Setup Windows 0.0.212' --notes $notes --prerelease
+          if($LASTEXITCODE -ne 0){throw 'GitHub API refused the Release; executable remains available in the successful audit artifact.'}
+          gh release view $tag --repo mini56/Kaloneo --json url,assets
+          if($LASTEXITCODE -ne 0){throw 'Release could not be verified'}
