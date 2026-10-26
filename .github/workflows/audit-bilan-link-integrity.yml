@@ -11,6 +11,7 @@ on:
       - 'seb-evalpro/scripts/kaloneo-bilan-link-integrity-smoke.js'
       - 'seb-evalpro/scripts/bilan-tri-word-footer-smoke.js'
       - 'seb-evalpro/scripts/bilan-parcours-filter-electron-smoke-main.js'
+      - 'seb-evalpro/scripts/bilan-parcours-filter-smoke.js'
       - 'seb-evalpro/src/bilan-error-count.js'
       - 'seb-evalpro/src/bilan-table-view.js'
       - 'seb-evalpro/src/bilan-history-main.js'
