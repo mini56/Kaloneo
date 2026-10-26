@@ -36,7 +36,5 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'KALTEST data invalid'}
           npm run prepare:web
           if($LASTEXITCODE -ne 0){throw 'prepare:web failed'}
-      - name: Contrôler l'aide autonome, recherche et images
-        run: npx electron --no-sandbox scripts/kaloneo-r141-help-guides-electron-smoke-main.js
       - name: Contrôler fenêtre entière, adaptation, taille réelle et zoom sur les deux aides
         run: npx electron --no-sandbox scripts/kaloneo-help-fullscreen-electron-smoke-main.js

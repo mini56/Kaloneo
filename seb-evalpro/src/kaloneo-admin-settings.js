@@ -102,12 +102,24 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
     photoZoom=state;
     function render(){
       if(photoZoom!==state||!image.naturalWidth||!image.naturalHeight)return;
+      // Le retour au mode Adapter doit d'abord supprimer les dimensions de
+      // zoom, sinon les barres de défilement faussent l'échelle calculée.
+      if(state.fit){
+        canvas.style.width='100%';
+        canvas.style.height='100%';
+        image.style.width='0px';
+        image.style.height='0px';
+        stage.scrollLeft=0;
+        stage.scrollTop=0;
+      }
       const fitted=Math.min(stage.clientWidth/image.naturalWidth,stage.clientHeight/image.naturalHeight);
       const scale=state.fit?fitted:state.scale;
       if(!(scale>0))return;
       const width=Math.round(image.naturalWidth*scale),height=Math.round(image.naturalHeight*scale);
-      canvas.style.width=Math.max(stage.clientWidth,width)+'px';
-      canvas.style.height=Math.max(stage.clientHeight,height)+'px';
+      if(!state.fit){
+        canvas.style.width=Math.max(stage.clientWidth,width)+'px';
+        canvas.style.height=Math.max(stage.clientHeight,height)+'px';
+      }
       image.style.width=width+'px';
       image.style.height=height+'px';
       output.textContent=Math.round(scale*100)+' %';

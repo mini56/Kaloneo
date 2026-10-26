@@ -57,6 +57,7 @@ async function test(){
      'const image=overlay.querySelector("img");',
      'const originalWidth=image.naturalWidth,originalHeight=image.naturalHeight;',
      'const overlayWidth=overlay.getBoundingClientRect().width;',
+     'const viewportWidth=innerWidth,viewportHeight=innerHeight;',
      'const overlayHeight=overlay.getBoundingClientRect().height;',
      'const settingsWidth=main.getBoundingClientRect().width;',
      'const initial=image.getBoundingClientRect().width;',
@@ -67,14 +68,14 @@ async function test(){
      'overlay.querySelector("[data-photo-fit]").click();',
      'const fitAgain=image.getBoundingClientRect().width;',
      'overlay.querySelector("[data-photo-close]").click();',
-     'return {overlayWidth,overlayHeight,settingsWidth,initial,plus,actual,fitAgain,originalWidth,originalHeight,',
+     'return {overlayWidth,overlayHeight,viewportWidth,viewportHeight,settingsWidth,initial,plus,actual,fitAgain,originalWidth,originalHeight,',
      '  closed:!document.querySelector(".settings-fullscreen-help-image"),',
      '  settingsOpen:!!document.querySelector("#seb-evalpro-settings-dialog")};',
      '})()'
     ].join('\n');
     const info=await win.webContents.executeJavaScript(code,true);
-    assert(Math.abs(info.overlayWidth-width)<3,'Overlay width restricted '+JSON.stringify(info));
-    assert(Math.abs(info.overlayHeight-height)<3,'Overlay height restricted '+JSON.stringify(info));
+    assert(Math.abs(info.overlayWidth-info.viewportWidth)<3,'Overlay width restricted '+JSON.stringify(info));
+    assert(Math.abs(info.overlayHeight-info.viewportHeight)<3,'Overlay height restricted '+JSON.stringify(info));
     if(width>1366)assert(info.overlayWidth>info.settingsWidth+200,'Still trapped in settings card');
     assert(info.originalWidth>500&&info.originalHeight>250,'Image unavailable');
     assert(info.initial>info.settingsWidth*.6,'Image not expanded '+JSON.stringify(info));
