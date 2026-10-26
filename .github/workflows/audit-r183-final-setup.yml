@@ -314,11 +314,6 @@ jobs:
           $tokens=$null;$errors=$null
           [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path ./scripts/kaloneo-packaged-startup-smoke.ps1).Path,[ref]$tokens,[ref]$errors) | Out-Null
           if($errors.Count -gt 0){throw ('Startup audit PowerShell script syntax invalid: '+($errors -join '; '))}
-      - name: Launch the real packaged KALONEO.exe before publishing (mandatory GUI regression gate)
-        shell: pwsh
-        run: |
-          & ./scripts/kaloneo-packaged-startup-smoke.ps1 -Executable (Resolve-Path dist/win-unpacked/KALONEO.exe)
-          if($LASTEXITCODE -ne 0){throw 'KALONEO.exe ne demarre pas — setup bloque'}
       - name: Retrieve real published R182 installer for migration
         shell: pwsh
         env:
@@ -332,11 +327,21 @@ jobs:
         run: |
           & ./scripts/r179-real-upgrade-windows-smoke.ps1 -PreviousSetup (Resolve-Path dist/previous/KALONEO-Setup-0.0.209.exe) -NewSetup (Resolve-Path dist/KALONEO-Setup-0.0.210.exe)
           if($LASTEXITCODE -ne 0){throw 'R183 real upgrade lost candidate or builder data'}
+      - name: Launch the real packaged KALONEO.exe after upgrade and before publishing (mandatory GUI regression gate)
+        shell: pwsh
+        run: |
+          & ./scripts/kaloneo-packaged-startup-smoke.ps1 -Executable (Resolve-Path dist/win-unpacked/KALONEO.exe)
+          if($LASTEXITCODE -ne 0){throw 'KALONEO.exe ne demarre pas — setup bloque'}
       - name: Confirm that the real installed KALONEO.exe launches without Javascript exception
         shell: pwsh
         run: |
           & ./scripts/kaloneo-packaged-startup-smoke.ps1 -Executable (Join-Path $env:LOCALAPPDATA 'Programs/KALONEO/KALONEO.exe')
           if($LASTEXITCODE -ne 0){throw 'KALONEO.exe installe ne demarre pas — setup bloque'}
+      - name: Check original protected candidate data once again after both real Windows launches
+        shell: pwsh
+        run: |
+          & npx electron --no-sandbox scripts/r172-update-fixture-electron-main.js --verify
+          if($LASTEXITCODE -ne 0){throw 'Données candidats modifiées après test de lancement Windows — Setup bloqué'}
       - name: Verify integrated R60 is mandatory and green
         shell: pwsh
         run: |
