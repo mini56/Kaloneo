@@ -85,7 +85,7 @@ app.whenReady().then(async()=>{
   // changer le niveau, et sans désactiver les appréciations manuelles.
   const allRows=await win.webContents.executeJavaScript(`(()=>{
    const rows=[...document.querySelectorAll('#bilan tbody tr[data-r]')];
-   for(const tr of rows){
+   for(const tr of rows.filter(x=>x.querySelector('.csel'))){
     const select=tr.querySelector('.csel');
     const i=[...select.options].find(o=>o.dataset.l==='I');
     const ii=[...select.options].find(o=>o.dataset.l==='II');
@@ -93,16 +93,19 @@ app.whenReady().then(async()=>{
     tr.dataset.level='I';tr.querySelectorAll('.level').forEach(c=>c.classList.toggle('on',c.dataset.l==='I'));
     select.value=ii.value; // le bug de la capture (vert I, phrase II)
    }
-   const initial=rows.filter(tr=>tr.querySelector('.csel').selectedOptions[0]?.dataset.l!=='I').length;
+   const eligible=rows.filter(tr=>tr.querySelector('.csel'));
+   const initial=eligible.filter(tr=>tr.querySelector('.csel').selectedOptions[0]?.dataset.l!=='I').length;
    document.getElementById('save').click();
-   return {count:rows.length,initial,
-    remaining:rows.filter(tr=>tr.querySelector('.csel').selectedOptions[0]?.dataset.l!=='I').map(tr=>tr.dataset.r)};
+   return {count:rows.length,eligible:eligible.length,initial,
+    remaining:eligible.filter(tr=>tr.querySelector('.csel').selectedOptions[0]?.dataset.l!=='I').map(tr=>tr.dataset.r)};
   })()`);await pause();
   assert.equal(allRows.count,18,'Toutes les rubriques officielles doivent être contrôlées.');
-  assert.equal(allRows.initial,18,'La régression I/II doit être réellement reproduite.');
+  assert.equal(allRows.eligible,17,'Tri temps a cinq durées mais aucune liste de commentaire.');
+  assert.equal(allRows.initial,17,'La régression I/II doit être réellement reproduite.');
   assert.deepEqual(allRows.remaining,[],'Tous les niveaux doivent avoir le commentaire de la bonne couleur.');
   assert.equal(captured.rows.filter(r=>r.kind==='item').length,18);
   for(const row of captured.rows.filter(r=>r.kind==='item')){
+   if(!row.options.some(o=>o.level==='I'))continue; // Tri temps n'a pas de menu.
    const opt=row.options.find(o=>o.value===row.preset);
    assert.equal(row.level,'I','Le niveau validé reste I : '+row.key);
    assert.equal(opt?.level,'I','La capture archive le bon commentaire : '+row.key);
@@ -136,7 +139,7 @@ app.whenReady().then(async()=>{
    assert.deepEqual(after,before,'La grille enregistrée doit conserver exactement la géométrie et la mise en forme validées.');
    const coherence=await win.webContents.executeJavaScript(`(()=>[...document.querySelectorAll('#seb-bh-institutional-table tr[data-r]')].map(tr=>({key:tr.dataset.r,color:tr.querySelector('.level.on')?.dataset.l,comment:tr.querySelector('.csel')?.selectedOptions[0]?.dataset.l})))()`);
    assert.equal(coherence.length,18);
-   for(const row of coherence)assert.equal(row.comment,row.color,'Bilan enregistre I/II incoherent : '+row.key);
+   for(const row of coherence)if(row.comment!==undefined)assert.equal(row.comment,row.color,'Bilan enregistre I/II incoherent : '+row.key);
    const tri=await win.webContents.executeJavaScript(`(()=>{const table=document.querySelector('#seb-bh-institutional-table');return {times:table.querySelector('#triTimes').innerText,average:table.querySelector('#triAvg').textContent,errors:table.querySelector('#triErr').textContent,errorColumn:table.querySelector('#triErr').closest('td').cellIndex,emptyTextareas:table.querySelectorAll('textarea').length}})()`);
    assert.deepEqual(tri,{times,average:'00:08',errors:'2 erreurs',errorColumn:5,emptyTextareas:0});
    for(const level of ['II','I']){
@@ -146,7 +149,7 @@ app.whenReady().then(async()=>{
    await win.webContents.executeJavaScript("document.getElementById('seb-bh-save-revision').click()");await pause();
    assert.equal(revision.rows.find(r=>r.key==='tri-temps').triTimes,times);
    assert.equal(revision.rows.find(r=>r.key==='tri-erreurs').triErrors,'2 erreurs');
-   for(const row of revision.rows.filter(r=>r.kind==='item'))
+   for(const row of revision.rows.filter(r=>r.kind==='item'&&r.options.some(o=>o.level==='I')))
     assert.equal(row.options.find(o=>o.value===row.preset)?.level,row.level,
       'La sauvegarde de la revision doit rectifier le commentaire : '+row.key);
    const footer=await win.webContents.executeJavaScript(`(()=>{const w=document.querySelector('.seb-bh-editor-card'),body=w.querySelector('.seb-bh-editor-body'),f=w.querySelector('.seb-bh-editor-foot');body.scrollTop=body.scrollHeight;return {footerVisible:f.getBoundingClientRect().bottom<=innerHeight,bodyScroll:body.scrollTop,footerBelowBody:f.getBoundingClientRect().top>=body.getBoundingClientRect().bottom-1}})()`);

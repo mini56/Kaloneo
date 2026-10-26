@@ -16,6 +16,11 @@ for(const [,key,html]of rows){
  const options=[...html.matchAll(/<option\b([^>]*)>([\s\S]*?)<\/option>/g)].map(m=>({
    value:m[2],text:m[2],level:m[1].match(/data-l="(NE|I|II|III)"/)?.[1]||''
  }));
+ if(key==='tri-temps'){
+  assert.equal(options.length,0,'La ligne Tri temps a un relevé de cinq temps, sans liste déroulante.');
+  for(const level of ['NE','I','II','III'])assert(html.includes('data-l="'+level+'"'),'Niveau Tri temps absent : '+level);
+  continue;
+ }
  for(const level of ['NE','I','II','III'])assert(options.some(o=>o.level===level),'Niveau '+level+' absent : '+key);
  for(const level of ['NE','I','II','III']){
    for(const other of ['NE','I','II','III'].filter(l=>l!==level)){
@@ -52,4 +57,4 @@ assert(result,'Gestes et postures doit alimenter la ligne officielle.');
 assert.equal(result.level,'I');assert.equal(result.preset,opts.find(x=>x.level==='I').value);
 assert.equal(result.detail,'100 % de réponses correctes.');assert.equal(result.points,3);
 assert.equal(result.possible,3);
-console.log('KALONEO_BILAN_18_LINES_LEVEL_COMMENT=OK — 18 lignes, 4 niveaux, 216 incohérences rectifiées; commentaires libres et points préservés; Gestes 3/3=I');
+console.log('KALONEO_BILAN_18_LINES_LEVEL_COMMENT=OK — 18 lignes, 17 commentaires, 4 niveaux, 204 incohérences rectifiées; commentaires libres et points préservés; Gestes 3/3=I');
