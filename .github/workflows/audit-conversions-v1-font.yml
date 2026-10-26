@@ -1,0 +1,38 @@
+name: "KALONÉO - V1 Conversions questions lisibles sans Setup"
+on:
+  push:
+    branches:
+      - fix-r60-tri-rearm-only-20261011
+    paths:
+      - '.github/workflows/audit-conversions-v1-font.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  conversions-electron:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Installer les dépendances des médias
+        run: python -m pip install --disable-pip-version-check Pillow==11.3.0 imageio-ffmpeg==0.6.0
+      - name: Installer Electron
+        run: npm install --no-audit --no-fund
+      - name: Préparer les pages candidates
+        shell: pwsh
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          if($LASTEXITCODE -ne 0){throw 'Données V1 invalides'}
+          npm run prepare:web
+          if($LASTEXITCODE -ne 0){throw 'Préparation pages échouée'}
+      - name: Vérifier dix énoncés, lisibilité, tableau, image et débordement sur trois écrans
+        run: npx electron --no-sandbox scripts/kaloneo-conversions-v1-font-electron-smoke-main.js
