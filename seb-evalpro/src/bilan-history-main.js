@@ -1,5 +1,6 @@
 const {projectDocument}=require('./bilan-parcours');
 const {normalizeErrorCounts}=require('./bilan-error-count');
+const {alignBilanRow}=require('./bilan-level-consistency');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -76,7 +77,7 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
       summary: String(document.summary || ''),
       feeling: String(document.feeling || ''),
       headers: Array.isArray(document.headers) ? document.headers.map((v) => String(v || '')) : ['Modules', 'NE', 'I', 'II', 'III', 'Commentaires'],
-      rows: rows.map((row, index) => ({
+      rows: rows.map((row, index) => alignBilanRow({
         kind: row && row.kind === 'section' ? 'section' : 'item',
         key: String((row && row.key) || `row-${index + 1}`),
         className: String((row && row.className) || ''),

@@ -235,6 +235,8 @@ function clearAutomaticRows(){
     const target=row(id);
     if(!target||target.hidden)return;
     setLevel(target,'');
+    const selected=target.querySelector('.csel');
+    if(selected)selected.selectedIndex=0; // Aucun commentaire antérieur sans niveau correspondant.
     delete target.dataset.score;
     delete target.dataset.possible;
     const detail=target.querySelector('.detail');

@@ -3,6 +3,7 @@
 // recomposée à partir de textes aplatis ou de zones de saisie supplémentaires.
 const {institutionalTableSource}=require('./institutional-bilan-grid');
 const {normalizeErrorCounts}=require('./bilan-error-count');
+const {alignedPreset}=require('./bilan-level-consistency');
 function pruneEmptySections(table){
  let section=null,hasRows=false;
  for(const row of [...table.querySelectorAll('tbody tr')]){
@@ -58,7 +59,8 @@ function createEditorTable(documentState){
     for(const opt of row.options){const option=document.createElement('option');option.value=opt.value||'';option.textContent=opt.text||'';option.dataset.l=opt.level||'';select.appendChild(option)}
    }
    for(const option of select.options)option.dataset.level=option.dataset.l||'';
-   const chosen=(row.preset?[...select.options].find(o=>o.value===row.preset):null)||[...select.options].find(o=>o.dataset.l===row.level);
+   const preset=alignedPreset(row.level,row.preset,row.options?.length?row.options:[...select.options].map(o=>({value:o.value,level:o.dataset.l})));
+   const chosen=(preset?[...select.options].find(o=>o.value===preset&&o.dataset.l===row.level):null)||[...select.options].find(o=>o.dataset.l===row.level);
    if(chosen)select.value=chosen.value;
    select.addEventListener('change',()=>setLevel(select.options[select.selectedIndex]?.dataset.l||''));
   }

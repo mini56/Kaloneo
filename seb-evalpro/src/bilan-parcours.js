@@ -4,6 +4,7 @@ const fs=require('fs'),path=require('path');
 const bundled=path.join(__dirname,'..','app','web','js','kaloneo-bilan-routing.js');
 const routing=require(fs.existsSync(bundled)?bundled:'../source/js/kaloneo-bilan-routing');
 const {normalizeErrorCounts}=require('./bilan-error-count');
+const {alignBilanRow}=require('./bilan-level-consistency');
 function decode(value){if(value&&typeof value==='object')return value;try{return JSON.parse(value||'null')}catch(_){return null}}
 function statesFrom(session){
   for(const [key,value] of Object.entries(session||{})){
@@ -97,7 +98,7 @@ function projectDocument(document,session={},metadata=[]){
     // Temps du tri et appréciations sans barème numérique restent des niveaux,
     // jamais des pourcentages fabriqués à partir de I / II / III.
     if(!validPair(row)&&(/^(fabrication-|briques-|tri-)/.test(row.key)))row.assessmentMode='level';
-    rows.push(row);
+    rows.push(alignBilanRow(row));
   }
   return {...document,parcoursTests:tests,rows};
 }

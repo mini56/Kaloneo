@@ -16,6 +16,10 @@ on:
       - 'seb-evalpro/scripts/kaloneo-parcours-builder-smoke.js'
       - 'seb-evalpro/src/bilan-error-count.js'
       - 'seb-evalpro/src/bilan-table-view.js'
+      - 'seb-evalpro/src/bilan-level-consistency.js'
+      - 'seb-evalpro/source/js/admin-bilan-runtime.js'
+      - 'seb-evalpro/source/js/admin-bilan-kaloneo.js'
+      - 'seb-evalpro/scripts/bilan-level-consistency-smoke.js'
       - 'seb-evalpro/src/bilan-history-main.js'
       - 'seb-evalpro/src/bilan-history-preload.js'
       - 'seb-evalpro/src/bilan-docx-main.js'
@@ -41,6 +45,17 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Verification catalogue integral, Gestes, grilles, sauvegardes et refus Builder
         run: node scripts/kaloneo-bilan-link-integrity-smoke.js
+      - name: Coherence des 18 lignes entre couleurs, commentaires et niveaux, y compris Gestes et postures 3 sur 3
+        run: |
+          node --check src/bilan-level-consistency.js
+          node --check src/bilan-history-preload.js
+          node --check src/bilan-history-main.js
+          node --check src/bilan-parcours.js
+          node --check src/bilan-table-view.js
+          node --check source/js/admin-bilan-runtime.js
+          node --check source/js/admin-bilan-kaloneo.js
+          node --check scripts/bilan-level-consistency-smoke.js
+          node scripts/bilan-level-consistency-smoke.js
       - name: Placement droite du tri, singulier/pluriel et boutons bas du bilan et Word
         run: node scripts/bilan-tri-word-footer-smoke.js
       - name: Ergonomie de la bibliotheque, import/export et creation de parcours avec liaison obligatoire

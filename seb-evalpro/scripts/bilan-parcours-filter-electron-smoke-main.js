@@ -80,6 +80,33 @@ app.whenReady().then(async()=>{
   await win.loadFile(path.join(__dirname,'..','app','web','admin-bilan.html'));await pause();
   const initialPlacement=await win.webContents.executeJavaScript(`(()=>{const tr=document.querySelector('[data-r="tri-erreurs"]'),e=document.getElementById('triErr');const tools=document.querySelector('.bilan-bottom-actions .tools');return {column:e.closest('td').cellIndex,title:tr.cells[0].textContent.trim(),errors:e.textContent,position:getComputedStyle(document.querySelector('.bilan-bottom-actions')).position,buttons:[...tools.querySelectorAll('button')].map(b=>b.id)}})()`);
   assert.deepEqual(initialPlacement,{column:5,title:'Nombre d’erreurs effectuées',errors:'0 erreur',position:'fixed',buttons:['auto','save','word','close-bilan-top']},'Compteur à droite, barre des actions fixée en bas.');
+  // Régression toutes rubriques : niveau I vert, ancien menu II (copie d'un
+  // état incohérent). Sauvegarder doit réaligner les 18 commentaires sans
+  // changer le niveau, et sans désactiver les appréciations manuelles.
+  const allRows=await win.webContents.executeJavaScript(`(()=>{
+   const rows=[...document.querySelectorAll('#bilan tbody tr[data-r]')];
+   for(const tr of rows){
+    const select=tr.querySelector('.csel');
+    const i=[...select.options].find(o=>o.dataset.l==='I');
+    const ii=[...select.options].find(o=>o.dataset.l==='II');
+    if(!i||!ii)throw new Error('Option institutionnelle absente : '+tr.dataset.r);
+    tr.dataset.level='I';tr.querySelectorAll('.level').forEach(c=>c.classList.toggle('on',c.dataset.l==='I'));
+    select.value=ii.value; // le bug de la capture (vert I, phrase II)
+   }
+   const initial=rows.filter(tr=>tr.querySelector('.csel').selectedOptions[0]?.dataset.l!=='I').length;
+   document.getElementById('save').click();
+   return {count:rows.length,initial,
+    remaining:rows.filter(tr=>tr.querySelector('.csel').selectedOptions[0]?.dataset.l!=='I').map(tr=>tr.dataset.r)};
+  })()`);await pause();
+  assert.equal(allRows.count,18,'Toutes les rubriques officielles doivent être contrôlées.');
+  assert.equal(allRows.initial,18,'La régression I/II doit être réellement reproduite.');
+  assert.deepEqual(allRows.remaining,[],'Tous les niveaux doivent avoir le commentaire de la bonne couleur.');
+  assert.equal(captured.rows.filter(r=>r.kind==='item').length,18);
+  for(const row of captured.rows.filter(r=>r.kind==='item')){
+   const opt=row.options.find(o=>o.value===row.preset);
+   assert.equal(row.level,'I','Le niveau validé reste I : '+row.key);
+   assert.equal(opt?.level,'I','La capture archive le bon commentaire : '+row.key);
+  }
   const times=[5,8,11,7,9].map((s,i)=>'N°'+(i+1)+' : 00 min '+String(s).padStart(2,'0')+' s').join('\n');
   await win.webContents.executeJavaScript(`(()=>{
    document.querySelector('#bilan').style.width='1100px';
@@ -96,11 +123,20 @@ app.whenReady().then(async()=>{
   const before=await win.webContents.executeJavaScript(`(${measure})(document.querySelector('#bilan'))`);
   let archived=JSON.parse(JSON.stringify(captured));
   const oldErrorRow=archived.rows.find(r=>r.key==='tri-erreurs');oldErrorRow.comment=oldErrorRow.preset; // ancien éditeur : copie redondante du choix
+  // Une archive historique peut encore conserver une phrase II avec niveau I.
+  // Le rendu du bilan enregistre et son export ne doivent jamais la propager.
+  for(const row of archived.rows.filter(r=>r.kind==='item')){
+   row.preset=row.options.find(o=>o.level==='II')?.value||row.preset;
+   row.comment=row.preset; // historique où l'ancien choix avait été recopié
+  }
   for(let cycle=0;cycle<2;cycle++){
    await win.webContents.executeJavaScript(`window.bilanFilterTest.open(${JSON.stringify({candidate:{nom:'TEST',prenom:'GRILLE'},originalBuild:182,document:archived})})`);
    await win.webContents.executeJavaScript("document.querySelector('#seb-bh-institutional-table').style.width='1100px'");
    const after=await win.webContents.executeJavaScript(`(${measure})(document.querySelector('#seb-bh-institutional-table'))`);
    assert.deepEqual(after,before,'La grille enregistrée doit conserver exactement la géométrie et la mise en forme validées.');
+   const coherence=await win.webContents.executeJavaScript(`(()=>[...document.querySelectorAll('#seb-bh-institutional-table tr[data-r]')].map(tr=>({key:tr.dataset.r,color:tr.querySelector('.level.on')?.dataset.l,comment:tr.querySelector('.csel')?.selectedOptions[0]?.dataset.l})))()`);
+   assert.equal(coherence.length,18);
+   for(const row of coherence)assert.equal(row.comment,row.color,'Bilan enregistre I/II incoherent : '+row.key);
    const tri=await win.webContents.executeJavaScript(`(()=>{const table=document.querySelector('#seb-bh-institutional-table');return {times:table.querySelector('#triTimes').innerText,average:table.querySelector('#triAvg').textContent,errors:table.querySelector('#triErr').textContent,errorColumn:table.querySelector('#triErr').closest('td').cellIndex,emptyTextareas:table.querySelectorAll('textarea').length}})()`);
    assert.deepEqual(tri,{times,average:'00:08',errors:'2 erreurs',errorColumn:5,emptyTextareas:0});
    for(const level of ['II','I']){
@@ -110,6 +146,9 @@ app.whenReady().then(async()=>{
    await win.webContents.executeJavaScript("document.getElementById('seb-bh-save-revision').click()");await pause();
    assert.equal(revision.rows.find(r=>r.key==='tri-temps').triTimes,times);
    assert.equal(revision.rows.find(r=>r.key==='tri-erreurs').triErrors,'2 erreurs');
+   for(const row of revision.rows.filter(r=>r.kind==='item'))
+    assert.equal(row.options.find(o=>o.value===row.preset)?.level,row.level,
+      'La sauvegarde de la revision doit rectifier le commentaire : '+row.key);
    const footer=await win.webContents.executeJavaScript(`(()=>{const w=document.querySelector('.seb-bh-editor-card'),body=w.querySelector('.seb-bh-editor-body'),f=w.querySelector('.seb-bh-editor-foot');body.scrollTop=body.scrollHeight;return {footerVisible:f.getBoundingClientRect().bottom<=innerHeight,bodyScroll:body.scrollTop,footerBelowBody:f.getBoundingClientRect().top>=body.getBoundingClientRect().bottom-1}})()`);
    assert(footer.footerVisible&&footer.footerBelowBody,'Les boutons enregistrer / Word / fermer restent visibles en bas du bilan enregistré.');
    assert.equal(revision.rows.find(r=>r.key==='briques-identification').detail,'Temps : 06:23');

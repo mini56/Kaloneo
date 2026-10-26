@@ -1,5 +1,6 @@
 const { ipcRenderer } = require('electron');
 const path = require('path');
+const {alignBilanRow}=require('./bilan-level-consistency');
 
 let installed = false;
 let savingCurrent = null;
@@ -65,7 +66,7 @@ function captureBilanDocument() {
       text: textOf(opt),
       level: String(opt.getAttribute('data-l') || '')
     })) : [];
-    rows.push({
+    rows.push(alignBilanRow({
       kind: 'item',
       key,
       className: tr.className || '',
@@ -83,7 +84,7 @@ function captureBilanDocument() {
       possible: tr.dataset.possible!==undefined && tr.dataset.possible!==''
         ? Number(tr.dataset.possible) : null,
       options
-    });
+    }));
   });
   return {
     title: 'Bilan institutionnel',
@@ -309,7 +310,7 @@ function buildEditorDocument(editor) {
     const comment = tr.querySelector('.seb-bh-comment');
     const detail = tr.querySelector('.seb-bh-detail');
     const options = select ? Array.from(select.options).map((opt) => ({ value:String(opt.value || ''), text:textOf(opt), level:String(opt.dataset.level || '') })) : [];
-    rows.push({
+    rows.push(alignBilanRow({
       kind:'item', key:String(tr.dataset.key || `row-${index + 1}`), className:String(tr.dataset.className || ''), moduleText:String(tr.firstElementChild?.innerText || tr.dataset.moduleText || ''), sectionText:'',
       level:active ? String(active.dataset.level || '') : '', preset:select ? String(select.value || '') : '', comment:comment ? String(comment.value || '') : String(tr.dataset.comment||''), detail:detail ? String(detail.textContent || '') : '',
       points:tr.dataset.points!==undefined?Number(tr.dataset.points):null,
@@ -318,7 +319,7 @@ function buildEditorDocument(editor) {
       triTimes:tr.querySelector('#triTimes')?.innerText||'',
       triAverage:tr.querySelector('#triAvg')?.textContent||'',
       triErrors:tr.querySelector('#triErr')?.textContent||'', options
-    });
+    }));
   });
   const summary=sebV7Single(String(editor.querySelector('#seb-bh-history-summary')?.value||editor.dataset.summary||''));
   const feeling=String(editor.querySelector('#seb-bh-history-feeling')?.value||editor.dataset.feeling||'');
