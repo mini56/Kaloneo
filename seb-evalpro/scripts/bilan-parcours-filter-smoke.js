@@ -123,7 +123,8 @@ assert.equal(triGeneral.institutionalRows.find(r=>r.key==='tri-temps').triTimes,
 const triWord=wordRows(triGeneral).filter(r=>r.type==='row');
 assert.equal(triWord[0].extra,restoredTri.rows[0].triTimes);
 assert(triWord[0].module.includes('00:08'));
-assert(triWord[1].module.includes('2 erreurs'));
+assert.equal(triWord[1].module,'Nombre d’erreurs effectuées','Le Word ne doit plus afficher les erreurs dans la colonne Modules.');
+assert.equal(triWord[1].extra,'2 erreurs','Les erreurs du tri doivent être dans la colonne Commentaires du Word.');
 console.log('BILAN_TRI_RECOVERY=OK — cinq temps réels, moyenne, erreurs, priorité archive, bilan général et Word');
 
 const manualGeneral=aggregateGeneralBilan([{candidateId:'manuel',archive:{document:{rows:[{kind:'item',key:'fabrication-plan',level:'I',preset:'Capacité satisfaisante.',comment:''}]}}}]);
