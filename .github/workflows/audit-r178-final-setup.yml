@@ -5,6 +5,8 @@ on:
       - fix-r60-tri-rearm-only-20261011
     paths:
       - '.github/workflows/audit-r178-final-setup.yml'
+      - 'seb-evalpro/scripts/kaloneo-r178-tri-instruction-smoke.js'
+      - 'seb-evalpro/scripts/kaloneo-image-export-ui-smoke.js'
   workflow_dispatch:
 permissions:
   contents: write
