@@ -308,6 +308,12 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Bilan routing absent du package — setup bloque'}
       - name: Build unpublished R183 test installer, Build #186 unique
         run: npx electron-builder --win nsis --config build/kaloneo-r183-final-setup.yml --publish never
+      - name: Verify PowerShell test parser before launching the real executable
+        shell: pwsh
+        run: |
+          $tokens=$null;$errors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path ./scripts/kaloneo-packaged-startup-smoke.ps1).Path,[ref]$tokens,[ref]$errors) | Out-Null
+          if($errors.Count -gt 0){throw ('Startup audit PowerShell script syntax invalid: '+($errors -join '; '))}
       - name: Launch the real packaged KALONEO.exe before publishing (mandatory GUI regression gate)
         shell: pwsh
         run: |

@@ -53,7 +53,7 @@ try {
     $isMain= @($titles | Where-Object {$_ -match 'KALON|SEB EvalPro' -and $_ -notmatch 'Démarrage impossible'}).Count -gt 0
     if($i -ge 12 -and $isMain){
       $foundMain++
-      if($foundMain -ge 4)break
+      if($foundMain -ge 4){break}
     }else{$foundMain=0}
   }
   if($foundMain -lt 4){throw "KALONEO_PACKAGED_STARTUP_FAILED: fenêtre principale absente; fenêtres visibles : $($titles -join '; ')"}
