@@ -82,7 +82,17 @@ function projectDocument(document,session={},metadata=[]){
     const abandoned=sources.length&&sources.every(t=>/ABANDON|SKIP/i.test(String(states[t.id]?.status||''))&&routing.nonEvaluated(states[t.id]));
     if(abandoned){row.level='NE';row.points=null;row.possible=null;row.preset='';row.comment='';row.detail='Exercice abandonné.'}
     const pair=scores.get(row.key);
-    if(!validPair(row)&&pair){row.points=pair.score;row.possible=pair.max}
+    if(!validPair(row)&&pair){
+      row.points=pair.score;row.possible=pair.max;
+      // Une archive autrefois marquée NE faute de liaison retrouve son niveau
+      // réel à partir des résultats sauvegardés. Un niveau validé par
+      // l'administrateur n'est pas remplacé silencieusement.
+      if((!row.level||row.level==='NE')&&!(/^(fabrication-|briques-|tri-)/.test(row.key))){
+        const pct=100*pair.score/pair.max;
+        row.level=pct>=70?'I':pct>=45?'II':'III';
+        row.detail=pct.toLocaleString('fr-FR',{maximumFractionDigits:2})+' % de réponses correctes.';
+      }
+    }
     // Temps du tri et appréciations sans barème numérique restent des niveaux,
     // jamais des pourcentages fabriqués à partir de I / II / III.
     if(!validPair(row)&&(/^(fabrication-|briques-|tri-)/.test(row.key)))row.assessmentMode='level';

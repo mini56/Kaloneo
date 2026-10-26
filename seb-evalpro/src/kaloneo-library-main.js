@@ -8,6 +8,8 @@ const {loadSuppliedImages,publicMetadata}=require('./kaloneo-supplied-images');
 const zlib = require('zlib');
 const { exportImageRecords } = require('./kaloneo-image-export');
 const { iconForDefinition } = require('./kaloneo-default-test-icons');
+const bilanRouting = require('../source/js/kaloneo-bilan-routing');
+const {OFFICIAL: OFFICIAL_BILAN_ROWS}=require('./institutional-bilan-grid');
 
 const BASE_TEST_ORDER = Object.freeze([
   'calculs_commandes_atelier',
@@ -617,6 +619,14 @@ function createKaloneoLibrary(options = {}) {
 
     const rawCategory = String(definition.category || (role === 'introduction' ? 'introduction' : role === 'fin' ? 'fin' : 'autres'));
     const category = String(definition.id) === 'planning_cantine' ? 'planification' : rawCategory;
+    const protectedTest=seedContainsTest(definition.id,definition.version);
+    const adminModified=definition?.kaloneoLibrary?.adminModified === true;
+    const mappedRows=role==='test'
+      ?bilanRouting.selectedRows([{id:definition.id,category,adminModified,
+        bilanContributions:definition.bilanContributions||[]}])
+      :new Set();
+    const bilanLabels=OFFICIAL_BILAN_ROWS.filter(row=>row.kind==='row'&&mappedRows.has(row.key))
+      .map(row=>({key:row.key,label:row.label}));
 
     return {
       id:String(definition.id),
@@ -631,8 +641,9 @@ function createKaloneoLibrary(options = {}) {
       questionCount:questions,
       icon:iconForDefinition(definition),
       tools:[...new Set(tools)],
-      protectedVersion:seedContainsTest(definition.id, definition.version),
-      adminModified:definition?.kaloneoLibrary?.adminModified === true,
+      protectedVersion:protectedTest,
+      adminModified,
+      bilanRows:bilanLabels,
       // Les liaisons du Builder sont conservées par version. Le bilan ne doit
       // jamais tenter de les deviner d'après le titre ou la catégorie.
       bilanContributions:Array.isArray(definition.bilanContributions)
@@ -747,6 +758,12 @@ function createKaloneoLibrary(options = {}) {
     ensureSeed();
     const error = validateTestDefinition(definition);
     if (error) return { ok:false, error };
+    // Toute nouvelle définition doit avoir une ligne institutionnelle valide.
+    // Les V1 système historiques sont préservées sans changement des barèmes.
+    if(roleOf(definition)==='test'&&!seedContainsTest(definition.id,definition.version)){
+      const check=bilanRouting.validateTestLink(definition);
+      if(!check.ok)return {ok:false,code:'BILAN_LINK_REQUIRED',error:check.error};
+    }
 
     const value = JSON.parse(JSON.stringify(definition));
     value.id = String(value.id).trim();
@@ -1559,6 +1576,10 @@ function createKaloneoLibrary(options = {}) {
       seen.add(id);
       try {
         const definition = resolveDefinition(definitions, ref, 'test');
+        if(!seedContainsTest(definition.id,definition.version)){
+          const check=bilanRouting.validateTestLink(definition);
+          if(!check.ok)throw new Error('Test « '+definition.title+' » non rattaché au bilan : '+check.error);
+        }
         tests.push(refFor(definition));
       } catch (error) {
         return { ok:false, error:error.message };

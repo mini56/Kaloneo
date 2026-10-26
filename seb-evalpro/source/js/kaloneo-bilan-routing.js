@@ -79,6 +79,28 @@
       .filter(x=>x&&typeof x.lineId==='string'&&Boolean(ROWS[x.lineId]));
   }
   function rowFor(lineId){return ROWS[String(lineId||'')]||''}
+  function validateTestLink(test){
+    if(['introduction','fin'].includes(String(test?.pageRole||'')) ||
+       ['introduction','fin'].includes(String(test?.category||'')))
+      return {ok:true,rows:[]};
+    const declared=Array.isArray(test?.bilanContributions)?test.bilanContributions:[];
+    if(declared.length!==1)return {ok:false,error:'Choisir exactement une ligne du bilan institutionnel pour ce test.'};
+    const link=declared[0],key=rowFor(link?.lineId);
+    if(!key||!compatible(test?.category,link.lineId))
+      return {ok:false,error:'Ligne du bilan inconnue ou incompatible avec la catégorie du test.'};
+    const bindings=link?.bindings&&typeof link.bindings==='object'?link.bindings:{};
+    if(key.startsWith('fabrication-')){
+      if(Object.keys(bindings).length)return {ok:false,error:'Une activité pratique doit rester évaluée manuellement.'};
+    }else{
+      if(test?.scored===false)return {ok:false,error:'Un test automatique ne peut pas avoir la notation désactivée.'};
+      // Anciennes définitions importées : score en pourcentage est supporté,
+      // avec base 100, jamais par une division pourcentage/pourcentage.
+      const raw=bindings.score==='score'&&bindings.score_max==='score_max';
+      const percent=bindings.score==='pourcentage'&&bindings.score_max==='pourcentage';
+      if(!raw&&!percent)return {ok:false,error:'La liaison doit transmettre les points réels ou un pourcentage sur 100.'};
+    }
+    return {ok:true,rows:[key]};
+  }
   function numeric(value){
     if(value===null||value===undefined||String(value).trim()==='')return null;
     const n=Number(value);return Number.isFinite(n)?n:null;
@@ -107,17 +129,11 @@
   function collect(tests,stateFor){
     const entries=new Map(),warnings=[];
     for(const test of tests||[]){
-      // Les V1 historiques ont leurs propres barèmes et ne doivent jamais
-      // être comptées deux fois. Exception explicite et UNIQUE validée en R156 :
-      // Gestes et postures V1 est désormais relié à la ligne officielle
-      // Compétences transversales, avec sa note réelle sur 3 points.
-      const gesturesV1=test?.id==='gestes_postures'&&String(test?.version)==='1.0.0'&&
-        test?.category==='competences_transversales'&&
-        links(test).some(link=>link.lineId===
-          'bilan.savoirs_fondamentaux.competences_transversales.mobiliser_competences');
-      if(test?.adminModified!==true&&!gesturesV1)continue;
+      // Les V1 utilisent leur notation historique ou leur lien explicite.
+      // Une même paire test/ligne ne doit jamais être comptée deux fois.
       for(const link of links(test)){
         const rowId=rowFor(link.lineId);
+        if(test?.adminModified!==true&&(LEGACY[rowId]||[]).includes(test.id))continue;
         if(!compatible(test.category,link.lineId)){
           warnings.push({testId:test.id,rowId,reason:'Categorie incompatible avec la ligne du bilan'});
           continue;
@@ -134,5 +150,5 @@
     }
     return {entries,warnings};
   }
-  return Object.freeze({rowFor,compatible,links,scoreOf,collect,LEGACY,selectedRows,nonEvaluated});
+  return Object.freeze({rowFor,compatible,links,scoreOf,collect,LEGACY,selectedRows,nonEvaluated,validateTestLink});
 });

@@ -66,6 +66,15 @@
     target.classList.toggle('error', type === 'error');
   }
 
+  function bilanStatus(item) {
+    if(!item||item.role!=='test')return '';
+    if(item.category==='autoevaluation')return 'Autoévaluation : hors notation';
+    const rows=Array.isArray(item.bilanRows)?item.bilanRows:[];
+    if(!rows.length)return 'ATTENTION : aucune ligne institutionnelle reliée';
+    if(rows.length>1)return 'Bilan : '+rows.length+' lignes institutionnelles';
+    return 'Bilan : '+String(rows[0].label||rows[0].key||'Ligne officielle');
+  }
+
   function categoryLabel(value) {
     const labels = {
       introduction:'Introduction de parcours',
@@ -376,6 +385,8 @@
     }
     const identity=testAdminIdentity(item);
     if(identity) details.push(identity);
+    const status=bilanStatus(item);
+    if(status)details.push(status);
     card.querySelector('.card-meta').textContent = details.join(' • ');
     if(identity)card.title=String(item.title)+' — '+identity;
 
@@ -512,7 +523,8 @@
       card.querySelector('.sequence-meta').textContent =
         categoryLabel(item.category) + ' • v' + item.version + ' • ' +
         (item.scored ? 'noté' : 'non noté') +
-        (testAdminIdentity(item) ? ' • '+testAdminIdentity(item) : '');
+        (testAdminIdentity(item) ? ' • '+testAdminIdentity(item) : '') +
+        (bilanStatus(item) ? ' • '+bilanStatus(item) : '');
 
       const up = card.querySelector('.move-up');
       const down = card.querySelector('.move-down');

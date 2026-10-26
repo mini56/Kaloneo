@@ -1,0 +1,46 @@
+name: "KALONÉO - Audit exhaustif des rattachements aux 18 lignes du bilan (sans Setup)"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/audit-bilan-link-integrity.yml'
+      - 'seb-evalpro/source/js/kaloneo-bilan-routing.js'
+      - 'seb-evalpro/src/bilan-parcours.js'
+      - 'seb-evalpro/src/kaloneo-library-main.js'
+      - 'seb-evalpro/source/js/admin-parcours-builder.js'
+      - 'seb-evalpro/scripts/kaloneo-bilan-link-integrity-smoke.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  links-and-scores:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Installer les dependances Electron
+        run: npm install --no-audit --no-fund
+      - name: Verification catalogue integral, Gestes, grilles, sauvegardes et refus Builder
+        run: node scripts/kaloneo-bilan-link-integrity-smoke.js
+      - name: Non regression des liaisons Builder, pourcentages et versions V1
+        run: node scripts/kaloneo-bilan-builder-routing-smoke.js
+      - name: Non regression grille 18 lignes et Word
+        run: node scripts/r152-institutional-grid-and-builder-smoke.js
+      - name: Non regression des bilans enregistres et de la consolidation
+        run: node scripts/bilan-parcours-filter-smoke.js
+      - name: Securite des anciennes V1 et preparation du vrai candidat
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          if($LASTEXITCODE -ne 0){throw 'Echec de synchronisation V1'}
+          npm run prepare:web
+          if($LASTEXITCODE -ne 0){throw 'Echec preparation candidat'}
+      - name: Verification sous Electron du bilan et du Word enregistres
+        run: node scripts/run-bilan-electron-check.js scripts/bilan-parcours-filter-electron-smoke-main.js "BILAN_FILTER_ELECTRON=OK"
+      - name: Verification sous Electron de la synthese generale
+        run: node scripts/run-bilan-electron-check.js scripts/general-bilan-synthesis-electron-smoke-main.js "GENERAL_SYNTHESIS_ELECTRON=OK"
