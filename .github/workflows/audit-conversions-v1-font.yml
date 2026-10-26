@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/audit-conversions-v1-font.yml'
       - 'seb-evalpro/scripts/kaloneo-conversions-v1-font-electron-smoke-main.js'
+      - 'seb-evalpro/source/css/kaltest-pilot2.css'
   workflow_dispatch:
 permissions:
   contents: read
