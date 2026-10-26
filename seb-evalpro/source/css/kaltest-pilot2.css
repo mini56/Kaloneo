@@ -4064,3 +4064,39 @@ body:is([data-seb-kaltest-id="grille_operations"],[data-seb-kaltest-id="carre_ma
   body[data-seb-kaltest-id="grille_operations"]{--kaloneo-grid-square:clamp(36px,9.5vh,65px)}
   body[data-seb-kaltest-id="carre_magique_15"]{--kaloneo-grid-square:clamp(32px,6.8vh,48px)}
 }
+
+/* KALONÉO — amélioration ciblée V1 des énoncés de conversions.
+   Le texte des 10 questions était bloqué à 15 px malgré une grande réserve
+   d'espace à gauche. Pas de changement au tableau, image, contenu ou barème.
+   S'applique à l'aperçu réel du Builder ET au parcours candidat. */
+body[data-seb-kaltest-id="conversions_atelier_expedition"]
+  .kaltest-conversions-work .kaltest-question-list{
+  font-size:clamp(16px,1.1vw,18px);
+  line-height:1.29;
+  padding-top:4px;
+  padding-bottom:5px;
+}
+body[data-seb-kaltest-id="conversions_atelier_expedition"]
+  .kaltest-conversions-work .kaltest-question-list li{
+  margin:4px 0;
+}
+@media (max-height:820px){
+  body[data-seb-kaltest-id="conversions_atelier_expedition"]
+    .kaltest-conversions-work .kaltest-question-list{
+    font-size:16.5px;
+    line-height:1.22;
+    padding-top:2px;
+    padding-bottom:2px;
+  }
+  body[data-seb-kaltest-id="conversions_atelier_expedition"]
+    .kaltest-conversions-work .kaltest-question-list li{margin:3px 0}
+}
+@media (max-height:740px){
+  body[data-seb-kaltest-id="conversions_atelier_expedition"]
+    .kaltest-conversions-work .kaltest-question-list{
+    font-size:16px;
+    line-height:1.18;
+  }
+  body[data-seb-kaltest-id="conversions_atelier_expedition"]
+    .kaltest-conversions-work .kaltest-question-list li{margin:2px 0}
+}
