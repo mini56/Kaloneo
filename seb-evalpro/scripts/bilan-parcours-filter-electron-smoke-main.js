@@ -91,6 +91,7 @@ app.whenReady().then(async()=>{
   const measure=`table=>[...table.querySelectorAll('tbody tr')].map(tr=>({height:tr.getBoundingClientRect().height,cells:[...tr.cells].map(td=>({width:td.getBoundingClientRect().width,bold:td.querySelectorAll('b').length,italic:td.querySelectorAll('i').length,background:getComputedStyle(td).backgroundColor,font:getComputedStyle(td).fontSize,padding:getComputedStyle(td).padding})),thresholds:[...tr.querySelectorAll('.level')].map(x=>x.textContent.trim())}))`;
   const before=await win.webContents.executeJavaScript(`(${measure})(document.querySelector('#bilan'))`);
   let archived=JSON.parse(JSON.stringify(captured));
+  const oldErrorRow=archived.rows.find(r=>r.key==='tri-erreurs');oldErrorRow.comment=oldErrorRow.preset; // ancien éditeur : copie redondante du choix
   for(let cycle=0;cycle<2;cycle++){
    await win.webContents.executeJavaScript(`window.bilanFilterTest.open(${JSON.stringify({candidate:{nom:'TEST',prenom:'GRILLE'},originalBuild:182,document:archived})})`);
    await win.webContents.executeJavaScript("document.querySelector('#seb-bh-institutional-table').style.width='1100px'");

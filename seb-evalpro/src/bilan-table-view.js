@@ -40,7 +40,7 @@ function createEditorTable(documentState){
  for(const tr of [...table.querySelectorAll('tbody tr')]){
   if(tr.matches('tr.section,tr.section2')){tr.classList.add('seb-bh-section');continue}
   const row=byKey.get(tr.dataset.r);if(!row){tr.remove();continue}
-  tr.dataset.key=row.key;tr.dataset.className=tr.className;tr.dataset.comment=String(row.comment||'');
+  tr.dataset.key=row.key;tr.dataset.className=tr.className;tr.dataset.comment=row.options?.some(o=>o.value===row.comment)?'':String(row.comment||'');
   if(row.points!==null&&row.points!==undefined)tr.dataset.points=String(row.points);
   if(row.possible!==null&&row.possible!==undefined)tr.dataset.possible=String(row.possible);
   tr.dataset.assessmentMode=row.assessmentMode||'';

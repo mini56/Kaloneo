@@ -214,7 +214,7 @@ function aggregateInstitutionalRows(evaluations){
    }else if(LEVELS.has(src.level)&&src.level!=='NE'){
      if(line.mode==='manual'||src.assessmentMode==='level'){
        manual=src.level; // Dernière validation humaine, sans calcul de points fictifs.
-       manualComment=String(src.comment||'');
+       manualComment=String(src.comment||src.preset||'');
        manualDetail=String(src.detail||'');
      }else missing++;
    }

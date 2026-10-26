@@ -125,3 +125,6 @@ assert.equal(triWord[0].extra,restoredTri.rows[0].triTimes);
 assert(triWord[0].module.includes('00:08'));
 assert(triWord[1].module.includes('2 erreurs'));
 console.log('BILAN_TRI_RECOVERY=OK — cinq temps réels, moyenne, erreurs, priorité archive, bilan général et Word');
+
+const manualGeneral=aggregateGeneralBilan([{candidateId:'manuel',archive:{document:{rows:[{kind:'item',key:'fabrication-plan',level:'I',preset:'Capacité satisfaisante.',comment:''}]}}}]);
+assert.equal(manualGeneral.institutionalRows.find(r=>r.key==='fabrication-plan').comment,'Capacité satisfaisante.');
