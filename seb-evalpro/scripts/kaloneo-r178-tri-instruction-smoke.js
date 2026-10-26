@@ -42,7 +42,7 @@ try{
  const after=JSON.parse(fs.readFileSync(path.join(dst,relative),'utf8'));
  const beforeOther=fs.readFileSync(other,'utf8');
  assert.equal(beforeOther,untouched,'Un autre test a été modifié');
- assert.deepEqual({...after,instruction:old},previous,'La migration a changé autre chose que la consigne');
+ assert.deepEqual({...after,instruction:previous.instruction},previous,'La migration a changé autre chose que la consigne');
  console.log('KALONEO_R178_UPGRADE_OLD_TRI_LABEL_ONLY=SUCCESS');
 }finally{fs.rmSync(tmp,{recursive:true,force:true});}
 console.log('KALONEO_R178_TRI_V1_INSTRUCTION_ONLY=SUCCESS');

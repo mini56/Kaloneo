@@ -14,7 +14,8 @@ const zip=read('src/kaloneo-image-export.js');
 
 for(const id of ['export-images','import-images','import-image-zip'])
   assert.match(page,new RegExp('id="'+id+'"'),'Bouton manquant : '+id);
-assert.match(page,/<button id="export-images" class="primary"/);
+// Les boutons alignés ont la classe de grille supplémentaire control-row-1.
+assert.match(page,/<button\s+id="export-images"\s+class="primary(?:\s+[^"]*)?"/);
 assert.match(ui,/byId\('export-images'\)\.addEventListener\('click'/);
 assert.match(ui,/kaloneoExportImageZip\?\.\(\)/);
 assert.match(preload,/kaloneoExportImageZip: \(\) => ipcRenderer\.invoke\('kaloneo-library:export-image-zip'\)/);
