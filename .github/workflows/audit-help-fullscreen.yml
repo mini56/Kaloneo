@@ -1,0 +1,42 @@
+name: "KALONÉO - Aide A/B zoom plein écran vérifié sans Setup"
+on:
+  push:
+    branches:
+      - fix-r60-tri-rearm-only-20261011
+    paths:
+      - '.github/workflows/audit-help-fullscreen.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  aide-zoom-electron:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Installer les outils des ressources
+        run: python -m pip install --disable-pip-version-check Pillow==11.3.0 imageio-ffmpeg==0.6.0
+      - name: Installer Electron
+        run: npm install --no-audit --no-fund
+      - name: Vérifier l'intégrité des 18 captures réelles
+        run: node scripts/kaloneo-r141-help-guides-guard.js
+      - name: Préparer l'application réelle hors connexion
+        shell: pwsh
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          if($LASTEXITCODE -ne 0){throw 'KALTEST data invalid'}
+          npm run prepare:web
+          if($LASTEXITCODE -ne 0){throw 'prepare:web failed'}
+      - name: Contrôler l'aide autonome, recherche et images
+        run: npx electron --no-sandbox scripts/kaloneo-r141-help-guides-electron-smoke-main.js
+      - name: Contrôler fenêtre entière, adaptation, taille réelle et zoom sur les deux aides
+        run: npx electron --no-sandbox scripts/kaloneo-help-fullscreen-electron-smoke-main.js
