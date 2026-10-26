@@ -5,6 +5,10 @@ on:
     paths:
       - '.github/workflows/audit-bilan-parcours.yml'
       - 'seb-evalpro/src/bilan-parcours.js'
+      - 'seb-evalpro/src/bilan-history-*.js'
+      - 'seb-evalpro/src/bilan-table-view.js'
+      - 'seb-evalpro/src/institutional-bilan-grid.js'
+      - 'seb-evalpro/src/candidate-catalog-preload.js'
       - 'seb-evalpro/scripts/bilan-parcours-filter*'
   workflow_dispatch:
 permissions:
@@ -25,20 +29,38 @@ jobs:
       - name: Préparer les pages réelles et vérifier les V1
         run: |
           node scripts/build-kaltest-pilot2-data.js
+          if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
           npm run prepare:web
+          if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
       - name: Maths seules, abandons, anciens bilans et points chiffrés
         run: node scripts/bilan-parcours-filter-smoke.js
       - name: Consolidation, Word et confidentialité
         run: |
           node scripts/general-bilan-aggregation-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
           node scripts/general-bilan-ipc-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
           node scripts/r152-institutional-grid-and-builder-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
           node scripts/kaloneo-bilan-builder-routing-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
           node scripts/bilan-docx-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
           node scripts/candidate-local-protection-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
       - name: Vrais écrans Windows, capture, réouverture et Word filtré
         run: npx electron --no-sandbox scripts/bilan-parcours-filter-electron-smoke-main.js
+      - name: Synthèse générale et bouton visible
+        run: |
+          node scripts/general-bilan-synthesis-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
+          if($LASTEXITCODE -ne 0){throw 'Synthese invalide'}
+          npx electron --no-sandbox scripts/general-bilan-synthesis-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
+          if($LASTEXITCODE -ne 0){throw 'Ecran general invalide'}
       - name: Régression des V1 et des liaisons Builder
         run: |
           npx electron --no-sandbox scripts/kaloneo-bilan-dynamic-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}
           npx electron --no-sandbox scripts/kaloneo-bilan-builder-routing-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Controle bilan en echec'}

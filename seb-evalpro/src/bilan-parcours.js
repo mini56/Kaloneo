@@ -41,7 +41,33 @@ function rowScores(tests,states){
   for(const [key,entries] of linked.entries)for(const entry of entries)add(key,entry.pair);
   return sums;
 }
+// Récupération des mesures d'une ancienne archive depuis SON état enregistré.
+// Les valeurs déjà figées dans le bilan restent prioritaires.
+function restoreTri(document,session){
+ if(!document)return document;
+ const state=statesFrom(session).tri_chevilles||{};
+ let attempts=Array.isArray(state.tri?.rows)?state.tri.rows.slice(0,5):[];
+ attempts=attempts.filter(r=>r?.seconds!==null&&r?.seconds!==undefined&&Number.isFinite(Number(r.seconds))&&Number(r.seconds)>=0&&r.errors!==null&&r.errors!==undefined&&String(r.errors).trim()!==''&&Number.isFinite(Number(r.errors)));
+ if(!attempts.length&&Array.isArray(state.result?.tri?.temps_essais)){
+  attempts=state.result.tri.temps_essais.slice(0,5).filter(x=>x!==null&&Number.isFinite(Number(x))&&Number(x)>=0).map((seconds,i)=>({seconds:Number(seconds),errors:i===0?state.result.tri.erreurs_total:0}));
+ }
+ if(!attempts.length){
+  const legacy=decode(session?.tri_cheville_data);
+  attempts=(legacy?.tris||[]).slice(0,5).filter(r=>Number(r.minutes)||Number(r.secondes)).map(r=>({seconds:(Number(r.minutes)||0)*60+(Number(r.secondes)||0),errors:r.erreurs}));
+ }
+ const pad=x=>String(x).padStart(2,'0');
+ const seconds=attempts.length?Math.round(attempts.reduce((sum,r)=>sum+Number(r.seconds),0)/attempts.length):null;
+ const total=attempts.length&&attempts.every(r=>r.errors!==null&&r.errors!==undefined&&Number.isFinite(Number(r.errors)))?attempts.reduce((sum,r)=>sum+Number(r.errors),0):null;
+ return {...document,rows:(document.rows||[]).map(row=>{
+  if(row.key==='tri-temps')return {...row,
+   triTimes:row.triTimes||(attempts.length?attempts.map((r,i)=>'N°'+(i+1)+' : '+pad(Math.floor(r.seconds/60))+' min '+pad(r.seconds%60)+' s').join('\n'):''),
+   triAverage:row.triAverage||String(row.moduleText||'').match(/Moyenne\s+(\d{1,3}:\d{2})/i)?.[1]||(seconds!==null?pad(Math.floor(seconds/60))+':'+pad(seconds%60):'')};
+  if(row.key==='tri-erreurs')return {...row,triErrors:row.triErrors||String(row.moduleText||'').match(/\b\d+\s+erreurs?\b/i)?.[0]||(total!==null?total+' erreur'+(total===1?'':'s'):'')};
+  return row;
+ })};
+}
 function projectDocument(document,session={},metadata=[]){
+  document=restoreTri(document,session);
   const tests=testsFrom(document,session,metadata);
   if(!document||!tests)return document;
   const states=statesFrom(session);

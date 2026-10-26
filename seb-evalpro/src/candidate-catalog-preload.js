@@ -640,19 +640,8 @@ function renderInstitutionalGeneralTable(host,lines) {
     }
     const detail=row.querySelector('.detail');
     if(detail)detail.textContent=String(line.detail||'');
-    if(row.dataset.r==='tri-temps'){
-      const avg=String(line.latestModule||'').match(/Moyenne\s+(\d{2}:\d{2})/i);
-      const node=row.querySelector('#triAvg');
-      if(node)node.textContent=avg?avg[1]:'—';
-      const times=row.querySelector('#triTimes');
-      if(times)times.textContent='';
-    }
-    if(row.dataset.r==='tri-erreurs'){
-      const found=String(line.latestModule||'').match(/(\d+)\s+erreurs?/i);
-      const node=row.querySelector('#triErr');
-      if(node)node.textContent=found?found[0]:'Non renseigné';
-    }
   }
+  require('./bilan-table-view').applyTriValues(original,entries);
   let header=null,hasRows=false;
   for(const row of [...original.querySelectorAll('tbody tr')]){
     if(row.matches('tr.section,tr.section2')){

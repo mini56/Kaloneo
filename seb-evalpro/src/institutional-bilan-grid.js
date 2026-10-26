@@ -196,12 +196,13 @@ function aggregateInstitutionalRows(evaluations){
   if(line.kind==='section'){section={...line};sectionAdded=false;continue;}
   if(!selected.has(line.key))continue;
   if(section&&!sectionAdded){result.push(section);sectionAdded=true;}
-  let points=0,possible=0,scored=0,missing=0,manual=null,manualComment='',manualDetail='',latestModule='';
+  let points=0,possible=0,scored=0,missing=0,manual=null,manualComment='',manualDetail='',latestModule='',triValues={};
   for(const item of sorted){
    const rows=Array.isArray(item.archive?.document?.rows)?item.archive.document.rows:[];
    const src=rows.find(row=>row?.kind==='item'&&row.key===line.key);
    if(!src)continue;
    if(src.moduleText)latestModule=String(src.moduleText);
+   triValues={triTimes:src.triTimes||'',triAverage:src.triAverage||'',triErrors:src.triErrors||''};
    const obtained=src.points,maximum=src.possible;
    const isNumeric=obtained!==null&&obtained!==undefined&&maximum!==null&&maximum!==undefined&&
      Number.isFinite(Number(obtained))&&Number.isFinite(Number(maximum))&&
@@ -232,7 +233,7 @@ function aggregateInstitutionalRows(evaluations){
   const detail=percent===null?manualDetail:(display+' de réponses correctes.');
   result.push({...line,points,possible,scored,percent:percent===null?null:Math.round(percent*100)/100,
     level,missing,display,comment,detail,
-    moduleText:definition.module,latestModule});
+    moduleText:definition.module,latestModule,...triValues});
  }
  return {rows:result,warnings};
 }
@@ -240,7 +241,8 @@ function wordRows(general){
  const entries=Array.isArray(general?.institutionalRows)?general.institutionalRows:[];
  return entries.map(line=>line.kind==='section'
    ?{type:'section',text:line.label,strong:line.label==='Compétences techniques'}
-   :{type:'row',key:line.key,module:line.moduleText||officialRowDefinitions().get(line.key)?.module||line.label,
+   :{type:'row',key:line.key,module:line.key==='tri-temps'?(line.moduleText||'').replace(/Moyenne\s+\d{1,3}:\d{2}/,'Moyenne '+(line.triAverage||'—')):line.key==='tri-erreurs'?(line.moduleText||'').replace(/\b\d+\s+erreurs?\b/,line.triErrors||'Non renseigné'):line.moduleText||officialRowDefinitions().get(line.key)?.module||line.label,
+     extra:line.key==='tri-temps'?line.triTimes||'':'',
      level:line.level||'NE',levelTexts:officialRowDefinitions().get(line.key)?.levelTexts||{},
      alternate:!!officialRowDefinitions().get(line.key)?.alternate,
      comment:line.comment||'',detail:line.detail||''});

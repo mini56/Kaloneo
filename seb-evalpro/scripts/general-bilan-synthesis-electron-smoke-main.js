@@ -7,7 +7,7 @@ let metadata=[],smokeState={version:1,sessionStorage:{candidat_data:JSON.stringi
 let savedSummary='',exportedSummary='',failNext=false;
 const person={personId:'PERS-TEST',nom:'TEST',prenom:'GENERAL'};
 const evaluation=(id,points)=>({candidateId:id,session:{},archive:{document:{rows:[{kind:'item',key:'math-enonce',level:'II',points,possible:10},{kind:'item',key:'math-problemes',level:'NE',points:null,possible:null}]}}});
-const general=aggregateGeneralBilan([evaluation('a',6),evaluation('b',8)]);
+let general=aggregateGeneralBilan([evaluation('a',6),evaluation('b',8)]);
 const deadline=setTimeout(()=>{console.error('GENERAL_SYNTHESIS_ELECTRON_TIMEOUT');app.exit(2)},60000);
 ipcMain.on('app:edition-sync',event=>{event.returnValue={edition:'admin',canBilan:true,canAi:true,canImport:true,canExport:true}});
 ipcMain.on('state:load-sync',event=>{event.returnValue=smokeState});
@@ -75,6 +75,14 @@ app.whenReady().then(async()=>{
    assert((await win.webContents.executeJavaScript("document.getElementById('seb-gb-status').textContent")).includes('Sources modifiées'));
    win.destroy();win=null;
   }
+  const triTimes=[5,8,11,7,9].map((s,i)=>'N°'+(i+1)+' : 00 min '+String(s).padStart(2,'0')+' s').join('\n');
+  general=aggregateGeneralBilan([evaluation('a',6),{candidateId:'tri',archive:{document:{rows:[{kind:'item',key:'tri-temps',level:'I',assessmentMode:'level',triTimes,triAverage:'00:08'},{kind:'item',key:'tri-erreurs',level:'I',assessmentMode:'level',triErrors:'2 erreurs'}]}}}]);
+  win=new BrowserWindow({show:false,width:1366,height:768,webPreferences:{preload:path.join(__dirname,'bilan-parcours-filter-test-preload.js'),contextIsolation:true,nodeIntegration:false,sandbox:false}});
+  await win.loadFile(path.join(__dirname,'..','app','web','admin-bilan.html'));await pause();
+  await win.webContents.executeJavaScript(`window.bilanFilterTest.openGeneral('${person.personId}')`);
+  const measurements=await win.webContents.executeJavaScript(`(()=>{const t=document.getElementById('seb-gb-original-table').shadowRoot;return{times:t.querySelector('#triTimes').innerText,average:t.querySelector('#triAvg').textContent,errors:t.querySelector('#triErr').textContent}})()`);
+  assert.deepEqual(measurements,{times:triTimes,average:'00:08',errors:'2 erreurs'});
+  win.destroy();win=null;
   console.log('GENERAL_SYNTHESIS_ELECTRON=OK — bouton visible 1366/1200, vraie grille consolidée, génération, modification, sauvegarde, Word, réouverture et erreur sans perte');
   clearTimeout(deadline);app.exit(0);
  }catch(error){console.error(error.stack||error);clearTimeout(deadline);if(win)win.destroy();app.exit(2)}

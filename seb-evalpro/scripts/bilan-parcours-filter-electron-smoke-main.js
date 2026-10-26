@@ -71,6 +71,43 @@ app.whenReady().then(async()=>{
    assert(!wordHtml.includes('Messagerie électronique')&&!wordHtml.includes('Expression écrite'));
    win.destroy();win=null;
   }
+  // Comparaison de la vraie grille complète avant/après sauvegarde : mêmes
+  // dimensions, gras/italiques, seuils, couleurs et mesures, à largeur égale.
+  metadata=[];smokeState={version:1,sessionStorage:{candidat_data:JSON.stringify({nom:'TEST',prenom:'GRILLE'})},localStorage:{},lastPage:'admin-bilan.html'};
+  win=new BrowserWindow({show:false,width:1366,height:900,webPreferences:{preload:path.join(__dirname,'bilan-parcours-filter-test-preload.js'),contextIsolation:true,nodeIntegration:false,sandbox:false}});
+  await win.loadFile(path.join(__dirname,'..','app','web','admin-bilan.html'));await pause();
+  const times=[5,8,11,7,9].map((s,i)=>'N°'+(i+1)+' : 00 min '+String(s).padStart(2,'0')+' s').join('\n');
+  await win.webContents.executeJavaScript(`(()=>{
+   document.querySelector('#bilan').style.width='1100px';
+   document.querySelector('#triTimes').innerText=${JSON.stringify(times)};
+   document.querySelector('#triAvg').textContent='00:08';document.querySelector('#triErr').textContent='2 erreurs';
+   document.querySelector('[data-r="briques-identification"] .detail').textContent='Temps : 06:23';
+   document.querySelector('[data-r="briques-manipulation"] .detail').textContent='1 erreur';
+   document.getElementById('save').click();
+  })()`);await pause();
+  assert.equal(captured.rows.filter(r=>r.kind==='item').length,18);
+  assert.equal(captured.rows.find(r=>r.key==='tri-temps').triTimes,times);
+  const measure=`table=>[...table.querySelectorAll('tbody tr')].map(tr=>({height:tr.getBoundingClientRect().height,cells:[...tr.cells].map(td=>({width:td.getBoundingClientRect().width,bold:td.querySelectorAll('b').length,italic:td.querySelectorAll('i').length,background:getComputedStyle(td).backgroundColor,font:getComputedStyle(td).fontSize,padding:getComputedStyle(td).padding})),thresholds:[...tr.querySelectorAll('.level')].map(x=>x.textContent.trim())}))`;
+  const before=await win.webContents.executeJavaScript(`(${measure})(document.querySelector('#bilan'))`);
+  let archived=JSON.parse(JSON.stringify(captured));
+  for(let cycle=0;cycle<2;cycle++){
+   await win.webContents.executeJavaScript(`window.bilanFilterTest.open(${JSON.stringify({candidate:{nom:'TEST',prenom:'GRILLE'},originalBuild:182,document:archived})})`);
+   await win.webContents.executeJavaScript("document.querySelector('#seb-bh-institutional-table').style.width='1100px'");
+   const after=await win.webContents.executeJavaScript(`(${measure})(document.querySelector('#seb-bh-institutional-table'))`);
+   assert.deepEqual(after,before,'La grille enregistrée doit conserver exactement la géométrie et la mise en forme validées.');
+   const tri=await win.webContents.executeJavaScript(`(()=>{const table=document.querySelector('#seb-bh-institutional-table');return {times:table.querySelector('#triTimes').innerText,average:table.querySelector('#triAvg').textContent,errors:table.querySelector('#triErr').textContent,errorColumn:table.querySelector('#triErr').closest('td').cellIndex,emptyTextareas:table.querySelectorAll('textarea').length}})()`);
+   assert.deepEqual(tri,{times,average:'00:08',errors:'2 erreurs',errorColumn:0,emptyTextareas:0});
+   await win.webContents.executeJavaScript("document.getElementById('seb-bh-save-revision').click()");await pause();
+   assert.equal(revision.rows.find(r=>r.key==='tri-temps').triTimes,times);
+   assert.equal(revision.rows.find(r=>r.key==='tri-erreurs').triErrors,'2 erreurs');
+   assert.equal(revision.rows.find(r=>r.key==='briques-identification').detail,'Temps : 06:23');
+   await win.webContents.executeJavaScript("document.getElementById('seb-bh-export').click()");await pause();
+   assert(wordHtml.includes('00:08')&&wordHtml.includes('2 erreurs'));
+   for(const line of times.split('\n'))assert(wordHtml.includes(line),'Le Word doit garder chaque temps : '+line);
+   archived=JSON.parse(JSON.stringify(revision));
+   await win.webContents.executeJavaScript("document.getElementById('seb-bilan-history-editor').remove()");
+  }
+  win.destroy();win=null;
   console.log('BILAN_FILTER_ELECTRON=OK — maths seules, abandon seul, sections, capture réelle, éditeur, conservation des points et Word filtré');
   clearTimeout(deadline);app.exit(0);
  }catch(error){console.error(error.stack||error);clearTimeout(deadline);if(win)win.destroy();app.exit(2)}

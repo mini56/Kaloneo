@@ -93,5 +93,35 @@ try{
  const old=full();old.rows.find(r=>r.key==='math-enonce').level='II';old.rows.find(r=>r.key==='math-problemes').level='I';
  const restored=projectDocument(old,session);
  assert.deepEqual(restored.rows.filter(r=>r.kind==='item').map(r=>[r.points,r.possible]),[[2,3],[4,5]]);
+ // Les champs du tri traversent aussi le vrai stockage chiffré et deux lectures.
+ const triDoc={parcoursTests:[{id:'tri_chevilles'}],rows:[{kind:'item',key:'tri-temps',level:'I',triTimes:'N°1 : 00 min 05 s\nN°2 : 00 min 08 s\nN°3 : 00 min 11 s\nN°4 : 00 min 07 s\nN°5 : 00 min 09 s',triAverage:'00:08'},{kind:'item',key:'tri-erreurs',level:'I',triErrors:'2 erreurs'}]};
+ const triSaved=call('bilan-history:save-current',{candidateId:id,candidate,document:triDoc});assert(triSaved.ok,triSaved.error);
+ let triLoaded=call('bilan-history:load',triSaved.filename);assert(triLoaded.ok,triLoaded.error);
+ for(let i=0;i<2;i++){
+  assert.equal(triLoaded.archive.document.rows.find(r=>r.key==='tri-temps').triTimes,triDoc.rows[0].triTimes);
+  assert.equal(triLoaded.archive.document.rows.find(r=>r.key==='tri-temps').triAverage,'00:08');
+  assert.equal(triLoaded.archive.document.rows.find(r=>r.key==='tri-erreurs').triErrors,'2 erreurs');
+  triLoaded.archive.document.summary='Lecture '+i;
+  const again=call('bilan-history:save-revision',{sourceFilename:triLoaded.filename,document:triLoaded.archive.document});assert(again.ok,again.error);
+  triLoaded=call('bilan-history:load',again.filename);assert(triLoaded.ok,triLoaded.error);
+ }
 }finally{clearLocalKey();fs.rmSync(root,{recursive:true,force:true})}
 console.log('BILAN_PARCOURS_FILTER=OK — maths seules, abandons, Builder, anciennes archives, points exacts, réenregistrement chiffré et union du Word général');
+
+// Anciennes archives : récupérer les mesures réelles, sans changer le niveau.
+const triSession={seb_kaloneo_results_manifest:JSON.stringify({tests:[{id:'tri_chevilles'}]}),seb_kaltest_pilot2_state_v1:JSON.stringify({tests:{tri_chevilles:{status:'COMPLETED',tri:{rows:[5,8,11,7,9].map((seconds,i)=>({seconds,errors:i===0?2:0}))}}}})};
+const oldTri={rows:[{kind:'item',key:'tri-temps',moduleText:'Tri de chevilles Moyenne 00:08',level:'I'},{kind:'item',key:'tri-erreurs',moduleText:'Nombre d’erreurs effectuées 2 erreurs',level:'I'}]};
+const restoredTri=projectDocument(oldTri,triSession);
+assert.equal(restoredTri.rows[0].triTimes.split('\n').length,5);
+assert.equal(restoredTri.rows[0].triAverage,'00:08');
+assert.equal(restoredTri.rows[1].triErrors,'2 erreurs');
+const frozenTri=JSON.parse(JSON.stringify(restoredTri));frozenTri.rows[0].triTimes='N°1 : 02 min 00 s';
+assert.equal(projectDocument(frozenTri,triSession).rows[0].triTimes,'N°1 : 02 min 00 s','Les mesures déjà archivées restent prioritaires.');
+assert.equal(projectDocument(oldTri,{}).rows[0].triTimes,'','Ne pas inventer de temps absent.');
+const triGeneral=aggregateGeneralBilan([{candidateId:'tri',session:triSession,archive:{document:oldTri}}]);
+assert.equal(triGeneral.institutionalRows.find(r=>r.key==='tri-temps').triTimes,restoredTri.rows[0].triTimes);
+const triWord=wordRows(triGeneral).filter(r=>r.type==='row');
+assert.equal(triWord[0].extra,restoredTri.rows[0].triTimes);
+assert(triWord[0].module.includes('00:08'));
+assert(triWord[1].module.includes('2 erreurs'));
+console.log('BILAN_TRI_RECOVERY=OK — cinq temps réels, moyenne, erreurs, priorité archive, bilan général et Word');

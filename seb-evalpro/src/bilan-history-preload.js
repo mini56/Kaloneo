@@ -75,6 +75,9 @@ function captureBilanDocument() {
       preset: select ? String(select.value || '') : '',
       comment: textarea ? String(textarea.value || '') : '',
       detail: detail ? String(detail.innerText || detail.textContent || '').trim() : '',
+      triTimes:tr.querySelector('#triTimes')?.innerText||'',
+      triAverage:tr.querySelector('#triAvg')?.textContent||'',
+      triErrors:tr.querySelector('#triErr')?.textContent||'',
       points: tr.dataset.score!==undefined && tr.dataset.score!==''
         ? Number(tr.dataset.score) : null,
       possible: tr.dataset.possible!==undefined && tr.dataset.possible!==''
@@ -174,7 +177,7 @@ function addStyle() {
     .seb-bh-body{padding:15px;overflow:auto;background:#f5f7fb}.seb-bh-path{font-size:12px;color:#666;margin-bottom:10px}.seb-bh-row{display:grid;grid-template-columns:1.35fr .55fr .55fr .8fr auto;gap:10px;align-items:center;padding:10px 12px;background:#fff;border:1px solid #d9dfeb;border-radius:7px;margin-bottom:8px}.seb-bh-row strong{font-size:15px}.seb-bh-row small{color:#666}.seb-bh-bad{color:#c00000;font-weight:700}
     .seb-bh-actions{display:flex;justify-content:flex-end;gap:10px;padding:12px 16px;border-top:1px solid #ddd;background:#fff}.seb-bh-row>div:last-child{display:flex;justify-content:flex-end;gap:8px;align-items:center}.seb-bh-actions button,.seb-bh-row button{font:700 14px Arial,sans-serif;padding:8px 14px;border:1px solid #999;border-radius:5px;background:#f2f2f2;cursor:pointer}.seb-bh-actions .primary,.seb-bh-row .primary{background:#0070c0;color:#fff;border-color:#0070c0}.seb-bh-row .danger{background:#c62828;color:#fff;border-color:#c62828}.seb-bh-row .danger.confirm{background:#8b0000;border-color:#8b0000}
     .seb-bh-editor-card{width:98vw;height:94vh;background:#fff;border-radius:8px;box-shadow:0 16px 50px rgba(0,0,0,.42);display:flex;flex-direction:column;overflow:hidden}.seb-bh-editor-head{display:flex;gap:10px;align-items:center;background:#0070c0;color:#fff;padding:10px 15px}.seb-bh-editor-head strong{font-size:18px;flex:1}.seb-bh-warning{background:#fff3cd;color:#6e5200;border-radius:13px;padding:4px 9px;font-size:12px;font-weight:700}.seb-bh-editor-body{flex:1;overflow:auto;padding:16px;background:#fff}
-    .seb-bh-meta{display:flex;gap:24px;flex-wrap:wrap;margin:0 0 10px;font-size:14px}.seb-bh-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}.seb-bh-table th,.seb-bh-table td{border:1px solid #000;padding:5px;vertical-align:top}.seb-bh-table th{background:#0070c0;color:#fff}.seb-bh-table th:nth-child(2){background:#ccffff;color:#000}.seb-bh-table th:nth-child(3){background:#92d050;color:#000}.seb-bh-table th:nth-child(4){background:#ed7d31}.seb-bh-table th:nth-child(5){background:#c00000}.seb-bh-section td{background:#9cc2e5;font-weight:700}.seb-bh-module{white-space:pre-line}.seb-bh-level{text-align:center;cursor:pointer;height:42px;user-select:none}.seb-bh-level.on[data-level="NE"]{background:#ccffff}.seb-bh-level.on[data-level="I"]{background:#92d050}.seb-bh-level.on[data-level="II"]{background:#ed7d31;color:#fff}.seb-bh-level.on[data-level="III"]{background:#c00000;color:#fff}.seb-bh-level.on:after{content:none}.seb-bh-select,.seb-bh-comment{width:100%;font:inherit}.seb-bh-select{margin-bottom:5px}.seb-bh-comment{min-height:55px;resize:vertical;padding:5px}.seb-bh-detail{font-size:12px;color:#555;white-space:pre-line;margin-top:4px}.seb-bh-editor-foot{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid #ddd;background:#f8f8f8}.seb-bh-editor-foot .info{flex:1;font-size:13px;color:#555}.seb-bh-editor-foot button{font:700 14px Arial,sans-serif;padding:8px 14px;border:1px solid #999;border-radius:5px;background:#f2f2f2;cursor:pointer}.seb-bh-editor-foot .primary{background:#0070c0;color:#fff;border-color:#0070c0}
+    .seb-bh-meta{display:flex;gap:24px;flex-wrap:wrap;margin:0 0 10px;font-size:14px}.seb-bh-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}.seb-bh-table th,.seb-bh-table td{border:1px solid #000;padding:5px;vertical-align:top}.seb-bh-table th{background:#0070c0;color:#fff}.seb-bh-table th:nth-child(2){background:#ccffff;color:#000}.seb-bh-table th:nth-child(3){background:#92d050;color:#000}.seb-bh-table th:nth-child(4){background:#ed7d31}.seb-bh-table th:nth-child(5){background:#c00000}.seb-bh-section td{background:#9cc2e5;font-weight:700}.seb-bh-module{white-space:pre-line}.seb-bh-level{text-align:center;cursor:pointer;user-select:none}.seb-bh-level.on[data-level="NE"]{background:#ccffff}.seb-bh-level.on[data-level="I"]{background:#92d050}.seb-bh-level.on[data-level="II"]{background:#ed7d31;color:#fff}.seb-bh-level.on[data-level="III"]{background:#c00000;color:#fff}.seb-bh-level.on:after{content:none}.seb-bh-select,.seb-bh-comment{width:100%;font:inherit}.seb-bh-select{margin-bottom:5px}.seb-bh-comment{min-height:55px;resize:vertical;padding:5px}.seb-bh-detail{font-size:12px;color:#555;white-space:pre-line;margin-top:4px}.seb-bh-editor-foot{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid #ddd;background:#f8f8f8}.seb-bh-editor-foot .info{flex:1;font-size:13px;color:#555}.seb-bh-editor-foot button{font:700 14px Arial,sans-serif;padding:8px 14px;border:1px solid #999;border-radius:5px;background:#f2f2f2;cursor:pointer}.seb-bh-editor-foot .primary{background:#0070c0;color:#fff;border-color:#0070c0}
   `;
   document.head.appendChild(style);
 }
@@ -307,11 +310,14 @@ function buildEditorDocument(editor) {
     const detail = tr.querySelector('.seb-bh-detail');
     const options = select ? Array.from(select.options).map((opt) => ({ value:String(opt.value || ''), text:textOf(opt), level:String(opt.dataset.level || '') })) : [];
     rows.push({
-      kind:'item', key:String(tr.dataset.key || `row-${index + 1}`), className:String(tr.dataset.className || ''), moduleText:String(tr.dataset.moduleText || ''), sectionText:'',
-      level:active ? String(active.dataset.level || '') : '', preset:select ? String(select.value || '') : '', comment:comment ? String(comment.value || '') : '', detail:detail ? String(detail.textContent || '') : '',
+      kind:'item', key:String(tr.dataset.key || `row-${index + 1}`), className:String(tr.dataset.className || ''), moduleText:String(tr.firstElementChild?.innerText || tr.dataset.moduleText || ''), sectionText:'',
+      level:active ? String(active.dataset.level || '') : '', preset:select ? String(select.value || '') : '', comment:comment ? String(comment.value || '') : String(tr.dataset.comment||''), detail:detail ? String(detail.textContent || '') : '',
       points:tr.dataset.points!==undefined?Number(tr.dataset.points):null,
       possible:tr.dataset.possible!==undefined?Number(tr.dataset.possible):null,
-      assessmentMode:tr.dataset.assessmentMode||'', options
+      assessmentMode:tr.dataset.assessmentMode||'',
+      triTimes:tr.querySelector('#triTimes')?.innerText||'',
+      triAverage:tr.querySelector('#triAvg')?.textContent||'',
+      triErrors:tr.querySelector('#triErr')?.textContent||'', options
     });
   });
   const summary=sebV7Single(String(editor.querySelector('#seb-bh-history-summary')?.value||editor.dataset.summary||''));
@@ -376,48 +382,9 @@ function openEditor(filename, archive) {
   card.dataset.note = String((archive.document && archive.document.note) || '');
   card.dataset.summary = String((archive.document && archive.document.summary) || '');
   card.dataset.parcoursTests=JSON.stringify(archive.document?.parcoursTests||null);
-  const tbody = overlay.querySelector('tbody');
-  const rows = archive.document && Array.isArray(archive.document.rows) ? archive.document.rows : [];
-  rows.forEach((row, index) => {
-    const tr = document.createElement('tr');
-    tr.dataset.key = String(row.key || `row-${index + 1}`);
-    if (row.kind === 'section') {
-      tr.className = 'seb-bh-section';
-      const td = document.createElement('td'); td.colSpan = 6; td.textContent = row.sectionText || ''; tr.appendChild(td); tbody.appendChild(tr); return;
-    }
-    if(row.points!==null&&row.points!==undefined)tr.dataset.points=String(row.points);
-    if(row.possible!==null&&row.possible!==undefined)tr.dataset.possible=String(row.possible);
-    tr.dataset.assessmentMode=row.assessmentMode||'';
-    tr.dataset.className = String(row.className || '');
-    tr.dataset.moduleText = String(row.moduleText || '');
-    const module = document.createElement('td'); module.className = 'seb-bh-module'; module.textContent = row.moduleText || ''; tr.appendChild(module);
-    ['NE','I','II','III'].forEach((level) => {
-      const td = document.createElement('td'); td.className = 'seb-bh-level' + (row.level === level ? ' on' : ''); td.dataset.level = level;
-      td.addEventListener('click', () => { tr.querySelectorAll('.seb-bh-level').forEach((cell) => cell.classList.remove('on')); td.classList.add('on'); });
-      tr.appendChild(td);
-    });
-    const comments = document.createElement('td');
-    if (Array.isArray(row.options) && row.options.length) {
-      const select = document.createElement('select'); select.className = 'seb-bh-select';
-      row.options.forEach((opt) => { const option = document.createElement('option'); option.value = opt.value || ''; option.textContent = opt.text || ''; option.dataset.level = opt.level || ''; select.appendChild(option); });
-      select.value = row.preset || '';
-      select.addEventListener('change', () => {
-        const chosen = select.options[select.selectedIndex];
-        const level = chosen && chosen.dataset.level;
-        if (level && ['NE','I','II','III'].includes(level)) {
-          tr.querySelectorAll('.seb-bh-level').forEach((cell) => cell.classList.toggle('on', cell.dataset.level === level));
-        } else {
-          tr.querySelectorAll('.seb-bh-level').forEach((cell) => cell.classList.remove('on'));
-        }
-        const comment = tr.querySelector('.seb-bh-comment');
-        if (comment) comment.value = chosen ? String(chosen.value || '') : '';
-      });
-      comments.appendChild(select);
-    }
-    const textarea = document.createElement('textarea'); textarea.className = 'seb-bh-comment'; textarea.value = row.comment || ''; comments.appendChild(textarea);
-    if (row.detail) { const detail = document.createElement('div'); detail.className = 'seb-bh-detail'; detail.textContent = row.detail; comments.appendChild(detail); }
-    tr.appendChild(comments); tbody.appendChild(tr);
-  });
+  const {table,css}=require('./bilan-table-view').createEditorTable(archive.document||{rows:[]});
+  const style=document.createElement('style');style.textContent=css;overlay.appendChild(style);
+  overlay.querySelector('.seb-bh-table').replaceWith(table);
 
   const sa=overlay.querySelector('#seb-bh-history-summary');if(sa){sa.value=sebV7Single(String((archive.document&&archive.document.summary)||''));sa.addEventListener('input',()=>card.dataset.summary=sa.value)}
   const gb=overlay.querySelector('#seb-bh-gen-summary');if(gb){const nb=gb.cloneNode(true);gb.replaceWith(nb);nb.addEventListener('click',()=>{sa.value=sebV7Single(sebV4HistorySummary(card,candidate));card.dataset.summary=sa.value})}
@@ -561,18 +528,10 @@ function exportHistoricalWord(card, candidate, originalBuild, revision) {
     const detail = tr.querySelector('.detail');
     if (detail) detail.textContent = String(row.detail || '');
 
-    if (String(row.key) === 'tri-temps') {
-      const avg = String(row.moduleText || '').match(/Moyennes+([0-9]{1,2}:[0-9]{2})/i);
-      const avgEl = tr.querySelector('#triAvg');
-      if (avg && avgEl) avgEl.textContent = avg[1].padStart(5, '0');
-    }
-    if (String(row.key) === 'tri-erreurs') {
-      const err = String(row.moduleText || '').match(/([0-9]+)s+erreur/i);
-      const errEl = tr.querySelector('#triErr');
-      if (err && errEl) errEl.textContent = err[1] + ' erreur' + (Number(err[1]) > 1 ? 's' : '');
-    }
+
   });
 
+  require('./bilan-table-view').applyTriValues(table,edited.rows);
   let section=null,hasRows=false;
   for(const row of [...table.querySelectorAll('tbody tr')]){
     if(row.matches('tr.section,tr.section2')){
