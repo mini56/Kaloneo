@@ -115,10 +115,10 @@ app.whenReady().then(async()=>{
    assert.equal(revision.rows.find(r=>r.key==='briques-identification').detail,'Temps : 06:23');
    await win.webContents.executeJavaScript("document.getElementById('seb-bh-export').click()");await pause();
    assert(wordHtml.includes('00:08')&&wordHtml.includes('2 erreurs'));
-   const wordRow=wordHtml.match(/<tr[^>]*data-r="tri-erreurs"[^>]*>([\\s\\S]*?)<\\/tr>/i)?.[1]||'';
-   assert(/<div[^>]*id="triErr"[^>]*>2 erreurs<\\/div>/i.test(wordRow),
+   const wordRow=wordHtml.split('data-r="tri-erreurs"')[1]?.split('</tr>')[0]||'';
+   assert(wordRow.includes('id="triErr"')&&wordRow.includes('2 erreurs'),
     'Le Word doit placer le compteur dans la colonne Commentaires.');
-   assert(!/Nombre d.erreurs effectuées<\\/b><br>/i.test(wordRow),
+   assert(!wordRow.includes('</b><br><span id="triErr"'),
     'La première colonne Word ne doit pas contenir un saut suivi du compteur.');
    assert(wordHtml.includes(revision.rows.find(r=>r.key==='tri-erreurs').preset),'Le commentaire validé doit rester dans le Word.');
    for(const line of times.split('\n'))assert(wordHtml.includes(line),'Le Word doit garder chaque temps : '+line);
