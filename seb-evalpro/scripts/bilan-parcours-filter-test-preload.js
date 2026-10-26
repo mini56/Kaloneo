@@ -3,5 +3,6 @@ require('../src/preload');
 const {contextBridge}=require('electron');
 // Test uniquement : ouvrir l'éditeur de production avec une archive fournie.
 contextBridge.exposeInMainWorld('bilanFilterTest',{
- open:(archive)=>require('../src/bilan-history-preload').openEditor('test.json',archive)
+ open:(archive)=>require('../src/bilan-history-preload').openEditor('test.json',archive),
+ openGeneral:(personId)=>require('../src/candidate-catalog-preload').openGeneralBilan(personId)
 });

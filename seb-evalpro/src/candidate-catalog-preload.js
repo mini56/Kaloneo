@@ -699,11 +699,12 @@ async function openGeneralBilan(personId) {
         </div>
         <div class="seb-cc-section">
           <h3>Synthèse générale (modifiable)</h3>
-          <textarea id="seb-gb-summary" spellcheck="true" rows="7" placeholder="Rédigez la synthèse croisée des parcours."></textarea>
+          <textarea id="seb-gb-summary" spellcheck="true" rows="7" placeholder="Cliquez sur Générer la synthèse ou rédigez la synthèse croisée des parcours."></textarea>
           <p id="seb-gb-status" role="status">Grille en lecture seule. Les niveaux pratiques ont été validés dans les pré-bilans ; seule la synthèse générale est modifiable.</p>
         </div>
       </div>
       <div class="seb-cc-detail-actions seb-gb-actions">
+        <button type="button" id="seb-gb-generate">Générer la synthèse</button>
         <button type="button" id="seb-gb-save" class="primary">Enregistrer le bilan général</button>
         <button type="button" id="seb-gb-word">Générer Word</button>
         <button type="button" id="seb-gb-open">Ouvrir Word</button>
@@ -724,12 +725,39 @@ async function openGeneralBilan(personId) {
   const save=overlay.querySelector('#seb-gb-save');
   const word=overlay.querySelector('#seb-gb-word');
   const open=overlay.querySelector('#seb-gb-open');
-  let pending=false;
-  function busy(state){pending=state;for(const b of [save,word,open])b.disabled=state}
+  const generate=overlay.querySelector('#seb-gb-generate');
+  let pending=false,wordMatchesField=true;
+  function busy(state){
+    pending=state;
+    for(const b of [save,word,generate])b.disabled=state;
+    open.disabled=state||!wordMatchesField;
+    field.disabled=state;
+  }
+  function changed(){
+    wordMatchesField=false;
+    generate.textContent=field.value.trim()?'Régénérer la synthèse':'Générer la synthèse';
+    busy(false);
+  }
+  generate.textContent=field.value.trim()?'Régénérer la synthèse':'Générer la synthèse';
+  field.addEventListener('input',changed);
+  generate.addEventListener('click',async()=>{
+    if(pending)return;busy(true);
+    status.textContent='Génération de la synthèse générale…';
+    try{
+      const r=await ipcRenderer.invoke('candidate-catalog:generate-general-synthesis',personId,general.sourceDigest);
+      if(!r||!r.ok||!String(r.text||'').trim())throw new Error(r&&r.error||'Synthèse générale indisponible.');
+      field.value=r.text;
+      wordMatchesField=false;
+      generate.textContent='Régénérer la synthèse';
+      status.textContent='Synthèse générale générée. Vous pouvez la modifier, puis enregistrer le bilan ou générer son Word.';
+      field.scrollIntoView({block:'nearest'});
+    }catch(e){status.textContent=String(e.message||e)}finally{busy(false)}
+  });
   save.addEventListener('click',async()=>{
     if(pending)return;busy(true);
     try {
       const r=await ipcRenderer.invoke('candidate-catalog:save-general-bilan',personId,field.value,general.sourceDigest);
+      if(r&&r.ok)wordMatchesField=false;
       status.textContent=r&&r.ok?'Bilan général enregistré. Générer un nouveau Word.':(r&&r.error||'Échec enregistrement');
     }catch(e){status.textContent=String(e.message||e)}finally{busy(false)}
   });
@@ -737,6 +765,7 @@ async function openGeneralBilan(personId) {
     if(pending)return;busy(true);
     try {
       const r=await ipcRenderer.invoke('candidate-catalog:export-general-bilan',personId,field.value,general.sourceDigest);
+      if(r&&r.ok)wordMatchesField=true;
       status.textContent=r&&r.ok?'Word sécurisé généré. Cliquez sur Ouvrir Word.':(r&&r.error||'Échec génération Word');
     }catch(e){status.textContent=String(e.message||e)}finally{busy(false)}
   });
@@ -1214,4 +1243,4 @@ function install(options = {}) {
   }
 }
 
-module.exports = { install, openCatalog, openCandidateDetail };
+module.exports = { install, openCatalog, openCandidateDetail, openGeneralBilan };

@@ -46,10 +46,11 @@ function fixture(id,date,title,tests,overrides={}) {
     {nom:'MARTIN',prenom:'JULES',naissance:'1992-07-12'});
   fixture('eval-delta','2026-09-04','Commerce',{calculs:{title:'Calculs',score:2,max:10}},
     {nom:'MARTIN',prenom:'JULES',naissance:'1992-07-12'});
+  let adminUnlocked=true;
   const handlers=new Map();
   const ipcMain={handle:(name,fn)=>handlers.set(name,fn),on:()=>{}};
   const app={getPath(name){return name==='temp'?path.join(root,'temp'):name==='userData'?path.join(root,'userData'):path.join(root,'Documents')}};
-  register({app,ipcMain,getAdminUnlocked:()=>true,getAdminDocumentPassword:()=> 'AdminTest2026!',
+  register({app,ipcMain,getAdminUnlocked:()=>adminUnlocked,getAdminDocumentPassword:()=> 'AdminTest2026!',
     getActiveCandidate:()=>null,dataRoot:root});
   const handler=(name,...args)=>handlers.get(name)(null,...args);
   const persons=handler('candidate-catalog:list-persons');
@@ -79,7 +80,18 @@ function fixture(id,date,title,tests,overrides={}) {
   assert.equal(math.tests.find(t=>t.id==='calculs').possible,20);
   assert.equal(math.tests.find(t=>t.id==='conversions').scoredPassages,1);
   assert.equal(loaded.general.notes.length,2,'Commentaires anciens consultables.');
-  const summary='Synthese de trois paragraphes\nUne evaluation pluridisciplinaire.';
+  const sourcesBefore=fs.readFileSync(path.join(f1.directory,'bilan','historique','BILAN_eval-alpha.json'));
+  const generated=handler('candidate-catalog:generate-general-synthesis',personId,loaded.general.sourceDigest);
+  assert(generated.ok,generated.error);
+  assert(/différents parcours/.test(generated.text));
+  assert(/mathématiques/.test(generated.text));
+  assert(!/messagerie|briques|fabrication/i.test(generated.text),'Synthèse limitée aux compétences évaluées.');
+  assert(!fs.existsSync(path.join(root,'BilansGeneraux',personId,'bilan-general.json')),'Générer ne doit pas enregistrer sans action de l’administrateur.');
+  assert(fs.readFileSync(path.join(f1.directory,'bilan','historique','BILAN_eval-alpha.json')).equals(sourcesBefore),'Le bilan de parcours source ne doit pas être modifié.');
+  adminUnlocked=false;
+  assert.equal(handler('candidate-catalog:generate-general-synthesis',personId,loaded.general.sourceDigest).ok,false);
+  adminUnlocked=true;
+  const summary=generated.text+'\n\nComplément rédigé par l’administrateur.';
   const saved=handler('candidate-catalog:save-general-bilan',personId,summary,loaded.general.sourceDigest);
   assert(saved.ok,saved.error);
   const generalDir=path.join(root,'BilansGeneraux',personId);
@@ -90,6 +102,14 @@ function fixture(id,date,title,tests,overrides={}) {
   assert(exported.ok,exported.error);
   assert(fs.statSync(path.join(generalDir,'bilan-general.docx')).size>1000);
   assert(fs.statSync(path.join(generalDir,'bilan-general.sebword')).size>1000);
+  const {decryptBilanDocxBuffer}=require('../src/bilan-docx-main');
+  const {unzipSync}=require('fflate');
+  const plainWord=await decryptBilanDocxBuffer(fs.readFileSync(path.join(generalDir,'bilan-general.docx')),'AdminTest2026!');
+  const xml=Buffer.from(unzipSync(plainWord)['word/document.xml']).toString('utf8');
+  assert(xml.includes('Cette synthèse croise les résultats'));
+  assert(xml.includes('Complément rédigé par l’administrateur.'),'La synthèse éditée doit se retrouver dans le Word sécurisé.');
+  const reopenedSummary=handler('candidate-catalog:general-bilan',personId);
+  assert.equal(reopenedSummary.summary,summary,'Réouverture fidèle à la synthèse modifiée.');
   // La derniere sauvegarde de l'un des parcours rend le general obsolete.
   const statePath=path.join(f1.directory,'donnees','evaluation-state.json');
   const updated=readJsonFile(statePath);
@@ -99,6 +119,8 @@ function fixture(id,date,title,tests,overrides={}) {
   writeJsonFile(statePath,updated);
   const stale=handler('candidate-catalog:general-bilan',personId);
   assert(stale.ok&&stale.outdated,'Un changement de source doit invalider le general.');
+  const refusedGeneration=handler('candidate-catalog:generate-general-synthesis',personId,loaded.general.sourceDigest);
+  assert(!refusedGeneration.ok,'Une génération avec des sources périmées doit être refusée.');
   const refused=await handler('candidate-catalog:export-general-bilan',personId,summary,loaded.general.sourceDigest);
   assert(refused&&!refused.ok,'Ne pas exporter un Word sur des sources modifiees.');
   // Apres mise en corbeille et purge du dernier parcours, suppression de l'archive generale.

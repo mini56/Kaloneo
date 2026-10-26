@@ -796,6 +796,15 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
         summary:data.savedSummary,lastSavedAt:data.lastSavedAt,outdated:data.outdated};
     }catch(error){return {ok:false,error:String(error.message||error)}}
   });
+  ipcMain.handle('candidate-catalog:generate-general-synthesis',(_event,personId,digest)=>{
+    if(!getAdminUnlocked()||!editionCapabilities.canBilan)return {ok:false,error:'Accès administrateur requis.'};
+    try{
+      const current=computePersonGeneralBilan(personId);
+      if(digest!==current.general.sourceDigest)throw new Error('Les bilans des parcours ont changé. Rouvrir le bilan général avant de générer sa synthèse.');
+      const {generateGeneralSynthesis}=require('./general-bilan-synthesis');
+      return {ok:true,...generateGeneralSynthesis(current.person,current.general)};
+    }catch(error){return {ok:false,error:String(error.message||error)}}
+  });
   ipcMain.handle('candidate-catalog:save-general-bilan',(_event,personId,summary,digest)=>{
     if(!getAdminUnlocked()||!editionCapabilities.canBilan)return {ok:false,error:'Acces administrateur requis.'};
     try{

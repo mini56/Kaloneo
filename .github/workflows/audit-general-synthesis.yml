@@ -1,0 +1,44 @@
+name: "KALONÉO - Génération de la synthèse générale"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/audit-general-synthesis.yml'
+      - 'seb-evalpro/src/general-bilan-synthesis.js'
+      - 'seb-evalpro/scripts/general-bilan-synthesis*'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  general-synthesis:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm install --no-audit --no-fund
+      - name: Synthèse générale, sécurité, enregistrement et vrai Word chiffré
+        run: |
+          node scripts/general-bilan-synthesis-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Synthese generale invalide'}
+          node scripts/general-bilan-ipc-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Enregistrement ou Word invalide'}
+          node scripts/test-seb-ia-v1.js
+          if($LASTEXITCODE -ne 0){throw 'Regression du moteur existant'}
+          node scripts/bilan-parcours-filter-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Regression des bilans par parcours'}
+      - name: Préparer les vraies pages et vérifier les V1
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          if($LASTEXITCODE -ne 0){throw 'Preparation des donnees impossible'}
+          npm run prepare:web
+          if($LASTEXITCODE -ne 0){throw 'Preparation des pages impossible'}
+      - name: Bouton visible, génération, modification, sauvegarde et Word en vrai Electron
+        run: npx electron --no-sandbox scripts/general-bilan-synthesis-electron-smoke-main.js
+      - name: Régression des bilans courants filtrés et des points
+        run: npx electron --no-sandbox scripts/bilan-parcours-filter-electron-smoke-main.js
