@@ -31,6 +31,11 @@ async function test(){
   await win.webContents.executeJavaScript(inject,true);
   for(const [width,height] of [[1366,768],[1649,928],[1200,800]]){
    win.setSize(width,height);
+   // Windows emits the resize asynchronously for a hidden Electron BrowserWindow.
+   // Without waiting, a 1200px test could inadvertently reuse the 1649px viewport.
+   await eventually(()=>win.webContents.executeJavaScript(
+     'innerWidth <= '+(width-10)+' && innerWidth >= '+(width-85)
+   ),'Viewport really resized to '+width);
    for(const [kind,file] of [['admin','A01'],['builder','B01']]){
     await eventually(()=>win.webContents.executeJavaScript(
       '!!document.querySelector(\'#seb-evalpro-settings-dialog [data-tab="'+kind+'"]\')'

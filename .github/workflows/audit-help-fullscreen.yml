@@ -5,6 +5,7 @@ on:
       - fix-r60-tri-rearm-only-20261011
     paths:
       - '.github/workflows/audit-help-fullscreen.yml'
+      - 'seb-evalpro/scripts/kaloneo-help-fullscreen-electron-smoke-main.js'
   workflow_dispatch:
 permissions:
   contents: read
