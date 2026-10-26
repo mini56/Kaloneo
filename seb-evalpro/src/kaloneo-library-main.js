@@ -8,7 +8,12 @@ const {loadSuppliedImages,publicMetadata}=require('./kaloneo-supplied-images');
 const zlib = require('zlib');
 const { exportImageRecords } = require('./kaloneo-image-export');
 const { iconForDefinition } = require('./kaloneo-default-test-icons');
-const bilanRouting = require('../source/js/kaloneo-bilan-routing');
+// Le setup NSIS embarque uniquement src/ et app/. La source Builder n'existe
+// pas dans app.asar. Charger en priorité la copie candidate compilée.
+const packagedBilanRouting=path.join(__dirname,'..','app','web','js','kaloneo-bilan-routing.js');
+const bilanRouting=require(fs.existsSync(packagedBilanRouting)
+  ? packagedBilanRouting
+  : '../source/js/kaloneo-bilan-routing');
 const {OFFICIAL: OFFICIAL_BILAN_ROWS}=require('./institutional-bilan-grid');
 
 const BASE_TEST_ORDER = Object.freeze([
