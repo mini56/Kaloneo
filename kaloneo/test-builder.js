@@ -3335,8 +3335,8 @@
     for(const entry of state.supplementaryWindows){
       add(Boolean(String(entry.title||'').trim()),'Fenêtre complémentaire : titre');
       add(['text','list','table','image'].includes(entry.type||'text'),'Fenêtre complémentaire : type');
-      add(entry.type==='image'?/^data:image\//i.test(String(entry.imageData||'')):
-        Boolean(String(entry.text||'').trim()),'Fenêtre « '+(entry.title||entry.id)+' » : contenu intégré');
+      add(entry.type==='image'?Core.isSupplementaryWindowImageResource(entry.imageData):
+        Boolean(String(entry.text||'').trim()),'Fenêtre « '+(entry.title||entry.id)+' » : contenu disponible');
     }
     for(const block of state.blocks){
       const links=Array.isArray(block.supplementaryButtons)?block.supplementaryButtons:[];

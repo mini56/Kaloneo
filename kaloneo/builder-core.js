@@ -33,6 +33,16 @@
     if(Array.isArray(value)) return value.map(v=>String(v)).filter(Boolean);
     return String(value||'').split(';').map(v=>v.trim()).filter(Boolean);
   }
+  // Le candidat accepte les images embarquées et les fichiers locaux officiels.
+  // Le Builder doit appliquer les mêmes formats à la fenêtre complémentaire.
+  function isSupplementaryWindowImageResource(resource){
+    const src=String(resource||'').trim();
+    if(/^data:image\//i.test(src))return true;
+    if(src.includes('..')||src.includes('\\')||/[?#:]/.test(src))return false;
+    return /^(?:\.\/)?(?:imageqcm|assets)\/(?:[a-z0-9_ ().-]+\/)*[a-z0-9_ ().-]+\.(?:png|jpe?g|webp|gif|svg)$/i.test(src) ||
+      /^kaltest\/tests\/[a-z0-9_-]+\/\d+\.\d+\.\d+\/[a-z0-9_ -]+\.(?:png|jpe?g|webp)$/i.test(src);
+  }
+
   function clearMediaBlock(block){
     if(!block||!['image','audio','video'].includes(block.type)) return block;
     block.mediaName='';
@@ -1142,6 +1152,6 @@
   return Object.freeze({
     VERSION,SUPPORTED_FEATURES:[...SUPPORTED_FEATURES],RESPONSE_TYPES:[...RESPONSE_TYPES],LAYOUTS:[...LAYOUTS],
     BUILDER_CONTENT_TYPES:[...BUILDER_CONTENT_TYPES],
-    clone,cleanId,splitValues,clearMediaBlock,createGridBlock,definitionToModel,modelToDefinition,analyzeDefinition,canRoundTrip
+    clone,cleanId,splitValues,isSupplementaryWindowImageResource,clearMediaBlock,createGridBlock,definitionToModel,modelToDefinition,analyzeDefinition,canRoundTrip
   });
 });
