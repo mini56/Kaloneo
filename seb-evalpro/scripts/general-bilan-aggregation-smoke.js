@@ -4,12 +4,12 @@ const {aggregateGeneralBilan,wordRows}=require('../src/general-bilan-aggregation
 const build=(id,parcours,tests,extra={})=>({
  candidateId:id,parcours,date:extra.date||'2026-10-22',
  session:{
-  seb_kaloneo_results_manifest:JSON.stringify({tests:Object.entries(tests).map(([key,t])=>({id:key,title:t.title||key,category:t.category}))}),
+  seb_kaloneo_results_manifest:JSON.stringify({tests:Object.entries(tests).map(([key,t])=>({id:key,title:t.title||key,category:t.category,adminModified:true,bilanContributions:[{lineId:t.category==='organisation'?'bilan.competences_techniques.planning.repartition_taches':'bilan.savoirs_fondamentaux.mathematiques.comprendre_enonce_consigne',bindings:{score:'score',score_max:'score_max'}}]}))}),
   seb_kaltest_pilot2_state_v1:JSON.stringify({tests:Object.fromEntries(Object.entries(tests).map(([key,t])=>[key,{
     status:t.skipped?'PENDING':'COMPLETED',
     ...(t.skipped?{}:{result:t.result||{score:t.score,scoreMax:t.max}})
   }]))})
- },archive:{document:{summary:extra.summary||''}}
+ },archive:{document:{summary:extra.summary||'',rows:[...new Set(Object.values(tests).map(t=>t.category==='organisation'?'planning':'math-enonce'))].map(key=>({kind:'item',key}))}}
 });
 const a=build('e1','Logistique',{
  calculs:{title:'Calculs',category:'mathematiques',score:6,max:10},
@@ -43,7 +43,7 @@ assert.equal(result.notes.length,1);
 const org=result.categories.find(c=>c.name==='Organisation');
 assert.equal(org.testCount,3);
 assert.equal(org.tests.find(t=>t.id==='rangement').scoredPassages,1);
-assert.equal(wordRows(result).filter(t=>t.type==='row').length,18,'Le Word ne peut plus ajouter de lignes TOTAL ou de catégorie.');
+assert.equal(wordRows(result).filter(t=>t.type==='row').length,2,'Le Word ne peut plus ajouter de lignes TOTAL ou de catégorie.');
 assert(!wordRows(result).some(t=>/TOTAL|passage|parcours/i.test(t.module||'')));
 const weighted=aggregateGeneralBilan([
  build('one','A',{x:{score:1,max:2,category:'math'}}),
@@ -64,11 +64,13 @@ baseManual.archive.document.rows=[
  {kind:'section',sectionText:'Compétences techniques'},
  {kind:'item',key:'fabrication-plan',moduleText:'Lecture de plan',level:'I',comment:'Autonome'}
 ];
+baseManual.session.seb_kaloneo_results_manifest=JSON.stringify({tests:[{id:'structure_3d_papier',category:'activite_pratique'}]});
 const followManual=build('manual2','B',{calculs:{score:6,max:10}});
 followManual.archive.document.rows=[
  {kind:'section',sectionText:'Compétences techniques'},
  {kind:'item',key:'fabrication-plan',moduleText:'Lecture de plan',level:'II',comment:'Consignes supplémentaires'}
 ];
+followManual.session.seb_kaloneo_results_manifest=baseManual.session.seb_kaloneo_results_manifest;
 const consolidated=aggregateGeneralBilan([baseManual,followManual]);
 const manualCategory=consolidated.categories.find(c=>c.name==='Compétences techniques');
 assert(manualCategory);

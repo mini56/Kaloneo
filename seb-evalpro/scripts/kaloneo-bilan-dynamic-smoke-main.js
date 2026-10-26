@@ -146,16 +146,15 @@ app.whenReady().then(async()=>{
       return fail('Résultat parasite ajouté au Bilan depuis un test absent du manifeste',before);
     if(before.generatedPerTest!==0) return fail('le Bilan est encore construit avec une ligne par exercice',before);
     if(before.textareas!==0) return fail('une zone texte supplémentaire est encore présente dans la colonne Commentaires',before);
-    const mustRows=["fabrication-plan","fabrication-tracage","fabrication-decoupe","fabrication-assemblage","fabrication-finition","briques-identification","briques-manipulation","carre","organisation","planning","tri-temps","tri-erreurs","texte","mail","expression","math-enonce","math-problemes","competences-transversales"];
-    if(before.visibleRows.length!==18||mustRows.some(id=>!before.visibleRows.includes(id)))
-      return fail('Le Bilan doit montrer exactement les 18 lignes officielles',before);
-    if(before.visibleRows.some(id=>!mustRows.includes(id)))return fail('Ligne institutionnelle inventée',before);
+    const mustRows=['fabrication-plan','fabrication-tracage','fabrication-decoupe','fabrication-assemblage','fabrication-finition','briques-identification','briques-manipulation','organisation','planning','tri-temps','tri-erreurs','math-enonce',];
+    if(before.visibleRows.length!==mustRows.length||mustRows.some(id=>!before.visibleRows.includes(id)))
+      return fail('Le bilan doit contenir seulement les lignes des tests du parcours',before);
     if(before.fabrication.length!==5||before.fabrication.some(x=>x.hidden)) return fail('grille manuelle Structure 3D incomplète',before);
     if(!before.visibleSections.includes('Compétences techniques')||!before.visibleSections.includes('Savoirs fondamentaux')) {
       return fail('sections institutionnelles attendues incorrectes',before);
     }
-    if(!before.visibleSections.some(x=>/techniques de l'information/i.test(x))) return fail('Section TIC officielle absente',before);
-    if(before.visibleSections.length!==3)return fail('Le Bilan doit contenir exactement 3 sections',before);
+    if(before.visibleSections.some(x=>/techniques de l'information/i.test(x))) return fail('Section TIC hors parcours affichée',before);
+    if(before.visibleSections.length!==2)return fail('Le bilan doit contenir seulement les 2 sections du parcours',before);
     if(before.autoRowPresent||before.autoSectionPresent) return fail('Autoévaluation visible dans le tableau institutionnel',before);
     if(!/Je pense avoir progressé dans mes compétences de base\./.test(before.autoSummary)) return fail('Libellé lisible de l’autoévaluation savoirs absent',before);
     if(!/Messagerie : Je me suis senti\(e\) stressé\(e\) ou bloqué\(e\)/.test(before.autoSummary)) return fail('Libellé lisible de l’autoévaluation numérique absent',before);

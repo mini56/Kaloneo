@@ -33,7 +33,7 @@ const evals=[
 ];
 const data=aggregateGeneralBilan(evals);
 const row=key=>data.institutionalRows.find(r=>r.key===key);
-assert.equal(data.institutionalRows.length,21,'3 sections + 18 official lines');
+assert.equal(data.institutionalRows.length,6,'2 sections et 4 lignes réellement présentes dans les bilans sources');
 assert.equal(row('math-problemes').points,10);
 assert.equal(row('math-problemes').possible,15);
 assert.equal(row('math-problemes').percent,66.67,'Additionner les points, pas les pourcentages.');
@@ -51,8 +51,8 @@ assert(!row('act_pratique_inventee'),'Une rubrique inventée ne peut apparaître
 assert(row('math-problemes').comment.includes('II.'),'Même commentaire que dans le bilan individuel.');
 assert.equal(row('fabrication-decoupe').comment,'','Aucun commentaire pratique inventé.');
 const word=wordRows(data);
-assert.equal(word.length,21);
-assert.deepEqual(word.filter(x=>x.type==='row').map(x=>x.key),rowIds);
+assert.equal(word.length,6);
+assert.deepEqual(word.filter(x=>x.type==='row').map(x=>x.key),['fabrication-decoupe','expression','math-problemes','competences-transversales']);
 assert(!word.some(x=>/TOTAL|parcours|passage/i.test(x.module||'')));
 assert(word.find(x=>x.key==='math-problemes').comment.includes('II.'),'Le commentaire provient du vrai tableau institutionnel.');
 assert(word.find(x=>x.key==='math-problemes').detail.includes('66,67 % de réponses correctes.'),'Pourcentage + phrase attendue.');

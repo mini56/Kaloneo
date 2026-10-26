@@ -1,3 +1,4 @@
+const {projectDocument}=require('./bilan-parcours');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -6,7 +7,7 @@ const { readJsonFile, encodeJson, encryptLocalFileBuffer, decryptLocalFileBuffer
 const { opaqueCandidateName } = require('./candidate-private-documents');
 const {discardOldWordExports,pruneReplacedBilans,hasCurrentOnlyArchive}=require('./candidate-bilan-current');
 
-module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked, buildNumber, dataRoot = null }) {
+module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked, buildNumber, getBilanTestMetadata = () => [], dataRoot = null }) {
   const CURRENT_BUILD = String(buildNumber || 'DEV');
   const TYPE = 'SEB_EVALPRO_BILAN_ARCHIVE';
   const documentsPath = app.getPath('documents');
@@ -68,6 +69,7 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
     const rows = Array.isArray(document.rows) ? document.rows : [];
     if (!rows.length) throw new Error('Aucune ligne de bilan à enregistrer.');
     return {
+      ...(Array.isArray(document.parcoursTests)?{parcoursTests:document.parcoursTests}:{}),
       title: String(document.title || 'Bilan institutionnel'),
       note: String(document.note || ''),
       summary: String(document.summary || ''),
@@ -83,6 +85,7 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
         preset: String((row && row.preset) || ''),
         comment: String((row && row.comment) || ''),
         detail: String((row && row.detail) || ''),
+        assessmentMode:row?.assessmentMode==='level'?'level':'',
         points: row?.points!==null && row?.points!==undefined &&
           Number.isFinite(Number(row.points))?Number(row.points):null,
         possible: row?.possible!==null && row?.possible!==undefined &&
@@ -143,6 +146,12 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
     return { full:target, filename:safe, archive, legacy:false, integrityOk:true };
   }
 
+  function documentForParcours(document,candidateDir){
+    const stateFile=path.join(candidateDir,'donnees','evaluation-state.json');
+    const stored=fs.existsSync(stateFile)?readJsonFile(stateFile):{};
+    return projectDocument(document,stored.sessionStorage||{},getBilanTestMetadata());
+  }
+
   function readArchive(filename) {
     const safe = path.basename(String(filename || ''));
     if (!safe.toLowerCase().endsWith('.json')) throw new Error('Archive de bilan invalide.');
@@ -156,7 +165,8 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
     if (!full || !fs.existsSync(full)) throw new Error('Archive de bilan introuvable.');
     const archive = readJsonFile(full);
     if (!verify(archive)) throw new Error('ATTENTION : archive de bilan modifiée ou corrompue. Ouverture refusée.');
-    return { archive, filename:safe, full };
+    const candidateDir=path.dirname(path.dirname(path.dirname(full)));
+    return { archive:{...archive,document:documentForParcours(archive.document,candidateDir)}, filename:safe, full };
   }
 
   function listArchivesRaw() {
@@ -269,7 +279,8 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
       const candidateId = String(payload && payload.candidateId || '').trim();
       const candidate = normalizeCandidate(payload && payload.candidate);
       if (!candidateId && !candidate.nom && !candidate.prenom) throw new Error('Candidat non identifié.');
-      const document = normalizeDocument(payload && payload.document);
+      const candidateDir=path.dirname(path.dirname(candidateHistoryDir(candidate,candidateId)));
+      const document = normalizeDocument(documentForParcours(payload && payload.document,candidateDir));
       const sessionToken = safePart(payload && payload.sessionToken, '');
       const rootId = sessionToken || sha({ candidate, originalBuild:String((payload && payload.originalBuild) || CURRENT_BUILD) }).slice(0,24);
       const latest = currentForCandidate(candidate,candidateId);
@@ -342,7 +353,8 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
     try {
       const loaded = readArchive(payload && payload.sourceFilename);
       const source = loaded.archive;
-      const document = normalizeDocument(payload && payload.document);
+      const candidateDir=path.dirname(path.dirname(path.dirname(loaded.full)));
+      const document = normalizeDocument(documentForParcours(payload && payload.document,candidateDir));
       const documentSha256 = sha(document);
       const latest = currentForCandidate(normalizeCandidate(source.candidate),String(source.candidateId||''));
       if (latest && latest.archive.documentSha256 === documentSha256) {

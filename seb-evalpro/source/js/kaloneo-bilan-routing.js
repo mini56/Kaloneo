@@ -28,6 +28,35 @@
     'bilan.savoirs_fondamentaux.mathematiques.resoudre_problemes':'math-problemes',
     'bilan.savoirs_fondamentaux.competences_transversales.mobiliser_competences':'competences-transversales'
   });
+  // Appartenance au parcours, indépendante des résultats et des abandons.
+  const LEGACY=Object.freeze({
+    'fabrication-plan':['structure_3d_papier'],
+    'fabrication-tracage':['structure_3d_papier'],
+    'fabrication-decoupe':['structure_3d_papier'],
+    'fabrication-assemblage':['structure_3d_papier'],
+    'fabrication-finition':['structure_3d_papier'],
+    'briques-identification':['construction_briques'],
+    'briques-manipulation':['construction_briques'],carre:['gratte_ciel'],
+    organisation:['ranger_stock'],planning:['organisation_demenagement','planning_cantine'],
+    'tri-temps':['tri_chevilles'],'tri-erreurs':['tri_chevilles'],
+    texte:['traitement_texte_bureautique'],mail:['redaction_email'],
+    expression:['texte_a_trous_stage_logistique','genre_nombre','paronymes_rapport','dictee_professionnelle'],
+    'math-enonce':['calculs_commandes_atelier','calculs_poids_volumes'],
+    'math-problemes':['horaires_reception_controle','fractions_preparation_lots','conversions_atelier_expedition'],
+    'competences-transversales':[]
+  });
+  function selectedRows(tests){
+    const selected=new Set();
+    for(const test of tests||[]){
+      if(test.adminModified!==true){
+        for(const [key,ids] of Object.entries(LEGACY))
+          if(ids.includes(test.id))selected.add(key);
+      }
+      for(const link of links(test))
+        if(compatible(test.category,link.lineId))selected.add(rowFor(link.lineId));
+    }
+    return selected;
+  }
   function normalize(s){
     return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
       .toLowerCase().replace(/[_-]/g,' ').trim();
@@ -90,7 +119,8 @@
           continue;
         }
         if(!entries.has(rowId))entries.set(rowId,[]);
-        const result=typeof stateFor==='function'?stateFor(test.id)?.result:null;
+        const state=typeof stateFor==='function'?stateFor(test.id):null;
+        const result=/ABANDON|SKIP|PENDING|NOT_STARTED/i.test(String(state?.status||''))?null:state?.result;
         const pair=scoreOf(result,link.bindings);
         entries.get(rowId).push({testId:test.id,title:test.title||test.id,pair,
           manual:!link.bindings||!Object.keys(link.bindings).length});
@@ -100,5 +130,5 @@
     }
     return {entries,warnings};
   }
-  return Object.freeze({rowFor,compatible,links,scoreOf,collect});
+  return Object.freeze({rowFor,compatible,links,scoreOf,collect,LEGACY,selectedRows});
 });

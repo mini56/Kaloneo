@@ -1921,6 +1921,7 @@ const candidateReplayHandlers = require('./replay-main')({
   buildNumber: APP_BUILD_NUMBER
 });
 require('./bilan-history-main')({
+  getBilanTestMetadata: () => getKaloneoLibrary().listTests(),
   app,
   ipcMain,
   getAdminUnlocked: () => adminSessionUnlocked,
@@ -1928,6 +1929,7 @@ require('./bilan-history-main')({
 });
 
 require('./candidate-catalog-main')({
+  getBilanTestMetadata: () => getKaloneoLibrary().listTests(),
   app,
   ipcMain,
   getAdminUnlocked: () => adminSessionUnlocked,

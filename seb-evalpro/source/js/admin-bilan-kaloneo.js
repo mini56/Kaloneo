@@ -6,27 +6,7 @@ const MANIFEST_KEY='seb_kaloneo_results_manifest';
 const STATE_PREFIX='seb_kaltest_pilot2_state_v1';
 const EXCLUDED_IDS=new Set(['fin_parcours','transition_video_f1']);
 
-const EXISTING_ROW_SOURCES=Object.freeze({
-  'fabrication-plan':['structure_3d_papier'],
-  'fabrication-tracage':['structure_3d_papier'],
-  'fabrication-decoupe':['structure_3d_papier'],
-  'fabrication-assemblage':['structure_3d_papier'],
-  'fabrication-finition':['structure_3d_papier'],
-  'briques-identification':['construction_briques'],
-  'briques-manipulation':['construction_briques'],
-  'carre':['gratte_ciel'],
-  'organisation':['ranger_stock'],
-  'planning':['organisation_demenagement','planning_cantine'],
-  'tri-temps':['tri_chevilles'],
-  'tri-erreurs':['tri_chevilles'],
-  'texte':['traitement_texte_bureautique'],
-  'mail':['redaction_email'],
-  'expression':['texte_a_trous_stage_logistique','genre_nombre','paronymes_rapport','dictee_professionnelle'],
-  'math-enonce':['calculs_commandes_atelier','calculs_poids_volumes'],
-  'math-problemes':['horaires_reception_controle','fractions_preparation_lots','conversions_atelier_expedition'],
-  // Également réinitialisée lors d'un nouveau calcul du bilan.
-  'competences-transversales':[]
-});
+const EXISTING_ROW_SOURCES=window.KaloneoBilanRouting.LEGACY;
 
 const CATEGORY_LABELS=Object.freeze({
   mathematiques:'Mathématiques',
@@ -141,7 +121,7 @@ function buildContext(){
       scored:m.scored!==undefined?m.scored!==false:rawTest.scored!==false,
       activityType:clean(m.activityType||rawTest.activityType||''),
       version:clean(rawTest.version||m.version||''),
-      adminModified:m.adminModified===true,
+      adminModified:rawTest.adminModified===true||m.adminModified===true,
       bilanContributions:Array.isArray(rawTest.bilanContributions)
         ? rawTest.bilanContributions
         : Array.isArray(m.bilanContributions)?m.bilanContributions:[]
@@ -188,7 +168,7 @@ function fmtSeconds(value){
   return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
 }
 function scorePair(id){
-  if(!has(id))return null;
+  if(!has(id)||/ABANDON|SKIP|PENDING|NOT_STARTED/.test(statusFor(id)))return null;
   const result=resultFor(id);
   if(!result)return null;
   const score=Number(result.score),max=Number(result.scoreMax);
@@ -347,20 +327,18 @@ function findSectionRows(){
   return groups;
 }
 function installInstitutionalFilter(){
-  // Les 18 lignes officielles du Bilan ne sont ni générées ni masquées
-  // selon le contenu du parcours : elles existent dans le modèle source.
-  // Une ligne sans résultat reste NE/non évaluée, sans rubrique inventée.
   if(!context.enabled)return false;
-  const table=document.getElementById('bilan');
-  const tbody=table?.querySelector('tbody');
+  const tbody=document.querySelector('#bilan tbody');
   if(!tbody)return false;
+  document.getElementById('bilan').dataset.parcoursTests=JSON.stringify(context.tests);
+  const selected=window.KaloneoBilanRouting.selectedRows(context.tests);
   tbody.querySelectorAll('tr[data-r]').forEach(target=>{
-    target.hidden=false;
-    target.dataset.sebKaloneoExcluded='0';
+    target.hidden=!selected.has(target.dataset.r);
+    target.dataset.sebKaloneoExcluded=target.hidden?'1':'0';
   });
   findSectionRows().forEach(group=>{
-    group.header.hidden=false;
-    group.header.dataset.sebKaloneoExcluded='0';
+    group.header.hidden=!group.rows.some(target=>!target.hidden);
+    group.header.dataset.sebKaloneoExcluded=group.header.hidden?'1':'0';
   });
   return true;
 }
@@ -516,7 +494,7 @@ function autoInstitutional(){
     const pair=scorePair('gratte_ciel');
     if(pair){
       const errors=Math.max(0,pair.max-pair.score);
-      applyInstitutional('carre',errors<=2?'I':errors<=4?'II':'III',errors+' erreur'+(errors===1?'':'s'));
+      applyInstitutional('carre',errors<=2?'I':errors<=4?'II':'III',errors+' erreur'+(errors===1?'':'s'),pair);
     }
   }
 
@@ -527,7 +505,7 @@ function autoInstitutional(){
     if(pair){
       const errors=Math.max(0,Math.round((pair.max-pair.score)*100)/100);
       const level=errors<=2?'I':errors<=4?'II':'III';
-      applyInstitutional('organisation',level,errors+' erreur'+(errors===1?'':'s'));
+      applyInstitutional('organisation',level,errors+' erreur'+(errors===1?'':'s'),pair);
     }
   }
 
@@ -539,7 +517,7 @@ function autoInstitutional(){
     if(planning){
       const errors=Math.max(0,Math.round((planning.max-planning.score)*100)/100);
       const level=planning.score>=20?'I':planning.score>=17?'II':'III';
-      applyInstitutional('planning',level,errors+' erreur'+(errors===1?'':'s'));
+      applyInstitutional('planning',level,errors+' erreur'+(errors===1?'':'s'),planning);
     }
   }
 
@@ -568,7 +546,7 @@ function autoInstitutional(){
     const pair=scorePair('traitement_texte_bureautique');
     if(pair){
       const errors=Math.max(0,pair.max-pair.score);
-      applyInstitutional('texte',pair.score>=7?'I':pair.score>=3?'II':'III',errors+' erreur'+(errors===1?'':'s'));
+      applyInstitutional('texte',pair.score>=7?'I':pair.score>=3?'II':'III',errors+' erreur'+(errors===1?'':'s'),pair);
     }
   }
 
@@ -576,7 +554,7 @@ function autoInstitutional(){
     const pair=scorePair('redaction_email');
     if(pair){
       const errors=Math.max(0,pair.max-pair.score);
-      applyInstitutional('mail',errors<=1?'I':errors<=3?'II':'III',errors+' erreur'+(errors===1?'':'s'));
+      applyInstitutional('mail',errors<=1?'I':errors<=3?'II':'III',errors+' erreur'+(errors===1?'':'s'),pair);
     }
   }
 
@@ -630,6 +608,11 @@ function autoInstitutional(){
     }
   }
 
+  for(const key of window.KaloneoBilanRouting.selectedRows(context.tests)){
+    const sources=context.tests.filter(test=>window.KaloneoBilanRouting.selectedRows([test]).has(key));
+    if(sources.length&&sources.every(test=>/ABANDON|SKIP/.test(statusFor(test.id))))
+      applyInstitutional(key,'NE','Exercice abandonné.');
+  }
   persist();
   const status=document.getElementById('status');
   if(status)status.textContent=(routing?.warnings?.length
@@ -644,7 +627,8 @@ function persist(){
     data.rows[target.dataset.r]={
       level:target.dataset.level||'',
       select:target.querySelector('.csel')?.value||'',
-      detail:target.querySelector('.detail')?.textContent||''
+      detail:target.querySelector('.detail')?.textContent||'',
+      points:target.dataset.score??null,possible:target.dataset.possible??null
     };
   });
   const avg=document.getElementById('triAvg'),err=document.getElementById('triErr'),times=document.getElementById('triTimes');

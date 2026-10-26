@@ -42,6 +42,7 @@ function captureBilanDocument() {
   const headers = Array.from(table.querySelectorAll('thead th')).map((th) => textOf(th));
   const rows = [];
   Array.from(table.querySelectorAll('tbody tr')).forEach((tr, index) => {
+    if(tr.hidden||tr.dataset.sebKaloneoExcluded==='1')return;
     const key = String(tr.getAttribute('data-r') || '').trim();
     if (!key) {
       rows.push({
@@ -83,6 +84,7 @@ function captureBilanDocument() {
   });
   return {
     title: 'Bilan institutionnel',
+    parcoursTests: JSON.parse(table.dataset.parcoursTests||'null'),
     note: textOf(document.querySelector('.note')),
     summary: String(window.sessionStorage.getItem('seb_evalpro_bilan_synthese') || ''),
     feeling: String(window.sessionStorage.getItem('seb_evalpro_bilan_ressenti') || ''),
@@ -306,12 +308,15 @@ function buildEditorDocument(editor) {
     const options = select ? Array.from(select.options).map((opt) => ({ value:String(opt.value || ''), text:textOf(opt), level:String(opt.dataset.level || '') })) : [];
     rows.push({
       kind:'item', key:String(tr.dataset.key || `row-${index + 1}`), className:String(tr.dataset.className || ''), moduleText:String(tr.dataset.moduleText || ''), sectionText:'',
-      level:active ? String(active.dataset.level || '') : '', preset:select ? String(select.value || '') : '', comment:comment ? String(comment.value || '') : '', detail:detail ? String(detail.textContent || '') : '', options
+      level:active ? String(active.dataset.level || '') : '', preset:select ? String(select.value || '') : '', comment:comment ? String(comment.value || '') : '', detail:detail ? String(detail.textContent || '') : '',
+      points:tr.dataset.points!==undefined?Number(tr.dataset.points):null,
+      possible:tr.dataset.possible!==undefined?Number(tr.dataset.possible):null,
+      assessmentMode:tr.dataset.assessmentMode||'', options
     });
   });
   const summary=sebV7Single(String(editor.querySelector('#seb-bh-history-summary')?.value||editor.dataset.summary||''));
   const feeling=String(editor.querySelector('#seb-bh-history-feeling')?.value||editor.dataset.feeling||'');
-  return { title:'Bilan institutionnel', note:String(editor.dataset.note || ''), summary, feeling, headers:['Modules','NE','I','II','III','Commentaires'], rows };
+  return { title:'Bilan institutionnel', note:String(editor.dataset.note || ''), summary, feeling, headers:['Modules','NE','I','II','III','Commentaires'], parcoursTests:JSON.parse(editor.dataset.parcoursTests||'null'), rows };
 }
 
 
@@ -370,6 +375,7 @@ function openEditor(filename, archive) {
   const card = overlay.querySelector('.seb-bh-editor-card');
   card.dataset.note = String((archive.document && archive.document.note) || '');
   card.dataset.summary = String((archive.document && archive.document.summary) || '');
+  card.dataset.parcoursTests=JSON.stringify(archive.document?.parcoursTests||null);
   const tbody = overlay.querySelector('tbody');
   const rows = archive.document && Array.isArray(archive.document.rows) ? archive.document.rows : [];
   rows.forEach((row, index) => {
@@ -379,6 +385,9 @@ function openEditor(filename, archive) {
       tr.className = 'seb-bh-section';
       const td = document.createElement('td'); td.colSpan = 6; td.textContent = row.sectionText || ''; tr.appendChild(td); tbody.appendChild(tr); return;
     }
+    if(row.points!==null&&row.points!==undefined)tr.dataset.points=String(row.points);
+    if(row.possible!==null&&row.possible!==undefined)tr.dataset.possible=String(row.possible);
+    tr.dataset.assessmentMode=row.assessmentMode||'';
     tr.dataset.className = String(row.className || '');
     tr.dataset.moduleText = String(row.moduleText || '');
     const module = document.createElement('td'); module.className = 'seb-bh-module'; module.textContent = row.moduleText || ''; tr.appendChild(module);
@@ -520,7 +529,7 @@ function exportHistoricalWord(card, candidate, originalBuild, revision) {
 
   table.querySelectorAll('tbody tr[data-r]').forEach((tr) => {
     const row = byKey.get(String(tr.getAttribute('data-r') || ''));
-    if (!row) return;
+    if (!row) {tr.remove();return;}
 
     const level = ['NE','I','II','III'].includes(String(row.level || '')) ? String(row.level) : '';
     tr.setAttribute('data-level', level);
@@ -563,6 +572,15 @@ function exportHistoricalWord(card, candidate, originalBuild, revision) {
       if (err && errEl) errEl.textContent = err[1] + ' erreur' + (Number(err[1]) > 1 ? 's' : '');
     }
   });
+
+  let section=null,hasRows=false;
+  for(const row of [...table.querySelectorAll('tbody tr')]){
+    if(row.matches('tr.section,tr.section2')){
+      if(section&&!hasRows)section.remove();
+      section=row;hasRows=false;
+    }else if(row.dataset.r)hasRows=true;
+  }
+  if(section&&!hasRows)section.remove();
 
   table.querySelectorAll('.csel').forEach((el) => el.remove());
   table.querySelectorAll('.ctxt').forEach((el) => {

@@ -1,3 +1,4 @@
+const {projectArchive}=require('./bilan-parcours');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -29,7 +30,7 @@ const {
   enrichCandidatePersonIdentity
 } = require('./candidate-person-identity');
 
-module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnlocked, getAdminDocumentPassword, getActiveCandidate, dataRoot = null }) {
+module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnlocked, getAdminDocumentPassword, getActiveCandidate, getBilanTestMetadata = () => [], dataRoot = null }) {
   const editionCapabilities = getEditionCapabilities();
   const documentsPath = app.getPath('documents');
   const root = dataRoot || path.join(documentsPath, 'SEB EvalPro');
@@ -767,7 +768,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
       const archive=currentEvaluationBilan(record);
       if(!archive)throw new Error('Bilan du parcours non trouve : '+e.parcours);
       return {candidateId:record.candidateId,parcours:e.parcours,date:e.date,
-        session,manifest:record.manifest||{},archive};
+        session,manifest:record.manifest||{},archive:projectArchive(archive,session,getBilanTestMetadata())};
     });
     if(evaluations.length<2)throw new Error('Il faut au moins deux bilans de parcours enregistres.');
     const general=aggregateGeneralBilan(evaluations);
@@ -814,7 +815,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
       if(!secret)return {ok:false,error:'Mot de passe administrateur indispensable au document Word.'};
       const result=saveGeneralBilan(personId,summary,digest);
       const {person,general}=result.current;
-      if(!general.testCount)return {ok:false,error:'Aucun test exploitable pour produire le bilan general.'};
+      if(!general.institutionalRows?.some(row=>row.kind==='row'))return {ok:false,error:'Aucun test exploitable pour produire le bilan general.'};
       const buffer=await buildBilanDocxBuffer({
         candidate:{nom:person.nom,prenom:person.prenom,date:new Date().toLocaleDateString('fr-FR')},
         rows:wordRows(general),
@@ -1290,7 +1291,8 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     const archive = readJson(full);
     if (!archive) return { ok:false, corruption:true, error:'ATTENTION : ce bilan est illisible. Il peut y avoir une corruption de données. Le fichier n’a pas été ouvert.' };
     if (!verifyBilan(archive)) return { ok:false, corruption:true, error:'ATTENTION : le contrôle d’intégrité a échoué. Il peut y avoir une corruption de données. Le bilan n’a pas été ouvert.' };
-    return { ok:true, filename:safe, archive };
+    const stored=readJson(path.join(record.candidateDir,'donnees','evaluation-state.json'))||{};
+    return { ok:true, filename:safe, archive:projectArchive(archive,stored.sessionStorage||{},getBilanTestMetadata()) };
   });
 
   ipcMain.handle('candidate-catalog:open-export', async (_event, candidateId, filename) => {

@@ -38,6 +38,8 @@ function sourceDigest(evaluations){
 }
 function aggregateGeneralBilan(evaluations){
   if(!Array.isArray(evaluations)||!evaluations.length)throw new Error('Aucune evaluation disponible.');
+  const {projectArchive}=require('./bilan-parcours');
+  evaluations=evaluations.map(e=>({...e,archive:e.archive?projectArchive(e.archive,e.session||{}):null}));
   const ids=new Set(),groups=new Map(),testCategoryById=new Map(),sources=[],notes=[];
   for(const item of evaluations){
     const id=clean(item.candidateId);
@@ -56,6 +58,7 @@ function aggregateGeneralBilan(evaluations){
       if(!testId||EXCLUDED.has(testId)||visited.has(testId))continue;
       visited.add(testId);
       const state=states[testId]||{};
+      if(/ABANDON|SKIP|PENDING|NOT_STARTED/i.test(String(state.status||'')))continue;
       const result=state.result||{};
       const actual=Number(result.score),possible=Number(result.scoreMax);
       const scored=Number.isFinite(actual)&&Number.isFinite(possible)&&possible>0&&actual>=0&&actual<=possible;

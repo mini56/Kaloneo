@@ -185,11 +185,17 @@ function percentLevel(value){
 }
 function fmt(value){return Number(value).toLocaleString('fr-FR',{maximumFractionDigits:2})+' %'}
 function aggregateInstitutionalRows(evaluations){
+ const {projectArchive}=require('./bilan-parcours');
+ evaluations=(Array.isArray(evaluations)?evaluations:[]).map(e=>({...e,archive:e.archive?projectArchive(e.archive,e.session||{}):null}));
  const sorted=[...(Array.isArray(evaluations)?evaluations:[])].sort((a,b)=>
    String(a.date||'').localeCompare(String(b.date||'')));
  const result=[],warnings=[];
+ const selected=new Set(evaluations.flatMap(e=>(e.archive?.document?.rows||[]).filter(r=>r.kind==='item').map(r=>r.key)));
+ let section=null,sectionAdded=false;
  for(const line of OFFICIAL){
-  if(line.kind==='section'){result.push({...line});continue;}
+  if(line.kind==='section'){section={...line};sectionAdded=false;continue;}
+  if(!selected.has(line.key))continue;
+  if(section&&!sectionAdded){result.push(section);sectionAdded=true;}
   let points=0,possible=0,scored=0,missing=0,manual=null,manualComment='',manualDetail='',latestModule='';
   for(const item of sorted){
    const rows=Array.isArray(item.archive?.document?.rows)?item.archive.document.rows:[];
@@ -205,7 +211,7 @@ function aggregateInstitutionalRows(evaluations){
      possible+=Number(maximum);
      scored++;
    }else if(LEVELS.has(src.level)&&src.level!=='NE'){
-     if(line.mode==='manual'){
+     if(line.mode==='manual'||src.assessmentMode==='level'){
        manual=src.level; // Dernière validation humaine, sans calcul de points fictifs.
        manualComment=String(src.comment||'');
        manualDetail=String(src.detail||'');

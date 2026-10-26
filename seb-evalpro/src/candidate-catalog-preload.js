@@ -604,13 +604,14 @@ function renderInstitutionalGeneralTable(host,lines) {
   const entries=Array.isArray(lines)?lines.filter(item=>item.kind==='row'):[];
   const originalRows=[...original.querySelectorAll('tbody tr[data-r]')];
   const mapped=new Map(entries.map(line=>[line.key,line]));
-  if(entries.length!==18||originalRows.length!==18||mapped.size!==18||
-     originalRows.some(row=>!mapped.has(row.dataset.r)))
-    throw new Error('Le bilan général doit avoir les 18 lignes officielles.');
+  if(originalRows.length!==18||mapped.size!==entries.length||
+     entries.some(line=>!originalRows.some(row=>row.dataset.r===line.key)))
+    throw new Error('Ligne étrangère au modèle institutionnel.');
   original.id='seb-gb-institutional-table';
   original.setAttribute('aria-label','Bilan de parcour complet, lecture seule');
   for(const row of originalRows){
     const line=mapped.get(row.dataset.r);
+    if(!line){row.remove();continue}
     const level=['NE','I','II','III'].includes(line.level)?line.level:'NE';
     for(const cell of row.querySelectorAll('.level[data-l]')){
       cell.classList.toggle('on',cell.dataset.l===level);
@@ -652,6 +653,14 @@ function renderInstitutionalGeneralTable(host,lines) {
       if(node)node.textContent=found?found[0]:'Non renseigné';
     }
   }
+  let header=null,hasRows=false;
+  for(const row of [...original.querySelectorAll('tbody tr')]){
+    if(row.matches('tr.section,tr.section2')){
+      if(header&&!hasRows)header.remove();
+      header=row;hasRows=false;
+    }else if(row.dataset.r)hasRows=true;
+  }
+  if(header&&!hasRows)header.remove();
   const shadow=host.attachShadow({mode:'open'});
   const style=document.createElement('style');
   style.textContent=css.textContent+
@@ -683,7 +692,7 @@ async function openGeneralBilan(personId) {
       </div>
       <div class="seb-cc-body">
         <p>Une seule grille institutionnelle consolidée. Les évaluations pratiques sont reprises des pré-bilans validés.</p>
-        ${warnings?'<p class="seb-gb-warning">Certaines lignes d’anciens pré-bilans manquent de points enregistrés. Réenregistrer ces pré-bilans avant une consolidation numérique définitive.</p>':''}
+        ${warnings?'<p class="seb-gb-warning">Certaines lignes des bilans de parcours n’ont pas de points numériques exploitables. Vérifier leurs résultats avant de valider la consolidation.</p>':''}
         ${response.outdated?'<p class="seb-gb-warning">Les bilans des parcours ont évolué : sauvegarder à nouveau le bilan général et régénérer le Word.</p>':''}
         <div class="seb-cc-section"><h3>Bilan de parcour complet</h3>
           <div id="seb-gb-original-table"></div>

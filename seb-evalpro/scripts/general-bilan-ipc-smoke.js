@@ -16,7 +16,7 @@ const write=(p,v)=>{fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileS
 function fixture(id,date,title,tests,overrides={}) {
  const c={nom:'TEST',prenom:'SOPHIE',naissance:'1990-01-01',personIdentifier:'7654321',date,parcours:title,lieu:'Lorient',groupe:'1',...overrides};
  const directory=path.join(root,'Candidats',codedFolderName(id));
- const metadata=Object.entries(tests).map(([k,v])=>({id:k,title:v.title||k,category:v.category||'mathematiques'}));
+ const metadata=Object.entries(tests).map(([k,v])=>({id:k,title:v.title||k,category:v.category||'mathematiques',adminModified:true,bilanContributions:[{lineId:'bilan.savoirs_fondamentaux.mathematiques.comprendre_enonce_consigne',bindings:{score:'score',score_max:'score_max'}}]}));
  const statuses=Object.fromEntries(Object.entries(tests).map(([k,v])=>[k,{status:'COMPLETED',result:{score:v.score,scoreMax:v.max}}]));
  const session={
   seb_kaloneo_results_manifest:JSON.stringify({tests:metadata}),
