@@ -17,7 +17,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
   // L'aide au survol est gérée par l'infobulle uniforme de la barre Admin.
   // Le title natif affichait une deuxième bulle au style Windows.
   button.removeAttribute('title');
-  function close(){if(layer){layer.remove();layer=null;}}
+  function close(){if(layer){closeHelpZoom();layer.remove();layer=null;}}
   async function countLibraries(){
     const target=layer?.querySelector('#kaloneo-setting-count');
     if(!target)return;
@@ -38,6 +38,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
   }
   function selectTab(tab){
     if(!layer)return;
+    closeHelpZoom();
     for(const b of layer.querySelectorAll('[data-tab]')){
       const active=b.dataset.tab===tab;
       b.setAttribute('aria-selected',String(active));
@@ -60,6 +61,97 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
       countLibraries();
     }
   }
+
+  // La capture est envoyée par le manuel imbriqué, mais la visionneuse
+  // est créée au niveau de l'application : elle remplit la fenêtre Electron.
+  let photoZoom=null;
+  function closeHelpZoom(){
+    if(!photoZoom)return;
+    photoZoom.root.remove();
+    photoZoom=null;
+  }
+  function openHelpZoom(frame,imageSrc,caption){
+    closeHelpZoom();
+    if(!layer)return;
+    const overlay=document.createElement('div');
+    overlay.className='settings-fullscreen-help-image';
+    overlay.setAttribute('role','dialog');
+    overlay.setAttribute('aria-modal','true');
+    overlay.setAttribute('aria-label','Image du guide en grand format');
+    overlay.innerHTML='<div class="settings-photo-toolbar">'+
+      '<span class="settings-photo-caption"></span>'+
+      '<div class="settings-photo-controls">'+
+      '<button type="button" data-photo-fit>Adapter à l’écran</button>'+
+      '<button type="button" data-photo-minus aria-label="Réduire l’image">−</button>'+
+      '<output data-photo-scale aria-live="polite"></output>'+
+      '<button type="button" data-photo-plus aria-label="Agrandir l’image">+</button>'+
+      '<button type="button" data-photo-actual>Taille réelle 100 %</button>'+
+      '<button type="button" data-photo-close>× Fermer</button>'+
+      '</div></div>'+
+      '<div class="settings-photo-scroll" tabindex="0">'+
+      '<div class="settings-photo-canvas"><img alt=""></div></div>';
+    layer.appendChild(overlay);
+    const stage=overlay.querySelector('.settings-photo-scroll');
+    const canvas=overlay.querySelector('.settings-photo-canvas');
+    const image=canvas.querySelector('img');
+    const output=overlay.querySelector('[data-photo-scale]');
+    overlay.querySelector('.settings-photo-caption').textContent=caption||'Capture d’écran KALONÉO';
+    image.alt=caption||'Capture d’écran KALONÉO';
+    image.src=new URL(imageSrc,frame.src).href;
+    const state={root:overlay,fit:true,scale:1};
+    photoZoom=state;
+    function render(){
+      if(photoZoom!==state||!image.naturalWidth||!image.naturalHeight)return;
+      const fitted=Math.min(stage.clientWidth/image.naturalWidth,stage.clientHeight/image.naturalHeight);
+      const scale=state.fit?fitted:state.scale;
+      if(!(scale>0))return;
+      const width=Math.round(image.naturalWidth*scale),height=Math.round(image.naturalHeight*scale);
+      canvas.style.width=Math.max(stage.clientWidth,width)+'px';
+      canvas.style.height=Math.max(stage.clientHeight,height)+'px';
+      image.style.width=width+'px';
+      image.style.height=height+'px';
+      output.textContent=Math.round(scale*100)+' %';
+    }
+    function zoom(factor){
+      if(!image.naturalWidth)return;
+      const fitted=Math.min(stage.clientWidth/image.naturalWidth,stage.clientHeight/image.naturalHeight);
+      state.scale=Math.min(4,Math.max(.35,(state.fit?fitted:state.scale)*factor));
+      state.fit=false;
+      render();
+      stage.scrollLeft=Math.max(0,(stage.scrollWidth-stage.clientWidth)/2);
+      stage.scrollTop=Math.max(0,(stage.scrollHeight-stage.clientHeight)/2);
+    }
+    overlay.querySelector('[data-photo-fit]').addEventListener('click',()=>{state.fit=true;render();});
+    overlay.querySelector('[data-photo-actual]').addEventListener('click',()=>{state.fit=false;state.scale=1;render();});
+    overlay.querySelector('[data-photo-plus]').addEventListener('click',()=>zoom(1.25));
+    overlay.querySelector('[data-photo-minus]').addEventListener('click',()=>zoom(.8));
+    overlay.querySelector('[data-photo-close]').addEventListener('click',closeHelpZoom);
+    overlay.addEventListener('keydown',ev=>{
+      if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();closeHelpZoom();}
+      else if(ev.key==='+'||ev.key==='='){ev.preventDefault();zoom(1.25);}
+      else if(ev.key==='-'){ev.preventDefault();zoom(.8);}
+      else if(ev.key==='0'){ev.preventDefault();state.fit=true;render();}
+    });
+    image.addEventListener('load',render);
+    image.addEventListener('error',()=>{output.textContent='Image indisponible';});
+    overlay.querySelector('[data-photo-close]').focus();
+    render();
+  }
+  function receiveHelpImage(ev){
+    if(!layer||ev.data?.type!=='kaloneo-help-photo-open')return;
+    const tab=layer.querySelector('[data-tab][aria-selected="true"]')?.dataset.tab;
+    if(tab!=='admin'&&tab!=='builder')return;
+    const frame=layer.querySelector('[data-section="'+tab+'"] iframe');
+    if(!frame||ev.source!==frame.contentWindow)return;
+    const allowed=tab==='admin'?['A01','A02','A03','A04','A06','A07']:
+      ['B01','B02','B03','B04','B05','B06','B07','B08','B09','B10','B11','B12'];
+    if(typeof ev.data.src!=='string'||!allowed.some(id=>ev.data.src==='captures/'+id+'.png'))return;
+    openHelpZoom(frame,ev.data.src,String(ev.data.alt||'').slice(0,300));
+  }
+  window.addEventListener('message',receiveHelpImage);
+  window.addEventListener('resize',()=>{
+    if(photoZoom?.fit)photoZoom.root.querySelector('[data-photo-fit]')?.click();
+  });
   async function open(){
     if(layer||!await ipcRenderer.invoke('admin:status').catch(()=>false))return;
     layer=document.createElement('div');
@@ -135,6 +227,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
 }
 
 `;
+    style.textContent += "\n#seb-evalpro-settings-dialog .settings-fullscreen-help-image{\n position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;\n background:#0c2639;color:#fff;padding:8px;min-width:0;min-height:0\n}\n#seb-evalpro-settings-dialog .settings-photo-toolbar{\n flex:none;display:flex;align-items:center;justify-content:space-between;\n gap:10px;padding:4px 7px 10px;flex-wrap:wrap\n}\n#seb-evalpro-settings-dialog .settings-photo-caption{\n font-size:14px;font-weight:700;color:#eff8ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap\n}\n#seb-evalpro-settings-dialog .settings-photo-controls{\n display:flex;align-items:center;gap:7px;flex-wrap:wrap\n}\n#seb-evalpro-settings-dialog .settings-photo-controls button{\n border:1px solid #9bc2d6;border-radius:7px;background:#fff;color:#034c6e;\n font-weight:700;padding:7px 12px;min-height:37px\n}\n#seb-evalpro-settings-dialog .settings-photo-controls [data-photo-close]{\n color:#a62231;border-color:#edb0b7\n}\n#seb-evalpro-settings-dialog .settings-photo-controls output{\n min-width:56px;text-align:center;color:#fff;font-variant-numeric:tabular-nums\n}\n#seb-evalpro-settings-dialog .settings-photo-scroll{\n flex:1;min-height:0;min-width:0;width:100%;overflow:auto;\n background:#1b303e;overscroll-behavior:contain;border-radius:7px\n}\n#seb-evalpro-settings-dialog .settings-photo-canvas{\n display:grid;place-items:center;min-width:100%;min-height:100%\n}\n#seb-evalpro-settings-dialog .settings-photo-canvas img{\n display:block;max-width:none!important;max-height:none!important;\n border-radius:3px;box-shadow:0 3px 24px #0008\n}\n@media(max-width:780px){\n #seb-evalpro-settings-dialog .settings-photo-caption{font-size:12px}\n #seb-evalpro-settings-dialog .settings-photo-controls{gap:4px}\n #seb-evalpro-settings-dialog .settings-photo-controls button{font-size:12px;padding:6px 8px}\n}\n";
     layer.appendChild(style);
     document.body.appendChild(layer);
     layer.querySelector('[data-settings-header-icon]').src=iconUrl;
@@ -167,7 +260,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
     });
     layer.querySelector('[data-close]').addEventListener('click',close);
     layer.addEventListener('click',event=>{if(event.target===layer)close();});
-    layer.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();close();}});
+    layer.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();if(photoZoom)closeHelpZoom();else close();}});
     layer.querySelectorAll('[data-tab]').forEach(btn=>btn.addEventListener('click',()=>selectTab(btn.dataset.tab)));
     selectTab('passwords');
     const form=layer.querySelector('#kaloneo-setting-form');

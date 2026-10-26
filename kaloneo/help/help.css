@@ -78,7 +78,7 @@ dl dt{font-weight:750;color:#074767;margin-top:13px}dl dd{margin:3px 0 9px 0}
 /* R141 — captures réelles hors connexion, agrandissement dans le manuel. */
 .help-photo{background:#fff}.help-photo img{max-height:580px;object-fit:contain;cursor:zoom-in;border-radius:6px}
 .help-photo img:hover{outline:2px solid #7baac1;outline-offset:2px}
-.help-image-dialog{width:min(96vw,1500px);max-width:96vw;max-height:94vh;padding:12px;border:1px solid #b4ccda;border-radius:12px;box-shadow:0 15px 70px #00192c66;background:#fff}
-.help-image-dialog::backdrop{background:#001e34b8}.help-image-dialog img{width:auto;max-width:100%;height:auto;max-height:calc(94vh - 80px);display:block;margin:auto;object-fit:contain}
+.help-image-dialog{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;padding:12px;border:1px solid #b4ccda;border-radius:12px;box-shadow:0 15px 70px #00192c66;background:#fff}
+.help-image-dialog::backdrop{background:#001e34b8}.help-image-dialog img{width:100%;max-width:100%;height:calc(100dvh - 94px);max-height:none;display:block;margin:auto;object-fit:contain}
 #close-image-dialog{display:block;margin:0 0 10px auto;padding:8px 14px;border:1px solid #91b8ca;border-radius:8px;background:#fff;color:#064662;font-weight:700;cursor:pointer}
 @media print{.help-image-dialog{display:none!important}.help-photo img{max-height:450px}}

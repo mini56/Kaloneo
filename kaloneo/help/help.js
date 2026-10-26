@@ -95,7 +95,16 @@
   document.querySelectorAll('figure.help-photo img').forEach(img=>{
     img.setAttribute('tabindex','0');img.setAttribute('role','button');
     img.setAttribute('aria-label',img.alt+' — agrandir');
-    const open=()=>{zoomImage.src=img.currentSrc||img.src;zoomImage.alt=img.alt;zoom.showModal();};
+    const open=()=>{
+      if(window.parent!==window && new URLSearchParams(location.search).has('settings')){
+        window.parent.postMessage({type:'kaloneo-help-photo-open',
+          src:img.getAttribute('src'),alt:img.alt},'*');
+        return;
+      }
+      zoomImage.src=img.currentSrc||img.src;
+      zoomImage.alt=img.alt;
+      zoom.showModal();
+    };
     img.addEventListener('click',open);
     img.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open();}});
   });
