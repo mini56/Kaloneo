@@ -1,0 +1,21 @@
+name: "KALONÉO — Vérification ciblée Builder Puzzle V1 sans Setup"
+on:
+  push:
+    branches:
+      - fix-r60-tri-rearm-only-20261011
+    paths:
+      - '.github/workflows/audit-puzzle-builder-image.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  controle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Tester validation fenêtre image et intégrité V1
+        run: node seb-evalpro/scripts/kaloneo-puzzle-builder-window-validation-smoke.js
