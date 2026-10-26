@@ -50,7 +50,7 @@ try {
     if($titles|Where-Object{$_ -match 'JavaScript error|Démarrage impossible|^Error$|Uncaught Exception'}){
       throw "KALONEO_PACKAGED_STARTUP_FAILED: fenêtre d'erreur réelle : $($titles -join '; ')"
     }
-    $isMain= @($titles | Where-Object {$_ -match 'KALON.EO|SEB EvalPro' -and $_ -notmatch 'Démarrage impossible'}).Count -gt 0
+    $isMain= @($titles | Where-Object {$_ -match 'KALON|SEB EvalPro' -and $_ -notmatch 'Démarrage impossible'}).Count -gt 0
     if($i -ge 12 -and $isMain){
       $foundMain++
       if($foundMain -ge 4)break

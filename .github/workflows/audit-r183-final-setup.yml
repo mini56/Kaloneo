@@ -302,6 +302,7 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Tableau du bilan enregistre invalide — Setup bloque'}
       - name: Preflight de la resolution du routage bilan dans le vrai package
         run: |
+          node --check src/kaloneo-library-main.js
           node --check scripts/kaloneo-packaged-bilan-routing-smoke.js
           node scripts/kaloneo-packaged-bilan-routing-smoke.js
           if($LASTEXITCODE -ne 0){throw 'Bilan routing absent du package — setup bloque'}
