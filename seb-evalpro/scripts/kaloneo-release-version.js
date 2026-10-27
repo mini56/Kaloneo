@@ -55,7 +55,7 @@ function verify(){
     throw Error('Numéro de Setup NSIS différent du Build '+n);
   const actual=read(generatedConfigPath);
   const expected=renderConfig(read(originalConfigPath),n);
-  if(actual!==expected){
+  if(actual.replace(/\r\n/g,'\n')!==expected.replace(/\r\n/g,'\n')){
     let index=0;
     while(index<actual.length && index<expected.length && actual[index]===expected[index])index++;
     throw Error('Version ou nom du Setup non synchronisé dans kaloneo-auto-release.yml (position '+index+', tailles '+actual.length+'/'+expected.length+', actual='+JSON.stringify(actual.slice(index,index+80))+', expected='+JSON.stringify(expected.slice(index,index+80))+')');
