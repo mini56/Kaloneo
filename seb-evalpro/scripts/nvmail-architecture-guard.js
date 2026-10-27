@@ -77,4 +77,14 @@ for (const token of [
   'data.score_total || 0'
 ]) if (!results.includes(token)) fail('page Résultats ne récupère plus nvmail: ' + token);
 
+
+const illustrated=html.match(/<img\s+class="nvmail-workspace-image"\s+src="([^"]+)"/);
+if(!illustrated) fail('Illustration fournie absente en bas du bloc gauche.');
+const illustratedFile=decodeURIComponent(illustrated[1]).replace(/\//g,path.sep);
+if(!fs.existsSync(path.join(root,'app','web',illustratedFile))) fail('Image d’e-mails non embarquée dans la véritable application.');
+if(!/<section id="left"[\s\S]*?class="nvmail-workspace-image"[\s\S]*?<\/section>\s*<section id="right"/.test(html)) fail('Image hors du bloc gauche.');
+const appearance=read('app/web/css/kaloneo-remaining-pages.css');
+for(const token of ['img.nvmail-workspace-image','background:#EAF7ED!important','background:linear-gradient(145deg,#F2FBF3,#FCFFFC)!important'])
+  if(!appearance.includes(token)) fail('Habillage vert clair incomplet : '+token);
+
 console.log('SEB EvalPro garde nvmail: contenu, /6, page8_data, fonctions séparées et navigation centrale — OK.');

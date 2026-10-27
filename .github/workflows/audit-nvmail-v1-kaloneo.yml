@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/audit-nvmail-v1-kaloneo.yml'
       - 'seb-evalpro/source/nvmail.html'
+      - 'seb-evalpro/source/imageqcm/Espace de travail dédié aux e-mails.png'
       - 'seb-evalpro/source/js/nvmail-page.js'
       - 'seb-evalpro/source/css/kaloneo-remaining-pages.css'
       - 'seb-evalpro/scripts/nvmail-architecture-guard.js'

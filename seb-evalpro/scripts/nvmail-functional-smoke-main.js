@@ -139,6 +139,45 @@ async function verifyReload(win) {
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-software-rasterizer');
 
+async function verifyGreenMailIllustration(win,width,height){
+  win.setSize(width,height);
+  await new Promise(resolve=>setTimeout(resolve,400));
+  const ui=await win.webContents.executeJavaScript(`(()=>{
+    const left=document.querySelector('#left.nvmail-left-panel');
+    const right=document.querySelector('#right.nvmail-right-panel');
+    const illustration=left?.querySelector('img.nvmail-workspace-image');
+    const card=left?.querySelector('.nvmail-consigne-panel');
+    const form=right?.querySelector('#formEmail');
+    const imageBox=illustration?.getBoundingClientRect();
+    const leftBox=left?.getBoundingClientRect();
+    const textBox=card?.getBoundingClientRect();
+    const styleLeft=left?getComputedStyle(left):null;
+    const styleRight=right?getComputedStyle(right):null;
+    const styleForm=form?getComputedStyle(form):null;
+    return {
+      imageComplete:!!illustration?.complete && illustration.naturalWidth>0 && illustration.naturalHeight>0,
+      src:illustration?.getAttribute('src'),
+      leftRgb:styleLeft?.backgroundColor,
+      rightRgb:styleRight?.backgroundColor,
+      formRgb:styleForm?.backgroundImage,
+      visible:!!imageBox && imageBox.width>80 && imageBox.height>45,
+      insideLeft:!!imageBox && imageBox.left>=leftBox.left && imageBox.right<=leftBox.right && imageBox.bottom<=leftBox.bottom+1,
+      belowText:!!imageBox && imageBox.top>=textBox.bottom-1,
+      withinScreen:!!imageBox && imageBox.bottom<=innerHeight+1,
+      bodyScroll:document.documentElement.scrollWidth>innerWidth+2
+    };
+  })()`);
+  const assert=require('node:assert/strict');
+  assert.equal(ui.imageComplete,true,'Image e-mail non chargée: '+JSON.stringify(ui));
+  assert.equal(decodeURIComponent(ui.src),'imageqcm/Espace de travail dédié aux e-mails.png');
+  assert.equal(ui.leftRgb,'rgb(234, 247, 237)','Le bloc gauche doit être vert clair.');
+  assert.equal(ui.rightRgb,'rgb(234, 247, 237)','Le bloc droit doit être vert clair.');
+  assert(ui.formRgb.includes('242, 251, 243'),'Le formulaire droit doit avoir un fond vert clair.');
+  assert(ui.visible && ui.insideLeft && ui.belowText && ui.withinScreen,
+    'L’image doit être sous les consignes, entièrement visible dans le bloc gauche : '+JSON.stringify(ui));
+  assert.equal(ui.bodyScroll,false,'Débordement horizontal de page.');
+}
+
 async function verifyButtonGeometry(win,width,height){
   win.setSize(width,height);
   await new Promise(resolve=>setTimeout(resolve,400));
@@ -170,7 +209,9 @@ app.whenReady().then(async () => {
   try {
     await win.loadFile(page);
     await waitForPage(win);
+    await verifyGreenMailIllustration(win,1600,900);
     await verifyButtonGeometry(win,1600,900);
+    await verifyGreenMailIllustration(win,1366,768);
     await verifyButtonGeometry(win,1366,768);
     const first=await runScenario(win);
     const reloaded=await verifyReload(win);
