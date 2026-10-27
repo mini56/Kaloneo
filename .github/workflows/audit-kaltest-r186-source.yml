@@ -49,4 +49,6 @@ jobs:
           npm run prepare:web
           node scripts/kaltest-single-source-guard.js
       - name: Actual KALTEST Electron runtime
-        run: npx electron --no-sandbox scripts/kaloneo-shared-html-candidate-electron-smoke-main.js
+        run: |
+          npx electron --no-sandbox scripts/kaloneo-shared-html-candidate-electron-smoke-main.js
+          npx electron --no-sandbox scripts/kaloneo-r186-candidate-electron-smoke-main.js
