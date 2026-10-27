@@ -93,11 +93,12 @@ async function check(test,width,height){
   win.destroy();
 }
 app.whenReady().then(async()=>{
+ const keepAlive=new BrowserWindow({show:false,width:100,height:100});
  try{
   await check(tests[0],1366,768);
   await check(tests[0],1200,800);
   await check(tests[1],1366,768);
   await check(tests[1],1200,800);
-  clearTimeout(deadline);app.quit();
+  keepAlive.destroy();clearTimeout(deadline);app.quit();
  }catch(e){fail(e);}
 }).catch(fail);
