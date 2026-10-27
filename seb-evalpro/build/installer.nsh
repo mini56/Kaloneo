@@ -152,7 +152,7 @@ Function KaloneoVerifyInstallerPassword
     System::Alloc 32
     Pop $R3
     StrCpy $4 32
-    System::Call 'advapi32::CryptGetHashParam(p r2, i 2, p $R3, *i .r4, i 0) i .r9'
+    System::Call 'advapi32::CryptGetHashParam(p r2, i 2, p $R3, *i r4r4, i 0) i .r9'
     ${If} $9 != 0
       ${If} $4 == 32
         StrCpy $KaloneoPasswordResult "34"
