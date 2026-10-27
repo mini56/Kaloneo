@@ -23,7 +23,6 @@ jobs:
       KALONEO_SKIP_OFFICIAL_V1: '0'
       KALONEO_STRICT_RENDER_IMAGES: '1'
       KALONEO_STRICT_INTRO_VIDEO: '1'
-      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout release commit
         uses: actions/checkout@v4
@@ -98,6 +97,8 @@ jobs:
           if($exe.Length -lt 100MB){throw 'Setup unusually small'}
           Write-Host "KALONEO_190_SETUP_BUILT=$($exe.Length) bytes"
       - name: Real Windows update from 1.00.189 to 1.00.190 preserves encrypted data
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference='Stop'
           New-Item -ItemType Directory -Path dist/previous -Force | Out-Null
@@ -134,6 +135,8 @@ jobs:
           compression-level: 0
           retention-days: 30
       - name: Publish one GitHub Release from the exact tested executable
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference='Stop'
           $tag='kaloneo-1.00.190'
