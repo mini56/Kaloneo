@@ -50,17 +50,3 @@ try {
     'Version de distribution manquante');
   console.log('KALONEO_R118_SETTINGS=OK password persistence, legacy access, UI, help, version');
 }finally{fs.rmSync(directory,{recursive:true,force:true});}
-+'{APP_BUILD_NUMBER}'+String.fromCharCode(96)));
-  const main=read(path.join(root,'src','main.js'));
-  assert(main.includes("kaloneo-settings:change-password"));
-  assert(main.includes("getCandidateStore().getActiveCandidate()"));
-  const manual=read(path.join(repo,'kaloneo','admin-help','index.html'));
-  assert((manual.match(/<article /g)||[]).length>=10,'première version du manuel Admin');
-  assert(fs.existsSync(path.join(repo,'kaloneo','admin-help','help.js')));
-  const p=require('../package.json');
-  assert(Number.isInteger(p.sebBuildNumber)&&p.sebBuildNumber>=125,
-    'Numéro de Build progressif obligatoire');
-  assert(/^\d+\.\d+\.\d+$/.test(String(p.sebReleaseVersion)),
-    'Version de distribution manquante');
-  console.log('KALONEO_R118_SETTINGS=OK password persistence, legacy access, UI, help, version');
-}finally{fs.rmSync(directory,{recursive:true,force:true});}
