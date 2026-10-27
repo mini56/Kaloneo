@@ -1,0 +1,46 @@
+name: "KALONÉO — contrôle du bouton MAJ et SHA256 (sans Setup)"
+on:
+  push:
+    branches: [fix-r186-kaltest-source-unique-20261027]
+    paths:
+      - ".github/workflows/audit-kaloneo-updates.yml"
+      - "seb-evalpro/src/kaloneo-update-checker.js"
+      - "seb-evalpro/src/kaloneo-admin-settings.js"
+      - "seb-evalpro/src/main.js"
+      - "seb-evalpro/scripts/kaloneo-update-checker-smoke.js"
+      - "seb-evalpro/package.json"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mises-a-jour-et-securite:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: seb-evalpro
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Vérifier syntaxe des modules et du moteur
+        run: |
+          $ErrorActionPreference='Stop'
+          node --check src/main.js
+          if($LASTEXITCODE -ne 0){throw 'Syntaxe main.js'}
+          node --check src/kaloneo-admin-settings.js
+          if($LASTEXITCODE -ne 0){throw 'Syntaxe interface Réglages'}
+          node --check src/kaloneo-update-checker.js
+          if($LASTEXITCODE -ne 0){throw 'Syntaxe vérificateur MAJ'}
+          node --check scripts/kaloneo-update-checker-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Syntaxe test MAJ'}
+      - name: Vérifier GitHub, versions, interface et SHA256 sur flux binaire de 40 Mo
+        run: |
+          node scripts/kaloneo-update-checker-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Mise à jour ou contrôle SHA256 incorrect'}
+      - name: Vérifier réglages et non-régression des mots de passe
+        run: |
+          node scripts/kaloneo-r118-settings-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Régression des réglages Administrateur'}
