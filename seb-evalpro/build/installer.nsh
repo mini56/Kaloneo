@@ -145,16 +145,16 @@ Function KaloneoVerifyInstallerPassword
     Return
   ${EndIf}
   StrCpy $KaloneoPasswordResult "32"
-  System::Call 'advapi32::CryptHashData(p r2, t "$KaloneoHashInput", i r0, i 0) i .r9'
+  System::Call 'advapi32::CryptHashData(p r2, t "$KaloneoHashInput", i $R0, i 0) i .r9'
   StrCpy $KaloneoHashInput ""
   ${If} $9 != 0
     StrCpy $KaloneoPasswordResult "33"
     System::Alloc 32
     Pop $R3
-    StrCpy $R4 32
-    System::Call 'advapi32::CryptGetHashParam(p r2, i 2, p r3, *i r4, i 0) i .r9'
+    StrCpy $4 32
+    System::Call 'advapi32::CryptGetHashParam(p r2, i 2, p $R3, *i .r4, i 0) i .r9'
     ${If} $9 != 0
-      ${If} $R4 == 32
+      ${If} $4 == 32
         StrCpy $KaloneoPasswordResult "34"
         ; Comparer les 8 mots SHA256 (entiers signes) sans garder le secret.
         System::Call '*$R3(i .r0, i .r1, i .r2, i .r3, i .r4, i .r5, i .r6, i .r7)'
