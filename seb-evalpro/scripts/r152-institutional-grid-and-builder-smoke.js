@@ -55,7 +55,7 @@ assert.equal(word.length,6);
 assert.deepEqual(word.filter(x=>x.type==='row').map(x=>x.key),['fabrication-decoupe','expression','math-problemes','competences-transversales']);
 assert(!word.some(x=>/TOTAL|parcours|passage/i.test(x.module||'')));
 assert(word.find(x=>x.key==='math-problemes').comment.includes('II.'),'Le commentaire provient du vrai tableau institutionnel.');
-assert(word.find(x=>x.key==='math-problemes').detail.includes('66,67 % de réponses correctes.'),'Pourcentage + phrase attendue.');
+assert(word.find(x=>x.key==='math-problemes').detail.includes('67 % de réponses correctes.'),'Pourcentage + phrase attendue.');
 assert(word.find(x=>x.key==='fabrication-decoupe').comment==='');
 assert.equal(word.find(x=>x.key==='competences-transversales').detail,'60 % de réponses correctes.');
 const incomplete=grid.aggregateInstitutionalRows([{archive:archive([{key:'math-problemes',level:'I'}])}]);

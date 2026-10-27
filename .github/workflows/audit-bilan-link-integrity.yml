@@ -25,6 +25,7 @@ on:
       - 'seb-evalpro/src/bilan-docx-main.js'
       - 'seb-evalpro/src/institutional-bilan-grid.js'
       - 'seb-evalpro/scripts/institutional-general-rounding-smoke.js'
+      - 'seb-evalpro/scripts/r152-institutional-grid-and-builder-smoke.js'
       - 'seb-evalpro/scripts/general-bilan-synthesis-electron-smoke-main.js'
       - 'seb-evalpro/src/candidate-catalog-preload.js'
       - 'seb-evalpro/overrides/admin-bilan.html'
