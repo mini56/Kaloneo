@@ -55,7 +55,11 @@ function verify(){
     throw Error('Numéro de Setup NSIS différent du Build '+n);
   const actual=read(generatedConfigPath);
   const expected=renderConfig(read(originalConfigPath),n);
-  if(actual!==expected)throw Error('Version ou nom du Setup non synchronisé dans kaloneo-auto-release.yml');
+  if(actual!==expected){
+    let index=0;
+    while(index<actual.length && index<expected.length && actual[index]===expected[index])index++;
+    throw Error('Version ou nom du Setup non synchronisé dans kaloneo-auto-release.yml (position '+index+', tailles '+actual.length+'/'+expected.length+', actual='+JSON.stringify(actual.slice(index,index+80))+', expected='+JSON.stringify(expected.slice(index,index+80))+')');
+  }
   const preload=read(path.join(root,'src','preload.js'));
   const tick=String.fromCharCode(96);
   if(!preload.includes('const APP_RELEASE_VERSION = '+tick+'1.00.'+'$'+'{APP_BUILD_NUMBER}'+tick+';'))
