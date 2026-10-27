@@ -1,0 +1,55 @@
+name: "KALONÉO — mot de passe majuscule dans la fenêtre du Setup"
+on:
+  push:
+    branches: [fix-r186-kaltest-source-unique-20261027]
+    paths:
+      - ".github/workflows/audit-kaloneo-uppercase-gui.yml"
+      - "seb-evalpro/scripts/kaloneo-uppercase-gui-smoke.ps1"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  uppercase-gui-smoke:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: seb-evalpro
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compiler Setup avec mot de passe fictif lettres majuscules uniquement
+        env:
+          KALONEO_INSTALL_PASSWORD: 'KALONEOINSTALLATIONTEST'
+        run: |
+          $ErrorActionPreference='Stop'
+          python -m pip install --disable-pip-version-check Pillow==11.3.0 imageio-ffmpeg==0.6.0
+          if($LASTEXITCODE -ne 0){throw 'Python dependencies unavailable'}
+          python scripts/kaloneo-r125-branding.py
+          if($LASTEXITCODE -ne 0){throw 'Branding invalid'}
+          python scripts/r158-build-installer-intro.py
+          if($LASTEXITCODE -ne 0){throw 'Intro invalid'}
+          npm install --no-audit --no-fund
+          if($LASTEXITCODE -ne 0){throw 'NPM unavailable'}
+          node scripts/kaloneo-install-auth-build.js
+          if($LASTEXITCODE -ne 0){throw 'Build password verifier failed'}
+          node scripts/build-kaltest-pilot2-data.js
+          if($LASTEXITCODE -ne 0){throw 'KALTEST missing'}
+          npm run prepare:web
+          if($LASTEXITCODE -ne 0){throw 'Application validation failed'}
+          node scripts/kaloneo-nsis-directory-template.js
+          if($LASTEXITCODE -ne 0){throw 'NSIS template mismatch'}
+          & npx electron-builder --win nsis --config build/kaloneo-auto-release.yml --publish never
+          if($LASTEXITCODE -ne 0){throw 'Windows Setup compilation failed'}
+      - name: Tester la saisie en majuscules sur la page apres acceptation de la licence
+        run: |
+          $setup=Get-ChildItem dist/KALONEO-Setup-*.exe | Select-Object -First 1
+          if(-not $setup){throw 'Setup absent'}
+          & ./scripts/kaloneo-uppercase-gui-smoke.ps1 -SetupPath $setup.FullName -ExpectedPassword 'KALONEOINSTALLATIONTEST'
+          if($LASTEXITCODE -ne 0){throw 'Interactive uppercase password test failed'}
