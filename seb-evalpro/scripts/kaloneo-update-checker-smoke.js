@@ -56,8 +56,12 @@ async function run(){
   assert.ok(settings.includes('data-download-update'));
   assert.ok(settings.includes('Vérifier les mises à jour'));
   assert.ok(settings.indexOf('data-kaloneo-about-logo')<settings.indexOf('data-check-update'),'bouton sous logo');
-  assert.ok(settings.includes('Téléchargement en cours… Veuillez attendre le message « Téléchargement terminé »'),'Indiquer clairement d’attendre la fin du téléchargement');
-  assert.ok(settings.includes('Ne fermez pas KALONÉO pendant le téléchargement'),'Empêcher une fermeture prématurée');
+  assert.ok(settings.includes('Choisissez le dossier où enregistrer la mise à jour'),'Indiquer le choix du dossier avant le téléchargement');
+  assert.ok(main.includes("event.sender.send('kaloneo-updates:download-started')"),'Émettre le signal de démarrage réel après le choix du fichier');
+  assert.ok(settings.includes("ipcRenderer.on('kaloneo-updates:download-started',onDownloadStarted)"),'Afficher la progression au démarrage effectif du transfert');
+  assert.ok(settings.includes("ipcRenderer.removeListener('kaloneo-updates:download-started',onDownloadStarted)"),'Nettoyer le signal après téléchargement ou annulation');
+  assert.ok(settings.includes('Mise à jour en cours de téléchargement. Veuillez patienter'),'Indiquer clairement d’attendre la fin du téléchargement');
+  assert.ok(settings.includes('Ne fermez pas KALONÉO pendant le transfert'),'Empêcher une fermeture prématurée');
   assert.ok(settings.includes('Téléchargement terminé et vérifié (SHA256 conforme)'),'Confirmer réellement la fin du téléchargement');
   assert.ok(settings.includes('sinon, redémarrez-le depuis l’icône du Bureau'),'Expliquer quoi faire si le démarrage automatique est décoché');
   assert.ok(settings.includes('data-open-downloaded-setup-folder'),'Le bouton dossier doit être présent dans les Réglages');
