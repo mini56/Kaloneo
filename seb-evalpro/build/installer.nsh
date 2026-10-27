@@ -112,6 +112,111 @@ Var SebIntroNextButton
 Var SebIntroNewBitmapHandle
 Var KaloneoCleanPathInitialized
 Var KaloneoLicenseExplicitlyAccepted
+Var KaloneoPasswordAccepted
+Var KaloneoPasswordDialog
+Var KaloneoPasswordField
+Var KaloneoPasswordEntry
+Var KaloneoHashInput
+Var KaloneoPasswordResult
+\n!include "${BUILD_RESOURCES_DIR}\\kaloneo-password-hash.nsh"
+
+; Aucune copie d'un Setup sans verification, y compris /S.
+; Le hash sale n'est genere qu'a la compilation depuis le secret GitHub.
+Function KaloneoVerifyInstallerPassword
+  StrCpy $KaloneoPasswordAccepted "0"
+  StrCpy $KaloneoPasswordResult "0"
+  ${If} $KaloneoPasswordEntry == ""
+    Return
+  ${EndIf}
+  StrCpy $KaloneoHashInput "${KALONEO_PASSWORD_SALT}$KaloneoPasswordEntry"
+  StrLen $R0 $KaloneoHashInput
+  IntOp $R0 $R0 * 2
+  ; CryptoAPI native Windows : SHA256 sur UTF16LE(salt + saisie).
+  System::Call 'advapi32::CryptAcquireContextW(*p .r1, p 0, p 0, i 24, i 0xF0000000) i .r9'
+  ${If} $9 == 0
+    StrCpy $KaloneoHashInput ""
+    Return
+  ${EndIf}
+  System::Call 'advapi32::CryptCreateHash(p r1, i 0x800c, p 0, i 0, *p .r2) i .r9'
+  ${If} $9 == 0
+    System::Call 'advapi32::CryptReleaseContext(p r1, i 0)'
+    StrCpy $KaloneoHashInput ""
+    Return
+  ${EndIf}
+  System::Call 'advapi32::CryptHashData(p r2, t "$KaloneoHashInput", i r0, i 0) i .r9'
+  StrCpy $KaloneoHashInput ""
+  ${If} $9 != 0
+    System::Alloc 32
+    Pop $R3
+    StrCpy $R4 32
+    System::Call 'advapi32::CryptGetHashParam(p r2, i 2, p r3, *i r4, i 0) i .r9'
+    ${If} $9 != 0
+      ${If} $R4 == 32
+        ; Comparer les 8 mots SHA256 (entiers signes) sans garder le secret.
+        System::Call '*$R3(i .r0, i .r1, i .r2, i .r3, i .r4, i .r5, i .r6, i .r7)'
+        ${If} $0 == ${KALONEO_PASSWORD_WORD0}
+        ${AndIf} $1 == ${KALONEO_PASSWORD_WORD1}
+        ${AndIf} $2 == ${KALONEO_PASSWORD_WORD2}
+        ${AndIf} $3 == ${KALONEO_PASSWORD_WORD3}
+        ${AndIf} $4 == ${KALONEO_PASSWORD_WORD4}
+        ${AndIf} $5 == ${KALONEO_PASSWORD_WORD5}
+        ${AndIf} $6 == ${KALONEO_PASSWORD_WORD6}
+        ${AndIf} $7 == ${KALONEO_PASSWORD_WORD7}
+          StrCpy $KaloneoPasswordAccepted "1"
+          StrCpy $KaloneoPasswordResult "1"
+        ${EndIf}
+      ${EndIf}
+    ${EndIf}
+    System::Free $R3
+  ${EndIf}
+  System::Call 'advapi32::CryptDestroyHash(p r2)'
+  System::Call 'advapi32::CryptReleaseContext(p r1, i 0)'
+FunctionEnd
+
+!macro customInit
+  StrCpy $KaloneoPasswordAccepted "0"
+  ; /S ne doit jamais contourner la protection. Automatisation autorisee
+  ; uniquement si le secret exact est passe dans l'environnement du processus.
+  ${If} ${Silent}
+    ReadEnvStr $KaloneoPasswordEntry "KALONEO_INSTALL_PASSWORD"
+    Call KaloneoVerifyInstallerPassword
+    StrCpy $KaloneoPasswordEntry ""
+    ${If} $KaloneoPasswordAccepted != "1"
+      DetailPrint "Installation silencieuse refusee : authentification invalide."
+      SetErrorLevel 21
+      Abort
+    ${EndIf}
+  ${EndIf}
+!macroend
+
+Function KaloneoPasswordPageCreate
+  ; La page intervient apres l'acceptation explicite de la licence.
+  StrCpy $KaloneoPasswordAccepted "0"
+  nsDialogs::Create 1018
+  Pop $KaloneoPasswordDialog
+  ${If} $KaloneoPasswordDialog == error
+    Abort
+  ${EndIf}
+  ${NSD_CreateLabel} 5u 8u 92% 34u "Installation reservee aux structures autorisees. Saisissez le mot de passe d'installation KALONÉO pour continuer."
+  Pop $0
+  ${NSD_CreatePassword} 5u 56u 92% 22u ""
+  Pop $KaloneoPasswordField
+  SendMessage $KaloneoPasswordField ${EM_LIMITTEXT} 120 0
+  ${NSD_CreateLabel} 5u 91u 92% 34u "Sans mot de passe valide, aucune installation ni mise a jour n'est autorisee."
+  Pop $0
+  ${NSD_SetFocus} $KaloneoPasswordField
+  nsDialogs::Show
+FunctionEnd
+
+Function KaloneoPasswordPageLeave
+  ${NSD_GetText} $KaloneoPasswordField $KaloneoPasswordEntry
+  Call KaloneoVerifyInstallerPassword
+  StrCpy $KaloneoPasswordEntry ""
+  ${If} $KaloneoPasswordAccepted != "1"
+    MessageBox MB_ICONSTOP|MB_OK "Mot de passe d'installation incorrect. L'installation KALONÉO est bloquee." /SD IDOK
+    Abort
+  ${EndIf}
+FunctionEnd
 
 !include "${BUILD_RESOURCES_DIR}\intro-frames\intro-meta.nsh"
 
@@ -182,6 +287,7 @@ FunctionEnd
   !define MUI_LICENSEPAGE_TEXT_TOP "Veuillez lire la licence complète avant de poursuivre."
   !define MUI_PAGE_CUSTOMFUNCTION_LEAVE KaloneoLicensePageLeave
   !insertmacro MUI_PAGE_LICENSE "${BUILD_RESOURCES_DIR}\KALONEO-LICENCE.txt"
+  Page custom KaloneoPasswordPageCreate KaloneoPasswordPageLeave
 !macroend
 
 Function KaloneoLicensePageLeave
