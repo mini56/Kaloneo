@@ -1,0 +1,238 @@
+name: "KALONÉO — publier la prochaine Release (numéro automatique)"
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: kaloneo-release-next-automatic-version
+  cancel-in-progress: false
+jobs:
+  compiler-tester-publier:
+    runs-on: windows-latest
+    timeout-minutes: 50
+    defaults:
+      run:
+        working-directory: seb-evalpro
+        shell: pwsh
+    env:
+      KALONEO_SKIP_OFFICIAL_V1: '0'
+      KALONEO_STRICT_RENDER_IMAGES: '1'
+      KALONEO_STRICT_INTRO_VIDEO: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Calcul automatique du prochain numéro depuis les Releases validées
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if($env:GITHUB_REF_NAME -ne 'fix-r186-kaltest-source-unique-20261027'){
+            throw 'Branche de publication inattendue : validation requise.'
+          }
+          $raw = gh api 'repos/mini56/Kaloneo/releases?per_page=100'
+          if($LASTEXITCODE -ne 0){throw 'Impossible de lire les Releases. Refus de deviner un numéro.'}
+          $entries = @($raw | ConvertFrom-Json)
+          $numbers = @()
+          foreach($release in $entries){
+            if($release.draft -eq $true){continue}
+            if([string]$release.tag_name -notmatch '^kaloneo-1\.00\.(\d+)$'){continue}
+            $no=[int]$Matches[1]
+            $assetName="KALONEO-Setup-1.00.$no.exe"
+            if(@($release.assets | Where-Object { $_.name -eq $assetName }).Count -eq 0){continue}
+            $numbers += $no
+          }
+          if($numbers.Count -eq 0){throw 'Aucune Release de référence vérifiable. Refus de deviner le numéro.'}
+          $previous = ($numbers | Measure-Object -Maximum).Maximum
+          $next = [int]$previous + 1
+          if($next -gt 999999){throw 'Limite du numéro de build'}
+          Add-Content $env:GITHUB_ENV "KALONEO_PREVIOUS_VERSION=1.00.$previous"
+          Add-Content $env:GITHUB_ENV "KALONEO_PUBLIC_VERSION=1.00.$next"
+          Add-Content $env:GITHUB_ENV "KALONEO_BUILD_NUMBER=$next"
+          node scripts/kaloneo-release-version.js --release $next
+          if($LASTEXITCODE -ne 0){throw 'Synchronisation de la version impossible.'}
+          node scripts/kaloneo-release-version.js --verify
+          if($LASTEXITCODE -ne 0){throw 'Version incohérente avant compilation.'}
+          Write-Host "KALONEO_AUTO_RELEASE_VERSION=1.00.$next ; précédente=1.00.$previous"
+
+      - name: Dépendances et ressources Windows
+        run: |
+          $ErrorActionPreference='Stop'
+          python -m pip install --disable-pip-version-check Pillow==11.3.0 imageio-ffmpeg==0.6.0
+          if($LASTEXITCODE -ne 0){throw 'Outils Python manquants'}
+          python scripts/kaloneo-r125-branding.py
+          if($LASTEXITCODE -ne 0){throw 'Branding installateur invalide'}
+          python scripts/r158-build-installer-intro.py
+          if($LASTEXITCODE -ne 0){throw 'Animation NSIS invalide'}
+          npm install --no-audit --no-fund
+          if($LASTEXITCODE -ne 0){throw 'Installation des dépendances impossible'}
+
+      - name: Construire les véritables tests KALTEST et contrôler les versions
+        run: |
+          $ErrorActionPreference='Stop'
+          node scripts/build-kaltest-pilot2-data.js
+          if($LASTEXITCODE -ne 0){throw 'Définitions KALTEST manquantes'}
+          npm run prepare:web
+          if($LASTEXITCODE -ne 0){throw 'Préparation ou contrôle bloquant invalide'}
+          node scripts/kaloneo-release-version.js --verify
+          if($LASTEXITCODE -ne 0){throw 'Différence de version avant Setup'}
+          node scripts/kaltest-single-source-guard.js
+          if($LASTEXITCODE -ne 0){throw 'Un exercice KALTEST n’est pas sa source officielle'}
+
+      - name: Vérifier réellement les exercices en deux résolutions et les bilans
+        run: |
+          $ErrorActionPreference='Stop'
+          & npx electron --no-sandbox scripts/kaloneo-r186-candidate-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Rendu Mail ou Traitement de texte incorrect'}
+          & npx electron --no-sandbox scripts/kaloneo-shared-html-candidate-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Rendu candidat/Builder incorrect'}
+          foreach($test in @(
+            'bilan-parcours-filter-smoke.js',
+            'general-bilan-aggregation-smoke.js',
+            'institutional-general-rounding-smoke.js',
+            'bilan-level-consistency-smoke.js',
+            'general-bilan-ipc-smoke.js',
+            'candidate-loss-prevention-smoke.js',
+            'kaloneo-packaged-bilan-routing-smoke.js'
+          )){
+            node ("scripts/"+$test)
+            if($LASTEXITCODE -ne 0){throw "Régression : $test"}
+          }
+          node scripts/kaloneo-update-checker-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Bouton de mises à jour incorrect'}
+          node scripts/kaloneo-r118-settings-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Régression des réglages Admin'}
+
+      - name: Préparer le mot de passe secret et la licence
+        env:
+          KALONEO_INSTALL_PASSWORD: ${{ secrets.KALONEO_INSTALL_PASSWORD }}
+        run: |
+          $ErrorActionPreference='Stop'
+          node scripts/r174-license-about-nsis-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Licence d’installation invalide'}
+          node scripts/kaloneo-install-auth-build.js
+          if($LASTEXITCODE -ne 0){throw 'Mot de passe secret absent : publication interdite'}
+          node scripts/kaloneo-nsis-directory-template.js
+          if($LASTEXITCODE -ne 0){throw 'Protection du Setup Windows impossible'}
+
+      - name: Compiler l'installateur Windows avec le numéro automatique
+        run: |
+          $ErrorActionPreference='Stop'
+          & npx electron-builder --win nsis --config build/kaloneo-auto-release.yml --publish never
+          if($LASTEXITCODE -ne 0){throw 'Compilation Windows impossible'}
+          $file="dist/KALONEO-Setup-$($env:KALONEO_PUBLIC_VERSION).exe"
+          $setup=Get-Item $file -ErrorAction Stop
+          if($setup.Length -lt 100MB){throw 'Fichier Setup incomplet'}
+          node scripts/kaloneo-release-version.js --verify-packed
+          if($LASTEXITCODE -ne 0){throw 'Version réelle du programme empaqueté différente du Setup'}
+
+      - name: Refuser la copie silencieuse sans mot de passe ou avec un faux mot de passe
+        run: |
+          $ErrorActionPreference='Stop'
+          $file=(Resolve-Path ("dist/KALONEO-Setup-"+$env:KALONEO_PUBLIC_VERSION+".exe")).Path
+          $target=Join-Path $env:LOCALAPPDATA 'Programs/KALONEO/KALONEO.exe'
+          Remove-Item Env:KALONEO_INSTALL_PASSWORD -ErrorAction SilentlyContinue
+          $without=Start-Process -FilePath $file -ArgumentList @('/S','/currentuser') -PassThru -Wait
+          if($without.ExitCode -eq 0 -or (Test-Path $target)){throw 'Le Setup accepte une installation sans mot de passe'}
+          $env:KALONEO_INSTALL_PASSWORD='Mot-de-passe-faux-qui-ne-doit-jamais-fonctionner-2026!'
+          $wrong=Start-Process -FilePath $file -ArgumentList @('/S','/currentuser') -PassThru -Wait
+          Remove-Item Env:KALONEO_INSTALL_PASSWORD -ErrorAction SilentlyContinue
+          if($wrong.ExitCode -eq 0 -or (Test-Path $target)){throw 'Le Setup accepte un mot de passe incorrect'}
+          Write-Host 'KALONEO_PASSWORD_REJECTION=SUCCESS'
+
+      - name: Mise à jour Windows réelle et préservation des données chiffrées
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KALONEO_INSTALL_PASSWORD: ${{ secrets.KALONEO_INSTALL_PASSWORD }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $previousTag='kaloneo-'+$env:KALONEO_PREVIOUS_VERSION
+          $previousExe='KALONEO-Setup-'+$env:KALONEO_PREVIOUS_VERSION+'.exe'
+          $newExe='KALONEO-Setup-'+$env:KALONEO_PUBLIC_VERSION+'.exe'
+          New-Item -ItemType Directory -Path dist/previous -Force | Out-Null
+          gh release download $previousTag --repo mini56/Kaloneo --pattern $previousExe --dir dist/previous --clobber
+          if($LASTEXITCODE -ne 0){throw 'Impossible de récupérer le Setup précédent'}
+          $previousPath=(Resolve-Path (Join-Path 'dist/previous' $previousExe)).Path
+          $newPath=(Resolve-Path (Join-Path 'dist' $newExe)).Path
+          & ./scripts/r179-real-upgrade-windows-smoke.ps1 -PreviousSetup $previousPath -NewSetup $newPath
+          if($LASTEXITCODE -ne 0){throw 'Perte de données ou mise à jour Windows incorrecte'}
+
+      - name: Tester l'application Windows avant et après installation
+        run: |
+          $ErrorActionPreference='Stop'
+          & ./scripts/kaloneo-packaged-startup-smoke.ps1 -Executable (Resolve-Path dist/win-unpacked/KALONEO.exe)
+          if($LASTEXITCODE -ne 0){throw 'Exécutable empaqueté défectueux'}
+          & ./scripts/kaloneo-packaged-startup-smoke.ps1 -Executable (Join-Path $env:LOCALAPPDATA 'Programs/KALONEO/KALONEO.exe')
+          if($LASTEXITCODE -ne 0){throw 'Exécutable installé défectueux'}
+
+      - name: Vérifier intégrité et cohérence de tous les numéros avant publication
+        run: |
+          $ErrorActionPreference='Stop'
+          node scripts/kaloneo-release-version.js --verify-packed
+          if($LASTEXITCODE -ne 0){throw 'Numéro compilé incorrect'}
+          $setup="dist/KALONEO-Setup-$($env:KALONEO_PUBLIC_VERSION).exe"
+          $hash=(Get-FileHash $setup -Algorithm SHA256).Hash.ToUpperInvariant()
+          $shaFile=$setup+'.sha256'
+          Set-Content -Path $shaFile -Value "$hash  KALONEO-Setup-$($env:KALONEO_PUBLIC_VERSION).exe"
+          Add-Content $env:GITHUB_STEP_SUMMARY "### KALONÉO $($env:KALONEO_PUBLIC_VERSION) — contrôle complet"
+          Add-Content $env:GITHUB_STEP_SUMMARY "Admin, À propos, Setup, Release : **$($env:KALONEO_PUBLIC_VERSION)**"
+          Add-Content $env:GITHUB_STEP_SUMMARY "SHA256 : $hash"
+          Write-Host "KALONEO_VERSION_AND_SHA256_CONFIRMED=$($env:KALONEO_PUBLIC_VERSION) $hash"
+
+      - name: Conserver le Setup Windows validé
+        uses: actions/upload-artifact@v4
+        with:
+          name: KALONEO-Setup-${{ env.KALONEO_PUBLIC_VERSION }}-windows-valide
+          path: |
+            seb-evalpro/dist/KALONEO-Setup-${{ env.KALONEO_PUBLIC_VERSION }}.exe
+            seb-evalpro/dist/KALONEO-Setup-${{ env.KALONEO_PUBLIC_VERSION }}.exe.sha256
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enregistrer les numéros synchronisés puis publier la Release testée
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $tag='kaloneo-'+$env:KALONEO_PUBLIC_VERSION
+          gh release view $tag --repo mini56/Kaloneo --json tagName *> $null
+          if($LASTEXITCODE -eq 0){throw 'Release déjà publiée : modification interdite'}
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package.json build/installer.nsh build/kaloneo-auto-release.yml
+          git diff --cached --quiet
+          if($LASTEXITCODE -ne 0){
+            git commit -m ("chore(release): synchronize KALONÉO "+$env:KALONEO_PUBLIC_VERSION)
+            if($LASTEXITCODE -ne 0){throw 'Impossible de figer les versions dans GitHub'}
+          }
+          git push origin "HEAD:refs/heads/$env:GITHUB_REF_NAME"
+          if($LASTEXITCODE -ne 0){throw 'Push du code testé impossible : Release interdite'}
+          $commit=(git rev-parse HEAD).Trim()
+          $installer="dist/KALONEO-Setup-$($env:KALONEO_PUBLIC_VERSION).exe"
+          $shaFile=$installer+'.sha256'
+          $notes=@"
+          KALONÉO $($env:KALONEO_PUBLIC_VERSION) — Setup Windows validé.
+
+          Version automatiquement synchronisée depuis le dernier numéro GitHub.
+          Même numéro dans la barre Administrateur, À propos, l'installateur et la Release.
+          Bouton Vérifier les mises à jour dans les réglages.
+          Mot de passe obligatoire après acceptation de la licence, y compris à la mise à jour.
+          Vérifications des vrais exercices KALTEST et des bilans.
+          Mise à jour réelle depuis $($env:KALONEO_PREVIOUS_VERSION) : candidats, bilans et données chiffrées conservés.
+          Installateur contrôlé par SHA256, et publié également sur Kaloneo-MAJ après synchronisation.
+
+          Contrôles GitHub : https://github.com/mini56/Kaloneo/actions/runs/$env:GITHUB_RUN_ID
+          "@
+          gh release create $tag $installer $shaFile --repo mini56/Kaloneo --target $commit --title "KALONÉO $($env:KALONEO_PUBLIC_VERSION) — Setup Windows" --notes $notes --prerelease
+          if($LASTEXITCODE -ne 0){throw 'Impossible de publier la Release testée'}
+          gh release view $tag --repo mini56/Kaloneo --json url,assets
+          if($LASTEXITCODE -ne 0){throw 'Release publiée illisible'}
