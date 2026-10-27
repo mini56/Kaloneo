@@ -114,14 +114,25 @@ async function downloadVerified(update,target,options={}){
     throw new Error('Conservez le nom officiel du Setup pour la vérification.');
   const temp=destination+'.kaloneo-download';
   let total=0;const hash=crypto.createHash('sha256');
+  let lastReportedPercent=-1;
   try{
     const response=await (options.responseFor||responseFor)(update.url);
     const counter=new Transform({transform(chunk,encoding,callback){
       total+=chunk.length;
       if(total>MAX_DOWNLOAD||total>update.size){callback(new Error('Taille de téléchargement anormale.'));return;}
-      hash.update(chunk);callback(null,chunk);
+      hash.update(chunk);
+      // The percentage is based on actually received bytes, never a timer.
+      // Limit renderer traffic to at most 101 progress events per download.
+      const percent=Math.min(100,Math.floor(total*100/update.size));
+      if(percent>lastReportedPercent){
+        lastReportedPercent=percent;
+        try{options.onProgress?.({receivedBytes:total,totalBytes:update.size,percent});}catch(_){}
+      }
+      callback(null,chunk);
     }});
     await pipeline(response,counter,fs.createWriteStream(temp,{flags:'wx'}));
+    // 100% only means all bytes received. Validation remains mandatory.
+    try{options.onPhase?.('verifying');}catch(_){}
     const digest=hash.digest('hex').toLowerCase();
     if(total!==update.size||digest!==update.sha256.toLowerCase())
       throw new Error('Contrôle SHA256 échoué : le Setup reçu ne correspond pas à la Release.');
