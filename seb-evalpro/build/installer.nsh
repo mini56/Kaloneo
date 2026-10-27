@@ -104,6 +104,7 @@ Var SebIntroNewBitmapFile
 Var SebBrandingFinishDialog
 Var SebBrandingFinishImage
 Var SebBrandingFinishHandle
+Var KaloneoFinishLaunchCheckbox
 Var SebIntroShown
 Var SebIntroActive
 Var SebIntroFrame
@@ -442,7 +443,7 @@ intro_show:
 FunctionEnd
 
 !macro customFinishPage
-  Page custom SebBrandingFinishCreate
+  Page custom SebBrandingFinishCreate SebBrandingFinishLeave
 !macroend
 
 Function SebBrandingFinishCreate
@@ -456,8 +457,14 @@ Function SebBrandingFinishCreate
   Pop $SebBrandingFinishImage
   ${NSD_SetBitmap} $SebBrandingFinishImage "$PLUGINSDIR\kaloneo-branding.bmp" $SebBrandingFinishHandle
 
+  ; Choice is shown only after successful interactive installation.
+  ; Checked by default; users can uncheck to leave the installer without launching.
+  ${NSD_CreateCheckbox} 12u 167u 91% 22u "Démarrer KALONÉO maintenant"
+  Pop $KaloneoFinishLaunchCheckbox
+  ${NSD_Check} $KaloneoFinishLaunchCheckbox
+
   GetDlgItem $0 $HWNDPARENT 1
-  SendMessage $0 ${WM_SETTEXT} 0 "STR:Fermer"
+  SendMessage $0 ${WM_SETTEXT} 0 "STR:Terminer"
   GetDlgItem $0 $HWNDPARENT 3
   ShowWindow $0 0
   GetDlgItem $0 $HWNDPARENT 2
@@ -465,5 +472,23 @@ Function SebBrandingFinishCreate
 
   nsDialogs::Show
   ${NSD_FreeBitmap} $SebBrandingFinishHandle
+FunctionEnd
+
+Function SebBrandingFinishLeave
+  ; Do not launch anything for /S (silent update / maintenance).
+  ${If} ${Silent}
+    Return
+  ${EndIf}
+  ${NSD_GetState} $KaloneoFinishLaunchCheckbox $0
+  ${If} $0 == ${BST_CHECKED}
+    ; Use electron-builder's own de-elevated launcher: no app process
+    ; should inherit administrator rights from the Windows installer.
+    ${If} ${isUpdated}
+      StrCpy $1 "--updated"
+    ${Else}
+      StrCpy $1 ""
+    ${EndIf}
+    ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "$1"
+  ${EndIf}
 FunctionEnd
 !endif
