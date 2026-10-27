@@ -3,3 +3,5 @@ Publier automatiquement la prochaine version après 1.00.190 avec numéro unique
 Ne publier que si tous les contrôles Windows et le test de mise à jour réelle réussissent.
 
 Nouvelle exécution demandée après correction de syntaxe PowerShell du workflow.
+
+Nouvel essai de validation de la 1.00.191 après nettoyage du contrôle Réglages Administrateur.
