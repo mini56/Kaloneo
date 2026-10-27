@@ -89,7 +89,7 @@ jobs:
           node scripts/kaloneo-release-version.js --verify
           if($LASTEXITCODE -ne 0){throw 'Différence de version avant Setup'}
           node scripts/kaltest-single-source-guard.js
-          if($LASTEXITCODE -ne 0){throw 'Un exercice KALTEST n’est pas sa source officielle'}
+          if($LASTEXITCODE -ne 0){throw 'KALTEST : source officielle differente'}
 
       - name: Vérifier réellement les exercices en deux résolutions et les bilans
         run: |
@@ -121,7 +121,7 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           node scripts/r174-license-about-nsis-smoke.js
-          if($LASTEXITCODE -ne 0){throw 'Licence d’installation invalide'}
+          if($LASTEXITCODE -ne 0){throw 'Licence de installation invalide'}
           node scripts/kaloneo-install-auth-build.js
           if($LASTEXITCODE -ne 0){throw 'Mot de passe secret absent : publication interdite'}
           node scripts/kaloneo-nsis-directory-template.js
