@@ -39,7 +39,7 @@
 
   function expectedFilename() {
     const nom = readCandidateName();
-    return (nom || 'Nom') + '_Evaluation_Kalonéo';
+    return (nom || 'Nom') + String(window.sebNwtexteContext?.expectedFilenameSuffix || '');
   }
 
   function ensureStyles() {

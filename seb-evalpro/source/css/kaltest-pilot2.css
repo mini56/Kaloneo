@@ -4103,3 +4103,10 @@ body[data-seb-kaltest-id="conversions_atelier_expedition"]
   body[data-seb-kaltest-id="conversions_atelier_expedition"]
     .kaltest-conversions-work .kaltest-question-list li{margin:1px 0!important}
 }
+
+/* R186 : styles du test KALTEST sans page nvmail historique */
+.kaltest-mail-layout.kaltest-mail-light-green .kaltest-mail-instructions,.kaltest-mail-layout.kaltest-mail-light-green .kaltest-mail-composer{background:#eaf7ed;border-color:#9acfa8}
+.kaltest-mail-layout.kaltest-mail-light-green .kaltest-mail-instruction-list p{background:transparent}
+.kaltest-mail-workspace-image{display:block;width:100%;height:auto;max-height:25%;object-fit:contain;margin:auto auto 0;padding-top:6px;box-sizing:border-box}
+.kaltest-mail-send{align-self:flex-start;min-width:115px;margin-top:4px}
+@media(max-height:760px){.kaltest-mail-workspace-image{max-height:18%}}

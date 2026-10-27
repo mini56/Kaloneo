@@ -547,11 +547,11 @@
       const nomPrenom = (nom + ' ' + prenom).trim();
 
       if (details.mail_to) details.mail_to.correct =
-        String(testState.answers?.mail_to || '').trim() === 'conseil.perso@sauvegarde56.org';
+        String(testState.answers?.mail_to || '').trim() === String(test.questions?.find(q=>q.id==='mail_to')?.acceptedAnswers?.[0] || '');
       if (details.mail_cc) details.mail_cc.correct =
-        String(testState.answers?.mail_cc || '').trim() === 'stage-pro@sauvegarde56.org';
+        String(testState.answers?.mail_cc || '').trim() === String(test.questions?.find(q=>q.id==='mail_cc')?.acceptedAnswers?.[0] || '');
       if (details.mail_subject) details.mail_subject.correct =
-        Boolean(prenom) && subjectNorm === (prenom + ' mail seb').trim();
+        Boolean(prenom) && subjectNorm === (prenom + ' ' + normalizeIdentity(test.presentation?.mailComposer?.subjectSuffix)).trim();
       if (details.mail_file) details.mail_file.correct =
         String(testState.answers?.mail_file || '') === 'Rapport_stage.docx';
       if (details.mail_signature) details.mail_signature.correct =
@@ -564,7 +564,9 @@
       const config = (test.presentation?.builderContent || []).find(item => item?.type === 'text-editor')?.config || {};
       window.sebNwtexteContext = {
         storagePrefix:'seb_kaltest_editor:' + test.id + ':',
-        legacyPage7:config.scoringProfile === 'seb-bureautique-v1'
+        legacyPage7:config.scoringProfile === 'seb-bureautique-v1',
+        expectedSaveFolder:config.expectedSaveFolder,
+        expectedFilenameSuffix:config.expectedFilenameSuffix
       };
       const analyse = window.sebNwtexteEditor?.saveEvaluation?.() || null;
       const score = Math.max(0, Number(analyse?.score?.total) || 0);
@@ -2568,6 +2570,14 @@
       list.appendChild(p);
     }
     left.appendChild(list);
+    if (definition.illustration) {
+      const illustration = document.createElement('img');
+      illustration.className = 'kaltest-mail-workspace-image';
+      illustration.src = definition.illustration;
+      illustration.alt = 'Espace de travail dédié aux e-mails';
+      left.appendChild(illustration);
+    }
+    if (definition.theme === 'light-green') layout.classList.add('kaltest-mail-light-green');
 
     const form = document.createElement('section');
     form.className = 'kaltest-mail-composer';
@@ -2626,6 +2636,14 @@
     selected.textContent = String(testState.answers?.[fields.file] || 'Aucun fichier sélectionné');
     attachment.append(attachmentLabel, browse, selected);
     form.appendChild(attachment);
+    if (!completed) {
+      const send = document.createElement('button');
+      send.type = 'button';
+      send.className = 'seb-action-btn seb-btn-functional kaltest-mail-send';
+      send.textContent = test.behavior?.validationLabel || 'Envoyer';
+      send.addEventListener('click', () => { void finishCurrentTest(); });
+      form.appendChild(send);
+    }
 
     const overlay = document.createElement('div');
     overlay.className = 'kaltest-mail-overlay';
@@ -3112,7 +3130,9 @@
       if (!wrap.isConnected) return;
       window.sebNwtexteContext = {
         storagePrefix:'seb_kaltest_editor:' + test.id + ':',
-        legacyPage7:config.scoringProfile === 'seb-bureautique-v1'
+        legacyPage7:config.scoringProfile === 'seb-bureautique-v1',
+        expectedSaveFolder:config.expectedSaveFolder,
+        expectedFilenameSuffix:config.expectedFilenameSuffix
       };
       if (!window.sebNwtexteEditor?.initialize?.()) {
         document.getElementById('exercise-status').textContent = 'Éditeur de texte indisponible.';
@@ -4011,7 +4031,7 @@
     clearTimeout(transitionAdvanceTimer);
     transitionAdvanceTimer = null;
     clearInteractivePageActions();
-    if (next) next.hidden = test.presentation?.legacyFullPage === true;
+    if (next) next.hidden = test.presentation?.legacyFullPage === true || (test.id === 'redaction_email' && testState.status !== 'COMPLETED');
     host.innerHTML = '';
 
     if (renderTransitionVideo(test, host)) {

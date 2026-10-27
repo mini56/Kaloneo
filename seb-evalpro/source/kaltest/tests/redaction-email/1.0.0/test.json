@@ -26,15 +26,16 @@
     "mailComposer": {
       "instructions": [
         "Vous devez répondre à son e-mail. Envoyez votre message sur les adresses e-mail suivantes :",
-        "À votre conseiller : conseil.perso@sauvegarde56.org",
-        "En copie à votre responsable de stage : stage-pro@sauvegarde56.org",
+        "À votre conseiller : conseil.perso@kaloneo.org",
+        "En copie à votre responsable de stage : stage-pro@kaloneo.org",
         "Dans l'éditeur, mettez en forme votre texte en respectant les consignes ci-dessous.",
-        "Mettez en objet : Prénom* Mail-SEB",
+        "Mettez en objet : Prénom* Mail-Kalonéo",
         "Ajoutez votre rapport en pièce jointe.",
         "Saisissez un message avec une formule de politesse en introduction et à la fin puis une signature avec votre prénom, nom et numéro de téléphone sur le modèle ci-dessous :",
         "Prénom NOM",
-        "01.02.34.56.78",
-        "* Mettre votre prénom."
+        "01.02.34.56.78**",
+        "* Mettre votre prénom.",
+        "** utilisez un numéro de téléphone fictif."
       ],
       "fields": {
         "to": "mail_to",
@@ -49,7 +50,10 @@
         "Rapport_stage.docx",
         "Facture_2023.xlsx",
         "Memo.txt"
-      ]
+      ],
+      "illustration": "imageqcm/Espace de travail dédié aux e-mails.png",
+      "subjectSuffix": "Mail-Kalonéo",
+      "theme": "light-green"
     }
   },
   "evaluation": {
@@ -74,7 +78,7 @@
         "type": "text"
       },
       "acceptedAnswers": [
-        "conseil.perso@sauvegarde56.org"
+        "conseil.perso@kaloneo.org"
       ],
       "points": 1
     },
@@ -85,7 +89,7 @@
         "type": "text"
       },
       "acceptedAnswers": [
-        "stage-pro@sauvegarde56.org"
+        "stage-pro@kaloneo.org"
       ],
       "points": 1
     },

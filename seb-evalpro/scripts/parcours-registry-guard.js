@@ -90,11 +90,15 @@ for (const removed of ['qcm-1','qcm-2','qcm-2_1','qcm-3','qcm-texte-trous']) {
   if (pilot11Ids.includes(removed)) fail('ancienne page dupliquée dans PILOTE 11: ' + removed);
 }
 
+const archivedExercisePages = new Set(['nvmail.html', 'nwtexte.html']);
 for (const step of [...api.legacySteps, ...api.pilot11Steps]) {
-  if (!step.file || !/\.html(?:$|[?#])/i.test(String(step.file))) {
-    fail('fichier de parcours invalide pour ' + step.id);
+  if (!step.file || !/\.html(?:$|[?#])/i.test(String(step.file))) fail('fichier de parcours invalide pour ' + step.id);
+  const name = String(step.file).split(/[?#]/)[0];
+  const localFile = path.join(root, 'app', 'web', name);
+  if (archivedExercisePages.has(name)) {
+    if (fs.existsSync(localFile)) fail('ancienne page HTML livrée: ' + name);
+    continue;
   }
-  const localFile = path.join(root, 'app', 'web', String(step.file).split(/[?#]/)[0]);
   if (!fs.existsSync(localFile)) fail('page de parcours absente: ' + step.file);
 }
 

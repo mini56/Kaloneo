@@ -6,7 +6,7 @@
   "version": "1.0.0",
   "title": "Traitement de texte",
   "category": "tic",
-  "description": "Rédiger et mettre en forme un texte de dix lignes dans l’éditeur intégré, puis simuler son enregistrement dans Bureau\\SEB.",
+  "description": "Rédiger et mettre en forme un texte de dix lignes dans l’éditeur intégré, puis simuler son enregistrement dans Bureau\\Kalonéo.",
   "kind": "complex",
   "scored": true,
   "allowEmptyCompletion": true,
@@ -21,14 +21,14 @@
     "defaultEnabled": false
   },
   "scenario": "Vous préparez un court texte personnel à l’aide de l’éditeur afin de présenter votre expérience ou vos préférences professionnelles.",
-  "instruction": "Répondez à l'une des trois questions suivantes dans un texte de dix lignes. Respectez les consignes de mise en forme et enregistrez le document dans le dossier SEB sur le bureau.",
+  "instruction": "Répondez à l'une des trois questions suivantes dans un texte de dix lignes. Respectez les consignes de mise en forme et enregistrez le document dans le dossier Kalonéo sur le bureau.",
   "presentation": {
     "layout": "50-50",
     "builderContent": [
       {
         "type": "text",
         "zone": "left",
-        "text": "Choisissez une question :\n1. Quelle est mon activité préférée et pourquoi ?\n2. Quelle est mon expérience professionnelle préférée et pourquoi ?\n3. Quel est mon métier préféré et pourquoi ?\n\nTitre : notez la question choisie, puis mettez-la en gras, police Arial, taille 16.\nTexte : au moins 10 lignes, police Arial, taille 12.\n\nEnregistrez le document dans le dossier SEB sur le bureau sous l’intitulé :\nNom*_Evaluation_Bureautique_SEB\n* Remplacez Nom par votre vrai nom."
+        "text": "Choisissez une question :\n1. Quelle est mon activité préférée et pourquoi ?\n2. Quelle est mon expérience professionnelle préférée et pourquoi ?\n3. Quel est mon métier préféré et pourquoi ?\n\nTitre : notez la question choisie, puis mettez-la en gras, police Arial, taille 16.\nTexte : au moins 10 lignes, police Arial, taille 12.\n\nEnregistrez le document dans le dossier Kalonéo sur le bureau sous l’intitulé :\nNom*_Evaluation_Kalonéo\n* Remplacez Nom par votre vrai nom."
       },
       {
         "type": "text-editor",
@@ -36,7 +36,9 @@
         "config": {
           "fileSimulation": true,
           "imageSimulation": true,
-          "scoringProfile": "seb-bureautique-v1"
+          "scoringProfile": "seb-bureautique-v1",
+          "expectedSaveFolder": "Bureau\\Kalonéo",
+          "expectedFilenameSuffix": "_Evaluation_Kalonéo"
         }
       }
     ]

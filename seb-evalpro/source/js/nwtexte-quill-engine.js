@@ -454,9 +454,12 @@
       const candidate = JSON.parse(sessionStorage.getItem('candidat_data') || '{}');
       const nom = String(candidate.nom || candidate.Nom || '').trim();
       if (!state || !nom) return false;
-      const expected = nom + '_Evaluation_Kalonéo';
+      const suffix = String(window.sebNwtexteContext?.expectedFilenameSuffix || '');
+      const folder = String(window.sebNwtexteContext?.expectedSaveFolder || '');
+      if (!suffix || !folder) return false;
+      const expected = nom + suffix;
       return state.enregistre === true &&
-        state.dossier === 'Bureau\\Kalonéo' &&
+        state.dossier === folder &&
         state.nomConforme === true &&
         String(state.nom || '').toLocaleLowerCase('fr') === expected.toLocaleLowerCase('fr');
     } catch (_) {
