@@ -1,0 +1,3 @@
+KALONÉO — demande explicite de publication Windows validée le 27 octobre 2026.
+Publier automatiquement la prochaine version après 1.00.190 avec numéro unique, bouton Vérifier les mises à jour, mot de passe d'installation obligatoire, bilans et KALTEST préservés.
+Ne publier que si tous les contrôles Windows et le test de mise à jour réelle réussissent.
