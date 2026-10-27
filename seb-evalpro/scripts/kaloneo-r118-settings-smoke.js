@@ -36,7 +36,7 @@ try {
   assert(preload.includes('installAdminSettings('));
   assert(preload.includes('id="seb-evalpro-settings" type="button" hidden'));
   assert(preload.includes('settingsButton.hidden = !adminUnlocked'));
-  assert(preload.includes('const APP_RELEASE_VERSION = '+String.fromCharCode(96)+'1.00.'+';
+  assert(preload.includes('const APP_RELEASE_VERSION = ') && preload.includes('APP_BUILD_NUMBER'), 'Version Admin issue du numéro unique');
   const main=read(path.join(root,'src','main.js'));
   assert(main.includes("kaloneo-settings:change-password"));
   assert(main.includes("getCandidateStore().getActiveCandidate()"));
