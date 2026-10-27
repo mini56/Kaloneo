@@ -9,6 +9,8 @@ on:
       - "seb-evalpro/src/main.js"
       - "seb-evalpro/scripts/kaloneo-update-checker-smoke.js"
       - "seb-evalpro/package.json"
+      - "seb-evalpro/scripts/kaloneo-r118-settings-smoke.js"
+      - "seb-evalpro/scripts/kaloneo-release-version.js"
   workflow_dispatch:
 permissions:
   contents: read
