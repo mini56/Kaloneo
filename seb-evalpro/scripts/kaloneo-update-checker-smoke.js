@@ -89,7 +89,7 @@ async function run(){
   assert.ok(main.includes("ipcMain.handle('kaloneo-updates:open-download-folder'"));
   assert.ok(main.includes("shell.showItemInFolder(filePath)"),'Afficher le fichier dans l’Explorateur');
   assert.ok(main.includes('lastVerifiedKaloneoSetupPath=result.filePath'),'N’autoriser que le fichier effectivement vérifié');
-  assert.ok(main.includes('stageVerifiedSetup(update,process.env.LOCALAPPDATA)'),'Utiliser un dossier local dédié pour le Setup');
+  assert.ok(main.includes('stageVerifiedSetup(update,process.env.LOCALAPPDATA,{'),'Utiliser un dossier local dédié pour le Setup avec progression en temps réel');
   assert.ok(main.includes('canInstallVerifiedUpdate(update,app.getVersion(),process.env.LOCALAPPDATA)'),'Revérifier SHA256 au moment de l’installation');
   assert.ok(main.includes('if(!filePath||!fs.existsSync(filePath))'),'Ne pas proposer un fichier inexistant');
   assert.ok(!main.includes("ipcMain.handle('kaloneo-updates:open-download-folder',async(event,filePath)"),'Ne jamais autoriser un chemin arbitraire venant de l’interface');
