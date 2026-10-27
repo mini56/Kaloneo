@@ -118,7 +118,7 @@ Var KaloneoPasswordField
 Var KaloneoPasswordEntry
 Var KaloneoHashInput
 Var KaloneoPasswordResult
-\n!include "${BUILD_RESOURCES_DIR}\\kaloneo-password-hash.nsh"
+!include "${BUILD_RESOURCES_DIR}\kaloneo-password-hash.nsh"
 
 ; Aucune copie d'un Setup sans verification, y compris /S.
 ; Le hash sale n'est genere qu'a la compilation depuis le secret GitHub.
