@@ -1026,6 +1026,9 @@ ipcMain.handle('kaloneo-updates:download',async(event)=>{
   if(pick.canceled||!pick.filePath)return {ok:false,cancelled:true};
   lastVerifiedKaloneoSetupPath=null;
   try{
+    // Le dialogue Enregistrer est terminé : signaler le début réel du
+    // transfert. Ne jamais annoncer "en cours" avant le choix du dossier.
+    event.sender.send('kaloneo-updates:download-started');
     const result=await downloadVerified(update,pick.filePath);
     if(result.ok)lastVerifiedKaloneoSetupPath=result.filePath;
     return result;
