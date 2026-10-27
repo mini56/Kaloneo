@@ -17,3 +17,5 @@ Nouvel essai Release 1.00.193 après adaptation du contrôle de conservation des
 Le 27 octobre 2026, demande de test de mise à jour réelle depuis 1.00.193 vers la version suivante, incluant le choix cochable « Démarrer KALONÉO maintenant » à la fin de l'installation. Publier uniquement après validations Windows.
 
 Contrôle Windows NSIS avec la case de démarrage facultatif réussi. Relancer la Release suivante pour valider la mise à jour réelle et publier le nouveau Setup.
+
+Nouvelle version demandée : téléchargement des mises à jour dans %LOCALAPPDATA%\KALONEO-Updates, SHA256 obligatoire, bouton Installer maintenant, confirmation utilisateur, fermeture de KALONÉO et lancement différé du Setup, sans perte de données ni changement du mot de passe.
