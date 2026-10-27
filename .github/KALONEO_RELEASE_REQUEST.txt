@@ -11,3 +11,5 @@ Secret d'installation validé sur GitHub : relancer la Release 1.00.191 et publi
 Release suivante demandée après signalement du mot de passe masqué : installer une case Afficher le mot de passe, même secret KALONEO_INSTALL_PASSWORD, contrôle des bilans et mise à jour conservés.
 
 Release Windows suivante demandée après correction du mot de passe : le numéro sera attribué automatiquement.
+
+Nouvel essai Release 1.00.193 après adaptation du contrôle de conservation des données à la rotation du mot de passe d'installation.
