@@ -160,8 +160,16 @@ jobs:
           KALONEO_INSTALL_PASSWORD: ${{ secrets.KALONEO_INSTALL_PASSWORD }}
         run: |
           $ErrorActionPreference='Stop'
-          $previousTag='kaloneo-'+$env:KALONEO_PREVIOUS_VERSION
-          $previousExe='KALONEO-Setup-'+$env:KALONEO_PREVIOUS_VERSION+'.exe'
+          # Le secret du Setup 1.00.192 a ete remplace par son proprietaire.
+          # Son ancienne valeur n'est pas recuperable (GitHub Actions secrets).
+          # Pour cette seule rotation, verifier la conservation depuis 1.00.190
+          # qui ne necessite pas de secret; ne pas affaiblir l'installation 1.00.193.
+          $testSourceVersion = $env:KALONEO_PREVIOUS_VERSION
+          if($testSourceVersion -eq '1.00.192'){$testSourceVersion='1.00.190'}
+          Add-Content $env:GITHUB_ENV "KALONEO_UPGRADE_TEST_SOURCE=$testSourceVersion"
+          Write-Host "KALONEO_UPGRADE_TEST_SOURCE=$testSourceVersion"
+          $previousTag='kaloneo-'+$testSourceVersion
+          $previousExe='KALONEO-Setup-'+$testSourceVersion+'.exe'
           $newExe='KALONEO-Setup-'+$env:KALONEO_PUBLIC_VERSION+'.exe'
           New-Item -ItemType Directory -Path dist/previous -Force | Out-Null
           gh release download $previousTag --repo mini56/Kaloneo --pattern $previousExe --dir dist/previous --clobber
@@ -233,7 +241,8 @@ jobs:
           Bouton Vérifier les mises à jour dans les réglages.
           Mot de passe obligatoire après acceptation de la licence, y compris à la mise à jour.
           Vérifications des vrais exercices KALTEST et des bilans.
-          Mise à jour réelle depuis $($env:KALONEO_PREVIOUS_VERSION) : candidats, bilans et données chiffrées conservés.
+          Mise à jour réelle testée depuis $($env:KALONEO_UPGRADE_TEST_SOURCE) : candidats, bilans et données chiffrées conservés.
+          Lors de la rotation du mot de passe, le Setup precedent 1.00.192 ne peut pas etre reutilise en CI avec le nouveau secret ; le test de conservation utilise 1.00.190.
           Installateur contrôlé par SHA256, et publié également sur Kaloneo-MAJ après synchronisation.
 
           Contrôles GitHub : https://github.com/mini56/Kaloneo/actions/runs/$env:GITHUB_RUN_ID
