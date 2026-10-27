@@ -274,14 +274,14 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
     });
     downloadUpdate.addEventListener('click',async()=>{
       downloadUpdate.disabled=true;
-      updateStatus.textContent='Téléchargement et vérification SHA256 du Setup…';
+      updateStatus.textContent='Téléchargement en cours… Veuillez attendre le message « Téléchargement terminé ». Ne fermez pas KALONÉO pendant le téléchargement et la vérification du Setup.';
       openDownloadedSetupFolder.hidden=true;
       try{
         const answer=await ipcRenderer.invoke('kaloneo-updates:download');
         if(!updateStatus.isConnected)return;
         if(answer?.cancelled)updateStatus.textContent='Téléchargement annulé.';
         else if(answer?.ok){
-          updateStatus.textContent='Setup téléchargé et contrôlé (SHA256 conforme). Fichier enregistré : '+answer.filePath+'. Fermez KALONÉO avant de lancer le fichier.';
+          updateStatus.textContent='Téléchargement terminé et vérifié (SHA256 conforme). Fichier enregistré : '+answer.filePath+'. Ouvrez le dossier du Setup, fermez KALONÉO, puis lancez le fichier. À la fin de l’installation, cochez « Démarrer KALONÉO maintenant » pour le rouvrir automatiquement ; sinon, redémarrez-le depuis l’icône du Bureau.';
           downloadUpdate.hidden=true;
           openDownloadedSetupFolder.hidden=false;
         }
