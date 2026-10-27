@@ -5,6 +5,7 @@ const finish=text.slice(text.indexOf('!macro customFinishPage'));
 assert(finish.includes('Page custom SebBrandingFinishCreate SebBrandingFinishLeave'),'Finish page must have a Leave callback');
 assert(finish.includes('${NSD_CreateCheckbox} 12u 167u 91% 22u "Démarrer KALONÉO maintenant"'),'Show launch choice on final screen');
 assert(finish.includes('${NSD_Check} $KaloneoFinishLaunchCheckbox'),'The user choice must default to ON');
+assert(finish.includes('Si vous décochez la case ci-dessous, redémarrez KALONÉO depuis l’icône du Bureau.'),'Explain manual restart when checkbox is unchecked');
 assert(finish.includes('STR:Terminer'),'Finish must be labelled Terminer');
 assert(finish.includes('Function SebBrandingFinishLeave'),'Launch must happen only when user chooses Finish');
 const leave=finish.slice(finish.indexOf('Function SebBrandingFinishLeave'));
