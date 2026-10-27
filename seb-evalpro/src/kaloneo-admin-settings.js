@@ -274,8 +274,14 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
     });
     downloadUpdate.addEventListener('click',async()=>{
       downloadUpdate.disabled=true;
-      updateStatus.textContent='Téléchargement en cours… Veuillez attendre le message « Téléchargement terminé ». Ne fermez pas KALONÉO pendant le téléchargement et la vérification du Setup.';
       openDownloadedSetupFolder.hidden=true;
+      updateStatus.textContent='Choisissez le dossier où enregistrer la mise à jour. Le téléchargement commencera après validation.';
+      const onDownloadStarted=()=>{
+        if(updateStatus.isConnected){
+          updateStatus.textContent='Mise à jour en cours de téléchargement. Veuillez patienter jusqu’au message « Téléchargement terminé ». Ne fermez pas KALONÉO pendant le transfert et la vérification.';
+        }
+      };
+      ipcRenderer.on('kaloneo-updates:download-started',onDownloadStarted);
       try{
         const answer=await ipcRenderer.invoke('kaloneo-updates:download');
         if(!updateStatus.isConnected)return;
@@ -287,7 +293,10 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
         }
         else updateStatus.textContent=answer?.error||'Téléchargement impossible.';
       }catch(_){if(updateStatus.isConnected)updateStatus.textContent='Téléchargement interrompu.';}
-      finally{if(downloadUpdate.isConnected)downloadUpdate.disabled=false;}
+      finally{
+        ipcRenderer.removeListener('kaloneo-updates:download-started',onDownloadStarted);
+        if(downloadUpdate.isConnected)downloadUpdate.disabled=false;
+      }
     });
     openDownloadedSetupFolder.addEventListener('click',async()=>{
       openDownloadedSetupFolder.disabled=true;
