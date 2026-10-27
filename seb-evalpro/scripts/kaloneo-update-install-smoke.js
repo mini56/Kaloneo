@@ -1,0 +1,65 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const os=require('node:os');
+const path=require('node:path');
+const crypto=require('node:crypto');
+const {Readable}=require('node:stream');
+const {updateDirectory,officialFile,isVerifiedFile,stageVerifiedSetup,buildWaitAndStartCommand,startAfterApplicationExit,canInstallVerifiedUpdate}=require('../src/kaloneo-update-install');
+
+async function test(){
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'kaloneo-upgrade-staging-'));
+  const data=Buffer.alloc(1024*1024,0x5e),size=40*1024*1024;
+  const hash=crypto.createHash('sha256');for(let i=0;i<40;i++)hash.update(data);
+  const sha256=hash.digest('hex');
+  const ver='1.00.195',filename='KALONEO-Setup-'+ver+'.exe';
+  const update={version:ver,tag:'kaloneo-'+ver,filename,sha256,size,url:'https://github.com/mini56/Kaloneo-MAJ/releases/download/kaloneo-'+ver+'/'+filename};
+  const file=officialFile(update,root);
+  assert.equal(file,path.join(root,'KALONEO-Updates',filename));
+  assert.equal(updateDirectory(root),path.join(root,'KALONEO-Updates'));
+  let calls=0;
+  const responseFor=async()=>{calls++;return Readable.from((async function*(){for(let n=0;n<40;n++)yield data;})());};
+  try{
+    let result=await stageVerifiedSetup(update,root,{responseFor});
+    assert.equal(result.ok,true);assert.equal(calls,1);
+    assert(await isVerifiedFile(update,file));
+    assert.equal(await canInstallVerifiedUpdate(update,'1.00.194',root),file);
+    await assert.rejects(()=>canInstallVerifiedUpdate(update,ver,root),/pas plus récente/);
+    result=await stageVerifiedSetup(update,root,{responseFor});
+    assert.equal(result.reused,true);assert.equal(calls,1,'Do not download an already verified Setup');
+    fs.writeFileSync(file,'untrusted-content');
+    await assert.rejects(()=>canInstallVerifiedUpdate(update,'1.00.194',root),/SHA256/);
+    result=await stageVerifiedSetup(update,root,{responseFor});
+    assert.equal(result.ok,true);assert.equal(calls,2,'Replace only a corrupted cached Setup');
+    fs.writeFileSync(file+'.kaloneo-download','interrupted download');
+    const again=await stageVerifiedSetup(update,root,{responseFor});
+    assert.equal(again.reused,true);assert.equal(calls,2);
+    fs.rmSync(file);
+    const bad={...update,sha256:'0'.repeat(64)};
+    await assert.rejects(()=>stageVerifiedSetup(bad,root,{responseFor}),/SHA256/);
+    assert(!fs.existsSync(file),'Never expose a failed SHA256 Setup');
+    assert(!fs.existsSync(file+'.kaloneo-download'),'Clean up incomplete downloads');
+    const script=Buffer.from(buildWaitAndStartCommand(file,1234),'base64').toString('utf16le');
+    assert(script.includes('Get-Process -Id 1234'));
+    assert(script.includes('WaitForExit(90000)'));
+    assert(script.includes('Start-Process -FilePath'));
+    const spawned=[];
+    const fakeSpawn=(exe,args,options)=>{spawned.push({exe,args,options});return {unref(){}};};
+    startAfterApplicationExit(file,1234,{spawn:fakeSpawn,powerShell:path.join(root,'powershell.exe')});
+    assert.equal(spawned.length,1);assert.equal(spawned[0].options.detached,true);
+    assert.deepEqual(spawned[0].args.slice(0,2),['-NoProfile','-NonInteractive']);
+    assert.equal(spawned[0].args.at(-1),buildWaitAndStartCommand(file,1234));
+    await assert.rejects(()=>canInstallVerifiedUpdate(update,'1.00.194',root),/SHA256/);
+    const main=fs.readFileSync(path.join(__dirname,'..','src','main.js'),'utf8');
+    const ui=fs.readFileSync(path.join(__dirname,'..','src','kaloneo-admin-settings.js'),'utf8');
+    assert(main.includes("ipcMain.handle('kaloneo-updates:install'"));
+    assert(main.includes('dialog.showMessageBox(mainWindow'));
+    assert(main.includes('startAfterApplicationExit(verifiedSetup,process.pid)'));
+    assert(main.includes('setTimeout(()=>app.quit(),150)'));
+    assert(main.includes('getCandidateStore().getActiveCandidate()'));
+    assert(ui.includes('data-install-update'));
+    assert(ui.includes("ipcRenderer.invoke('kaloneo-updates:install')"));
+    console.log('KALONEO_STAGED_UPDATER=SUCCESS: local staging, cached SHA256, no corrupt exe, explicit install, wait for exit, no data loss path');
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+}
+test().catch(error=>{console.error(error);process.exitCode=1});
