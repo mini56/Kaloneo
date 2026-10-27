@@ -112,6 +112,8 @@ jobs:
           }
           node scripts/kaloneo-update-checker-smoke.js
           if($LASTEXITCODE -ne 0){throw 'Bouton de mises à jour incorrect'}
+          node scripts/kaloneo-update-install-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Dossier dédié des MAJ, SHA256 ou lancement après fermeture incorrect'}
           node scripts/kaloneo-r118-settings-smoke.js
           if($LASTEXITCODE -ne 0){throw 'Régression des réglages Admin'}
 
