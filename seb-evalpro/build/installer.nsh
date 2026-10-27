@@ -115,6 +115,7 @@ Var KaloneoLicenseExplicitlyAccepted
 Var KaloneoPasswordAccepted
 Var KaloneoPasswordDialog
 Var KaloneoPasswordField
+Var KaloneoPasswordShowCheckbox
 Var KaloneoPasswordEntry
 Var KaloneoHashInput
 Var KaloneoPasswordResult
@@ -206,10 +207,26 @@ Function KaloneoPasswordPageCreate
   ${NSD_CreatePassword} 5u 56u 92% 22u ""
   Pop $KaloneoPasswordField
   SendMessage $KaloneoPasswordField ${EM_LIMITTEXT} 120 0
-  ${NSD_CreateLabel} 5u 91u 92% 34u "Sans mot de passe valide, aucune installation ni mise a jour n'est autorisee."
+  ${NSD_CreateCheckbox} 5u 85u 92% 19u "Afficher le mot de passe"
+  Pop $KaloneoPasswordShowCheckbox
+  ${NSD_Uncheck} $KaloneoPasswordShowCheckbox
+  ${NSD_OnClick} $KaloneoPasswordShowCheckbox KaloneoPasswordVisibilityToggle
+  ${NSD_CreateLabel} 5u 119u 92% 34u "Sans mot de passe valide, aucune installation ni mise a jour n'est autorisee."
   Pop $0
   ${NSD_SetFocus} $KaloneoPasswordField
   nsDialogs::Show
+FunctionEnd
+
+Function KaloneoPasswordVisibilityToggle
+  ${NSD_GetState} $KaloneoPasswordShowCheckbox $0
+  ${If} $0 == ${BST_CHECKED}
+    ; EM_SETPASSWORDCHAR avec 0 = afficher la saisie sans la modifier.
+    SendMessage $KaloneoPasswordField ${EM_SETPASSWORDCHAR} 0 0
+  ${Else}
+    ; Rétablir le masque standard '*', sans supprimer la saisie.
+    SendMessage $KaloneoPasswordField ${EM_SETPASSWORDCHAR} 42 0
+  ${EndIf}
+  System::Call 'user32::InvalidateRect(p $KaloneoPasswordField, p 0, i 1)'
 FunctionEnd
 
 Function KaloneoPasswordPageLeave
