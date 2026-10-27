@@ -1,0 +1,53 @@
+name: "KALONÉO — numérotation automatique et contrôle de cohérence (sans Setup)"
+on:
+  push:
+    branches: [fix-r186-kaltest-source-unique-20261027]
+    paths:
+      - ".github/workflows/audit-kaloneo-versioning.yml"
+      - "seb-evalpro/package.json"
+      - "seb-evalpro/src/preload.js"
+      - "seb-evalpro/build/installer.nsh"
+      - "seb-evalpro/build/kaloneo-auto-release.yml"
+      - "seb-evalpro/scripts/kaloneo-release-version.js"
+      - "seb-evalpro/scripts/build-number-consistency-guard.js"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  coherence-numeros:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: seb-evalpro
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Vérifier les cinq sources visibles et packaging
+        run: |
+          node --check scripts/kaloneo-release-version.js
+          if($LASTEXITCODE -ne 0){throw 'Erreur syntaxe numérotation'}
+          node scripts/kaloneo-release-version.js --verify
+          if($LASTEXITCODE -ne 0){throw 'Version affichée / Setup incohérente'}
+          node scripts/build-number-consistency-guard.js
+          if($LASTEXITCODE -ne 0){throw 'Version NSIS / Admin incohérente'}
+      - name: Simulation du prochain incrément (sans publication)
+        run: |
+          $ErrorActionPreference='Stop'
+          $source = (Get-Content package.json -Raw | ConvertFrom-Json)
+          $initial = [int]$source.sebBuildNumber
+          $next = $initial + 1
+          node scripts/kaloneo-release-version.js --release $next
+          if($LASTEXITCODE -ne 0){throw 'Augmentation automatique impossible'}
+          node scripts/build-number-consistency-guard.js
+          if($LASTEXITCODE -ne 0){throw 'Numéro Next Release incohérent'}
+          node scripts/kaloneo-release-version.js --release $initial
+          if($LASTEXITCODE -ne 0){throw 'Restauration version échouée'}
+          node scripts/kaloneo-release-version.js --verify
+          if($LASTEXITCODE -ne 0){throw 'Version après restauration incorrecte'}
+          $after = (Get-Content package.json -Raw | ConvertFrom-Json)
+          if($after.sebReleaseVersion -ne "1.00.$initial"){throw 'Affichage de version incorrect'}
+          Write-Host "KALONEO_AUTOMATIC_VERSION_TEST=SUCCESS $initial -> $next -> $initial"
