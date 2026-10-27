@@ -1,6 +1,10 @@
 name: "KALONÉO — publier la prochaine Release (numéro automatique)"
 on:
   workflow_dispatch:
+  push:
+    branches: [fix-r186-kaltest-source-unique-20261027]
+    paths:
+      - '.github/KALONEO_RELEASE_REQUEST.txt'
 permissions:
   contents: write
   actions: read
