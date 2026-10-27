@@ -5,3 +5,5 @@ Ne publier que si tous les contrôles Windows et le test de mise à jour réelle
 Nouvelle exécution demandée après correction de syntaxe PowerShell du workflow.
 
 Nouvel essai de validation de la 1.00.191 après nettoyage du contrôle Réglages Administrateur.
+
+Secret d'installation validé sur GitHub : relancer la Release 1.00.191 et publier seulement si toutes les validations sont vertes.
