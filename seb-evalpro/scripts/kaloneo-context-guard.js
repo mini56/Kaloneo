@@ -33,8 +33,8 @@ const pages = [
   'tri_de_cheville.html',
   'planning.html',
   'qcmv1.0.html',
-  'nwtexte.html',
-  'nvmail.html'
+
+  // R186 : pages historiques remplacées par des définitions KALTEST ; absentes du Setup.
 ];
 
 for (const page of pages) {
@@ -42,7 +42,7 @@ for (const page of pages) {
   if (!html.includes('css/kaloneo-context.css')) fail('composant contexte non chargé dans ' + page);
 }
 
-for (const page of ['kaltest-pilot2.html','brique.html','dictee.html','qcmv1.0.html','nwtexte.html','nvmail.html']) {
+for (const page of ['kaltest-pilot2.html','brique.html','dictee.html','qcmv1.0.html']) {
   const html = read('app/web/' + page);
   if (!html.includes('kaloneo-context-scenario')) fail('bloc Scénario commun absent dans ' + page);
   if (!html.includes('kaloneo-context-consigne')) fail('bloc Consigne commun absent dans ' + page);
