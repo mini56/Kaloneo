@@ -178,7 +178,8 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
       '<button type="button" data-tab="about">À propos</button><div class="settings-nav-brand"><img data-kaloneo-about-logo alt="Logo KALONÉO"></div>'+
       '<div class="settings-update-actions"><button type="button" data-check-update>Vérifier les mises à jour</button>'+
       '<p data-update-status role="status" aria-live="polite"></p>'+
-      '<button type="button" data-download-update hidden>Télécharger la mise à jour</button></div></nav>'+
+      '<button type="button" data-download-update hidden>Télécharger la mise à jour</button>'+
+      '<button type="button" data-open-downloaded-setup-folder hidden>Ouvrir le dossier du Setup</button></div></nav>'+
       '<div class="settings-main" role="region" aria-label="Contenu des réglages">'+
       '<section data-section="passwords"><div class="settings-intro"><h3>Gestion des accès</h3>'+
       '<p>Modifiez séparément le mot de passe Administrateur ou Développeur, après vérification de celui actuellement utilisé.</p></div>'+
@@ -250,6 +251,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
     layer.querySelector('[data-kaloneo-about-logo]').src=kaloneoLogoUrl;
     const checkUpdate=layer.querySelector('[data-check-update]');
     const downloadUpdate=layer.querySelector('[data-download-update]');
+    const openDownloadedSetupFolder=layer.querySelector('[data-open-downloaded-setup-folder]');
     const updateStatus=layer.querySelector('[data-update-status]');
     checkUpdate.addEventListener('click',async()=>{
       downloadUpdate.hidden=true;
@@ -273,14 +275,31 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
     downloadUpdate.addEventListener('click',async()=>{
       downloadUpdate.disabled=true;
       updateStatus.textContent='Téléchargement et vérification SHA256 du Setup…';
+      openDownloadedSetupFolder.hidden=true;
       try{
         const answer=await ipcRenderer.invoke('kaloneo-updates:download');
         if(!updateStatus.isConnected)return;
         if(answer?.cancelled)updateStatus.textContent='Téléchargement annulé.';
-        else if(answer?.ok){updateStatus.textContent='Setup téléchargé et contrôlé (SHA256 conforme). Fermez KALONÉO avant de lancer le fichier.';downloadUpdate.hidden=true;}
+        else if(answer?.ok){
+          updateStatus.textContent='Setup téléchargé et contrôlé (SHA256 conforme). Fichier enregistré : '+answer.filePath+'. Fermez KALONÉO avant de lancer le fichier.';
+          downloadUpdate.hidden=true;
+          openDownloadedSetupFolder.hidden=false;
+        }
         else updateStatus.textContent=answer?.error||'Téléchargement impossible.';
       }catch(_){if(updateStatus.isConnected)updateStatus.textContent='Téléchargement interrompu.';}
       finally{if(downloadUpdate.isConnected)downloadUpdate.disabled=false;}
+    });
+    openDownloadedSetupFolder.addEventListener('click',async()=>{
+      openDownloadedSetupFolder.disabled=true;
+      try{
+        const answer=await ipcRenderer.invoke('kaloneo-updates:open-download-folder');
+        if(!updateStatus.isConnected)return;
+        if(!answer?.ok){
+          updateStatus.textContent=answer?.error||'Impossible de retrouver le Setup téléchargé.';
+          openDownloadedSetupFolder.hidden=true;
+        }
+      }catch(_){if(updateStatus.isConnected)updateStatus.textContent='Impossible d’ouvrir le dossier du Setup.';}
+      finally{if(openDownloadedSetupFolder.isConnected)openDownloadedSetupFolder.disabled=false;}
     });
     const structureList=layer.querySelector('[data-associated-structures]');
     for(const structure of associatedStructures){
