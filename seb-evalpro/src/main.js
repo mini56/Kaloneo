@@ -1032,7 +1032,10 @@ ipcMain.handle('kaloneo-updates:download',async(event)=>{
     // Dossier fixe, en dehors du programme installé et des dossiers candidats.
     // Un fichier inachevé reste .kaloneo-download et n'est jamais exécutable.
     event.sender.send('kaloneo-updates:download-started');
-    const result=await stageVerifiedSetup(update,process.env.LOCALAPPDATA);
+    const result=await stageVerifiedSetup(update,process.env.LOCALAPPDATA,{
+      onProgress:progress=>event.sender.send('kaloneo-updates:download-progress',progress),
+      onPhase:phase=>event.sender.send('kaloneo-updates:download-phase',phase)
+    });
     if(result.ok)lastVerifiedKaloneoSetupPath=result.filePath;
     return result;
   }catch(error){
