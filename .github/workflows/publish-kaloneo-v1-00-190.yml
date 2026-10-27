@@ -1,9 +1,5 @@
 name: "KALONÉO 1.00.190 — Setup Windows testé et nouvelle Release"
 on:
-  push:
-    branches: [fix-r186-kaltest-source-unique-20261027]
-    paths:
-      - '.github/workflows/publish-kaloneo-v1-00-190.yml'
   workflow_dispatch:
 permissions:
   contents: write
@@ -89,6 +85,12 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'KALONEO licensing regression'}
           node scripts/kaloneo-nsis-directory-template.js
           if($LASTEXITCODE -ne 0){throw 'NSIS directory hook regression'}
+      - name: Préparer la vérification du mot de passe d'installation
+        env:
+          KALONEO_INSTALL_PASSWORD: ${{ secrets.KALONEO_INSTALL_PASSWORD }}
+        run: |
+          node scripts/kaloneo-install-auth-build.js
+          if($LASTEXITCODE -ne 0){throw 'Secret GitHub KALONEO_INSTALL_PASSWORD absent ou invalide : aucun Setup ne peut être publié'}
       - name: Build KALONÉO 1.00.190 Windows Setup
         run: |
           & npx electron-builder --win nsis --config build/kaloneo-v1-00-190-final-setup.yml --publish never
@@ -99,6 +101,7 @@ jobs:
       - name: Real Windows update from 1.00.189 to 1.00.190 preserves encrypted data
         env:
           GH_TOKEN: ${{ github.token }}
+          KALONEO_INSTALL_PASSWORD: ${{ secrets.KALONEO_INSTALL_PASSWORD }}
         run: |
           $ErrorActionPreference='Stop'
           New-Item -ItemType Directory -Path dist/previous -Force | Out-Null
