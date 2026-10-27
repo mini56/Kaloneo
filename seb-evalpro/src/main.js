@@ -27,6 +27,8 @@ const { internalStorageRoot, documentsWordRoot, migrateLegacyDocumentsStorage } 
 const kaloneoFullParcoursRoute = require('./kaloneo-full-parcours-route');
 const { buildBilanDocxBuffer, decryptBilanDocxBuffer } = require('./bilan-docx-main');
 const { createPasswordStore } = require('./kaloneo-passwords');
+const {checkUpdates,downloadVerified}=require('./kaloneo-update-checker');
+let pendingKaloneoUpdate=null;
 const { inspectCandidateOverflow } = require('./kaloneo-layout-diagnostics');
 
 // The taskbar must show exactly the same chameleon as the candidate's left bar.
@@ -990,6 +992,42 @@ ipcMain.handle('kaloneo-settings:change-password', (event,request) => {
     }
     return result;
   }catch(error){return {ok:false,error:'Impossible d’enregistrer les accès : '+String(error.message||error)};}
+});
+// Réseau utilisé uniquement à la demande de l'Administrateur.
+// Ne jamais installer un binaire automatiquement : téléchargement SHA256 vérifié, puis décision explicite.
+ipcMain.handle('kaloneo-updates:check',async(event)=>{
+  if(!adminSessionUnlocked||!mainWindow||event.sender!==mainWindow.webContents)
+    return {ok:false,error:'Accès Administrateur requis.'};
+  if(getCandidateStore().getActiveCandidate())
+    return {ok:false,error:'Terminez le parcours candidat avant la vérification des mises à jour.'};
+  pendingKaloneoUpdate=null;
+  try{
+    const result=await checkUpdates(app.getVersion());
+    if(result.status==='available')pendingKaloneoUpdate=result.latest;
+    return result;
+  }catch(error){
+    return {ok:false,error:'Vérification impossible. Contrôlez la connexion Internet : '+String(error.message||error)};
+  }
+});
+ipcMain.handle('kaloneo-updates:download',async(event)=>{
+  if(!adminSessionUnlocked||!mainWindow||event.sender!==mainWindow.webContents)
+    return {ok:false,error:'Accès Administrateur requis.'};
+  if(getCandidateStore().getActiveCandidate())
+    return {ok:false,error:'Terminez le parcours candidat avant de télécharger.'};
+  const update=pendingKaloneoUpdate;
+  if(!update)return {ok:false,error:'Vérifiez d’abord les mises à jour.'};
+  const pick=await dialog.showSaveDialog(mainWindow,{
+    title:'Enregistrer la mise à jour KALONÉO vérifiée',
+    defaultPath:path.join(app.getPath('downloads'),update.filename),
+    buttonLabel:'Télécharger le Setup',
+    filters:[{name:'Installateur KALONÉO',extensions:['exe']}]
+  });
+  if(pick.canceled||!pick.filePath)return {ok:false,cancelled:true};
+  try{
+    return await downloadVerified(update,pick.filePath);
+  }catch(error){
+    return {ok:false,error:'Téléchargement non validé : '+String(error.message||error)};
+  }
 });
 ipcMain.handle('kaloneo-developer:status', () => ({
   ok:adminSessionUnlocked,
