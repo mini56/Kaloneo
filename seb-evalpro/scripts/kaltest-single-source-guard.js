@@ -16,6 +16,11 @@ const content=word.presentation.builderContent.find(x=>x.type==='text').text;
 const config=word.presentation.builderContent.find(x=>x.type==='text-editor').config;
 assert(word.instruction.includes('dossier Kalonéo')&&content.includes('Nom*_Evaluation_Kalonéo'),'consignes traitement de texte');
 assert(config.expectedSaveFolder==='Bureau\\Kalonéo'&&config.expectedFilenameSuffix==='_Evaluation_Kalonéo','correction enregistrement');
+const arch=JSON.parse(fs.readFileSync(path.resolve(root,'..','kaloneo','archetype-registry.json'),'utf8'));
+for(const kind of ['traitement_texte','redaction_email']){
+ const files=arch.archetypes.find(x=>x.id===kind)?.source||[];
+ assert(files.some(x=>x.includes('/kaltest/tests/'))&&!files.some(x=>/source\/(nwtexte|nvmail)\.html/.test(x)),'archétype Builder pointant vers une ancienne page : '+kind);
+}
 const runtime=read('source/js/kaltest-pilot2-runtime.js');
 assert(!runtime.includes('@sauvegarde56.org')&&!runtime.includes('mail seb'),'correction runtime e-mail encore obsolète');
 assert(runtime.includes('kaltest-mail-send')&&runtime.includes('definition.illustration'),'bouton ou image absents du runtime KALTEST');
