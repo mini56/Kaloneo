@@ -5,6 +5,7 @@ on:
       - fix-r60-tri-rearm-only-20261011
     paths:
       - '.github/workflows/audit-kaloneo-v1-00-189-setup.yml'
+      - 'seb-evalpro/scripts/kaloneo-full-uninstall-policy.js'
   workflow_dispatch:
 permissions:
   contents: write

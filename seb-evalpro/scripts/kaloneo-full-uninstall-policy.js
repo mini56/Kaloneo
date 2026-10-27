@@ -3,11 +3,24 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const root=path.resolve(__dirname,'..');
 const nsis=fs.readFileSync(path.join(root,'build','installer.nsh'),'utf8');
 const pkg=require('../package.json');
+// Les versions historiques avaient un nom interne rNNN, KALONÉO utilise
+// maintenant l'identifiant public 1.00.189 avec version Windows 1.0.189.
+// Identifier sans ambiguïté le setup par son vrai nom d'artefact : aucune
+// suppression et aucun assouplissement des garde-fous d'AppData.
+const expectedArtifact='artifactName: "KALONEO-Setup-'+pkg.sebReleaseVersion+'.${ext}"';
 const matching=fs.readdirSync(path.join(root,'build'))
- .filter(f=>f.startsWith('kaloneo-r')&&f.endsWith('.yml'))
- .filter(f=>fs.readFileSync(path.join(root,'build',f),'utf8').includes('version: '+pkg.sebReleaseVersion));
+ .filter(f=>/^kaloneo-(?:r[0-9]+|v[0-9]+-[0-9]+-[0-9]+)-final-setup\.yml$/.test(f))
+ .filter(f=>fs.readFileSync(path.join(root,'build',f),'utf8').includes(expectedArtifact));
 assert.equal(matching.length,1,'Configuration unique du Setup actuel introuvable');
 const cfg=fs.readFileSync(path.join(root,'build',matching[0]),'utf8');
+const publicVersion=String(pkg.sebReleaseVersion||'');
+const newFormat=publicVersion.match(/^([0-9]+)\.([0-9]{2})\.([0-9]+)$/);
+if(newFormat){
+ const osVersion=[Number(newFormat[1]),Number(newFormat[2]),Number(newFormat[3])].join('.');
+ assert(cfg.includes('version: '+osVersion),'Numéro version Windows et Setup incohérent');
+} else {
+ assert(cfg.includes('version: '+publicVersion),'Numéro Setup historique incohérent');
+}
 assert.equal(pkg.build.nsis.deleteAppDataOnUninstall,false,'Le Setup generique doit conserver les donnees');
 assert(cfg.includes('deleteAppDataOnUninstall: false'),'La configuration NSIS doit conserver AppData');
 for(const expected of [
