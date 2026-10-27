@@ -7,3 +7,5 @@ Nouvelle exécution demandée après correction de syntaxe PowerShell du workflo
 Nouvel essai de validation de la 1.00.191 après nettoyage du contrôle Réglages Administrateur.
 
 Secret d'installation validé sur GitHub : relancer la Release 1.00.191 et publier seulement si toutes les validations sont vertes.
+
+Release suivante demandée après signalement du mot de passe masqué : installer une case Afficher le mot de passe, même secret KALONEO_INSTALL_PASSWORD, contrôle des bilans et mise à jour conservés.
