@@ -2,8 +2,8 @@
   'use strict';
 
   const STORAGE_KEY = 'page8_data';
-  const EMAIL_TO = 'conseil.perso@sauvegarde56.org';
-  const EMAIL_CC = 'stage-pro@sauvegarde56.org';
+  const EMAIL_TO = 'conseil.perso@kaloneo.org';
+  const EMAIL_CC = 'stage-pro@kaloneo.org';
   const CORRECT_FILE = 'Rapport_stage.docx';
 
   // SEB_SIGNATURE_CANDIDAT_NORMALISEE
@@ -32,7 +32,7 @@
     const objet = normaliserIdentiteMail(subject);
     const prenom = normaliserIdentiteMail(prenomCandidat);
     if (!objet || !prenom) return false;
-    return objet === (prenom + ' mail seb').trim();
+    return objet === (prenom + ' mail kaloneo').trim();
   }
 
   function telephoneMailValide(message) {
@@ -89,8 +89,8 @@
     const nomCandidat = getNomCandidat();
 
     // Les adresses sont volontairement strictes et sensibles à la casse.
-    const score_to = (String(to || '').trim() === 'conseil.perso@sauvegarde56.org') ? 1 : 0;
-    const score_cc = (String(cc || '').trim() === 'stage-pro@sauvegarde56.org') ? 1 : 0;
+    const score_to = (String(to || '').trim() === 'conseil.perso@kaloneo.org') ? 1 : 0;
+    const score_cc = (String(cc || '').trim() === 'stage-pro@kaloneo.org') ? 1 : 0;
     const score_subject = objetMailCandidatValide(subject, prenomCandidat) ? 1 : 0;
     const score_file = (file === CORRECT_FILE) ? 1 : 0;
     const score_signature = signatureCandidatValide(message, prenomCandidat, nomCandidat) ? 1 : 0;

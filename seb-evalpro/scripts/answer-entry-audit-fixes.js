@@ -345,11 +345,11 @@ for (const spec of [
   const { text } = read('app/web/js/nvmail-page.js');
   for (const required of [
     'function objetMailCandidatValide',
-    "return objet === (prenom + ' mail seb').trim();",
+    "return objet === (prenom + ' mail kaloneo').trim();",
     'function telephoneMailValide',
     'function signatureCandidatValide',
-    "String(to || '').trim() === 'conseil.perso@sauvegarde56.org'",
-    "String(cc || '').trim() === 'stage-pro@sauvegarde56.org'",
+    "String(to || '').trim() === 'conseil.perso@kaloneo.org'",
+    "String(cc || '').trim() === 'stage-pro@kaloneo.org'",
     'const score_subject = objetMailCandidatValide(subject, prenomCandidat) ? 1 : 0;',
     'const score_signature = signatureCandidatValide(message, prenomCandidat, nomCandidat) ? 1 : 0;',
     'const score_telephone = telephoneMailValide(message) ? 1 : 0;',
@@ -491,8 +491,8 @@ for (const spec of [
   if (genre('chefs d’œuvre') === genre('chefs-d’œuvre')) fail('test Genre/Nombre trait union trop permissif', 10);
 
   function id(v){ return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('fr-FR').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim(); }
-  function subjectOK(subject, prenom){ const a=id(subject),p=id(prenom); return !!a&&!!p&&a===(p+' mail seb').trim(); }
-  if (!subjectOK('ÉLODIE Mail-SEB','Élodie') || !subjectOK('élodie   mail-seb','Élodie') || subjectOK('Mail-SEB Élodie','Élodie')) fail('test objet mail', 10);
+  function subjectOK(subject, prenom){ const a=id(subject),p=id(prenom); return !!a&&!!p&&a===(p+' mail kaloneo').trim(); }
+  if (!subjectOK('ÉLODIE Mail-Kalonéo','Élodie') || !subjectOK('élodie   mail-kalonéo','Élodie') || subjectOK('Mail-Kalonéo Élodie','Élodie')) fail('test objet mail', 10);
   const phone = (m) => /(^|[^\d])0\d(?:[\s.,\/-]?\d{2}){4}(?!\d)/.test(String(m||''));
   if (!phone('06 10 34 45 79') || !phone('0297801478') || phone('16 10 34 45 79')) fail('test téléphone', 10);
 }

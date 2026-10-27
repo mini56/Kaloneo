@@ -35,13 +35,26 @@ async function runScenario(win) {
         date:'2026-09-26'
       }));
 
+      const send=document.getElementById('nvmail-send');
+      const browse=document.getElementById('nvmail-file-picker');
+      const form=document.getElementById('formEmail');
+      const consignes=document.querySelector('.nvmail-consigne-details').textContent;
+      assert(form.contains(send)&&send.type==='submit','Envoyer doit être le bouton de validation DANS le formulaire.');
+      assert(send.classList.contains('seb-btn-functional'),'Envoyer doit employer le style fonctionnel KALONÉO.');
+      assert(send.compareDocumentPosition(browse)&Node.DOCUMENT_POSITION_PRECEDING,'Envoyer doit être sous Parcourir.');
+      assert(consignes.includes('conseil.perso@kaloneo.org'),'Conseiller : adresse attendue manquante.');
+      assert(consignes.includes('stage-pro@kaloneo.org'),'Responsable de stage : adresse attendue manquante.');
+      assert(consignes.includes('Prénom* Mail-Kalonéo'),'Objet exact et accent attendus absents.');
+      assert(consignes.includes('01.02.34.56.78**'),'Les deux étoiles après le numéro fictif sont obligatoires.');
+      assert(consignes.includes('** utilisez un numéro de téléphone fictif.'),'La note sur le téléphone fictif est absente.');
+
       const to=document.getElementById('to');
       const cc=document.getElementById('cc');
       const subject=document.getElementById('subject');
       const message=document.getElementById('message');
-      to.value='conseil.perso@sauvegarde56.org';
-      cc.value='stage-pro@sauvegarde56.org';
-      subject.value='YY Mail-SEB';
+      to.value='conseil.perso@kaloneo.org';
+      cc.value='stage-pro@kaloneo.org';
+      subject.value='YY Mail-Kalonéo';
       message.value='Bonjour, voici mon rapport. Cordialement, YY XX 01.02.34.56.78';
 
       document.getElementById('nvmail-file-picker').click();
@@ -49,7 +62,7 @@ async function runScenario(win) {
       document.querySelector('[data-seb-file="Rapport_stage.docx"]').click();
       assert(document.getElementById('fichierSelectionne').textContent.trim()==='Rapport_stage.docx','Pièce jointe non sélectionnée.');
 
-      document.getElementById('formEmail').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+      send.click(); // Validation via le vrai bouton candidat, jamais via la barre de navigation.
       const data=JSON.parse(sessionStorage.getItem('page8_data')||'null');
       assert(data,'page8_data absent.');
       assert(data.score_total===6,'Score mail attendu 6/6, obtenu '+data.score_total);
@@ -59,27 +72,36 @@ async function runScenario(win) {
       assert(document.getElementById('resultatScore').textContent.includes('Message envoyé'),'Confirmation envoi absente.');
 
       const wrongCase=window.sebNvmail.saveEmailAnswers(
-        'Conseil.perso@sauvegarde56.org',
-        'stage-pro@sauvegarde56.org',
-        'YY Mail-SEB',
+        'Conseil.perso@kaloneo.org',
+        'stage-pro@kaloneo.org',
+        'YY Mail-Kalonéo',
         message.value,
         'Rapport_stage.docx'
       );
       assert(wrongCase.score_to===0,'Adresse À ne doit pas accepter une casse différente.');
 
       const wrongSubject=window.sebNvmail.saveEmailAnswers(
-        'conseil.perso@sauvegarde56.org',
-        'stage-pro@sauvegarde56.org',
-        'Mail-SEB YY',
+        'conseil.perso@kaloneo.org',
+        'stage-pro@kaloneo.org',
+        'Mail-Kalonéo YY',
         message.value,
         'Rapport_stage.docx'
       );
       assert(wrongSubject.score_subject===0,'Objet inversé accepté à tort.');
 
-      const finalData=window.sebNvmail.saveEmailAnswers(
+      const obsolete=window.sebNvmail.saveEmailAnswers(
         'conseil.perso@sauvegarde56.org',
         'stage-pro@sauvegarde56.org',
-        'yy mail-seb',
+        'YY Mail-SEB',
+        message.value,
+        'Rapport_stage.docx'
+      );
+      assert(obsolete.score_to===0&&obsolete.score_cc===0&&obsolete.score_subject===0,
+        'Les anciennes réponses Sauvegarde56 / Mail-SEB ne doivent plus être acceptées.');
+      const finalData=window.sebNvmail.saveEmailAnswers(
+        'conseil.perso@kaloneo.org',
+        'stage-pro@kaloneo.org',
+        'yy mail-kalonéo',
         message.value,
         'Rapport_stage.docx'
       );
@@ -105,8 +127,8 @@ async function verifyReload(win) {
         file:document.getElementById('fichierSelectionne').textContent.trim()
       };
       if(!data||data.score_total!==6)throw new Error('page8_data perdu après rechargement.');
-      if(fields.to!=='conseil.perso@sauvegarde56.org'||fields.cc!=='stage-pro@sauvegarde56.org')throw new Error('Adresses non restaurées.');
-      if(fields.subject!=='yy mail-seb')throw new Error('Objet non restauré.');
+      if(fields.to!=='conseil.perso@kaloneo.org'||fields.cc!=='stage-pro@kaloneo.org')throw new Error('Adresses non restaurées.');
+      if(fields.subject!=='yy mail-kalonéo')throw new Error('Objet non restauré.');
       if(fields.file!=='Rapport_stage.docx')throw new Error('Pièce jointe non restaurée.');
       if(!fields.message.includes('YY XX'))throw new Error('Message non restauré.');
       return {score:data.score_total,route:window.sebParcours.nextFile('nvmail')};
@@ -116,6 +138,27 @@ async function verifyReload(win) {
 
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-software-rasterizer');
+
+async function verifyButtonGeometry(win,width,height){
+  win.setSize(width,height);
+  await new Promise(resolve=>setTimeout(resolve,400));
+  const box=await win.webContents.executeJavaScript(`(()=>{
+    const b=document.getElementById('nvmail-send'),p=document.getElementById('nvmail-file-picker'),
+      f=document.getElementById('formEmail'),r=document.getElementById('right');
+    const send=b.getBoundingClientRect(),pick=p.getBoundingClientRect(),form=f.getBoundingClientRect(),right=r.getBoundingClientRect();
+    return {
+      parent:f.contains(b),buttonVisible:send.width>0&&send.height>0,
+      belowBrowse:send.top>pick.bottom,
+      insideForm:send.bottom<=form.bottom+1&&send.left>=form.left-1,
+      insideRight:send.bottom<=right.bottom+1,
+      withinViewport:send.top>=0&&send.bottom<=innerHeight+1,
+      page:document.body.dataset.kaloneoPage
+    };
+  })()`,true);
+  if(!box.parent||!box.buttonVisible||!box.belowBrowse||!box.insideForm||!box.insideRight||!box.withinViewport)
+    throw new Error('Envoyer invisible/mal positionné en '+width+'x'+height+' : '+JSON.stringify(box));
+  return box;
+}
 
 app.whenReady().then(async () => {
   const win = new BrowserWindow({
@@ -127,6 +170,8 @@ app.whenReady().then(async () => {
   try {
     await win.loadFile(page);
     await waitForPage(win);
+    await verifyButtonGeometry(win,1600,900);
+    await verifyButtonGeometry(win,1366,768);
     const first=await runScenario(win);
     const reloaded=await verifyReload(win);
     console.log('NVMAIL_FUNCTIONAL_SMOKE: OK');

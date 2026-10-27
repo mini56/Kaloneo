@@ -1,0 +1,43 @@
+name: "KALONÉO — Rédaction e-mail V1 : textes, notation et vrai bouton Envoyer (sans Setup)"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/audit-nvmail-v1-kaloneo.yml'
+      - 'seb-evalpro/source/nvmail.html'
+      - 'seb-evalpro/source/js/nvmail-page.js'
+      - 'seb-evalpro/source/css/kaloneo-remaining-pages.css'
+      - 'seb-evalpro/scripts/nvmail-architecture-guard.js'
+      - 'seb-evalpro/scripts/nvmail-functional-smoke-main.js'
+      - 'seb-evalpro/scripts/audit-corrections.js'
+      - 'seb-evalpro/scripts/answer-entry-audit-fixes.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  email-v1-real-windows:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Installer Electron et les dépendances du projet
+        run: npm install --no-audit --no-fund
+      - name: Contrôler les fichiers source sans toucher aux V1 validées
+        run: |
+          node --check source/js/nvmail-page.js
+          node --check scripts/nvmail-functional-smoke-main.js
+          node --check scripts/nvmail-architecture-guard.js
+          node --check scripts/answer-entry-audit-fixes.js
+          node --check scripts/audit-corrections.js
+      - name: Construire la vraie application candidat et passer tous les garde-fous
+        run: npm run prepare:web
+      - name: Vérifier caractères, casses, domaine kaloneo.org, barème sur six et position d'Envoyer
+        run: node scripts/nvmail-architecture-guard.js
+      - name: Vérifier sous Electron Windows 1600x900 et 1366x768, Envoyer dans le formulaire, scores /6 et reprise
+        run: npx electron --no-sandbox scripts/nvmail-functional-smoke-main.js

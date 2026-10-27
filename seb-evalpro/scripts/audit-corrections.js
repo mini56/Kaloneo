@@ -100,20 +100,20 @@ function patchMailResume() {
   const { html: controller } = read('js/nvmail-page.js');
 
   for (const expected of [
-    'conseil.perso@sauvegarde56.org',
-    'stage-pro@sauvegarde56.org'
+    'conseil.perso@kaloneo.org',
+    'stage-pro@kaloneo.org'
   ]) {
     if (!html.includes('>' + expected + '<')) {
       throw new Error('SEB EvalPro audit: adresse visible nvmail incorrecte ou absente : ' + expected);
     }
   }
-  if (/@(Sauvegarde56\.org)/.test(html)) {
-    throw new Error('SEB EvalPro audit: nvmail affiche encore Sauvegarde56.org avec un S majuscule');
+  if (/@(Kaloneo\.org)/.test(html)) {
+    throw new Error('SEB EvalPro audit: nvmail affiche encore Kaloneo.org avec un K majuscule');
   }
 
   for (const forbidden of [
-    "toLowerCase() === 'conseil.perso@sauvegarde56.org'",
-    "toLowerCase() === 'stage-pro@sauvegarde56.org'",
+    "toLowerCase() === 'conseil.perso@kaloneo.org'",
+    "toLowerCase() === 'stage-pro@kaloneo.org'",
     "sessionStorage.removeItem('page8_data')"
   ]) {
     if (controller.includes(forbidden)) {
@@ -122,8 +122,8 @@ function patchMailResume() {
   }
 
   for (const required of [
-    "String(to || '').trim() === 'conseil.perso@sauvegarde56.org'",
-    "String(cc || '').trim() === 'stage-pro@sauvegarde56.org'",
+    "String(to || '').trim() === 'conseil.perso@kaloneo.org'",
+    "String(cc || '').trim() === 'stage-pro@kaloneo.org'",
     'function signatureCandidatValide',
     'function objetMailCandidatValide',
     'function telephoneMailValide',

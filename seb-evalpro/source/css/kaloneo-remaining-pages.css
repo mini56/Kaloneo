@@ -321,6 +321,55 @@ body[data-kaloneo-page="nvmail"] #formEmail{
   border:1px solid var(--k-blue-line);
   border-radius:10px;
   background:linear-gradient(145deg,#F6FBFE,#FFFFFF)!important;
+  box-sizing:border-box;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+}
+/* Envoyer reste dans le bloc d'exercice, sous Parcourir, et non dans la
+   barre de navigation. Le message réduit sa hauteur selon l'écran. */
+body[data-kaloneo-page="nvmail"] #formEmail h2{
+  flex:none;
+  margin:0 0 5px!important;
+}
+body[data-kaloneo-page="nvmail"] #formEmail label{
+  flex:none;
+  margin-top:5px!important;
+}
+body[data-kaloneo-page="nvmail"] #formEmail input{
+  flex:0 0 36px;
+  height:36px!important;
+  min-height:0!important;
+  box-sizing:border-box;
+  margin-top:2px!important;
+}
+body[data-kaloneo-page="nvmail"] #formEmail #message{
+  flex:1 1 auto;
+  height:auto!important;
+  min-height:85px!important;
+  margin-top:2px!important;
+  box-sizing:border-box;
+  resize:none;
+}
+body[data-kaloneo-page="nvmail"] #formEmail #nvmail-file-picker{
+  flex:none;
+  align-self:flex-start;
+  margin-top:4px!important;
+}
+body[data-kaloneo-page="nvmail"] #formEmail #fichierSelectionne{
+  flex:none;
+  margin:5px 0 0!important;
+}
+body[data-kaloneo-page="nvmail"] #formEmail #nvmail-send{
+  flex:none;
+  align-self:flex-start;
+  margin:7px 0 0!important;
+}
+body[data-kaloneo-page="nvmail"] #formEmail #resultatScore{
+  flex:none;
+  margin:4px 0 0!important;
+  min-height:0;
 }
 body[data-kaloneo-page="nvmail"] input,
 body[data-kaloneo-page="nvmail"] textarea{

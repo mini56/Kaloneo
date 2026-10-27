@@ -20,16 +20,19 @@ const results = read('app/web/qcmv1.0.html') + '\n' + read('app/web/js/qcm-runti
 const protectedText = [
   'Votre conseiller vous contacte par e-mail pour vous prévenir que votre rendez-vous est déplacé.',
   'Il vous demande de lui envoyer votre rapport de stage en entreprise.',
-  'conseil.perso@sauvegarde56.org',
-  'stage-pro@sauvegarde56.org',
-  'Mettez en objet : <strong>Prénom* Mail-SEB</strong>',
+  'conseil.perso@kaloneo.org',
+  'stage-pro@kaloneo.org',
+  'Mettez en objet : <strong>Prénom* Mail-Kalonéo</strong>',
   '* Mettre votre prénom.',
   'Ajoutez votre <strong>rapport</strong> en pièce jointe.',
   'Prénom NOM',
-  '01.02.34.56.78',
+  '01.02.34.56.78**',
+  '** utilisez un numéro de téléphone fictif.',
   "Ensuite, passez à l'étape suivante..."
 ];
 for (const token of protectedText) if (!html.includes(token)) fail('contenu validé modifié: ' + token);
+if (!/<button[^>]+type="submit"[^>]+id="nvmail-send"[^>]+class="seb-action-btn seb-btn-functional"/.test(html)) fail('Bouton Envoyer de style KALONÉO absent du formulaire.');
+if (!/id="nvmail-file-picker"[\s\S]*?id="nvmail-send"[\s\S]*?<\/form>/.test(html)) fail('Envoyer doit rester dans le bloc droit, sous Parcourir.');
 
 if (!html.includes('<script src="js/seb-parcours.js"></script>') ||
     !html.includes('<script src="js/nvmail-page.js"></script>')) {
@@ -47,8 +50,8 @@ if (/function\s+(?:evaluerFormulaire|saveEmailAnswers|signatureCandidatValide)\s
 
 for (const token of [
   'window.sebNvmail = api;',
-  "String(to || '').trim() === 'conseil.perso@sauvegarde56.org'",
-  "String(cc || '').trim() === 'stage-pro@sauvegarde56.org'",
+  "String(to || '').trim() === 'conseil.perso@kaloneo.org'",
+  "String(cc || '').trim() === 'stage-pro@kaloneo.org'",
   'function objetMailCandidatValide',
   'function telephoneMailValide',
   'function signatureCandidatValide',

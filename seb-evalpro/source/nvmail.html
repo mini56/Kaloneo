@@ -299,16 +299,17 @@ html, body {
           <span class="kaloneo-context-text">Vous devez répondre à son e-mail. Envoyez votre message sur les adresses e-mail suivantes :</span>
 
           <div class="kaloneo-context-details nvmail-consigne-details">
-            <p>À votre conseiller : <u>conseil.perso@sauvegarde56.org</u></p>
-            <p>En copie à votre responsable de stage : <u>stage-pro@sauvegarde56.org</u></p>
+            <p>À votre conseiller : <u>conseil.perso@kaloneo.org</u></p>
+            <p>En copie à votre responsable de stage : <u>stage-pro@kaloneo.org</u></p>
 
             <p>Dans l'éditeur, mettre en forme votre texte en respectant les consignes ci-dessous.</p>
-            <p>Mettez en objet : <strong>Prénom* Mail-SEB</strong></p>
+            <p>Mettez en objet : <strong>Prénom* Mail-Kalonéo</strong></p>
             <p>Ajoutez votre <strong>rapport</strong> en pièce jointe.</p>
             <p>Saisissez un message avec une formule de politesse en introduction et à la fin puis une signature avec votre prénom, nom et numéro de téléphone sur le modèle ci-dessous :</p>
             <p>Prénom NOM</p>
-            <p>01.02.34.56.78</p>
+            <p>01.02.34.56.78**</p>
             <p class="kaloneo-footnote"><strong>* Mettre votre prénom.</strong></p>
+            <p class="kaloneo-footnote"><strong>** utilisez un numéro de téléphone fictif.</strong></p>
             <p>Ensuite, passez à l'étape suivante...</p>
           </div>
         </div>
@@ -347,7 +348,7 @@ html, body {
         <button type="button" class="seb-action-btn seb-btn-tool fake-file-input" id="nvmail-file-picker">📂 Parcourir…</button>
         <div class="selected-file" id="fichierSelectionne">Aucun fichier sélectionné</div>
 
-        <button type="submit" class="seb-action-btn seb-btn-nav"><strong>Envoyer 📧</strong></button>
+        <button type="submit" id="nvmail-send" class="seb-action-btn seb-btn-functional"><strong>Envoyer 📧</strong></button>
 
         <div class="score" id="resultatScore"></div>
       </form>
