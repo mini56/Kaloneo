@@ -19,3 +19,5 @@ Le 27 octobre 2026, demande de test de mise à jour réelle depuis 1.00.193 vers
 Contrôle Windows NSIS avec la case de démarrage facultatif réussi. Relancer la Release suivante pour valider la mise à jour réelle et publier le nouveau Setup.
 
 Nouvelle version demandée : téléchargement des mises à jour dans %LOCALAPPDATA%\KALONEO-Updates, SHA256 obligatoire, bouton Installer maintenant, confirmation utilisateur, fermeture de KALONÉO et lancement différé du Setup, sans perte de données ni changement du mot de passe.
+
+2026-10-27 : demande de nouvelle Release Windows après validation de la barre verte de progression réelle (octets/total et pourcentage), vérification SHA256 distincte, sans modifier la conservation des candidats ni les bilans ni les mots de passe.
