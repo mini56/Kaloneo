@@ -57,6 +57,15 @@ async function run(){
   assert.ok(settings.includes('Vérifier les mises à jour'));
   assert.ok(settings.indexOf('data-kaloneo-about-logo')<settings.indexOf('data-check-update'),'bouton sous logo');
   assert.ok(settings.includes('Téléchargement et vérification SHA256'));
-  console.log('KALONEO_MAJ_UPDATER_SMOKE=SUCCESS : versions, sources authentifiées, 40 Mo SHA256, interface Admin, abandon sécurisé.');
+  assert.ok(settings.includes('data-open-downloaded-setup-folder'),'Le bouton dossier doit être présent dans les Réglages');
+  assert.ok(settings.includes('openDownloadedSetupFolder.hidden=false'),'Le bouton dossier doit être visible uniquement après validation du téléchargement');
+  assert.ok(settings.includes('Fichier enregistré : '),'Le chemin réellement choisi doit être indiqué à l’administrateur');
+  assert.ok(settings.includes("ipcRenderer.invoke('kaloneo-updates:open-download-folder')"));
+  assert.ok(main.includes("ipcMain.handle('kaloneo-updates:open-download-folder'"));
+  assert.ok(main.includes("shell.showItemInFolder(filePath)"),'Afficher le fichier dans l’Explorateur');
+  assert.ok(main.includes('lastVerifiedKaloneoSetupPath=result.filePath'),'N’autoriser que le fichier effectivement vérifié');
+  assert.ok(main.includes('if(!filePath||!fs.existsSync(filePath))'),'Ne pas proposer un fichier inexistant');
+  assert.ok(!main.includes("ipcMain.handle('kaloneo-updates:open-download-folder',async(event,filePath)"),'Ne jamais autoriser un chemin arbitraire venant de l’interface');
+  console.log('KALONEO_MAJ_UPDATER_SMOKE=SUCCESS : versions, sources authentifiées, 40 Mo SHA256, emplacement affiché, bouton dossier sécurisé, abandon protégé.');
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});
