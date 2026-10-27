@@ -124,6 +124,8 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Licence de installation invalide'}
           node scripts/kaloneo-installer-password-visibility-smoke.js
           if($LASTEXITCODE -ne 0){throw 'Afficher ou masquer le mot de passe du Setup ne fonctionne pas'}
+          node scripts/kaloneo-installer-finish-launch-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Démarrage de KALONÉO au clic sur Terminer incorrect'}
           node scripts/kaloneo-install-auth-build.js
           if($LASTEXITCODE -ne 0){throw 'Mot de passe secret absent : publication interdite'}
           node scripts/kaloneo-nsis-directory-template.js
