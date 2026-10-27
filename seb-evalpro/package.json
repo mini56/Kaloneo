@@ -1,6 +1,6 @@
 {
   "name": "seb-evalpro",
-  "version": "0.3.10",
+  "version": "1.0.190",
   "description": "KALONÉO - évaluation locale des compétences",
   "main": "src/main.js",
   "author": "KALONÉO",

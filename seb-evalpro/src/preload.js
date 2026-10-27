@@ -7,7 +7,7 @@ const candidateCatalog = require('./candidate-catalog-preload');
 const { installAdminSettings } = require('./kaloneo-admin-settings');
 const appPackage = require('../package.json');
 const APP_BUILD_NUMBER = String(appPackage.sebBuildNumber || '').trim() || 'DEV';
-const APP_RELEASE_VERSION = String(appPackage.sebReleaseVersion || '').trim() || 'Version inconnue';
+const APP_RELEASE_VERSION = `1.00.${APP_BUILD_NUMBER}`;
 const APP_BUILD_LABEL = `Version ${APP_RELEASE_VERSION}`;
 // SEB_CANDIDATE_REPLAY_PROTO_PRELOAD
 const editionCapabilities = ipcRenderer.sendSync('app:edition-sync') || {

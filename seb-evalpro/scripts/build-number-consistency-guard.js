@@ -3,6 +3,9 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+const versionManager = require('./kaloneo-release-version');
+versionManager.verify();
+
 const preload = fs.readFileSync(path.join(root, 'src', 'preload.js'), 'utf8');
 const main = fs.readFileSync(path.join(root, 'src', 'main.js'), 'utf8');
 const branding = fs.readFileSync(path.join(root, 'scripts', 'generate-installer-branding.ps1'), 'utf8');
