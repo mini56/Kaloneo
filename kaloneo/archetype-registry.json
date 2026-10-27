@@ -309,9 +309,11 @@
     {
       "id": "traitement_texte",
       "source": [
-        "seb-evalpro/source/nwtexte.html",
-        "seb-evalpro/source/js/nwtexte-page.js",
-        "seb-evalpro/source/js/nwtexte-quill-engine.js"
+        "seb-evalpro/source/kaltest/tests/traitement-texte-bureautique/1.0.0/test.json",
+        "seb-evalpro/source/js/kaltest-pilot2-runtime.js",
+        "seb-evalpro/source/js/nwtexte-quill-engine.js",
+        "seb-evalpro/source/js/nwtexte-save-simulation.js",
+        "seb-evalpro/source/js/nwtexte-closed-dialogs.js"
       ],
       "proof": "builder-archetype",
       "blocks": [
@@ -330,8 +332,8 @@
     {
       "id": "redaction_email",
       "source": [
-        "seb-evalpro/source/nvmail.html",
-        "seb-evalpro/source/js/nvmail-page.js"
+        "seb-evalpro/source/kaltest/tests/redaction-email/1.0.0/test.json",
+        "seb-evalpro/source/js/kaltest-pilot2-runtime.js"
       ],
       "proof": "builder-archetype",
       "blocks": [
