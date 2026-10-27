@@ -69,9 +69,9 @@
     try {
       const candidate = JSON.parse(sessionStorage.getItem('candidat_data') || '{}');
       const name = String(candidate.nom || candidate.Nom || 'Nom').trim() || 'Nom';
-      return name + '_Evaluation_Bureautique_SEB.html';
+      return name + '_Evaluation_Kalonéo.html';
     } catch (_) {
-      return 'Nom_Evaluation_Bureautique_SEB.html';
+      return 'Nom_Evaluation_Kalonéo.html';
     }
   }
 
@@ -96,7 +96,7 @@
     const isImage = kind === 'image';
     const saved = readSavedDocument();
     const title = isImage ? 'Insérer une image' : 'Ouvrir';
-    const address = isImage ? 'Ce PC > Images' : 'Ce PC > Bureau > SEB';
+    const address = isImage ? 'Ce PC > Images' : 'Ce PC > Bureau > Kalonéo';
     const primaryText = isImage ? 'Insérer' : 'Ouvrir';
     const backdrop = document.createElement('div');
     backdrop.id = BACKDROP_ID;
@@ -115,7 +115,7 @@
             <div class="seb-nwtexte-picker-navitem ${isImage ? '' : 'active'}">🖼️ Bureau</div>
             <div class="seb-nwtexte-picker-navitem">📄 Documents</div>
             <div class="seb-nwtexte-picker-navitem ${isImage ? 'active' : ''}">🌄 Images</div>
-            <div class="seb-nwtexte-picker-navitem">📁 SEB</div>
+            <div class="seb-nwtexte-picker-navitem">📁 Kalonéo</div>
           </div>
           <div id="seb-nwtexte-picker-files"></div>
         </div>
@@ -161,7 +161,7 @@
         empty.id = 'seb-nwtexte-picker-empty';
         empty.textContent = isImage
           ? 'Aucune autre image n’est disponible dans ce dossier.'
-          : (saved ? 'Aucun fichier ne correspond à la recherche.' : 'Ce dossier est vide. Enregistrez d’abord le document dans le dossier SEB.');
+          : (saved ? 'Aucun fichier ne correspond à la recherche.' : 'Ce dossier est vide. Enregistrez d’abord le document dans le dossier Kalonéo.');
         files.appendChild(empty);
         primary.disabled = true;
         name.value = '';

@@ -125,19 +125,43 @@ async function runFunctionalScenario(win) {
       window.sebNwtexteSave.saveAs();
       await wait(20);
       const folder = document.getElementById('seb-fake-folder-seb');
-      assert(folder, 'Dossier SEB fictif absent.');
+      assert(folder, 'Dossier Kalonéo fictif absent.');
+      assert(folder.textContent.trim().includes('Kalonéo'), 'Le dossier visible doit s’appeler Kalonéo.');
       folder.dispatchEvent(new MouseEvent('dblclick', { bubbles:true }));
       const nameInput = document.getElementById('seb-fake-save-name');
       assert(nameInput, 'Champ nom Enregistrer sous absent.');
-      nameInput.value = 'TEST_Evaluation_Bureautique_SEB';
+      nameInput.value = 'TEST_Evaluation_Kalonéo';
       document.getElementById('seb-fake-save-button').click();
       await wait(20);
 
       const saveState = JSON.parse(localStorage.getItem('nwtexte_save_simulation') || 'null');
       assert(saveState && saveState.enregistre === true, 'Enregistrement simulé non mémorisé.');
-      assert(saveState.dossier === 'Bureau\\\\SEB', 'Dossier d’enregistrement incorrect.');
+      assert(saveState.dossier === 'Bureau\\\\Kalonéo', 'Dossier d’enregistrement incorrect.');
       assert(saveState.nomConforme === true, 'Nom de fichier conforme non reconnu.');
+      assert(saveState.nomAttendu==='TEST_Evaluation_Kalonéo','Nom officiel attendu mal enregistré.');
+      assert(saveState.fichier==='TEST_Evaluation_Kalonéo.html','Nom effectif du document incorrect.');
+      assert(document.getElementById('seb-fake-save-window')===null,'Enregistrer sous doit se fermer après validation.');
 
+      // Les anciens noms SEB ne doivent plus obtenir le point d'enregistrement.
+      // La notation /8, les 7 autres critères et la navigation ne changent pas.
+      window.sebNwtexteSave.saveAs();
+      await wait(20);
+      document.getElementById('seb-fake-folder-seb').dispatchEvent(new MouseEvent('dblclick', { bubbles:true }));
+      document.getElementById('seb-fake-save-name').value = 'TEST_Evaluation_Bureautique_SEB';
+      document.getElementById('seb-fake-save-button').click();
+      await wait(20);
+      const ancienne = JSON.parse(localStorage.getItem('nwtexte_save_simulation') || 'null');
+      assert(ancienne.nomConforme === false, 'Ancien nom SEB accepté comme nouvelle réponse correcte.');
+      assert(window.sebNwtexteEditor.analyseDocument().score.enregistrement === 0,
+        'Le point d’enregistrement doit être refusé à un ancien nom SEB.');
+
+      // Restituer le nouveau nom exact pour vérifier ensuite le parcours 8/8.
+      window.sebNwtexteSave.saveAs();
+      await wait(20);
+      document.getElementById('seb-fake-folder-seb').dispatchEvent(new MouseEvent('dblclick', { bubbles:true }));
+      document.getElementById('seb-fake-save-name').value = 'TEST_Evaluation_Kalonéo';
+      document.getElementById('seb-fake-save-button').click();
+      await wait(20);
       // Barème actuel : 8/8 et contrat historique conservé pour Résultats.
       const analyse = window.sebNwtexteEditor.saveEvaluation();
       assert(analyse && analyse.score && analyse.score.total === 8, 'Score nwtexte attendu 8/8, obtenu ' + (analyse?.score?.total));

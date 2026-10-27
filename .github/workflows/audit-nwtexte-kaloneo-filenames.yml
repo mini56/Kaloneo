@@ -1,0 +1,42 @@
+name: "KALONÉO — Traitement de texte : dossier et nom exacts (sans Setup)"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/audit-nwtexte-kaloneo-filenames.yml'
+      - 'seb-evalpro/source/nwtexte.html'
+      - 'seb-evalpro/source/js/nwtexte-save-simulation.js'
+      - 'seb-evalpro/source/js/nwtexte-closed-dialogs.js'
+      - 'seb-evalpro/source/js/nwtexte-quill-engine.js'
+      - 'seb-evalpro/scripts/nwtexte-architecture-guard.js'
+      - 'seb-evalpro/scripts/nwtexte-functional-smoke-main.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  word-text-test:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Installer le moteur Electron réel
+        run: npm install --no-audit --no-fund
+      - name: Analyser la syntaxe des seuls modules concernés
+        run: |
+          node --check source/js/nwtexte-save-simulation.js
+          node --check source/js/nwtexte-quill-engine.js
+          node --check source/js/nwtexte-closed-dialogs.js
+          node --check scripts/nwtexte-architecture-guard.js
+          node --check scripts/nwtexte-functional-smoke-main.js
+      - name: Préparer le parcours réel et lancer tous les garde-fous historiques
+        run: npm run prepare:web
+      - name: Vérifier les consignes Kalonéo, le nom attendu et le barème inchangé sur 8
+        run: node scripts/nwtexte-architecture-guard.js
+      - name: Tester sous Windows Electron Enregistrer sous Kalonéo, correction et rejeu sans régression
+        run: npx electron --no-sandbox scripts/nwtexte-functional-smoke-main.js

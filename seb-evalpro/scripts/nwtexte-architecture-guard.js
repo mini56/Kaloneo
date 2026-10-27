@@ -23,7 +23,7 @@ const bilan = read('app/web/admin-bilan.html') + '\n' + read('app/web/js/admin-b
 
 const protectedText = [
   'Scénario :',
-  "Répondez à l'une des trois questions suivantes dans un texte de dix lignes.",
+  "Répondez à l'une des trois questions suivantes dans un texte de dix lignes. Respectez les consignes de mise en forme et enregistrez le document dans le dossier Kalonéo sur le bureau.",
   'Quelle est mon activité préférée et pourquoi ?',
   'Quelle est mon expérience professionnelle préférée et pourquoi ?',
   'Quel est mon métier préféré et pourquoi ?',
@@ -32,8 +32,8 @@ const protectedText = [
   'Consigne :',
   '<strong>Titre :</strong> Notez la question choisie, puis mettez-la en <strong>gras</strong>, police <strong>Arial</strong>, taille <strong>16</strong>.',
   '<strong>Texte :</strong> Au moins <strong>10</strong> lignes. Police du corps de texte en <strong>Arial</strong>, taille <strong>12</strong>.',
-  'Enregistrez le document dans le dossier <strong>SEB</strong> sur le bureau sous l\'intitulé :',
-  '<strong>Nom*_Evaluation_Bureautique_SEB</strong>',
+  'Enregistrez le document dans le dossier <strong>Kalonéo</strong> sur le bureau sous l\'intitulé :',
+  '<strong>Nom*_Evaluation_Kalonéo</strong>',
   "Ensuite, passez à l'étape suivante..."
 ];
 for (const token of protectedText) if (!html.includes(token)) fail('contenu validé modifié: ' + token);
@@ -56,6 +56,16 @@ for (const token of [
   'enregistrement: savedCorrectly ? 1 : 0'
 ]) if (!engine.includes(token)) fail('contrat résultats nwtexte altéré: ' + token);
 
+for (const [source,token] of [
+  [save, "'_Evaluation_Kalonéo'"],
+  [save, "Bureau\\\\Kalonéo"],
+  [save, "<div>Kalonéo</div>"],
+  [engine, "'_Evaluation_Kalonéo'"],
+  [engine, "Bureau\\\\Kalonéo"],
+  [dialogs, "_Evaluation_Kalonéo.html"],
+  [dialogs, "Ce PC > Bureau > Kalonéo"]
+]) if (!source.includes(token)) fail('Contrat d’enregistrement Kalonéo absent : ' + token);
+if (/<strong>SEB<\/strong>|Nom\*_Evaluation_Bureautique_SEB/.test(html)) fail('Anciennes consignes SEB réintroduites.');
 if (!save.includes('window.sebNwtexteSave = Object.freeze')) fail('API sauvegarde nwtexte absente');
 if (!dialogs.includes('window.sebNwtexteDialogs = Object.freeze')) fail('API fenêtres nwtexte absente');
 if (!page.includes("window.sebParcours.goNext('nwtexte')")) fail('nwtexte ne passe pas par le registre parcours');

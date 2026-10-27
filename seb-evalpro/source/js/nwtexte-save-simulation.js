@@ -39,7 +39,7 @@
 
   function expectedFilename() {
     const nom = readCandidateName();
-    return (nom || 'Nom') + '_Evaluation_Bureautique_SEB';
+    return (nom || 'Nom') + '_Evaluation_Kalonéo';
   }
 
   function ensureStyles() {
@@ -92,7 +92,7 @@
     const fullName = clean + '.html';
     const expected = expectedFilename();
     const state = {
-      dossier: 'Bureau\\SEB',
+      dossier: 'Bureau\\Kalonéo',
       nom: clean,
       fichier: fullName,
       nomAttendu: expected,
@@ -176,7 +176,7 @@
       if (location === 'desktop') {
         address.textContent = 'Ce PC > Bureau';
         back.disabled = true;
-        files.innerHTML = '<div class="seb-fake-folder" id="seb-fake-folder-seb" tabindex="0"><div class="seb-fake-folder-icon">📁</div><div>SEB</div></div>';
+        files.innerHTML = '<div class="seb-fake-folder" id="seb-fake-folder-seb" tabindex="0"><div class="seb-fake-folder-icon">📁</div><div>Kalonéo</div></div>';
         const folder = files.querySelector('#seb-fake-folder-seb');
         folder.addEventListener('click', function () {
           files.querySelectorAll('.seb-fake-folder').forEach((item) => item.classList.remove('selected'));
@@ -188,7 +188,7 @@
           if (event.key === 'Enter') enterSeb();
         });
       } else {
-        address.textContent = 'Ce PC > Bureau > SEB';
+        address.textContent = 'Ce PC > Bureau > Kalonéo';
         back.disabled = false;
         files.innerHTML = '';
         nameInput.focus();
@@ -217,7 +217,7 @@
       }
       const state = persistSimulation(name);
       close();
-      showToast('Document enregistré dans Bureau\\SEB\\' + state.fichier);
+      showToast('Document enregistré dans Bureau\\Kalonéo\\' + state.fichier);
     }
 
     backdrop.querySelector('#seb-fake-save-close').addEventListener('click', close);
@@ -246,7 +246,7 @@
       return;
     }
     persistSimulation(simulatedPath.nom);
-    showToast('Document enregistré dans Bureau\\SEB\\' + simulatedPath.fichier);
+    showToast('Document enregistré dans Bureau\\Kalonéo\\' + simulatedPath.fichier);
   }
 
   restoreSimulationState();
