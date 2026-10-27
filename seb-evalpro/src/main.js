@@ -29,6 +29,7 @@ const { buildBilanDocxBuffer, decryptBilanDocxBuffer } = require('./bilan-docx-m
 const { createPasswordStore } = require('./kaloneo-passwords');
 const {checkUpdates,downloadVerified}=require('./kaloneo-update-checker');
 let pendingKaloneoUpdate=null;
+let lastVerifiedKaloneoSetupPath=null;
 const { inspectCandidateOverflow } = require('./kaloneo-layout-diagnostics');
 
 // The taskbar must show exactly the same chameleon as the candidate's left bar.
@@ -1023,10 +1024,30 @@ ipcMain.handle('kaloneo-updates:download',async(event)=>{
     filters:[{name:'Installateur KALONÉO',extensions:['exe']}]
   });
   if(pick.canceled||!pick.filePath)return {ok:false,cancelled:true};
+  lastVerifiedKaloneoSetupPath=null;
   try{
-    return await downloadVerified(update,pick.filePath);
+    const result=await downloadVerified(update,pick.filePath);
+    if(result.ok)lastVerifiedKaloneoSetupPath=result.filePath;
+    return result;
   }catch(error){
     return {ok:false,error:'Téléchargement non validé : '+String(error.message||error)};
+  }
+});
+// Ouvrir l'Explorateur seulement pour le fichier effectivement téléchargé
+// et contrôlé par SHA256. Aucun chemin libre fourni par la page Web.
+ipcMain.handle('kaloneo-updates:open-download-folder',async(event)=>{
+  if(!adminSessionUnlocked||!mainWindow||event.sender!==mainWindow.webContents)
+    return {ok:false,error:'Accès Administrateur requis.'};
+  if(getCandidateStore().getActiveCandidate())
+    return {ok:false,error:'Terminez le parcours candidat avant de consulter le Setup.'};
+  const filePath=lastVerifiedKaloneoSetupPath;
+  if(!filePath||!fs.existsSync(filePath))
+    return {ok:false,error:'Fichier téléchargé introuvable. Vérifiez le dossier choisi.'};
+  try{
+    shell.showItemInFolder(filePath);
+    return {ok:true,filePath};
+  }catch(error){
+    return {ok:false,error:'Impossible d’ouvrir le dossier : '+String(error.message||error)};
   }
 });
 ipcMain.handle('kaloneo-developer:status', () => ({
