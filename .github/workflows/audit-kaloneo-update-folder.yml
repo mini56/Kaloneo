@@ -1,0 +1,36 @@
+name: "KALONÉO — afficher le dossier du Setup téléchargé"
+on:
+  push:
+    branches: [fix-r186-kaltest-source-unique-20261027]
+    paths:
+      - "seb-evalpro/src/main.js"
+      - "seb-evalpro/src/kaloneo-admin-settings.js"
+      - "seb-evalpro/src/kaloneo-update-checker.js"
+      - "seb-evalpro/scripts/kaloneo-update-checker-smoke.js"
+      - ".github/workflows/audit-kaloneo-update-folder.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-downloaded-setup-folder:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: seb-evalpro
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Vérifier la syntaxe du programme et des Réglages
+        run: |
+          node --check src/main.js
+          if($LASTEXITCODE -ne 0){throw 'Erreur de syntaxe dans main.js'}
+          node --check src/kaloneo-admin-settings.js
+          if($LASTEXITCODE -ne 0){throw 'Erreur de syntaxe dans les Réglages'}
+      - name: Contrôler les téléchargements SHA256 et le bouton dossier
+        run: |
+          node scripts/kaloneo-update-checker-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Régression téléchargement sécurisé ou ouverture du dossier'}
