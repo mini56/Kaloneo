@@ -33,7 +33,7 @@ jobs:
           node --check src/kaloneo-admin-settings.js
           if($LASTEXITCODE -ne 0){throw 'Erreur de syntaxe dans les Réglages'}
           node --check src/kaloneo-update-install.js
-          if($LASTEXITCODE -ne 0){throw 'Erreur de syntaxe de l’installateur de mises à jour'}
+          if($LASTEXITCODE -ne 0){throw 'Erreur de syntaxe de installation de mises a jour'}
       - name: Contrôler les téléchargements SHA256 et le bouton dossier
         run: |
           node scripts/kaloneo-update-checker-smoke.js
