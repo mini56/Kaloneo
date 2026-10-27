@@ -178,6 +178,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
       '<button type="button" data-tab="about">À propos</button><div class="settings-nav-brand"><img data-kaloneo-about-logo alt="Logo KALONÉO"></div>'+
       '<div class="settings-update-actions"><button type="button" data-check-update>Vérifier les mises à jour</button>'+
       '<p data-update-status role="status" aria-live="polite"></p>'+
+      '<div data-update-progress-area class="settings-update-progress" hidden><progress data-update-progress max="100" value="0" aria-label="Progression du téléchargement"></progress><span data-update-progress-label>0 %</span></div>'+
       '<button type="button" data-download-update hidden>Télécharger la mise à jour</button>'+
       '<button type="button" data-install-update hidden>Installer maintenant</button>'+
       '<button type="button" data-open-downloaded-setup-folder hidden>Ouvrir le dossier du Setup</button></div></nav>'+
@@ -246,6 +247,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
 `;
     style.textContent += "\n#seb-evalpro-settings-dialog .settings-fullscreen-help-image{\n position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;\n background:#0c2639;color:#fff;padding:8px;min-width:0;min-height:0\n}\n#seb-evalpro-settings-dialog .settings-photo-toolbar{\n flex:none;display:flex;align-items:center;justify-content:space-between;\n gap:10px;padding:4px 7px 10px;flex-wrap:wrap\n}\n#seb-evalpro-settings-dialog .settings-photo-caption{\n font-size:14px;font-weight:700;color:#eff8ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap\n}\n#seb-evalpro-settings-dialog .settings-photo-controls{\n display:flex;align-items:center;gap:7px;flex-wrap:wrap\n}\n#seb-evalpro-settings-dialog .settings-photo-controls button{\n border:1px solid #9bc2d6;border-radius:7px;background:#fff;color:#034c6e;\n font-weight:700;padding:7px 12px;min-height:37px\n}\n#seb-evalpro-settings-dialog .settings-photo-controls [data-photo-close]{\n color:#a62231;border-color:#edb0b7\n}\n#seb-evalpro-settings-dialog .settings-photo-controls output{\n min-width:56px;text-align:center;color:#fff;font-variant-numeric:tabular-nums\n}\n#seb-evalpro-settings-dialog .settings-photo-scroll{\n flex:1;min-height:0;min-width:0;width:100%;overflow:auto;\n background:#1b303e;overscroll-behavior:contain;border-radius:7px\n}\n#seb-evalpro-settings-dialog .settings-photo-canvas{\n display:grid;place-items:center;min-width:100%;min-height:100%\n}\n#seb-evalpro-settings-dialog .settings-photo-canvas img{\n display:block;max-width:none!important;max-height:none!important;\n border-radius:3px;box-shadow:0 3px 24px #0008\n}\n@media(max-width:780px){\n #seb-evalpro-settings-dialog .settings-photo-caption{font-size:12px}\n #seb-evalpro-settings-dialog .settings-photo-controls{gap:4px}\n #seb-evalpro-settings-dialog .settings-photo-controls button{font-size:12px;padding:6px 8px}\n}\n";
     style.textContent+='\n/* Vérification manuelle des mises à jour sous le logo KALONÉO, colonne gauche. */\n#seb-evalpro-settings-dialog .settings-nav .settings-update-actions{flex:0 0 auto;width:100%;padding:1px 4px 8px;display:flex;flex-direction:column;gap:8px}\n#seb-evalpro-settings-dialog .settings-nav .settings-update-actions button{display:block;width:100%;white-space:normal;text-align:center;font-size:11px;font-weight:800;line-height:1.35;padding:10px 7px;border:1px solid #1073a2;background:#e7f4f9;color:#075271;text-transform:uppercase}\n#seb-evalpro-settings-dialog .settings-nav .settings-update-actions button:hover{background:#d0eaf5}\n#seb-evalpro-settings-dialog .settings-nav .settings-update-actions button:disabled{opacity:.55;cursor:wait}\n#seb-evalpro-settings-dialog .settings-nav .settings-update-actions button[hidden]{display:none!important}\n#seb-evalpro-settings-dialog .settings-nav .settings-update-actions [data-download-update]{background:#0879a8;color:#fff}\n#seb-evalpro-settings-dialog .settings-nav .settings-update-actions [data-update-status]{margin:0;padding:0 3px;color:#365f75;font-size:12px;line-height:1.35;overflow-wrap:anywhere;white-space:normal}\n';
+    style.textContent+='\n/* Barre verte de téléchargement : progression réelle des octets reçus. */\n#seb-evalpro-settings-dialog .settings-update-progress{display:flex;flex-direction:column;gap:4px;align-items:stretch;width:100%;padding:0 4px 5px}\n#seb-evalpro-settings-dialog .settings-update-progress[hidden]{display:none!important}\n#seb-evalpro-settings-dialog .settings-update-progress progress{appearance:none;-webkit-appearance:none;display:block;width:100%;height:16px;border-radius:8px;border:1px solid #81c79c;background:#e4f3e9;overflow:hidden;accent-color:#20a457}\n#seb-evalpro-settings-dialog .settings-update-progress progress::-webkit-progress-bar{background:#e4f3e9;border-radius:8px}\n#seb-evalpro-settings-dialog .settings-update-progress progress::-webkit-progress-value{background:#20a457;border-radius:8px}\n#seb-evalpro-settings-dialog .settings-update-progress progress::-moz-progress-bar{background:#20a457;border-radius:8px}\n#seb-evalpro-settings-dialog .settings-update-progress [data-update-progress-label]{text-align:center;color:#15623d;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}\n';
     layer.appendChild(style);
     document.body.appendChild(layer);
     layer.querySelector('[data-settings-header-icon]').src=iconUrl;
@@ -255,10 +257,14 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
     const installUpdate=layer.querySelector('[data-install-update]');
     const openDownloadedSetupFolder=layer.querySelector('[data-open-downloaded-setup-folder]');
     const updateStatus=layer.querySelector('[data-update-status]');
+    const downloadProgressArea=layer.querySelector('[data-update-progress-area]');
+    const downloadProgress=layer.querySelector('[data-update-progress]');
+    const downloadProgressLabel=layer.querySelector('[data-update-progress-label]');
     checkUpdate.addEventListener('click',async()=>{
       downloadUpdate.hidden=true;
       installUpdate.hidden=true;
       openDownloadedSetupFolder.hidden=true;
+      downloadProgressArea.hidden=true;
       checkUpdate.disabled=true;
       updateStatus.textContent='Recherche des mises à jour…';
       try{
@@ -270,6 +276,9 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
             updateStatus.textContent='Mise à jour '+answer.latest.version+' déjà téléchargée et vérifiée (SHA256 conforme). Vous pouvez installer maintenant.';
             installUpdate.hidden=false;
             openDownloadedSetupFolder.hidden=false;
+            downloadProgressArea.hidden=false;
+            downloadProgress.value=100;
+            downloadProgressLabel.textContent='100 % — déjà vérifié';
           }else{
             updateStatus.textContent='Nouvelle version '+answer.latest.version+' disponible (version installée : '+answer.installedVersion+').';
             downloadUpdate.hidden=false;
@@ -286,27 +295,54 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
       downloadUpdate.disabled=true;
       openDownloadedSetupFolder.hidden=true;
       installUpdate.hidden=true;
+      downloadProgressArea.hidden=true;
       updateStatus.textContent='La mise à jour va être téléchargée dans le dossier sécurisé KALONEO-Updates de Windows.';
       const onDownloadStarted=()=>{
         if(updateStatus.isConnected){
+          downloadProgressArea.hidden=false;
+          downloadProgress.value=0;
+          downloadProgressLabel.textContent='0 %';
           updateStatus.textContent='Mise à jour en cours de téléchargement. Veuillez patienter jusqu’au message « Téléchargement terminé ». Ne fermez pas KALONÉO pendant le transfert et la vérification.';
         }
       };
+      const onDownloadProgress=(_event,data)=>{
+        if(!downloadProgress.isConnected||!data||!Number.isFinite(data.percent))return;
+        const percent=Math.max(0,Math.min(100,Math.floor(data.percent)));
+        const received=Number(data.receivedBytes);
+        const total=Number(data.totalBytes);
+        if(!Number.isFinite(received)||!Number.isFinite(total)||total<=0)return;
+        downloadProgressArea.hidden=false;
+        downloadProgress.value=percent;
+        downloadProgressLabel.textContent=percent+' % — '+(received/1048576).toFixed(1)+' / '+(total/1048576).toFixed(1)+' Mo';
+      };
+      const onDownloadPhase=(_event,phase)=>{
+        if(phase==='verifying'&&updateStatus.isConnected){
+          updateStatus.textContent='Téléchargement des fichiers terminé. Vérification de sécurité SHA256 en cours… Veuillez patienter.';
+          downloadProgressLabel.textContent='100 % — vérification en cours';
+        }
+      };
       ipcRenderer.on('kaloneo-updates:download-started',onDownloadStarted);
+      ipcRenderer.on('kaloneo-updates:download-progress',onDownloadProgress);
+      ipcRenderer.on('kaloneo-updates:download-phase',onDownloadPhase);
       try{
         const answer=await ipcRenderer.invoke('kaloneo-updates:download');
         if(!updateStatus.isConnected)return;
-        if(answer?.cancelled)updateStatus.textContent='Téléchargement annulé.';
+        if(answer?.cancelled){updateStatus.textContent='Téléchargement annulé.';downloadProgressArea.hidden=true;}
         else if(answer?.ok){
+          downloadProgressArea.hidden=false;
+          downloadProgress.value=100;
+          downloadProgressLabel.textContent='100 % — téléchargement vérifié';
           updateStatus.textContent='Téléchargement terminé et vérifié (SHA256 conforme). Fichier enregistré : '+answer.filePath+'. Cliquez sur « Installer maintenant » pour fermer KALONÉO et lancer le Setup. À la fin, laissez cochée « Démarrer KALONÉO maintenant » pour ouvrir la nouvelle version.';
           downloadUpdate.hidden=true;
           installUpdate.hidden=false;
           openDownloadedSetupFolder.hidden=false;
         }
-        else updateStatus.textContent=answer?.error||'Téléchargement impossible.';
-      }catch(_){if(updateStatus.isConnected)updateStatus.textContent='Téléchargement interrompu.';}
+        else{updateStatus.textContent=answer?.error||'Téléchargement impossible.';downloadProgressArea.hidden=true;}
+      }catch(_){if(updateStatus.isConnected)updateStatus.textContent='Téléchargement interrompu.';downloadProgressArea.hidden=true;}
       finally{
         ipcRenderer.removeListener('kaloneo-updates:download-started',onDownloadStarted);
+        ipcRenderer.removeListener('kaloneo-updates:download-progress',onDownloadProgress);
+        ipcRenderer.removeListener('kaloneo-updates:download-phase',onDownloadPhase);
         if(downloadUpdate.isConnected)downloadUpdate.disabled=false;
       }
     });
