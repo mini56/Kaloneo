@@ -1,0 +1,63 @@
+name: "KALONÉO 1.00.189 — Publication Release du Setup Windows validé"
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - '.github/workflows/publish-kaloneo-v1-00-189-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish-verified-windows:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - name: Confirm exact completed Windows audit and three successful jobs
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $run=gh api repos/mini56/Kaloneo/actions/runs/40480756554 | ConvertFrom-Json
+          if($LASTEXITCODE -ne 0 -or $run.conclusion -ne 'success'){throw 'The Windows installer was not validated.'}
+          if($run.head_sha -ne '848620d80de4c2cae982d58febf2c3c460cfd67a'){throw 'Unexpected source revision: cannot publish different code.'}
+          $jobs=gh api 'repos/mini56/Kaloneo/actions/runs/40480756554/jobs?per_page=100' | ConvertFrom-Json
+          if($LASTEXITCODE -ne 0 -or $jobs.jobs.Count -ne 3 -or @($jobs.jobs|Where-Object{$_.conclusion -ne 'success'}).Count -ne 0){
+            throw 'All three Windows audit jobs must pass.'
+          }
+          Write-Host 'KALONEO_100189_ALL_THREE_AUDITS=SUCCESS'
+      - name: Retrieve exact Windows installer previously tested
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          New-Item -ItemType Directory -Path release -Force|Out-Null
+          gh run download 40480756554 --repo mini56/Kaloneo --name KALONEO-Setup-1.00.189-windows-valide --dir release
+          if($LASTEXITCODE -ne 0){throw 'Validated installer artifact unavailable.'}
+          $item=Get-Item release/KALONEO-Setup-1.00.189.exe -ErrorAction Stop
+          if($item.Length -ne 320841834){throw "Unexpected file size $($item.Length)"}
+          $hash=(Get-FileHash -Algorithm SHA256 $item.FullName).Hash.ToUpperInvariant()
+          if($hash -ne '1C387333F1FA58F82B3EDB0BB41558D621C308AC17D2D7253F291ABCC4AA5930'){throw "Unexpected SHA256 $hash"}
+          Write-Host "KALONEO_100189_EXACT_SETUP_VERIFIED=OK SHA256=$hash"
+      - name: Publish GitHub Release without rebuilding or changing executable
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag='kaloneo-1.00.189'
+          $existing=gh release view $tag --repo mini56/Kaloneo --json url 2>$null
+          if($LASTEXITCODE -eq 0){throw 'Release already exists; never duplicate the version.'}
+          $notes=@'
+          KALONÉO 1.00.189 — première version avec la numérotation KALONÉO.
+          - Bilans : niveaux et commentaires officiels synchronisés sur les 18 lignes.
+          - Bilan général : affichage des pourcentages arrondis à l'entier le plus proche dans l'application et dans le Word, sans changement des notes ni des seuils.
+          - Rédaction d'un e-mail : adresses kaloneo.org, objet Mail-Kalonéo et numéro fictif, bouton Envoyer intégré au bloc droit, deux panneaux vert clair, illustration fournie.
+          - Traitement de texte : instructions, dossier et correction du fichier Nom_Evaluation_Kalonéo (barème inchangé sur 8).
+          - Contrôles Windows : exercice e-mail 6/6, texte 8/8, bilans, Word, Builder, préservation des données candidats chiffrées, mise à jour depuis 0.0.212, démarrage du programme installé sans erreur JavaScript.
+          Contrôle GitHub Actions : https://github.com/mini56/Kaloneo/actions/runs/40480756554
+          SHA256 du Setup : 1C387333F1FA58F82B3EDB0BB41558D621C308AC17D2D7253F291ABCC4AA5930
+          '@
+          gh release create $tag release/KALONEO-Setup-1.00.189.exe --repo mini56/Kaloneo --target 848620d80de4c2cae982d58febf2c3c460cfd67a --title 'KALONÉO 1.00.189 — Setup Windows' --notes $notes --prerelease
+          if($LASTEXITCODE -ne 0){throw 'GitHub Release creation refused; validated Setup remains available in the successful GitHub Actions artifact.'}
+          gh release view $tag --repo mini56/Kaloneo --json url,assets
+          if($LASTEXITCODE -ne 0){throw 'Unable to verify published Release.'}
