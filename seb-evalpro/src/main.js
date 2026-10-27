@@ -27,9 +27,11 @@ const { internalStorageRoot, documentsWordRoot, migrateLegacyDocumentsStorage } 
 const kaloneoFullParcoursRoute = require('./kaloneo-full-parcours-route');
 const { buildBilanDocxBuffer, decryptBilanDocxBuffer } = require('./bilan-docx-main');
 const { createPasswordStore } = require('./kaloneo-passwords');
-const {checkUpdates,downloadVerified}=require('./kaloneo-update-checker');
+const {checkUpdates}=require('./kaloneo-update-checker');
+const {officialFile,isVerifiedFile,stageVerifiedSetup,startAfterApplicationExit,canInstallVerifiedUpdate}=require('./kaloneo-update-install');
 let pendingKaloneoUpdate=null;
 let lastVerifiedKaloneoSetupPath=null;
+let kaloneoUpdateInstallationStarting=false;
 const { inspectCandidateOverflow } = require('./kaloneo-layout-diagnostics');
 
 // The taskbar must show exactly the same chameleon as the candidate's left bar.
@@ -1002,9 +1004,15 @@ ipcMain.handle('kaloneo-updates:check',async(event)=>{
   if(getCandidateStore().getActiveCandidate())
     return {ok:false,error:'Terminez le parcours candidat avant la vérification des mises à jour.'};
   pendingKaloneoUpdate=null;
+  lastVerifiedKaloneoSetupPath=null;
   try{
     const result=await checkUpdates(app.getVersion());
-    if(result.status==='available')pendingKaloneoUpdate=result.latest;
+    if(result.status==='available'){
+      pendingKaloneoUpdate=result.latest;
+      const filename=officialFile(result.latest,process.env.LOCALAPPDATA);
+      result.prepared=await isVerifiedFile(result.latest,filename);
+      if(result.prepared)lastVerifiedKaloneoSetupPath=filename;
+    }
     return result;
   }catch(error){
     return {ok:false,error:'Vérification impossible. Contrôlez la connexion Internet : '+String(error.message||error)};
@@ -1015,25 +1023,59 @@ ipcMain.handle('kaloneo-updates:download',async(event)=>{
     return {ok:false,error:'Accès Administrateur requis.'};
   if(getCandidateStore().getActiveCandidate())
     return {ok:false,error:'Terminez le parcours candidat avant de télécharger.'};
+  if(kaloneoUpdateInstallationStarting)
+    return {ok:false,error:'Une installation est déjà en cours de démarrage.'};
   const update=pendingKaloneoUpdate;
   if(!update)return {ok:false,error:'Vérifiez d’abord les mises à jour.'};
-  const pick=await dialog.showSaveDialog(mainWindow,{
-    title:'Enregistrer la mise à jour KALONÉO vérifiée',
-    defaultPath:path.join(app.getPath('downloads'),update.filename),
-    buttonLabel:'Télécharger le Setup',
-    filters:[{name:'Installateur KALONÉO',extensions:['exe']}]
-  });
-  if(pick.canceled||!pick.filePath)return {ok:false,cancelled:true};
   lastVerifiedKaloneoSetupPath=null;
   try{
-    // Le dialogue Enregistrer est terminé : signaler le début réel du
-    // transfert. Ne jamais annoncer "en cours" avant le choix du dossier.
+    // Dossier fixe, en dehors du programme installé et des dossiers candidats.
+    // Un fichier inachevé reste .kaloneo-download et n'est jamais exécutable.
     event.sender.send('kaloneo-updates:download-started');
-    const result=await downloadVerified(update,pick.filePath);
+    const result=await stageVerifiedSetup(update,process.env.LOCALAPPDATA);
     if(result.ok)lastVerifiedKaloneoSetupPath=result.filePath;
     return result;
   }catch(error){
     return {ok:false,error:'Téléchargement non validé : '+String(error.message||error)};
+  }
+});
+ipcMain.handle('kaloneo-updates:install',async(event)=>{
+  if(!adminSessionUnlocked||!mainWindow||event.sender!==mainWindow.webContents)
+    return {ok:false,error:'Accès Administrateur requis.'};
+  if(getCandidateStore().getActiveCandidate())
+    return {ok:false,error:'Terminez le parcours candidat avant l’installation.'};
+  if(kaloneoUpdateInstallationStarting)
+    return {ok:false,error:'Installation déjà lancée.'};
+  if(process.platform!=='win32'||!app.isPackaged)
+    return {ok:false,error:'Installation automatique réservée à KALONÉO Windows installé.'};
+  const update=pendingKaloneoUpdate;
+  if(!update||!lastVerifiedKaloneoSetupPath)
+    return {ok:false,error:'Téléchargez et vérifiez d’abord la nouvelle version.'};
+  let verifiedSetup;
+  try{
+    verifiedSetup=await canInstallVerifiedUpdate(update,app.getVersion(),process.env.LOCALAPPDATA);
+    if(verifiedSetup!==lastVerifiedKaloneoSetupPath)
+      throw new Error('Le Setup vérifié ne correspond pas au téléchargement.');
+  }catch(error){
+    return {ok:false,error:String(error.message||error)};
+  }
+  const answer=await dialog.showMessageBox(mainWindow,{
+    type:'question',title:'Installer la mise à jour KALONÉO',
+    message:'Installer KALONÉO '+update.version+' maintenant ?',
+    detail:'Après confirmation, KALONÉO se fermera. L’installateur vous demandera d’accepter la licence et de saisir le mot de passe habituel. Vos candidats et bilans doivent être conservés.',
+    buttons:['Annuler','Fermer KALONÉO et installer'],
+    defaultId:0,cancelId:0,noLink:true
+  });
+  if(answer.response!==1)return {ok:false,cancelled:true};
+  try{
+    // Recontrôler le fichier après la confirmation, avant de quitter.
+    verifiedSetup=await canInstallVerifiedUpdate(update,app.getVersion(),process.env.LOCALAPPDATA);
+    startAfterApplicationExit(verifiedSetup,process.pid);
+    kaloneoUpdateInstallationStarting=true;
+    setTimeout(()=>app.quit(),150);
+    return {ok:true,closing:true};
+  }catch(error){
+    return {ok:false,error:'Impossible de démarrer l’installateur : '+String(error.message||error)};
   }
 });
 // Ouvrir l'Explorateur seulement pour le fichier effectivement téléchargé
