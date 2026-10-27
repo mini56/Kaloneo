@@ -179,6 +179,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
       '<div class="settings-update-actions"><button type="button" data-check-update>Vérifier les mises à jour</button>'+
       '<p data-update-status role="status" aria-live="polite"></p>'+
       '<button type="button" data-download-update hidden>Télécharger la mise à jour</button>'+
+      '<button type="button" data-install-update hidden>Installer maintenant</button>'+
       '<button type="button" data-open-downloaded-setup-folder hidden>Ouvrir le dossier du Setup</button></div></nav>'+
       '<div class="settings-main" role="region" aria-label="Contenu des réglages">'+
       '<section data-section="passwords"><div class="settings-intro"><h3>Gestion des accès</h3>'+
@@ -251,10 +252,13 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
     layer.querySelector('[data-kaloneo-about-logo]').src=kaloneoLogoUrl;
     const checkUpdate=layer.querySelector('[data-check-update]');
     const downloadUpdate=layer.querySelector('[data-download-update]');
+    const installUpdate=layer.querySelector('[data-install-update]');
     const openDownloadedSetupFolder=layer.querySelector('[data-open-downloaded-setup-folder]');
     const updateStatus=layer.querySelector('[data-update-status]');
     checkUpdate.addEventListener('click',async()=>{
       downloadUpdate.hidden=true;
+      installUpdate.hidden=true;
+      openDownloadedSetupFolder.hidden=true;
       checkUpdate.disabled=true;
       updateStatus.textContent='Recherche des mises à jour…';
       try{
@@ -262,8 +266,14 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
         if(!updateStatus.isConnected)return;
         if(!answer?.ok){updateStatus.textContent=answer?.error||'Vérification impossible.';return;}
         if(answer.status==='available'){
-          updateStatus.textContent='Nouvelle version '+answer.latest.version+' disponible (version installée : '+answer.installedVersion+').';
-          downloadUpdate.hidden=false;
+          if(answer.prepared){
+            updateStatus.textContent='Mise à jour '+answer.latest.version+' déjà téléchargée et vérifiée (SHA256 conforme). Vous pouvez installer maintenant.';
+            installUpdate.hidden=false;
+            openDownloadedSetupFolder.hidden=false;
+          }else{
+            updateStatus.textContent='Nouvelle version '+answer.latest.version+' disponible (version installée : '+answer.installedVersion+').';
+            downloadUpdate.hidden=false;
+          }
         }else if(answer.status==='current'){
           updateStatus.textContent='KALONÉO est à jour (version '+answer.installedVersion+').';
         }else{
@@ -275,7 +285,8 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
     downloadUpdate.addEventListener('click',async()=>{
       downloadUpdate.disabled=true;
       openDownloadedSetupFolder.hidden=true;
-      updateStatus.textContent='Choisissez le dossier où enregistrer la mise à jour. Le téléchargement commencera après validation.';
+      installUpdate.hidden=true;
+      updateStatus.textContent='La mise à jour va être téléchargée dans le dossier sécurisé KALONEO-Updates de Windows.';
       const onDownloadStarted=()=>{
         if(updateStatus.isConnected){
           updateStatus.textContent='Mise à jour en cours de téléchargement. Veuillez patienter jusqu’au message « Téléchargement terminé ». Ne fermez pas KALONÉO pendant le transfert et la vérification.';
@@ -287,8 +298,9 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
         if(!updateStatus.isConnected)return;
         if(answer?.cancelled)updateStatus.textContent='Téléchargement annulé.';
         else if(answer?.ok){
-          updateStatus.textContent='Téléchargement terminé et vérifié (SHA256 conforme). Fichier enregistré : '+answer.filePath+'. Ouvrez le dossier du Setup, fermez KALONÉO, puis lancez le fichier. À la fin de l’installation, cochez « Démarrer KALONÉO maintenant » pour le rouvrir automatiquement ; sinon, redémarrez-le depuis l’icône du Bureau.';
+          updateStatus.textContent='Téléchargement terminé et vérifié (SHA256 conforme). Fichier enregistré : '+answer.filePath+'. Cliquez sur « Installer maintenant » pour fermer KALONÉO et lancer le Setup. À la fin, laissez cochée « Démarrer KALONÉO maintenant » pour ouvrir la nouvelle version.';
           downloadUpdate.hidden=true;
+          installUpdate.hidden=false;
           openDownloadedSetupFolder.hidden=false;
         }
         else updateStatus.textContent=answer?.error||'Téléchargement impossible.';
@@ -297,6 +309,22 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
         ipcRenderer.removeListener('kaloneo-updates:download-started',onDownloadStarted);
         if(downloadUpdate.isConnected)downloadUpdate.disabled=false;
       }
+    });
+    installUpdate.addEventListener('click',async()=>{
+      installUpdate.disabled=true;
+      updateStatus.textContent='Vérification finale du Setup. Confirmez l’installation pour fermer KALONÉO et ouvrir l’installateur.';
+      try{
+        const answer=await ipcRenderer.invoke('kaloneo-updates:install');
+        if(!updateStatus.isConnected)return;
+        if(answer?.ok){
+          updateStatus.textContent='Fermeture de KALONÉO et ouverture du Setup de mise à jour…';
+        }else if(answer?.cancelled){
+          updateStatus.textContent='Installation annulée. La mise à jour vérifiée reste disponible.';
+        }else{
+          updateStatus.textContent=answer?.error||'Lancement de l’installation impossible.';
+        }
+      }catch(_){if(updateStatus.isConnected)updateStatus.textContent='Lancement de l’installation interrompu.';}
+      finally{if(installUpdate.isConnected)installUpdate.disabled=false;}
     });
     openDownloadedSetupFolder.addEventListener('click',async()=>{
       openDownloadedSetupFolder.disabled=true;
