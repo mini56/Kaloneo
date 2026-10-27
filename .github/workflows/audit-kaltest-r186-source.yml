@@ -13,6 +13,8 @@ on:
       - 'seb-evalpro/scripts/kaltest-single-source-guard.js'
       - 'seb-evalpro/scripts/parcours-registry-guard.js'
       - 'seb-evalpro/package.json'
+      - 'kaloneo/archetype-registry.json'
+      - 'seb-evalpro/scripts/kaloneo-r186-candidate-electron-smoke-main.js'
       - 'seb-evalpro/source/nvmail.html'
       - 'seb-evalpro/source/nwtexte.html'
   workflow_dispatch:
@@ -25,6 +27,7 @@ jobs:
     defaults:
       run:
         working-directory: seb-evalpro
+        shell: bash
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
