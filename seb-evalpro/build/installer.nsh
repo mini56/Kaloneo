@@ -461,6 +461,8 @@ Function SebBrandingFinishCreate
 
   ; Choice is shown only after successful interactive installation.
   ; Checked by default; users can uncheck to leave the installer without launching.
+  ${NSD_CreateLabel} 12u 137u 91% 26u "Installation terminée. Si vous décochez la case ci-dessous, redémarrez KALONÉO depuis l’icône du Bureau."
+  Pop $0
   ${NSD_CreateCheckbox} 12u 167u 91% 22u "Démarrer KALONÉO maintenant"
   Pop $KaloneoFinishLaunchCheckbox
   ${NSD_Check} $KaloneoFinishLaunchCheckbox
