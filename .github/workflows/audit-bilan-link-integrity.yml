@@ -24,6 +24,8 @@ on:
       - 'seb-evalpro/src/bilan-history-preload.js'
       - 'seb-evalpro/src/bilan-docx-main.js'
       - 'seb-evalpro/src/institutional-bilan-grid.js'
+      - 'seb-evalpro/scripts/institutional-general-rounding-smoke.js'
+      - 'seb-evalpro/scripts/general-bilan-synthesis-electron-smoke-main.js'
       - 'seb-evalpro/src/candidate-catalog-preload.js'
       - 'seb-evalpro/overrides/admin-bilan.html'
   workflow_dispatch:
@@ -56,6 +58,8 @@ jobs:
           node --check source/js/admin-bilan-kaloneo.js
           node --check scripts/bilan-level-consistency-smoke.js
           node scripts/bilan-level-consistency-smoke.js
+      - name: Arrondir TOUS les pourcentages du bilan general et du Word sans toucher aux notes ni aux niveaux
+        run: node scripts/institutional-general-rounding-smoke.js
       - name: Placement droite du tri, singulier/pluriel et boutons bas du bilan et Word
         run: node scripts/bilan-tri-word-footer-smoke.js
       - name: Ergonomie de la bibliotheque, import/export et creation de parcours avec liaison obligatoire

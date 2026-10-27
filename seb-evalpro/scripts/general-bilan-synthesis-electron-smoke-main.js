@@ -77,6 +77,29 @@ app.whenReady().then(async()=>{
    assert((await win.webContents.executeJavaScript("document.getElementById('seb-gb-status').textContent")).includes('Sources modifiées'));
    win.destroy();win=null;
   }
+  // Vérification du rendu réel Windows : arrondir toutes les lignes à l'unité,
+  // pas seulement le premier pourcentage. Aucun arrondi des scores et niveaux.
+  general=aggregateGeneralBilan([{candidateId:'ARRONDI',archive:{document:{rows:[
+   {kind:'item',key:'organisation',level:'III',points:2,possible:33},
+   {kind:'item',key:'texte',level:'I',points:7,possible:8},
+   {kind:'item',key:'math-enonce',level:'II',points:2,possible:3}
+  ]}}}]);
+  win=new BrowserWindow({show:false,width:1366,height:768,webPreferences:{preload:path.join(__dirname,'bilan-parcours-filter-test-preload.js'),contextIsolation:true,nodeIntegration:false,sandbox:false}});
+  await win.loadFile(path.join(__dirname,'..','app','web','admin-bilan.html'));await pause();
+  await win.webContents.executeJavaScript(`window.bilanFilterTest.openGeneral('${person.personId}')`);
+  const rounding=await win.webContents.executeJavaScript(`(()=>{
+   const root=document.getElementById('seb-gb-original-table').shadowRoot;
+   return ['organisation','texte','math-enonce'].map(key=>{
+     const tr=root.querySelector('tr[data-r="'+key+'"]');
+     return {key,detail:tr.querySelector('.detail').textContent,level:tr.querySelector('.level.on').dataset.l};
+   });
+  })()`);
+  assert.deepEqual(rounding,[
+   {key:'organisation',detail:'6 % de réponses correctes.',level:'III'},
+   {key:'texte',detail:'88 % de réponses correctes.',level:'I'},
+   {key:'math-enonce',detail:'67 % de réponses correctes.',level:'II'}
+  ],'Toutes les valeurs visibles du vrai bilan général doivent être arrondies sans changer les niveaux.');
+  win.destroy();win=null;
   const triTimes=[5,8,11,7,9].map((s,i)=>'N°'+(i+1)+' : 00 min '+String(s).padStart(2,'0')+' s').join('\n');
   general=aggregateGeneralBilan([evaluation('a',6),{candidateId:'tri',archive:{document:{rows:[{kind:'item',key:'tri-temps',level:'I',assessmentMode:'level',triTimes,triAverage:'00:08'},{kind:'item',key:'tri-erreurs',level:'I',assessmentMode:'level',triErrors:'2 erreurs'}]}}}]);
   win=new BrowserWindow({show:false,width:1366,height:768,webPreferences:{preload:path.join(__dirname,'bilan-parcours-filter-test-preload.js'),contextIsolation:true,nodeIntegration:false,sandbox:false}});
@@ -85,7 +108,7 @@ app.whenReady().then(async()=>{
   const measurements=await win.webContents.executeJavaScript(`(()=>{const t=document.getElementById('seb-gb-original-table').shadowRoot;return{times:t.querySelector('#triTimes').innerText,average:t.querySelector('#triAvg').textContent,errors:t.querySelector('#triErr').textContent}})()`);
   assert.deepEqual(measurements,{times:triTimes,average:'00:08',errors:'2 erreurs'});
   win.destroy();win=null;
-  console.log('GENERAL_SYNTHESIS_ELECTRON=OK — bouton visible 1366/1200, vraie grille consolidée, génération, modification, sauvegarde, Word, réouverture et erreur sans perte');
+  console.log('GENERAL_SYNTHESIS_ELECTRON=OK — bouton visible 1366/1200, vraie grille consolidée, arrondis 6/88/67 sans décimales, génération, modification, sauvegarde, Word, réouverture et erreur sans perte');
   clearTimeout(deadline);app.exit(0);
  }catch(error){console.error(error.stack||error);clearTimeout(deadline);if(win)win.destroy();app.exit(2)}
 });

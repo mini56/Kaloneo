@@ -184,7 +184,9 @@ function percentLevel(value){
  if(!Number.isFinite(value))return 'NE';
  return value>=NUMERIC_THRESHOLD.I?'I':value>=NUMERIC_THRESHOLD.II?'II':'III';
 }
-function fmt(value){return Number(value).toLocaleString('fr-FR',{maximumFractionDigits:2})+' %'}
+// Arrondir uniquement l'affichage du bilan général (écran et Word).
+// Les points, les totaux et le pourcentage brut restent exacts pour les niveaux I/II/III.
+function fmt(value){return Math.round(Number(value)).toLocaleString('fr-FR')+' %'}
 function aggregateInstitutionalRows(evaluations){
  const {projectArchive}=require('./bilan-parcours');
  evaluations=(Array.isArray(evaluations)?evaluations:[]).map(e=>({...e,archive:e.archive?projectArchive(e.archive,e.session||{}):null}));
