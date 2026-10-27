@@ -1,4 +1,4 @@
-name: "KALONÉO — afficher le dossier du Setup téléchargé"
+name: "KALONÉO — téléchargement et installation guidée"
 on:
   push:
     branches: [fix-r186-kaltest-source-unique-20261027]
@@ -6,6 +6,8 @@ on:
       - "seb-evalpro/src/main.js"
       - "seb-evalpro/src/kaloneo-admin-settings.js"
       - "seb-evalpro/src/kaloneo-update-checker.js"
+      - "seb-evalpro/src/kaloneo-update-install.js"
+      - "seb-evalpro/scripts/kaloneo-update-install-smoke.js"
       - "seb-evalpro/scripts/kaloneo-update-checker-smoke.js"
       - ".github/workflows/audit-kaloneo-update-folder.yml"
   workflow_dispatch:
@@ -30,7 +32,13 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Erreur de syntaxe dans main.js'}
           node --check src/kaloneo-admin-settings.js
           if($LASTEXITCODE -ne 0){throw 'Erreur de syntaxe dans les Réglages'}
+          node --check src/kaloneo-update-install.js
+          if($LASTEXITCODE -ne 0){throw 'Erreur de syntaxe de l’installateur de mises à jour'}
       - name: Contrôler les téléchargements SHA256 et le bouton dossier
         run: |
           node scripts/kaloneo-update-checker-smoke.js
           if($LASTEXITCODE -ne 0){throw 'Régression téléchargement sécurisé ou ouverture du dossier'}
+      - name: Vérifier le cache dédié et le démarrage de l'installateur
+        run: |
+          node scripts/kaloneo-update-install-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Régression du téléchargement sécurisé ou du lancement différé'}
