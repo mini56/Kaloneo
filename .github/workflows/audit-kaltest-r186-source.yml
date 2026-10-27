@@ -1,0 +1,52 @@
+name: "R186 — KALTEST source unique (sans Setup)"
+on:
+  push:
+    branches:
+      - fix-r186-kaltest-source-unique-20261027
+    paths:
+      - '.github/workflows/audit-kaltest-r186-source.yml'
+      - 'seb-evalpro/source/kaltest/tests/redaction-email/**'
+      - 'seb-evalpro/source/kaltest/tests/traitement-texte-bureautique/**'
+      - 'seb-evalpro/source/js/kaltest-pilot2-runtime.js'
+      - 'seb-evalpro/source/js/nwtexte-*'
+      - 'seb-evalpro/source/css/kaltest-pilot2.css'
+      - 'seb-evalpro/scripts/kaltest-single-source-guard.js'
+      - 'seb-evalpro/scripts/parcours-registry-guard.js'
+      - 'seb-evalpro/package.json'
+      - 'seb-evalpro/source/nvmail.html'
+      - 'seb-evalpro/source/nwtexte.html'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  kaltest-source-unique:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          npm install --no-audit --no-fund
+          python -m pip install Pillow==11.3.0 imageio-ffmpeg==0.6.0
+      - name: Test KALTEST source definitions and syntax
+        run: |
+          node --check source/js/kaltest-pilot2-runtime.js
+          node --check source/js/nwtexte-quill-engine.js
+          node --check source/js/nwtexte-save-simulation.js
+          node scripts/kaltest-single-source-guard.js
+      - name: Build real candidate application (no Setup)
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          npm run prepare:web
+          node scripts/kaltest-single-source-guard.js
+      - name: Actual KALTEST Electron runtime
+        run: npx electron --no-sandbox scripts/kaloneo-shared-html-candidate-electron-smoke-main.js
