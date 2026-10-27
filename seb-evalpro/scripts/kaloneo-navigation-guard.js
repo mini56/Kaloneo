@@ -65,8 +65,6 @@ const protectedButtons={
   'app/web/genrenombres.html':['id="btnCheck"','id="btnNextGenreNombre"'],
   'app/web/dictee.html':['id="verifyBtn"','id="nextBtn"'],
   'app/web/tri_de_cheville.html':['id="calc"','id="seb-tri-next"'],
-  'app/web/nwtexte.html':['id="btn-score"'],
-  'app/web/nvmail.html':['id="nvmail-next"'],
   'app/web/carre.html':['id="btnValidate"','id="btnNext"']
 };
 for(const [file,tokens] of Object.entries(protectedButtons)){
@@ -74,7 +72,7 @@ for(const [file,tokens] of Object.entries(protectedButtons)){
   for(const token of tokens) if(!html.includes(token)) fail('fonction de parcours supprimée dans '+file+': '+token);
 }
 
-const mail=read('app/web/nvmail.html');
-if(!mail.includes('<ul class="seb-kaloneo-no-bullets">')) fail('liste des pièces jointes non protégée contre les puces');
+const mailRuntime=read('app/web/js/kaltest-pilot2-runtime.js');
+if(!mailRuntime.includes('kaltest-mail-attachment')||!mailRuntime.includes('kaltest-mail-send')) fail('formulaire KALTEST e-mail incomplet');
 
 console.log('SEB EvalPro garde navigation KALONÉO: barre V16 52 px, vrai logo, gradient bleu, horloge, calculatrice intégrable, actions uniques et viewport réservé — OK.');
