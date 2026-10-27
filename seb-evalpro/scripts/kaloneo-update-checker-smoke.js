@@ -34,9 +34,16 @@ async function run(){
   try{
     const target=path.join(dir,latest.filename);
     const stream=()=>Readable.from((async function*(){for(let i=0;i<40;i++)yield block;})());
-    const r=await downloadVerified(latest,target,{responseFor:async()=>stream()});
+    const progress=[];const phases=[];
+    const r=await downloadVerified(latest,target,{responseFor:async()=>stream(),
+      onProgress:value=>progress.push(value),onPhase:phase=>phases.push(phase)});
     assert.equal(r.ok,true);
     assert.equal(r.sha256,sha);
+    assert(progress.length>5,'Actual progress events must be emitted during the transfer');
+    assert(progress.every((p,i)=>p.percent>=0&&p.percent<=100&&p.receivedBytes<=length&&p.totalBytes===length&&(!i||p.percent>progress[i-1].percent)),'Percentages must be monotonic and based on actual bytes');
+    assert.equal(progress.at(-1).percent,100);
+    assert.equal(progress.at(-1).receivedBytes,length);
+    assert.deepEqual(phases,['verifying'],'SHA256 stage must be distinct from received bytes');
     assert.equal(fs.statSync(target).size,length);
     fs.rmSync(target);
     const modified={...latest,sha256:'0'.repeat(64)};
@@ -58,6 +65,15 @@ async function run(){
   assert.ok(settings.indexOf('data-kaloneo-about-logo')<settings.indexOf('data-check-update'),'bouton sous logo');
   assert.ok(settings.includes('La mise à jour va être téléchargée dans le dossier sécurisé KALONEO-Updates'),'Indiquer le dossier sécurisé de téléchargement');
   assert.ok(main.includes("event.sender.send('kaloneo-updates:download-started')"),'Émettre le signal de démarrage réel après le choix du fichier');
+  assert.ok(main.includes("event.sender.send('kaloneo-updates:download-progress',progress)"),'Propagate genuine streaming progress');
+  assert.ok(main.includes("event.sender.send('kaloneo-updates:download-phase',phase)"),'Separate SHA256 verification phase');
+  assert.ok(settings.includes('data-update-progress-area')&&settings.includes('data-update-progress-label'),'Green progress indicator must exist');
+  assert.ok(settings.includes('data-update-progress max="100" value="0"'),'Progress must start at zero');
+  assert.ok(settings.includes('background:#20a457'),'Green bar must have an explicit color');
+  assert.ok(settings.includes("ipcRenderer.on('kaloneo-updates:download-progress',onDownloadProgress)"),'Listen for genuine progress');
+  assert.ok(settings.includes("ipcRenderer.removeListener('kaloneo-updates:download-progress',onDownloadProgress)"),'Remove progress listener after completion');
+  assert.ok(settings.includes('1048576'),'Transferred megabytes shown alongside percent');
+  assert.ok(settings.includes('100 % — vérification en cours'),'100 percent bytes is not a claim of verified download');
   assert.ok(settings.includes("ipcRenderer.on('kaloneo-updates:download-started',onDownloadStarted)"),'Afficher la progression au démarrage effectif du transfert');
   assert.ok(settings.includes("ipcRenderer.removeListener('kaloneo-updates:download-started',onDownloadStarted)"),'Nettoyer le signal après téléchargement ou annulation');
   assert.ok(settings.includes('Mise à jour en cours de téléchargement. Veuillez patienter'),'Indiquer clairement d’attendre la fin du téléchargement');
