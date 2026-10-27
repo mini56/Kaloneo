@@ -1,0 +1,16 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const src=fs.readFileSync(path.resolve(__dirname,'..','build','installer.nsh'),'utf8');
+const at=s=>src.indexOf(s);
+assert(at('!insertmacro MUI_PAGE_LICENSE')>=0,'licence missing');
+assert(at('Page custom KaloneoPasswordPageCreate KaloneoPasswordPageLeave')>at('!insertmacro MUI_PAGE_LICENSE'),'password must follow licence');
+assert(src.includes('${NSD_CreatePassword}'),'masked input missing');
+assert(src.includes('${NSD_CreateCheckbox} 5u 85u 92% 19u "Afficher le mot de passe"'),'visibility checkbox missing');
+assert(src.includes('${NSD_Uncheck} $KaloneoPasswordShowCheckbox'),'password must start hidden');
+assert(src.includes('${NSD_OnClick} $KaloneoPasswordShowCheckbox KaloneoPasswordVisibilityToggle'),'visibility not wired');
+assert(src.includes('SendMessage $KaloneoPasswordField ${EM_SETPASSWORDCHAR} 0 0'),'show operation missing');
+assert(src.includes('SendMessage $KaloneoPasswordField ${EM_SETPASSWORDCHAR} 42 0'),'hide operation missing');
+assert(src.includes('${NSD_GetText} $KaloneoPasswordField $KaloneoPasswordEntry'),'password verification must read actual input');
+assert(src.includes('Call KaloneoVerifyInstallerPassword'),'original verifier must remain');
+assert(src.includes('SetErrorLevel $KaloneoPasswordResult'),'silent verification must remain');
+console.log('KALONEO_PASSWORD_VISIBILITY=SUCCESS: licence, show/hide, verifier and silent guard preserved');
