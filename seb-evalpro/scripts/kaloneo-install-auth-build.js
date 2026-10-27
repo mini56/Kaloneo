@@ -10,7 +10,7 @@ const salt=crypto.randomBytes(16).toString('hex');
 const digest=crypto.createHash('sha256').update(Buffer.from(salt+password,'utf16le')).digest();
 const items=['; Generated in GitHub Actions from KALONEO_INSTALL_PASSWORD; never commit this file.',
   '!define KALONEO_PASSWORD_SALT "'+salt+'"'];
-for(let i=0;i<8;i++)items.push('!define KALONEO_PASSWORD_WORD'+i+' "0x'+digest.readInt32LE(i*4)+'"');
+for(let i=0;i<8;i++)items.push('!define KALONEO_PASSWORD_WORD'+i+' "'+digest.readInt32LE(i*4)+'"');
 const directory=path.join(__dirname,'..','build','pilot-resources');
 fs.mkdirSync(directory,{recursive:true});
 const output=path.join(directory,'kaloneo-password-hash.nsh');
