@@ -1,0 +1,160 @@
+name: "KALONÉO 1.00.190 — Setup Windows testé et nouvelle Release"
+on:
+  push:
+    branches: [fix-r186-kaltest-source-unique-20261027]
+    paths:
+      - '.github/workflows/publish-kaloneo-v1-00-190.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: kaloneo-release-1-00-190
+  cancel-in-progress: false
+jobs:
+  build-test-and-release:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: seb-evalpro
+        shell: pwsh
+    env:
+      KALONEO_SKIP_OFFICIAL_V1: '0'
+      KALONEO_STRICT_RENDER_IMAGES: '1'
+      KALONEO_STRICT_INTRO_VIDEO: '1'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout release commit
+        uses: actions/checkout@v4
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Build dependencies and branded installer resources
+        run: |
+          $ErrorActionPreference='Stop'
+          python -m pip install --disable-pip-version-check Pillow==11.3.0 imageio-ffmpeg==0.6.0
+          if($LASTEXITCODE -ne 0){throw 'Python tools unavailable'}
+          python scripts/kaloneo-r125-branding.py
+          if($LASTEXITCODE -ne 0){throw 'KALONÉO resources not built'}
+          python scripts/r158-build-installer-intro.py
+          if($LASTEXITCODE -ne 0){throw 'Installer intro not built'}
+          npm install --no-audit --no-fund
+          if($LASTEXITCODE -ne 0){throw 'NPM failed'}
+      - name: Compile canonical KALTEST definitions and verify no old HTML pages
+        run: |
+          $ErrorActionPreference='Stop'
+          node scripts/build-kaltest-pilot2-data.js
+          if($LASTEXITCODE -ne 0){throw 'KALTEST definitions missing'}
+          npm run prepare:web
+          if($LASTEXITCODE -ne 0){throw 'Canonical source preparation failed'}
+          node scripts/kaltest-single-source-guard.js
+          if($LASTEXITCODE -ne 0){throw 'Old exercise or correction detected'}
+          node scripts/kaloneo-r178-tri-instruction-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Tri de chevilles regression'}
+          node scripts/kaloneo-number-grid-v1-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Grilles regression'}
+      - name: Verify real Electron candidate exercises at 1366 and 1200
+        run: |
+          $ErrorActionPreference='Stop'
+          & npx electron --no-sandbox scripts/kaloneo-r186-candidate-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Real KALTEST mail/text interface is incorrect'}
+          & npx electron --no-sandbox scripts/kaloneo-shared-html-candidate-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Builder shared rendering regression'}
+      - name: Protect official bilans and candidate data
+        run: |
+          $ErrorActionPreference='Stop'
+          node scripts/bilan-parcours-filter-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Bilan regression'}
+          node scripts/general-bilan-aggregation-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'General bilan regression'}
+          node scripts/institutional-general-rounding-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Bilan rounding regression'}
+          node scripts/bilan-level-consistency-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Institutional levels changed'}
+          node scripts/general-bilan-ipc-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'General bilan export regression'}
+          node scripts/candidate-loss-prevention-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Candidate preservation regression'}
+          node scripts/kaloneo-packaged-bilan-routing-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Bilan packaged routing regression'}
+      - name: Verify license and Windows NSIS protections
+        run: |
+          $ErrorActionPreference='Stop'
+          node scripts/r174-license-about-nsis-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'KALONEO licensing regression'}
+          node scripts/kaloneo-nsis-directory-template.js
+          if($LASTEXITCODE -ne 0){throw 'NSIS directory hook regression'}
+      - name: Build KALONÉO 1.00.190 Windows Setup
+        run: |
+          & npx electron-builder --win nsis --config build/kaloneo-v1-00-190-final-setup.yml --publish never
+          if($LASTEXITCODE -ne 0){throw 'Windows Setup compilation failed'}
+          $exe=Get-Item dist/KALONEO-Setup-1.00.190.exe -ErrorAction Stop
+          if($exe.Length -lt 100MB){throw 'Setup unusually small'}
+          Write-Host "KALONEO_190_SETUP_BUILT=$($exe.Length) bytes"
+      - name: Real Windows update from 1.00.189 to 1.00.190 preserves encrypted data
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Path dist/previous -Force | Out-Null
+          gh release download kaloneo-1.00.189 --repo mini56/Kaloneo --pattern 'KALONEO-Setup-1.00.189.exe' --dir dist/previous --clobber
+          if($LASTEXITCODE -ne 0){throw 'Previous release unavailable'}
+          & ./scripts/r179-real-upgrade-windows-smoke.ps1 -PreviousSetup (Resolve-Path dist/previous/KALONEO-Setup-1.00.189.exe) -NewSetup (Resolve-Path dist/KALONEO-Setup-1.00.190.exe)
+          if($LASTEXITCODE -ne 0){throw 'Candidate data modified or Windows upgrade failed'}
+      - name: Start real packaged and installed KALONÉO without JavaScript errors
+        run: |
+          $ErrorActionPreference='Stop'
+          & ./scripts/kaloneo-packaged-startup-smoke.ps1 -Executable (Resolve-Path dist/win-unpacked/KALONEO.exe)
+          if($LASTEXITCODE -ne 0){throw 'Packaged KALONÉO does not launch'}
+          & ./scripts/kaloneo-packaged-startup-smoke.ps1 -Executable (Join-Path $env:LOCALAPPDATA 'Programs/KALONEO/KALONEO.exe')
+          if($LASTEXITCODE -ne 0){throw 'Installed KALONÉO does not launch'}
+      - name: Verify exact executable checksum and stage Release asset
+        run: |
+          $ErrorActionPreference='Stop'
+          $setup=Get-Item dist/KALONEO-Setup-1.00.190.exe -ErrorAction Stop
+          $hash=(Get-FileHash -Algorithm SHA256 $setup.FullName).Hash.ToUpperInvariant()
+          if($hash.Length -ne 64){throw 'SHA256 invalid'}
+          Set-Content -Path dist/KALONEO-Setup-1.00.190.exe.sha256 -Value "$hash  KALONEO-Setup-1.00.190.exe"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### KALONÉO 1.00.190 — Windows validé"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "SHA256: $hash"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Mise à jour réelle 1.00.189 → 1.00.190 : candidats protégés."
+          Write-Host "KALONEO_190_SETUP_SHA256=$hash"
+      - name: Preserve validated Setup and SHA256
+        uses: actions/upload-artifact@v4
+        with:
+          name: KALONEO-Setup-1.00.190-windows-valide
+          path: |
+            seb-evalpro/dist/KALONEO-Setup-1.00.190.exe
+            seb-evalpro/dist/KALONEO-Setup-1.00.190.exe.sha256
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+      - name: Publish one GitHub Release from the exact tested executable
+        run: |
+          $ErrorActionPreference='Stop'
+          $tag='kaloneo-1.00.190'
+          gh release view $tag --repo mini56/Kaloneo --json url *> $null
+          if($LASTEXITCODE -eq 0){throw 'Tag already exists: refusing to overwrite the release'}
+          $exe=Get-Item dist/KALONEO-Setup-1.00.190.exe -ErrorAction Stop
+          $sha=(Get-FileHash -Algorithm SHA256 $exe.FullName).Hash.ToUpperInvariant()
+          $notes=@"
+          KALONÉO 1.00.190 — correction des exercices réellement utilisés dans KALTEST.
+
+          - Rédaction d'un e-mail : adresses @kaloneo.org, objet Prénom Mail-Kalonéo, numéro fictif, illustration, panneaux vert clair, bouton Envoyer sous Parcourir et corrigé.
+          - Traitement de texte : consignes Kalonéo, dossier Bureau\\Kalonéo, fichier Nom_Evaluation_Kalonéo, correction de l'enregistrement /8.
+          - Les anciennes pages HTML de ces deux exercices ont été archivées sur une branche GitHub et ne sont plus intégrées dans le Setup.
+          - Éditeur de texte : moteur partagé Quill conservé comme composant technique ; définition de l'exercice et règles d'enregistrement pilotées par le KALTEST.
+          - Bilans institutionnels et bilans généraux inchangés.
+          - Windows : contrôle des vrais rendus KALTEST, démarrage après installation, mise à jour depuis 1.00.189, préservation des candidats chiffrés et du Word.
+
+          Audit complet : https://github.com/mini56/Kaloneo/actions/runs/$env:GITHUB_RUN_ID
+          SHA256 Setup : $sha
+          "@
+          gh release create $tag dist/KALONEO-Setup-1.00.190.exe dist/KALONEO-Setup-1.00.190.exe.sha256 --repo mini56/Kaloneo --target $env:GITHUB_SHA --title 'KALONÉO 1.00.190 — Setup Windows' --notes $notes --prerelease
+          if($LASTEXITCODE -ne 0){throw 'Release publication failed'}
+          gh release view $tag --repo mini56/Kaloneo --json url,assets
+          if($LASTEXITCODE -ne 0){throw 'Published Release cannot be verified'}
