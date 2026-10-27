@@ -56,7 +56,10 @@ async function run(){
   assert.ok(settings.includes('data-download-update'));
   assert.ok(settings.includes('Vérifier les mises à jour'));
   assert.ok(settings.indexOf('data-kaloneo-about-logo')<settings.indexOf('data-check-update'),'bouton sous logo');
-  assert.ok(settings.includes('Téléchargement et vérification SHA256'));
+  assert.ok(settings.includes('Téléchargement en cours… Veuillez attendre le message « Téléchargement terminé »'),'Indiquer clairement d’attendre la fin du téléchargement');
+  assert.ok(settings.includes('Ne fermez pas KALONÉO pendant le téléchargement'),'Empêcher une fermeture prématurée');
+  assert.ok(settings.includes('Téléchargement terminé et vérifié (SHA256 conforme)'),'Confirmer réellement la fin du téléchargement');
+  assert.ok(settings.includes('sinon, redémarrez-le depuis l’icône du Bureau'),'Expliquer quoi faire si le démarrage automatique est décoché');
   assert.ok(settings.includes('data-open-downloaded-setup-folder'),'Le bouton dossier doit être présent dans les Réglages');
   assert.ok(settings.includes('openDownloadedSetupFolder.hidden=false'),'Le bouton dossier doit être visible uniquement après validation du téléchargement');
   assert.ok(settings.includes('Fichier enregistré : '),'Le chemin réellement choisi doit être indiqué à l’administrateur');
