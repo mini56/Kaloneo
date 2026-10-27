@@ -3,8 +3,8 @@
 !include "WinMessages.nsh"
 !include "FileFunc.nsh"
 
-!define SEB_BUILD_NUMBER "188"
-!define SEB_BUILD_LABEL "Build #${SEB_BUILD_NUMBER}"
+!define SEB_BUILD_NUMBER "189"
+!define SEB_BUILD_LABEL "Version 1.00.${SEB_BUILD_NUMBER}"
 
 # R164 : montrer les opérations réelles de copie et de finalisation.
 ShowInstDetails show
