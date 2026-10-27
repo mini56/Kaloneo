@@ -175,7 +175,10 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
       '<button type="button" data-tab="passwords" aria-selected="true">Mots de passe</button>'+
       '<button type="button" data-tab="admin">Aide du programme</button>'+
       '<button type="button" data-tab="builder">Aide du Builder</button>'+
-      '<button type="button" data-tab="about">À propos</button><div class="settings-nav-brand"><img data-kaloneo-about-logo alt="Logo KALONÉO"></div></nav>'+
+      '<button type="button" data-tab="about">À propos</button><div class="settings-nav-brand"><img data-kaloneo-about-logo alt="Logo KALONÉO"></div>'+
+      '<div class="settings-update-actions"><button type="button" data-check-update>Vérifier les mises à jour</button>'+
+      '<p data-update-status role="status" aria-live="polite"></p>'+
+      '<button type="button" data-download-update hidden>Télécharger la mise à jour</button></div></nav>'+
       '<div class="settings-main" role="region" aria-label="Contenu des réglages">'+
       '<section data-section="passwords"><div class="settings-intro"><h3>Gestion des accès</h3>'+
       '<p>Modifiez séparément le mot de passe Administrateur ou Développeur, après vérification de celui actuellement utilisé.</p></div>'+
@@ -240,10 +243,45 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
 
 `;
     style.textContent += "\n#seb-evalpro-settings-dialog .settings-fullscreen-help-image{\n position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;\n background:#0c2639;color:#fff;padding:8px;min-width:0;min-height:0\n}\n#seb-evalpro-settings-dialog .settings-photo-toolbar{\n flex:none;display:flex;align-items:center;justify-content:space-between;\n gap:10px;padding:4px 7px 10px;flex-wrap:wrap\n}\n#seb-evalpro-settings-dialog .settings-photo-caption{\n font-size:14px;font-weight:700;color:#eff8ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap\n}\n#seb-evalpro-settings-dialog .settings-photo-controls{\n display:flex;align-items:center;gap:7px;flex-wrap:wrap\n}\n#seb-evalpro-settings-dialog .settings-photo-controls button{\n border:1px solid #9bc2d6;border-radius:7px;background:#fff;color:#034c6e;\n font-weight:700;padding:7px 12px;min-height:37px\n}\n#seb-evalpro-settings-dialog .settings-photo-controls [data-photo-close]{\n color:#a62231;border-color:#edb0b7\n}\n#seb-evalpro-settings-dialog .settings-photo-controls output{\n min-width:56px;text-align:center;color:#fff;font-variant-numeric:tabular-nums\n}\n#seb-evalpro-settings-dialog .settings-photo-scroll{\n flex:1;min-height:0;min-width:0;width:100%;overflow:auto;\n background:#1b303e;overscroll-behavior:contain;border-radius:7px\n}\n#seb-evalpro-settings-dialog .settings-photo-canvas{\n display:grid;place-items:center;min-width:100%;min-height:100%\n}\n#seb-evalpro-settings-dialog .settings-photo-canvas img{\n display:block;max-width:none!important;max-height:none!important;\n border-radius:3px;box-shadow:0 3px 24px #0008\n}\n@media(max-width:780px){\n #seb-evalpro-settings-dialog .settings-photo-caption{font-size:12px}\n #seb-evalpro-settings-dialog .settings-photo-controls{gap:4px}\n #seb-evalpro-settings-dialog .settings-photo-controls button{font-size:12px;padding:6px 8px}\n}\n";
+    style.textContent+='\n/* Vérification manuelle des mises à jour sous le logo KALONÉO, colonne gauche. */\n#seb-evalpro-settings-dialog .settings-nav .settings-update-actions{flex:0 0 auto;width:100%;padding:1px 4px 8px;display:flex;flex-direction:column;gap:8px}\n#seb-evalpro-settings-dialog .settings-nav .settings-update-actions button{display:block;width:100%;white-space:normal;text-align:center;font-size:11px;font-weight:800;line-height:1.35;padding:10px 7px;border:1px solid #1073a2;background:#e7f4f9;color:#075271;text-transform:uppercase}\n#seb-evalpro-settings-dialog .settings-nav .settings-update-actions button:hover{background:#d0eaf5}\n#seb-evalpro-settings-dialog .settings-nav .settings-update-actions button:disabled{opacity:.55;cursor:wait}\n#seb-evalpro-settings-dialog .settings-nav .settings-update-actions button[hidden]{display:none!important}\n#seb-evalpro-settings-dialog .settings-nav .settings-update-actions [data-download-update]{background:#0879a8;color:#fff}\n#seb-evalpro-settings-dialog .settings-nav .settings-update-actions [data-update-status]{margin:0;padding:0 3px;color:#365f75;font-size:12px;line-height:1.35;overflow-wrap:anywhere;white-space:normal}\n';
     layer.appendChild(style);
     document.body.appendChild(layer);
     layer.querySelector('[data-settings-header-icon]').src=iconUrl;
     layer.querySelector('[data-kaloneo-about-logo]').src=kaloneoLogoUrl;
+    const checkUpdate=layer.querySelector('[data-check-update]');
+    const downloadUpdate=layer.querySelector('[data-download-update]');
+    const updateStatus=layer.querySelector('[data-update-status]');
+    checkUpdate.addEventListener('click',async()=>{
+      downloadUpdate.hidden=true;
+      checkUpdate.disabled=true;
+      updateStatus.textContent='Recherche des mises à jour…';
+      try{
+        const answer=await ipcRenderer.invoke('kaloneo-updates:check');
+        if(!updateStatus.isConnected)return;
+        if(!answer?.ok){updateStatus.textContent=answer?.error||'Vérification impossible.';return;}
+        if(answer.status==='available'){
+          updateStatus.textContent='Nouvelle version '+answer.latest.version+' disponible (version installée : '+answer.installedVersion+').';
+          downloadUpdate.hidden=false;
+        }else if(answer.status==='current'){
+          updateStatus.textContent='KALONÉO est à jour (version '+answer.installedVersion+').';
+        }else{
+          updateStatus.textContent='Aucune mise à jour publiée pour le moment.';
+        }
+      }catch(_){if(updateStatus.isConnected)updateStatus.textContent='Connexion GitHub indisponible.';}
+      finally{if(checkUpdate.isConnected)checkUpdate.disabled=false;}
+    });
+    downloadUpdate.addEventListener('click',async()=>{
+      downloadUpdate.disabled=true;
+      updateStatus.textContent='Téléchargement et vérification SHA256 du Setup…';
+      try{
+        const answer=await ipcRenderer.invoke('kaloneo-updates:download');
+        if(!updateStatus.isConnected)return;
+        if(answer?.cancelled)updateStatus.textContent='Téléchargement annulé.';
+        else if(answer?.ok){updateStatus.textContent='Setup téléchargé et contrôlé (SHA256 conforme). Fermez KALONÉO avant de lancer le fichier.';downloadUpdate.hidden=true;}
+        else updateStatus.textContent=answer?.error||'Téléchargement impossible.';
+      }catch(_){if(updateStatus.isConnected)updateStatus.textContent='Téléchargement interrompu.';}
+      finally{if(downloadUpdate.isConnected)downloadUpdate.disabled=false;}
+    });
     const structureList=layer.querySelector('[data-associated-structures]');
     for(const structure of associatedStructures){
       const item=document.createElement('li');
