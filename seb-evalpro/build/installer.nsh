@@ -444,7 +444,9 @@ FunctionEnd
 
 !macro customFinishPage
   Page custom SebBrandingFinishCreate SebBrandingFinishLeave
-!macroend
+  ; Les fonctions de la page de fin ne doivent exister que dans le vrai
+  ; installateur. Lors de la génération de l'uninstaller, les plug-ins
+  ; StdUtils ne sont pas présents : déclarer les fonctions DANS la macro.
 
 Function SebBrandingFinishCreate
   nsDialogs::Create 1018
@@ -491,4 +493,5 @@ Function SebBrandingFinishLeave
     ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "$1"
   ${EndIf}
 FunctionEnd
+!macroend
 !endif
