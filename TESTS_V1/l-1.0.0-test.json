@@ -1,0 +1,729 @@
+{
+  "kaltestFormat": 1,
+  "minSebEvalPro": "0.3.10",
+  "builderVersion": "2.0.0",
+  "id": "l",
+  "version": "1.0.0",
+  "title": "Bon de transport.",
+  "category": "mathematiques",
+  "pageRole": "test",
+  "kind": "questionnaire",
+  "scored": true,
+  "icon": {
+    "id": "test_transport_colis",
+    "label": "Transport de colis",
+    "data": "data:image/png;base64,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"
+  },
+  "features": [
+    "runtime.basic",
+    "questionnaire.basic",
+    "questionnaire.table",
+    "questionnaire.grid",
+    "media.image",
+    "layout.split"
+  ],
+  "scenario": "Vous devez organiser une livraison de produit Kalonéo depuis le site de Bordeaux, jusqu'au dépôt de Brive-la-Gaillarde. On vous demande de remplir le bon de transport, et vous devez répondre à quelques questions.",
+  "instruction": "Pour vous aider, vous trouverez toutes les informations nécessaires pour remplir le bon de transport dans le tableau et les [u]fenêtres[/u] supplémentaires.",
+  "calculator": {
+    "compatible": true,
+    "defaultEnabled": false,
+    "brandLabel": "KALONÉO"
+  },
+  "chrono": {
+    "enabled": false,
+    "engine": null
+  },
+  "adminIntervention": {
+    "enabled": false
+  },
+  "autoevaluation": false,
+  "externalMaterial": {
+    "enabled": false
+  },
+  "presentation": {
+    "layout": "40-60",
+    "supplementaryWindows": [
+      {
+        "id": "document_jkd10smr6",
+        "title": "Au départ.",
+        "type": "image",
+        "text": "",
+        "imageData": "kaloneo-asset:1c87d47d54e698ef084be6d15c87fd620b1b5429ccc46edb59f750cc3c619fba.png",
+        "imageName": "Horloge — 33 8h00.png",
+        "imageAlt": "Document 1"
+      },
+      {
+        "id": "document_r9t1i2fwd",
+        "title": "A l'arrivée.",
+        "type": "image",
+        "text": "",
+        "imageData": "kaloneo-asset:eb983d8efc68121f45a49f89721e6924e6a2d2f92a99838032de84570ef7535a.png",
+        "imageName": "Horloge — 42 10h15.png",
+        "imageAlt": "Document 2"
+      }
+    ],
+    "builderContent": [
+      {
+        "type": "table-grid",
+        "zone": "left",
+        "table": {
+          "title": "",
+          "rows": 6,
+          "cols": 6,
+          "columns": [
+            {
+              "id": "c1",
+              "widthChars": 12,
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c2",
+              "widthChars": 12,
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c3",
+              "widthChars": 12,
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c4",
+              "widthChars": 12,
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c5",
+              "widthChars": 12,
+              "align": "center",
+              "remainder": false
+            },
+            {
+              "id": "c6",
+              "widthChars": 12,
+              "align": "center",
+              "remainder": false
+            }
+          ],
+          "cells": [
+            [
+              {
+                "kind": "fixed-text",
+                "value": "Distance en Km",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1,
+                "backgroundColor": "#6478be"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "Agen",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1,
+                "backgroundColor": "#6478be"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "Bordeaux",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1,
+                "backgroundColor": "#6478be"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "Brive-la-Gaillarde",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1,
+                "backgroundColor": "#6478be"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "Cahors",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1,
+                "backgroundColor": "#6478be"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "Mont-de-Marsan",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1,
+                "backgroundColor": "#6478be"
+              }
+            ],
+            [
+              {
+                "kind": "fixed-text",
+                "value": "Agen",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1,
+                "backgroundColor": "#c8c8c8"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "0",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "140",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "235",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "90",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "170",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              }
+            ],
+            [
+              {
+                "kind": "fixed-text",
+                "value": "Bordeaux",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1,
+                "backgroundColor": "#c8c8c8"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "140",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "0",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "200",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "230",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "135",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              }
+            ],
+            [
+              {
+                "kind": "fixed-text",
+                "value": "Brive-la-Gaillarde",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1,
+                "backgroundColor": "#c8c8c8"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "235",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "200",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "0",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "100",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "325",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              }
+            ],
+            [
+              {
+                "kind": "fixed-text",
+                "value": "Cahors",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1,
+                "backgroundColor": "#c8c8c8"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "90",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "230",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "100",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "0",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "305",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              }
+            ],
+            [
+              {
+                "kind": "fixed-text",
+                "value": "Mont-de-Marsan",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1,
+                "backgroundColor": "#c7c7c8"
+              },
+              {
+                "kind": "fixed-text",
+                "value": "170",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "135",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "325",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "305",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              },
+              {
+                "kind": "fixed-text",
+                "value": "0",
+                "questionId": "",
+                "acceptedAnswers": "",
+                "responseType": "text",
+                "points": 1,
+                "rowSpan": 1,
+                "colSpan": 1
+              }
+            ]
+          ],
+          "compact": true
+        }
+      },
+      {
+        "type": "image",
+        "zone": "left",
+        "resource": {
+          "name": "Fin de stage — série 1 — 05.png",
+          "mime": "image/png",
+          "data": "kaloneo-asset:c814aeab09b343b4b44fd03c1df583c8771a96dd4091e399776a2a4314605bc8.png",
+          "alt": "Fin de stage — série 1 — 05.png"
+        },
+        "style": {
+          "backgroundColor": "#FFF0E2"
+        }
+      },
+      {
+        "type": "text",
+        "zone": "right",
+        "text": "[b]Niveau[/b] d'essence au depart: [u]35 litres[/u]  .   [b]Niveau[/b] d'essence a  l'arrivée:[u] 20 litres[/u].",
+        "style": {
+          "backgroundColor": "#FFF0E2"
+        }
+      },
+      {
+        "type": "question",
+        "zone": "right",
+        "questionId": "ID1_l",
+        "style": {
+          "backgroundColor": "#FFF0E2"
+        }
+      },
+      {
+        "type": "question",
+        "zone": "right",
+        "questionId": "ID2_l",
+        "supplementaryButtons": [
+          {
+            "label": "Afficher les heures de départ et d'arrivée",
+            "windowId": "document_jkd10smr6",
+            "position": "after"
+          }
+        ],
+        "style": {
+          "backgroundColor": "#FFF0E2"
+        }
+      },
+      {
+        "type": "text",
+        "zone": "right",
+        "text": "[b]Quelle est la dépence engagée pour cette livraison, sachant:[/b]\n- Qu'il n'y a qu'un seule péage et que sont prix est fixé à 18,50 €.\n- Que le prix du carburant est fixé à 1.65 € le litre.\n",
+        "style": {
+          "backgroundColor": "#FFF0E2"
+        }
+      },
+      {
+        "type": "question",
+        "zone": "right",
+        "questionId": "ID3_l",
+        "style": {
+          "backgroundColor": "#FFF0E2"
+        }
+      },
+      {
+        "type": "text",
+        "zone": "right",
+        "text": "[b]Quelle est la consomation moyenne d'essence pour 100 km?[/b]",
+        "style": {
+          "backgroundColor": "#FFF0E2"
+        }
+      },
+      {
+        "type": "question",
+        "zone": "right",
+        "questionId": "ID4_l",
+        "style": {
+          "backgroundColor": "#FFF0E2"
+        }
+      },
+      {
+        "type": "question",
+        "zone": "right",
+        "questionId": "ID5_l",
+        "style": {
+          "backgroundColor": "#FFF0E2"
+        }
+      }
+    ]
+  },
+  "navigation": {
+    "next": "host",
+    "abandon": "host-common"
+  },
+  "runtime": {
+    "start": true,
+    "save": true,
+    "restore": true,
+    "finish": true
+  },
+  "questions": [
+    {
+      "id": "ID1_l",
+      "prompt": "Indiquez la distance parcourue:",
+      "response": {
+        "type": "number"
+      },
+      "points": 1,
+      "example": false,
+      "answerLayout": "inline",
+      "answerSuffix": "Km",
+      "acceptedAnswers": [
+        "200",
+        "200.00",
+        "200,00"
+      ]
+    },
+    {
+      "id": "ID2_l",
+      "prompt": "Déterminez, en heure et minute, la durée du parcours.",
+      "response": {
+        "type": "text"
+      },
+      "points": 1,
+      "example": false,
+      "answerLayout": "inline",
+      "acceptedAnswers": [
+        "2h15",
+        "2H15"
+      ],
+      "unitInput": true
+    },
+    {
+      "id": "ID3_l",
+      "prompt": "Indiquez ici votre réponse",
+      "response": {
+        "type": "number"
+      },
+      "points": 1,
+      "example": false,
+      "answerLayout": "inline",
+      "answerSuffix": "€",
+      "acceptedAnswers": [
+        "43.25",
+        "43,25"
+      ]
+    },
+    {
+      "id": "ID4_l",
+      "prompt": "Indiquez ici votre réponse",
+      "response": {
+        "type": "number"
+      },
+      "points": 1,
+      "example": false,
+      "answerLayout": "inline",
+      "answerSuffix": "litres/100km",
+      "acceptedAnswers": [
+        "7.5",
+        "7,5",
+        "7.50",
+        "7,50"
+      ]
+    },
+    {
+      "id": "ID5_l",
+      "prompt": "Indiquez ici le détail pour la résolution du problème :",
+      "response": {
+        "type": "free-text"
+      },
+      "points": 0,
+      "example": false,
+      "answerLayout": "below",
+      "answerHeightLines": 5,
+      "manualEvaluation": true,
+      "manualLevels": [
+        "NE",
+        "I",
+        "II",
+        "III"
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "id": "score",
+      "type": "number"
+    },
+    {
+      "id": "score_max",
+      "type": "number"
+    },
+    {
+      "id": "pourcentage",
+      "type": "number"
+    },
+    {
+      "id": "status",
+      "type": "string"
+    }
+  ],
+  "bilanContributions": [
+    {
+      "lineId": "bilan.savoirs_fondamentaux.mathematiques.resoudre_problemes",
+      "bindings": {
+        "score": "score",
+        "score_max": "score_max"
+      }
+    }
+  ],
+  "kaloneoLibrary": {
+    "adminModified": true,
+    "modifiedAt": "2026-10-28T13:36:31.955Z",
+    "imageSources": [
+      {
+        "name": "Horloge — 33 8h00.png",
+        "sha256": "1c87d47d54e698ef084be6d15c87fd620b1b5429ccc46edb59f750cc3c619fba",
+        "sourcePath": "horaires/33_8h00.png",
+        "mime": "image/png"
+      },
+      {
+        "name": "Horloge — 42 10h15.png",
+        "sha256": "eb983d8efc68121f45a49f89721e6924e6a2d2f92a99838032de84570ef7535a",
+        "sourcePath": "horaires/42_10h15.png",
+        "mime": "image/png"
+      },
+      {
+        "name": "Fin de stage — série 1 — 05.png",
+        "sha256": "c814aeab09b343b4b44fd03c1df583c8771a96dd4091e399776a2a4314605bc8",
+        "sourcePath": "02_fin_stage_01/05.png",
+        "mime": "image/png"
+      }
+    ]
+  }
+}
