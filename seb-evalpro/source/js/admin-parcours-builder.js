@@ -670,7 +670,10 @@
   function resetParcours() {
     state.editingId=null;
     state.editingSystemProvided=false;
-    state.maskScreen=state.maskScreens.find(item=>item.systemProvided)||state.maskScreens[0]||null;
+    // Le nouveau parcours propose « KALONÉO — image fixe » en premier,
+    // sans remplacer les choix de masquage des parcours déjà enregistrés.
+    state.maskScreen=state.maskScreens.find(item=>item.id==='kaloneo-video-image'&&item.version==='1.0.0')
+      ||state.maskScreens.find(item=>item.systemProvided)||state.maskScreens[0]||null;
     state.introduction=state.library.find(item=>item.role==='introduction')||null;
     state.fin=state.library.find(item=>item.role==='fin')||null;
     state.tests=[];
