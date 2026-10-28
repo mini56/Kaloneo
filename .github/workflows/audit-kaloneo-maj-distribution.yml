@@ -20,6 +20,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           KALONEO_SKIP_MIRROR_DISPATCH: '1'
+          KALONEO_MAJ_TEST_404_ONCE: '1'
           KALONEO_MAJ_MAX_ATTEMPTS: '3'
           KALONEO_MAJ_DELAY_SECONDS: '5'
         shell: bash
