@@ -21,3 +21,5 @@ Contrôle Windows NSIS avec la case de démarrage facultatif réussi. Relancer l
 Nouvelle version demandée : téléchargement des mises à jour dans %LOCALAPPDATA%\KALONEO-Updates, SHA256 obligatoire, bouton Installer maintenant, confirmation utilisateur, fermeture de KALONÉO et lancement différé du Setup, sans perte de données ni changement du mot de passe.
 
 2026-10-27 : demande de nouvelle Release Windows après validation de la barre verte de progression réelle (octets/total et pourcentage), vérification SHA256 distincte, sans modifier la conservation des candidats ni les bilans ni les mots de passe.
+
+2026-10-28 : correction R197 des menus Type et Zone du bloc 10 après insertion sans Aperçu. Audit Electron Windows R157/R197 réussi (run 40650131522), annulation du worker miniature en cours et reprise après édition. Publier la prochaine version uniquement si les tests Windows, bilans, données chiffrées, mot de passe et mise à jour réelle réussissent.
