@@ -939,6 +939,40 @@
   // L'état est libéré par change / focusout / clic extérieur / retour fenêtre.
   let builderSelectInteracting=false;
   let miniPreviewWaitingForSelect=false;
+  // R197 — Après « Insérer ici », les menus du nouveau bloc doivent rester
+  // disponibles sans qu'une BrowserWindow de miniature vole leur focus.
+  // La capture fidèle reprend quand l'édition quitte le nouveau bloc.
+  let miniPreviewInsertionGuardUid=null;
+  function releaseInsertedBlockGuard(){
+    if(!miniPreviewInsertionGuardUid)return;
+    miniPreviewInsertionGuardUid=null;
+    if(miniPreviewWaitingForSelect&&!builderSelectInteracting){
+      miniPreviewWaitingForSelect=false;
+      scheduleMiniPreviewCapture();
+    }
+  }
+  function beginInsertedBlockGuard(uid){
+    miniPreviewInsertionGuardUid=uid;
+    miniPreviewWaitingForSelect=true;
+    if(miniPreviewTimer){clearTimeout(miniPreviewTimer);miniPreviewTimer=null;}
+    // Interrompre aussi la capture DEJA en cours, pas seulement son timer.
+    // L'IPC est facultative dans les anciens environnements de tests.
+    try{return window.sebEvalPro?.kaloneoCancelMiniPreview?.();}
+    catch(_){return null;}
+  }
+  function focusInsertedBlock(uid,cancellation){
+    // Attendre l'arrêt du worker Windows avant de rendre le focus à l'éditeur.
+    Promise.resolve(cancellation).catch(()=>{}).then(()=>requestAnimationFrame(()=>{
+      if(!document.hasFocus())return; // Ne jamais voler le focus d'une autre application.
+      const card=Array.from($('blocks-editor').querySelectorAll('.exercise-block'))
+        .find(node=>node.dataset.uid===uid);
+      if(!card||!card.isConnected)return;
+      const active=document.activeElement;
+      if(active&&active!==document.body&&active!==document.documentElement)return;
+      card.tabIndex=-1;
+      try{card.focus({preventScroll:true});}catch(_){card.focus();}
+    }));
+  }
   function releaseBuilderSelect() {
     if(!builderSelectInteracting)return;
     builderSelectInteracting=false;
@@ -950,6 +984,11 @@
   function installNativeSelectPickers() {
     document.addEventListener('pointerdown',event=>{
       if(event.button!==0||event.pointerType==='touch')return;
+      // Laisser l'utilisateur manipuler Type et Zone avant toute nouvelle
+      // fenêtre cachée. Un clic hors du bloc libère la capture différée.
+      if(miniPreviewInsertionGuardUid &&
+         event.target?.closest?.('.exercise-block')?.dataset?.uid!==miniPreviewInsertionGuardUid)
+        releaseInsertedBlockGuard();
       const control=event.target?.closest?.('select');
       if(!control || !control.closest('.builder-editor,.builder-preview,.modal,.test-library-dialog,.image-library-dialog') ||
          control.disabled || control.options.length<2){
@@ -972,6 +1011,12 @@
     },{capture:true});
     document.addEventListener('focusout',event=>{
       if(event.target?.matches?.('select'))setTimeout(releaseBuilderSelect,0);
+    },{capture:true});
+    document.addEventListener('focusin',event=>{
+      // Tab clavier hors du bloc : la miniature peut à nouveau se calculer.
+      if(miniPreviewInsertionGuardUid &&
+         event.target?.closest?.('.exercise-block')?.dataset?.uid!==miniPreviewInsertionGuardUid)
+        releaseInsertedBlockGuard();
     },{capture:true});
     document.addEventListener('keydown',event=>{
       if(builderSelectInteracting&&['Escape','Tab','Enter'].includes(event.key))
@@ -2653,7 +2698,9 @@
     const copies=Workflow.copyBlocks(blocks,state.blocks,()=>uid('copie'));
     state.blocks=Workflow.insertBlocks(state.blocks,index,copies);
     copies.forEach(block=>collapsedBlockUids.add(block.uid));
+    const cancellation=copies.length?beginInsertedBlockGuard(copies[0].uid):null;
     changed();renderBlocks();
+    if(copies.length)focusInsertedBlock(copies[0].uid,cancellation);
   }
   async function refreshEnsembles(selected){
     const sel=$('block-ensemble-select');
@@ -2693,7 +2740,9 @@
     const block=baseBlock(type);
     state.blocks=Workflow.insertBlocks(state.blocks,index,[block]);
     collapsedBlockUids.add(block.uid);
+    const cancellation=beginInsertedBlockGuard(block.uid);
     changed();renderBlocks();
+    focusInsertedBlock(block.uid,cancellation);
   }
   function makeInsertionControl(index){
     const row=document.createElement('div');row.className='block-insert-divider';
@@ -2844,6 +2893,9 @@
       host.appendChild(makeInsertionControl(index+1));
     });
 
+    if(miniPreviewInsertionGuardUid &&
+       !state.blocks.some(block=>block.uid===miniPreviewInsertionGuardUid))
+      releaseInsertedBlockGuard();
     refreshPreview();
     restoreBlockFocus(host,focusSnapshot);
   }
@@ -3091,7 +3143,7 @@
 
   function scheduleMiniPreviewCapture(delay=MINI_PREVIEW_IDLE_MS) {
     if(Supplementary?.isEditing())return;
-    if(builderSelectInteracting){
+    if(builderSelectInteracting||miniPreviewInsertionGuardUid){
       miniPreviewWaitingForSelect=true;
       return;
     }
@@ -3100,7 +3152,7 @@
       miniPreviewTimer=null;
       const revision=miniPreviewRevision;
       if(Supplementary?.isEditing())return;
-      if(builderSelectInteracting){
+      if(builderSelectInteracting||miniPreviewInsertionGuardUid){
         miniPreviewWaitingForSelect=true;
         return;
       }
