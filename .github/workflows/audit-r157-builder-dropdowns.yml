@@ -9,6 +9,7 @@ on:
       - "seb-evalpro/source/js/kaltest-pilot2-runtime.js"
       - "seb-evalpro/source/kaltest-pilot2.html"
       - "seb-evalpro/scripts/kaloneo-candidate-name-input-electron-smoke-main.js"
+      - "seb-evalpro/scripts/candidate-forward-anonymity-smoke.js"
       - "seb-evalpro/scripts/kaloneo-welcome-role-electron-smoke-main.js"
       - "seb-evalpro/scripts/kaloneo-welcome-role-test-preload.js"
       - "seb-evalpro/src/main.js"
@@ -46,6 +47,8 @@ jobs:
         run: npx electron --no-sandbox scripts/kaloneo-welcome-role-electron-smoke-main.js
       - name: "Check real candidate name entry, symbols, accent and save protection"
         run: npx electron --no-sandbox scripts/kaloneo-candidate-name-input-electron-smoke-main.js
+      - name: "Check encrypted candidate files, replay and USB exports (including existing symbol names)"
+        run: node scripts/candidate-forward-anonymity-smoke.js
       - name: R197 verify cancellation of an already running mini-preview worker
         run: node scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
       - name: "R157 + R197 real Windows mouse: insert block 10 and edit Type / Zone before Aperçu"
