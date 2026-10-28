@@ -4,6 +4,9 @@ on:
     branches: [fix-r186-kaltest-source-unique-20261027]
     paths:
       - "kaloneo/test-builder.js"
+      - "kaloneo/test-builder.html"
+      - "kaloneo/test-builder.css"
+      - "kaloneo/help/index.html"
       - "seb-evalpro/overrides/admin-candidats.html"
       - "seb-evalpro/source/js/kaloneo-candidate-welcome.js"
       - "seb-evalpro/source/js/kaltest-pilot2-runtime.js"
