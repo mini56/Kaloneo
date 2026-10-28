@@ -724,8 +724,17 @@ function createKaloneoLibrary(options = {}) {
     return hydrate(definition,path.join(imagesRoot,'v1-assets'),(digest,extension)=>{
       const id='img-'+digest.slice(0,32);
       const record=findImageRecord(id);
-      if(!record)throw new Error('Image Builder absente de la bibliothèque : '+id);
-      return fs.readFileSync(record.binary);
+      if(record)return fs.readFileSync(record.binary);
+      // V1 officielle : réutilisation d'une image identique déjà livrée dans
+      // la bibliothèque virtuelle. Ne pas recopier les 3 images de transport
+      // dans app.asar ni en AppData : lire uniquement à l'ouverture du test.
+      const sources=Array.isArray(definition?.kaloneoLibrary?.imageSources)
+        ? definition.kaloneoLibrary.imageSources : [];
+      const mapping=sources.find(x=>x?.sha256===digest && x?.mime==='image/'+extension);
+      const candidate=mapping && suppliedImages.find(x=>x.sourceName===mapping.sourcePath);
+      if(candidate && path.extname(candidate.absolute).toLowerCase()==='.'+extension)
+        return fs.readFileSync(candidate.absolute);
+      throw new Error('Image Builder absente de la bibliothèque : '+id);
     });
   }
 
