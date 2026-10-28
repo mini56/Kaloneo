@@ -26,20 +26,7 @@
 <script src="js/seb-in-app-alert.js" id="seb-evalpro-in-app-alert-script"></script>
 <script src="js/seb-visual-branding.js" id="seb-evalpro-visual-branding"></script>
 
-<script>
-  // La meme page sert aux deux accueils : seule la presentation change.
-  if(new URLSearchParams(location.search).get('candidateWelcome')==='1'){
-    document.body.classList.add('candidate-welcome');
-    document.title='KALONÉO — Espace candidat';
-    document.getElementById('seb-welcome-title').textContent='Espace candidat';
-    const start=document.getElementById('seb-candidate-start');
-    start.addEventListener('click',async()=>{
-      start.disabled=true;
-      const ok=await window.sebEvalPro?.kaloneoStartCandidateParcours?.().catch(()=>false);
-      if(!ok)start.disabled=false;
-    });
-  }
-</script>
+<script src="js/kaloneo-candidate-welcome.js" id="kaloneo-candidate-welcome-script"></script>
 <script id="seb-ui-runtime-loader" src="js/seb-ui-runtime.js"></script>
 </body>
 </html>
