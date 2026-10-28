@@ -999,8 +999,9 @@ function createKaloneoLibrary(options = {}) {
 
   function getMaskScreen(ref = null) {
     ensureSeed();
-    const id = String(ref && ref.id || DEFAULT_MASK_ID);
-    const version = String(ref && ref.version || DEFAULT_MASK_VERSION);
+    const preferred = defaultMaskRef();
+    const id = String(ref && ref.id || preferred.id);
+    const version = String(ref && ref.version || preferred.version);
     let record = findMaskScreen(id, version);
     if (!record && (id !== DEFAULT_MASK_ID || version !== DEFAULT_MASK_VERSION)) {
       record = findMaskScreen(DEFAULT_MASK_ID, DEFAULT_MASK_VERSION);
@@ -1098,7 +1099,12 @@ function createKaloneoLibrary(options = {}) {
   }
 
   function defaultMaskRef() {
-    return { id:DEFAULT_MASK_ID, version:DEFAULT_MASK_VERSION };
+    // Par defaut, choisir l'ecran livre « KALONÉO — image fixe ».
+    // Garder l'ancien masque texte uniquement en repli si l'image
+    // n'est pas disponible (installation incomplete / ancien profil).
+    return findMaskScreen('kaloneo-video-image','1.0.0')
+      ? {id:'kaloneo-video-image',version:'1.0.0'}
+      : {id:DEFAULT_MASK_ID,version:DEFAULT_MASK_VERSION};
   }
 
   // Le parcours de base est livré avec le masque KALONÉO en image fixe.
