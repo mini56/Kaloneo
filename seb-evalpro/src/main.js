@@ -1009,7 +1009,7 @@ ipcMain.handle('kaloneo-updates:check',async(event)=>{
     const result=await checkUpdates(app.getVersion());
     if(result.status==='available'){
       pendingKaloneoUpdate=result.latest;
-      const filename=officialFile(result.latest,process.env.LOCALAPPDATA);
+      const filename=officialFile(result.latest,app.getPath('downloads'));
       result.prepared=await isVerifiedFile(result.latest,filename);
       if(result.prepared)lastVerifiedKaloneoSetupPath=filename;
     }
@@ -1029,10 +1029,10 @@ ipcMain.handle('kaloneo-updates:download',async(event)=>{
   if(!update)return {ok:false,error:'Vérifiez d’abord les mises à jour.'};
   lastVerifiedKaloneoSetupPath=null;
   try{
-    // Dossier fixe, en dehors du programme installé et des dossiers candidats.
+    // Dossier Téléchargements de l’utilisateur, sans ménage automatique des anciens Setup.
     // Un fichier inachevé reste .kaloneo-download et n'est jamais exécutable.
     event.sender.send('kaloneo-updates:download-started');
-    const result=await stageVerifiedSetup(update,process.env.LOCALAPPDATA,{
+    const result=await stageVerifiedSetup(update,app.getPath('downloads'),{
       onProgress:progress=>event.sender.send('kaloneo-updates:download-progress',progress),
       onPhase:phase=>event.sender.send('kaloneo-updates:download-phase',phase)
     });
@@ -1056,7 +1056,7 @@ ipcMain.handle('kaloneo-updates:install',async(event)=>{
     return {ok:false,error:'Téléchargez et vérifiez d’abord la nouvelle version.'};
   let verifiedSetup;
   try{
-    verifiedSetup=await canInstallVerifiedUpdate(update,app.getVersion(),process.env.LOCALAPPDATA);
+    verifiedSetup=await canInstallVerifiedUpdate(update,app.getVersion(),app.getPath('downloads'));
     if(verifiedSetup!==lastVerifiedKaloneoSetupPath)
       throw new Error('Le Setup vérifié ne correspond pas au téléchargement.');
   }catch(error){
@@ -1072,7 +1072,7 @@ ipcMain.handle('kaloneo-updates:install',async(event)=>{
   if(answer.response!==1)return {ok:false,cancelled:true};
   try{
     // Recontrôler le fichier après la confirmation, avant de quitter.
-    verifiedSetup=await canInstallVerifiedUpdate(update,app.getVersion(),process.env.LOCALAPPDATA);
+    verifiedSetup=await canInstallVerifiedUpdate(update,app.getVersion(),app.getPath('downloads'));
     startAfterApplicationExit(verifiedSetup,process.pid);
     kaloneoUpdateInstallationStarting=true;
     setTimeout(()=>app.quit(),150);
