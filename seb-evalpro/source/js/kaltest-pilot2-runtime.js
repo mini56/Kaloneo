@@ -4083,8 +4083,8 @@
   // Sécurité candidat : les saisies sont contrôlées AVANT toute sauvegarde.
   // Accepter les vrais noms internationaux, accents, espaces, apostrophes et
   // traits d'union ; écarter chiffres, slashs et symboles de clavier.
-  const CANDIDATE_NAME_ALLOWED=/[^\\p{L}\\p{M} '\\u2019-]/gu;
-  const CANDIDATE_NAME_VALID=/^\\p{L}[\\p{L}\\p{M}]*(?:[ '\\u2019-]\\p{L}[\\p{L}\\p{M}]*)*$/u;
+  const CANDIDATE_NAME_ALLOWED=/[^\p{L}\p{M} '\u2019-]/gu;
+  const CANDIDATE_NAME_VALID=/^\p{L}[\p{L}\p{M}]*(?:[ '\u2019-]\p{L}[\p{L}\p{M}]*)*$/u;
 
   function cleanCandidateName(value) {
     return String(value || '').normalize('NFC').replace(CANDIDATE_NAME_ALLOWED,'');
