@@ -118,6 +118,12 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Windows ne lance pas le Setup : publication bloquee'}
           & npx electron --no-sandbox scripts/kaloneo-welcome-role-electron-smoke-main.js
           if($LASTEXITCODE -ne 0){throw 'Accueil Admin : bouton de lancement candidat interdit ; Setup refusé'}
+          & npx electron --no-sandbox scripts/kaloneo-candidate-name-input-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'Noms et prenoms candidats : caracteres interdits ou sauvegarde invalide ; Setup refuse'}
+          foreach($privacy in @('candidate-forward-anonymity-smoke.js','replay-direct-candidate-storage-smoke.js','candidate-private-pending-smoke.js')){
+            node ("scripts/"+$privacy)
+            if($LASTEXITCODE -ne 0){throw "Confidentialite candidat/Replay non chiffree ou export insecure : $privacy"}
+          }
           node scripts/kaloneo-r118-settings-smoke.js
           if($LASTEXITCODE -ne 0){throw 'Régression des réglages Admin'}
           node scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
