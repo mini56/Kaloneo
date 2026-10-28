@@ -1665,15 +1665,44 @@ function injectAdminBar() {
         await showTransferMessage('Export impossible', result.error || 'Une erreur est survenue pendant l’export.', true);
         return false;
       }
-      if (!result.total) {
-        await showTransferMessage('Export candidats', 'Aucun dossier candidat n’a été trouvé sur ce PC.');
+      // Un export sans aucun candidat transmis n'est jamais une réussite.
+      // Donner les motifs des rejets sans afficher d'identité en clair.
+      const done=Number(result.added||0)+Number(result.updated||0);
+      const already=Number(result.skipped||0);
+      const rejected=Number(result.invalidSkipped||0);
+      const details=Array.isArray(result.invalidFolders)
+        ? result.invalidFolders.slice(0,6).map(item=>
+            '- '+String(item?.folderName||'Dossier inconnu')+' : '+String(item?.reason||'cause inconnue')).join('\n')
+        : '';
+      const failures=rejected
+        ? '\n\n'+rejected+' dossier(s) non exporté(s). Motifs :'+(details?'\n'+details:'\nDétail indisponible.')
+        : '';
+      if(!result.total && !rejected){
+        await showTransferMessage('Export candidats','Aucun dossier candidat terminé à exporter sur ce PC.');
         return false;
       }
+      if(done+already===0){
+        await showTransferMessage(
+          'Export impossible',
+          'AUCUN candidat n’a été exporté. La clé USB ne contient aucun nouveau fichier candidat validé.'+
+          failures+'\n\nLes dossiers originaux sur le PC sont conservés. Ne les supprimez pas.',
+          true
+        );
+        return false;
+      }
+      const partial=rejected>0;
       await showTransferMessage(
-        'Export terminé',
-        `Copie des fichiers terminée.\nVous pouvez retirer la clé USB en toute sécurité.\n\n${result.added} fichier(s) candidat chiffré(s) créé(s), ${result.updated || 0} mis à jour, ${result.skipped || 0} déjà présent(s) et ignoré(s).\n${result.verifiedFiles || 0} fichier(s) vérifié(s).${result.invalidSkipped ? `\n${result.invalidSkipped} dossier(s) candidat local(aux) illisible(s) ignoré(s) sans bloquer l’export.` : ''}\n\nClé : ${result.destinationRoot}`
+        partial?'Export partiel — attention':'Export terminé',
+        (partial
+          ? 'Certains dossiers candidats n’ont PAS été exportés. Ne considérez pas cette sauvegarde comme complète.'
+          : 'Copie des fichiers terminée. Vous pouvez retirer la clé USB en toute sécurité.')+
+        '\n\n'+Number(result.added||0)+' fichier(s) candidat chiffré(s) créé(s), '+
+        Number(result.updated||0)+' mis à jour, '+already+' déjà présent(s) et ignoré(s).'+
+        '\n'+Number(result.verifiedFiles||0)+' fichier(s) vérifié(s).'+failures+
+        '\n\nClé : '+String(result.destinationRoot||''),
+        partial
       );
-      return true;
+      return !partial;
     } catch (error) {
       await showTransferMessage('Export impossible', String(error && error.message ? error.message : error), true);
       return false;
