@@ -261,3 +261,56 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Impossible de publier la Release testée'}
           gh release view $tag --repo mini56/Kaloneo --json url,assets
           if($LASTEXITCODE -ne 0){throw 'Release publiée illisible'}
+
+  verifier-distribution-maj:
+    name: "Verifier publication et telechargement sur Kaloneo-MAJ"
+    needs: compiler-tester-publier
+    if: ${{ success() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Attendre la synchronisation automatique, verifier fichiers et SHA256
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Le miroir est independant : sa synchronisation est programmee toutes
+          # les cinq minutes. Ne jamais considerer une Release source comme
+          # distribuable tant que son Setup verifie n'est pas sur Kaloneo-MAJ.
+          source=$(gh api 'repos/mini56/Kaloneo/releases?per_page=20' --jq '[.[] | select(.draft == false and (.tag_name | startswith("kaloneo-1.00.")))] | first')
+          tag=$(jq -r '.tag_name' <<<"$source")
+          if [[ -z "$tag" || "$tag" == "null" ]]; then
+            echo "::error::Aucune Release KALONEO officielle verifiable"
+            exit 1
+          fi
+          version="${tag#kaloneo-}"
+          filename="KALONEO-Setup-${version}.exe"
+          sha_file="${filename}.sha256"
+          source_hash=$(jq -r --arg name "$filename" '.assets[] | select(.name == $name) | .digest' <<<"$source")
+          source_sha_hash=$(jq -r --arg name "$sha_file" '.assets[] | select(.name == $name) | .digest' <<<"$source")
+          if [[ ! "$source_hash" =~ ^sha256:[0-9a-fA-F]{64}$ || ! "$source_sha_hash" =~ ^sha256:[0-9a-fA-F]{64}$ ]]; then
+            echo "::error::Setup ou fichier SHA256 introuvable dans la Release officielle $tag"
+            exit 1
+          fi
+          for attempt in $(seq 1 18); do
+            mirror=$(gh api "repos/mini56/Kaloneo-MAJ/releases/tags/$tag" 2>/dev/null || true)
+            if [[ -n "$mirror" ]]; then
+              actual_hash=$(jq -r --arg name "$filename" '[.assets[] | select(.name == $name) | .digest] | first // ""' <<<"$mirror")
+              actual_sha_hash=$(jq -r --arg name "$sha_file" '[.assets[] | select(.name == $name) | .digest] | first // ""' <<<"$mirror")
+              actual_size=$(jq -r --arg name "$filename" '[.assets[] | select(.name == $name) | .size] | first // 0' <<<"$mirror")
+              if [[ "$actual_hash" == "$source_hash" && "$actual_sha_hash" == "$source_sha_hash" && "$actual_size" -ge 100000000 ]]; then
+                echo "KALONEO_MAJ_DISTRIBUTION=SUCCESS $tag"
+                echo "### Mise a jour $tag : telechargement disponible" >> "$GITHUB_STEP_SUMMARY"
+                echo "EXE et SHA256 presents et conformes a la Release officielle." >> "$GITHUB_STEP_SUMMARY"
+                echo "https://github.com/mini56/Kaloneo-MAJ/releases/tag/$tag" >> "$GITHUB_STEP_SUMMARY"
+                exit 0
+              fi
+              echo "Kaloneo-MAJ $tag : fichiers manquants ou empreintes differentes (essai $attempt/18)"
+            else
+              echo "Kaloneo-MAJ $tag : publication miroir en attente (essai $attempt/18)"
+            fi
+            sleep 60
+          done
+          echo "::error::La Release $tag ne se trouve pas en version complete sur Kaloneo-MAJ. Le workflow reste rouge."
+          exit 1
