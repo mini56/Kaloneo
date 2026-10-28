@@ -6,6 +6,9 @@ on:
       - "kaloneo/test-builder.js"
       - "seb-evalpro/overrides/admin-candidats.html"
       - "seb-evalpro/source/js/kaloneo-candidate-welcome.js"
+      - "seb-evalpro/source/js/kaltest-pilot2-runtime.js"
+      - "seb-evalpro/source/kaltest-pilot2.html"
+      - "seb-evalpro/scripts/kaloneo-candidate-name-input-electron-smoke-main.js"
       - "seb-evalpro/scripts/kaloneo-welcome-role-electron-smoke-main.js"
       - "seb-evalpro/scripts/kaloneo-welcome-role-test-preload.js"
       - "seb-evalpro/src/main.js"
@@ -41,6 +44,8 @@ jobs:
           npm run prepare:web
       - name: "Check candidate-only start button / never on administrator home"
         run: npx electron --no-sandbox scripts/kaloneo-welcome-role-electron-smoke-main.js
+      - name: "Check real candidate name entry, symbols, accent and save protection"
+        run: npx electron --no-sandbox scripts/kaloneo-candidate-name-input-electron-smoke-main.js
       - name: R197 verify cancellation of an already running mini-preview worker
         run: node scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
       - name: "R157 + R197 real Windows mouse: insert block 10 and edit Type / Zone before Aperçu"
