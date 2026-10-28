@@ -984,18 +984,27 @@
     return cancellation;
   }
   function focusInsertedBlock(uid,cancellation){
-    // Attendre l'arrêt du worker Windows avant de rendre le focus à l'éditeur.
-    Promise.resolve(cancellation).catch(()=>{}).then(()=>requestAnimationFrame(()=>{
-      if(miniPreviewInsertionGuardUid!==uid)return; // Une insertion plus récente a priorité.
-      if(!document.hasFocus())return; // Ne jamais voler le focus d'une autre application.
-      const card=Array.from($('blocks-editor').querySelectorAll('.exercise-block'))
-        .find(node=>node.dataset.uid===uid);
-      if(!card||!card.isConnected)return;
-      const active=document.activeElement;
-      if(active&&active!==document.body&&active!==document.documentElement)return;
-      card.tabIndex=-1;
-      try{card.focus({preventScroll:true});}catch(_){card.focus();}
-    }));
+    // R199 : renderBlocks() a DEJA reconstruit toute la liste.
+    // Après le clic / la confirmation Windows, réactiver un véritable SELECT
+    // natif du bloc restant au lieu de viser seulement la carte non interactive.
+    // Deux frames laissent Electron terminer le cycle de focus du dialogue.
+    Promise.resolve(cancellation).catch(()=>{}).then(()=>requestAnimationFrame(()=>
+      requestAnimationFrame(()=>{
+        if(miniPreviewInsertionGuardUid!==uid)return;
+        const host=$('blocks-editor');
+        const card=Array.from(host.querySelectorAll('.exercise-block'))
+          .find(node=>node.dataset.uid===uid);
+        if(!card||!card.isConnected)return;
+        // Forcer le reflow sur les nouveaux contrôles, sans recharger le test
+        // ni perdre les modifications / l'historique / les images.
+        void host.offsetHeight;
+        const active=document.activeElement;
+        if(active&&active!==document.body&&active!==document.documentElement
+           &&active!==host&&!host.contains(active))return;
+        const control=card.querySelector('.block-type:not(:disabled),.block-zone:not(:disabled)');
+        if(!control)return;
+        try{control.focus({preventScroll:true});}catch(_){control.focus();}
+      })));
   }
   function releaseBuilderSelect() {
     if(!builderSelectInteracting)return;
@@ -2774,7 +2783,7 @@
     const block=baseBlock(type);
     state.blocks=Workflow.insertBlocks(state.blocks,index,[block]);
     collapsedBlockUids.add(block.uid);
-    const cancellation=beginInsertedBlockGuard(block.uid);
+    const cancellation=beginWholeEditorGuard(block.uid);
     changed();renderBlocks();
     focusInsertedBlock(block.uid,cancellation);
   }
