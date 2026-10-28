@@ -10,17 +10,36 @@
     main{width:min(900px,92vw);min-height:min(620px,calc(100vh - 120px));background:#fff;border:1px solid #d8dde8;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.10);padding:34px;box-sizing:border-box;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
     h1{margin:0 0 28px;color:#0070c0;font-size:26px}
       #seb-admin-home-program-image{display:block;width:min(560px,36vw);max-width:72%;max-height:42vh;height:auto;object-fit:contain;margin:0 auto;user-select:none;-webkit-user-drag:none}
+    #seb-candidate-start{display:none;margin:20px auto 0;padding:13px 24px;background:#fff;border:1px solid #176690;color:#07517c;font:700 16px "Segoe UI",Arial,sans-serif;border-radius:11px;box-shadow:0 3px 9px rgba(0,55,86,.16);cursor:pointer}
+    #seb-candidate-start:hover{background:#eaf6fc;border-color:#07517c}
+    #seb-candidate-start:focus-visible{outline:3px solid #6abde3;outline-offset:2px}
+    body.candidate-welcome #seb-candidate-start{display:block}
   </style>
 <link rel="stylesheet" href="css/seb-in-app-alert.css" id="seb-evalpro-in-app-alert-css">
 </head>
 <body>
   <main>
-    <h1>Espace administrateur</h1>
+    <h1 id="seb-welcome-title">Espace administrateur</h1>
     <img id="seb-admin-home-program-image" src="assets/kaloneo-logo-app.png" alt="KALONÉO — Au cœur d’un nouvel élan.">
+    <button id="seb-candidate-start" type="button">Débuter le parcours</button>
   </main>
 <script src="js/seb-in-app-alert.js" id="seb-evalpro-in-app-alert-script"></script>
 <script src="js/seb-visual-branding.js" id="seb-evalpro-visual-branding"></script>
 
+<script>
+  // La meme page sert aux deux accueils : seule la presentation change.
+  if(new URLSearchParams(location.search).get('candidateWelcome')==='1'){
+    document.body.classList.add('candidate-welcome');
+    document.title='KALONÉO — Espace candidat';
+    document.getElementById('seb-welcome-title').textContent='Espace candidat';
+    const start=document.getElementById('seb-candidate-start');
+    start.addEventListener('click',async()=>{
+      start.disabled=true;
+      const ok=await window.sebEvalPro?.kaloneoStartCandidateParcours?.().catch(()=>false);
+      if(!ok)start.disabled=false;
+    });
+  }
+</script>
 <script id="seb-ui-runtime-loader" src="js/seb-ui-runtime.js"></script>
 </body>
 </html>
