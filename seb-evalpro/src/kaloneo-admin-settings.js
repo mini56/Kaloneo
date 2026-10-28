@@ -296,7 +296,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
       openDownloadedSetupFolder.hidden=true;
       installUpdate.hidden=true;
       downloadProgressArea.hidden=true;
-      updateStatus.textContent='La mise à jour va être téléchargée dans le dossier sécurisé KALONEO-Updates de Windows.';
+      updateStatus.textContent='La mise à jour sera enregistrée dans votre dossier Téléchargements Windows. Les anciens Setup restent à votre disposition : vous pourrez les supprimer vous-même.';
       const onDownloadStarted=()=>{
         if(updateStatus.isConnected){
           downloadProgressArea.hidden=false;
