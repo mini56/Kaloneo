@@ -709,8 +709,12 @@ function createWindow() {
 
   mainWindow.setMenuBarVisibility(false);
   installDownloadRouting();
-  setSplashProgress(48, 'Chargement du parcours…');
-  loadSavedCandidateEvaluation(state);
+  setSplashProgress(48, 'Chargement de l’accueil candidat…');
+  // Page d'accueil IDENTIQUE a l'accueil Admin, seul le titre et le bouton
+  // changent. Le parcours sauvegarde reste intact jusqu'au clic du candidat.
+  mainWindow.loadFile(existingWebPage('admin-candidats.html'),{
+    query:{candidateWelcome:'1'}
+  });
 
   mainWindow.webContents.on('did-finish-load', () => {
     applyAdminWindowMode(adminSessionUnlocked);
@@ -1308,6 +1312,15 @@ function loadAdminCandidateBrowser(candidateId = '') {
 
 ipcMain.handle('admin:open-candidate-browser', (_event, candidateId) => {
   return loadAdminCandidateBrowser(candidateId);
+});
+
+ipcMain.handle('kaloneo:candidate-start-parcours', event => {
+  if(!mainWindow||mainWindow.isDestroyed()||adminSessionUnlocked)return false;
+  // Autoriser le depart uniquement depuis la page d'accueil candidat.
+  if(event.sender!==mainWindow.webContents||
+     !mainWindow.webContents.getURL().includes('admin-candidats.html?candidateWelcome=1'))return false;
+  loadSavedCandidateEvaluation(readState());
+  return true;
 });
 
 ipcMain.handle('admin:return-candidate-browser', (_event, candidateId) => {
