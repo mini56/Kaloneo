@@ -118,6 +118,10 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Windows ne lance pas le Setup : publication bloquee'}
           node scripts/kaloneo-r118-settings-smoke.js
           if($LASTEXITCODE -ne 0){throw 'Régression des réglages Admin'}
+          node scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'R197 : une capture Electron cachee vole le focus du Builder'}
+          & npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'R197 : Type / Zone du nouveau bloc inaccessibles sans Apercu, Setup refuse'}
 
       - name: Préparer le mot de passe secret et la licence
         env:
