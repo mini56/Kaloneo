@@ -114,6 +114,37 @@ function audit(rootDir){
   assert(!symbolBytes.includes(symbolsCandidate.nom)&&!symbolBytes.includes(symbolsCandidate.prenom),
     'L export ne doit jamais divulguer le nom historique avec symboles.');
   console.log('KALONEO_LEGACY_SYMBOL_NAME_ENCRYPTED_EXPORT=OK');
+  // Régression réelle du 28/10 : deux évaluations de « Candidat Test »
+  // ne doivent pas être exclues à cause du fichier TECHNIQUE candidat.json.
+  const regularCandidate={nom:'Candidat',prenom:'Test',lieu:'Lorient',groupe:'1',date:'2026-10-26'};
+  const regularIds=['CANDIDATE-TEST-20261026-A','CANDIDATE-TEST-20261026-B'];
+  for(let i=0;i<regularIds.length;i++){
+    const name='CAND-'+(i===0?'AABBCCDDEEFF':'112233445566');
+    const folder=path.join(a,'storage','Candidats',name);
+    for(const rel of ['donnees','resultats','replay','bilan/historique','bilan/exports'])
+      fs.mkdirSync(path.join(folder,rel),{recursive:true});
+    const data={...regularCandidate,date:i===0?'2026-10-26':'2026-10-28'};
+    writeJsonFile(path.join(folder,'manifest.json'),{schemaVersion:1,privacyStorageVersion:1,
+      candidateId:regularIds[i],shortId:'TEST26'+i,status:'TERMINE',folderName:name,candidat:data});
+    writeJsonFile(path.join(folder,'donnees','candidat.json'),data);
+    writeJsonFile(path.join(folder,'donnees','evaluation-state.json'),
+      {sessionStorage:{candidat_data:JSON.stringify(data)},localStorage:{}});
+    writeJsonFile(path.join(folder,'donnees','progression.json'),{lastPage:'FIN'});
+    writeJsonFile(path.join(folder,'resultats','reponses.json'),{});
+    writeJsonFile(path.join(folder,'resultats','scores.json'),{});
+  }
+  const regularUsb=path.join(root,'USB-regular',createPrivateExportFolderName());
+  fs.mkdirSync(regularUsb,{recursive:true});
+  const regularExport=transfer.exportSelected(regularUsb,'MOT-DE-PASSE-USB-UNIQUE',regularIds);
+  assert.strictEqual(regularExport.added,2,'Deux évaluations de Candidat Test doivent être exportables.');
+  assert.strictEqual(regularExport.invalidSkipped,0,'Candidat Test : faux rejet du nom technique candidat.json.');
+  assert.strictEqual(regularExport.verifiedFiles,12,'Tous les JSON chiffrés des deux évaluations doivent être vérifiés.');
+  for(const exported of regularExport.copied){
+    const text=fs.readFileSync(path.join(regularUsb,exported.filename),'utf8');
+    assert(!text.includes('Candidat')&&!text.includes('Test'),
+      'Une identité candidat ne doit pas apparaître dans la sauvegarde chiffrée.');
+  }
+  console.log('KALONEO_TWO_CANDIDAT_TEST_EVALUATIONS_EXPORT_ENCRYPTED=OK');
   clearLocalKey();configureLocalKey(Buffer.alloc(32,68));
   const dest=createCandidateTransfer({dataRoot:path.join(b,'storage'),documentsPath:path.join(b,'Documents'),userDataPath:b});
   const imported=dest.importAll(usb1,'MOT-DE-PASSE-USB-UNIQUE');
