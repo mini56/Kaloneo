@@ -15,8 +15,10 @@ async function test(){
   const ver='1.00.195',filename='KALONEO-Setup-'+ver+'.exe';
   const update={version:ver,tag:'kaloneo-'+ver,filename,sha256,size,url:'https://github.com/mini56/Kaloneo-MAJ/releases/download/kaloneo-'+ver+'/'+filename};
   const file=officialFile(update,root);
-  assert.equal(file,path.join(root,'KALONEO-Updates',filename));
-  assert.equal(updateDirectory(root),path.join(root,'KALONEO-Updates'));
+  assert.equal(file,path.join(root,filename),'Use user's Downloads directly, no hidden updates folder');
+  assert.equal(updateDirectory(root),root,'Do not invent an additional folder in Downloads');
+  const older=path.join(root,'KALONEO-Setup-1.00.194.exe');
+  fs.writeFileSync(older,'previous setup retained by user');
   let calls=0;
   const responseFor=async()=>{calls++;return Readable.from((async function*(){for(let n=0;n<40;n++)yield data;})());};
   try{
@@ -29,11 +31,17 @@ async function test(){
     assert.equal(result.reused,true);assert.equal(calls,1,'Do not download an already verified Setup');
     fs.writeFileSync(file,'untrusted-content');
     await assert.rejects(()=>canInstallVerifiedUpdate(update,'1.00.194',root),/SHA256/);
+    await assert.rejects(()=>stageVerifiedSetup(update,root,{responseFor}),/Un fichier portant ce nom/);
+    assert.equal(fs.readFileSync(file,'utf8'),'untrusted-content','Never overwrite or remove the user existing Setup');
+    assert.equal(calls,1,'A conflicting user file blocks download before contacting GitHub');
+    fs.rmSync(file); // The user must decide whether to delete conflicting files.
     result=await stageVerifiedSetup(update,root,{responseFor});
-    assert.equal(result.ok,true);assert.equal(calls,2,'Replace only a corrupted cached Setup');
+    assert.equal(result.ok,true);assert.equal(calls,2,'Download can be retried once user removes the conflicting file');
     fs.writeFileSync(file+'.kaloneo-download','interrupted download');
     const again=await stageVerifiedSetup(update,root,{responseFor});
     assert.equal(again.reused,true);assert.equal(calls,2);
+    assert(!fs.existsSync(file+'.kaloneo-download'),'Remove only interrupted .kaloneo-download fragments');
+    assert.equal(fs.readFileSync(older,'utf8'),'previous setup retained by user','Never delete an older installer from Downloads');
     fs.rmSync(file);
     const bad={...update,sha256:'0'.repeat(64)};
     await assert.rejects(()=>stageVerifiedSetup(bad,root,{responseFor}),/SHA256/);
@@ -59,7 +67,7 @@ async function test(){
     assert(main.includes('getCandidateStore().getActiveCandidate()'));
     assert(ui.includes('data-install-update'));
     assert(ui.includes("ipcRenderer.invoke('kaloneo-updates:install')"));
-    console.log('KALONEO_STAGED_UPDATER=SUCCESS: local staging, cached SHA256, no corrupt exe, explicit install, wait for exit, no data loss path');
+    console.log('KALONEO_STAGED_UPDATER=SUCCESS: user Downloads, older setup preserved, no overwrite, cached SHA256, explicit install and safe app exit');
   }finally{fs.rmSync(root,{recursive:true,force:true});}
 }
 test().catch(error=>{console.error(error);process.exitCode=1});
