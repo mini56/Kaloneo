@@ -927,8 +927,15 @@ async function createParcoursChoiceDialog() {
   const correctionsYesButton = layer.querySelector('#pc-corrections-yes');
   let focused = null;
   let focusedDetails = null;
+  // Les deux nouveaux parcours fournis sont toujours sans correction affichee.
+  const isFixedNoCorrectionParcours = () =>
+    focused && ['parcours-math-modele','parcours-exp-ecrite-modele'].includes(String(focused.id));
 
   const refreshCorrectionChoice = () => {
+    if(isFixedNoCorrectionParcours()) showCorrectionsDuringParcours=false;
+    correctionsYesButton.disabled=Boolean(isFixedNoCorrectionParcours());
+    correctionsYesButton.title=correctionsYesButton.disabled
+      ? 'Corrections désactivées pour ce parcours fourni' : '';
     correctionsNoButton.classList.toggle('active', !showCorrectionsDuringParcours);
     correctionsYesButton.classList.toggle('active', showCorrectionsDuringParcours);
     correctionsNoButton.setAttribute('aria-pressed', showCorrectionsDuringParcours ? 'false' : 'true');
@@ -950,6 +957,8 @@ async function createParcoursChoiceDialog() {
   const renderDetails = async (meta) => {
     focused = meta;
     focusedDetails = null;
+    if(isFixedNoCorrectionParcours())showCorrectionsDuringParcours=false;
+    refreshCorrectionChoice();
     openButton.disabled = !meta;
     refreshChooseState();
     [...list.querySelectorAll('.pc-item')].forEach(node => node.classList.toggle('active', node.dataset.id === String(meta?.id || '')));
@@ -1005,6 +1014,7 @@ async function createParcoursChoiceDialog() {
     refreshChooseState();
   });
   correctionsYesButton.addEventListener('click', () => {
+    if(isFixedNoCorrectionParcours())return;
     showCorrectionsDuringParcours = true;
     refreshCorrectionChoice();
     refreshChooseState();
