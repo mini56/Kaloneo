@@ -2858,7 +2858,8 @@ app.whenReady().then(async()=>{
         return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),
           hit:hit===select||select.contains(hit)};
       };
-      return {count:blocks.length,focus:document.activeElement===card,
+      return {count:blocks.length,focus:document.activeElement===card || document.activeElement===type,
+        focusTarget:document.activeElement===type?'type':document.activeElement===card?'card':document.activeElement?.tagName,
         documentFocus:document.hasFocus(),type:coords(type),zone:coords(zone),
         typeDisabled:type?.disabled,zoneDisabled:zone?.disabled};
     }.toString()+')()');
@@ -2914,6 +2915,43 @@ app.whenReady().then(async()=>{
     console.log('KALONEO_R197_INSERT_BLOCK10_NATIVE_DROPDOWNS=OK',
       JSON.stringify({afterInsertion,changedType,changedZone,miniCancelCalls,
         resumedMiniature:miniRenderCalls>miniBefore}));
+
+    // R199 : suppression du bloc 10, puis menus des AUTRES blocs, sans Apercu.
+    const removeTen=await win.webContents.executeJavaScript('('+function(){
+      const cards=[...document.querySelectorAll('.exercise-block')];
+      const button=cards[9]?.querySelector('.remove-block');
+      window.confirm=()=>true;
+      button?.click();
+      return {count:document.querySelectorAll('.exercise-block').length,
+        typeControls:[...document.querySelectorAll('.exercise-block .block-type')].length,
+        zoneControls:[...document.querySelectorAll('.exercise-block .block-zone')].length};
+    }.toString()+')()');
+    if(removeTen.count!==9||removeTen.typeControls!==9||removeTen.zoneControls!==9)
+      return fail('R199 : suppression du bloc 10 incomplete',removeTen);
+    await wait(350);
+    for(const number of [1,5,9]){
+      for(const className of ['block-type','block-zone']){
+        const point=await win.webContents.executeJavaScript('('+function(number,className){
+          const card=[...document.querySelectorAll('.exercise-block')][number-1];
+          const control=card?.querySelector('.'+className);
+          control?.scrollIntoView({block:'center'});
+          const r=control?.getBoundingClientRect();
+          return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),
+            hit:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)===control,
+            disabled:control?.disabled};
+        }.toString()+')('+number+','+JSON.stringify(className)+')');
+        if(!point.hit||point.disabled)return fail('R199 : menu non accessible apres suppression', {number,className,point});
+        await clickNative(point);
+        win.webContents.sendInputEvent({type:'keyDown',keyCode:'Escape'});
+        win.webContents.sendInputEvent({type:'keyUp',keyCode:'Escape'});
+        const active=await win.webContents.executeJavaScript('('+function(number,className){
+          const card=[...document.querySelectorAll('.exercise-block')][number-1];
+          return document.activeElement===card?.querySelector('.'+className);
+        }.toString()+')('+number+','+JSON.stringify(className)+')');
+        if(!active)return fail('R199 : menu natif sans focus apres suppression', {number,className});
+      }
+    }
+    console.log('KALONEO_R199_DELETE_ALL_BLOCK_SELECTS=OK',JSON.stringify(removeTen));
 
     console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
