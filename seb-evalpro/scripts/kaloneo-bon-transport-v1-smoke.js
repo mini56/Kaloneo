@@ -59,7 +59,8 @@ try{
   const lib=createKaloneoLibrary({
     dataRoot:path.join(tmp,'user'),
     seedTestsRoot:output,
-    suppliedImagesRoot:supplied
+    suppliedImagesRoot:supplied,
+    seedImageRoots:[{root:path.join(tmp,'seed','v1-assets'),category:'Images tests Builder KALONÉO'}]
   });
   const item=lib.getTest('l','1.0.0');
   assert.equal(item.ok,true,'V1 Bon de transport absente de la bibliotheque candidate');
