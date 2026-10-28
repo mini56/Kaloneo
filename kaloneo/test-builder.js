@@ -993,9 +993,9 @@
       // Après une boîte de confirmation native Windows, Electron peut laisser
       // la fenêtre Admin sans focus OS : .focus() sur un SELECT ne suffit pas.
       // Réactiver uniquement la fenêtre Builder qui vient d'insérer/supprimer.
-      if(!document.hasFocus()){
-        try{await window.sebEvalPro?.kaloneoRefocusBuilder?.();}catch(_){}
-      }
+      // Une perte de focus du popup natif n'est pas toujours visible dans
+      // document.hasFocus() : restaurer le focus OS même si le DOM paraît actif.
+      try{await window.sebEvalPro?.kaloneoRefocusBuilder?.();}catch(_){}
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
         if(miniPreviewInsertionGuardUid!==uid)return;
         const host=$('blocks-editor');
