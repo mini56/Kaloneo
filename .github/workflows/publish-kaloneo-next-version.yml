@@ -307,10 +307,24 @@ jobs:
           version="${tag#kaloneo-}"
           filename="KALONEO-Setup-${version}.exe"
           sha_file="${filename}.sha256"
-          source_hash=$(jq -r --arg name "$filename" '.assets[] | select(.name == $name) | .digest' <<<"$source")
-          source_sha_hash=$(jq -r --arg name "$sha_file" '.assets[] | select(.name == $name) | .digest' <<<"$source")
+          # Une Release peut etre visible avant que l'API rende ses assets.
+          # Relire le tag officiel et attendre les deux empreintes valides.
+          source_hash=''
+          source_sha_hash=''
+          for source_ready_attempt in $(seq 1 16); do
+            latest=$(gh api "repos/mini56/Kaloneo/releases/tags/$tag" 2>/dev/null || true)
+            if [[ -n "$latest" ]]; then
+              source_hash=$(jq -r --arg name "$filename" '[.assets[]? | select(.name == $name) | .digest] | first // ""' <<<"$latest")
+              source_sha_hash=$(jq -r --arg name "$sha_file" '[.assets[]? | select(.name == $name) | .digest] | first // ""' <<<"$latest")
+              if [[ "$source_hash" =~ ^sha256:[0-9a-fA-F]{64}$ && "$source_sha_hash" =~ ^sha256:[0-9a-fA-F]{64}$ ]]; then
+                break
+              fi
+            fi
+            echo "Release $tag visible, mais empreintes pas encore disponibles (essai $source_ready_attempt/16)"
+            sleep 15
+          done
           if [[ ! "$source_hash" =~ ^sha256:[0-9a-fA-F]{64}$ || ! "$source_sha_hash" =~ ^sha256:[0-9a-fA-F]{64}$ ]]; then
-            echo "::error::Setup ou fichier SHA256 introuvable dans la Release officielle $tag"
+            echo "::error::Setup ou SHA256 officiel toujours absent pour $tag ; distribution refusee"
             exit 1
           fi
           for attempt in $(seq 1 18); do
