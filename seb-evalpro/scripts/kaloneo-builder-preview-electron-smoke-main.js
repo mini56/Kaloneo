@@ -30,6 +30,13 @@ const imageLibraryAlternativeData = 'data:image/svg+xml;base64,' + Buffer.from('
 let win = null;
 let miniRenderCalls = 0;
 let miniCancelCalls = 0;
+let builderRefocusCalls = 0;
+ipcMain.handle('kaloneo-builder:refocus-editor',()=>{
+  builderRefocusCalls++;
+  if(!win||win.isDestroyed())return false;
+  win.focus();win.webContents.focus();
+  return win.isFocused();
+});
 const miniRenderModes=[];
 ipcMain.handle('kaloneo-builder:cancel-mini-preview',()=>{
   miniCancelCalls++;
@@ -2864,6 +2871,7 @@ app.whenReady().then(async()=>{
         typeDisabled:type?.disabled,zoneDisabled:zone?.disabled};
     }.toString()+')()');
     if(afterInsertion.count!==10||!afterInsertion.focus||!afterInsertion.documentFocus||
+       builderRefocusCalls<1||
        afterInsertion.typeDisabled||afterInsertion.zoneDisabled||
        !afterInsertion.type?.hit||!afterInsertion.zone?.hit)
       return fail('R197 : bloc 10 ou ses deux listes déroulantes inutilisables dès insertion',afterInsertion);
@@ -2873,6 +2881,19 @@ app.whenReady().then(async()=>{
       return fail('R197 : fenêtre de miniature lancée pendant la manipulation du bloc 10',
         {miniBefore,miniRenderCalls});
     await clickNative(afterInsertion.type);
+    // R200 : vérifier la vraie saisie clavier sur la liste ouverte.
+    // Un changement .value + dispatchEvent simulé masquait le défaut Windows.
+    win.webContents.sendInputEvent({type:'keyDown',keyCode:'Down'});
+    win.webContents.sendInputEvent({type:'keyUp',keyCode:'Down'});
+    win.webContents.sendInputEvent({type:'keyDown',keyCode:'Enter'});
+    win.webContents.sendInputEvent({type:'keyUp',keyCode:'Enter'});
+    await wait(160);
+    const nativeTypeSelection=await win.webContents.executeJavaScript('('+function(){
+      return document.querySelectorAll('.exercise-block')[9]?.querySelector('.block-type')?.value;
+    }.toString()+')()');
+    if(!nativeTypeSelection||nativeTypeSelection==='text')
+      return fail('R200 : le vrai menu Type ne reçoit pas la sélection au clavier après insertion',
+        {nativeTypeSelection,builderRefocusCalls});
     win.webContents.sendInputEvent({type:'keyDown',keyCode:'Escape'});
     win.webContents.sendInputEvent({type:'keyUp',keyCode:'Escape'});
     const changedType=await win.webContents.executeJavaScript('('+function(){
@@ -2929,6 +2950,8 @@ app.whenReady().then(async()=>{
     if(removeTen.count!==9||removeTen.typeControls!==9||removeTen.zoneControls!==9)
       return fail('R199 : suppression du bloc 10 incomplete',removeTen);
     await wait(350);
+    if(builderRefocusCalls<2)return fail('R200 : refocus natif non demandé après suppression',
+      {builderRefocusCalls});
     for(const number of [1,5,9]){
       for(const className of ['block-type','block-zone']){
         const point=await win.webContents.executeJavaScript('('+function(number,className){
