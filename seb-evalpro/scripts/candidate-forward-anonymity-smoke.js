@@ -89,6 +89,31 @@ function audit(rootDir){
   const repeat=transfer.exportSelected(usb1,'MOT-DE-PASSE-USB-UNIQUE',[id]);
   assert.strictEqual(repeat.skipped,1,'Re-export sans modification doit retrouver le candidat en dechiffrant');
   assert.strictEqual(fs.readdirSync(usb1).filter(x=>x.endsWith('.seb')).length,1);
+  // La lecture d'un ancien dossier contenant par erreur '/' ou '§' dans
+  // l'identité doit rester exportable. Seules les NOUVELLES saisies sont filtrées.
+  const symbolsCandidate={nom:'MAR/§TIN!',prenom:'AN/!NE',lieu:'Lorient',groupe:'Formation',date:'2026-10-28'};
+  const symbolsId='CANDIDATE-TEST-SYMBOL-82828';
+  const symbolsDir=path.join(a,'storage','Candidats','CAND-A1B2C3D4E5F6');
+  for(const rel of ['donnees','resultats','replay','bilan/historique','bilan/exports'])
+    fs.mkdirSync(path.join(symbolsDir,rel),{recursive:true});
+  writeJsonFile(path.join(symbolsDir,'manifest.json'),{
+    schemaVersion:1,privacyStorageVersion:1,candidateId:symbolsId,shortId:'SYM828',
+    status:'TERMINE',folderName:path.basename(symbolsDir),candidat:symbolsCandidate
+  });
+  writeJsonFile(path.join(symbolsDir,'donnees','candidat.json'),symbolsCandidate);
+  writeJsonFile(path.join(symbolsDir,'donnees','evaluation-state.json'),
+    {sessionStorage:{candidat_data:JSON.stringify(symbolsCandidate)},localStorage:{}});
+  writeJsonFile(path.join(symbolsDir,'donnees','progression.json'),{lastPage:'FIN'});
+  writeJsonFile(path.join(symbolsDir,'resultats','reponses.json'),{});
+  writeJsonFile(path.join(symbolsDir,'resultats','scores.json'),{});
+  const symbolUsb=path.join(root,'USB-symbols',createPrivateExportFolderName());
+  fs.mkdirSync(symbolUsb,{recursive:true});
+  const symbolExport=transfer.exportSelected(symbolUsb,'MOT-DE-PASSE-USB-UNIQUE',[symbolsId]);
+  assert.strictEqual(symbolExport.added,1,'Un nom historique avec / § ! ne doit pas bloquer le transfert chiffre.');
+  const symbolBytes=fs.readFileSync(path.join(symbolUsb,symbolExport.copied[0].filename),'utf8');
+  assert(!symbolBytes.includes(symbolsCandidate.nom)&&!symbolBytes.includes(symbolsCandidate.prenom),
+    'L export ne doit jamais divulguer le nom historique avec symboles.');
+  console.log('KALONEO_LEGACY_SYMBOL_NAME_ENCRYPTED_EXPORT=OK');
   clearLocalKey();configureLocalKey(Buffer.alloc(32,68));
   const dest=createCandidateTransfer({dataRoot:path.join(b,'storage'),documentsPath:path.join(b,'Documents'),userDataPath:b});
   const imported=dest.importAll(usb1,'MOT-DE-PASSE-USB-UNIQUE');
