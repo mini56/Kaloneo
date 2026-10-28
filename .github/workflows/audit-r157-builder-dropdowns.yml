@@ -1,6 +1,14 @@
 name: "KALONÉO R157 - Audit général des menus déroulants Builder V1 et futur"
 on:
-  # Vérification disponible à la demande ; contrôles automatisés réunis dans le Setup R177.
+  push:
+    branches: [fix-r186-kaltest-source-unique-20261027]
+    paths:
+      - "kaloneo/test-builder.js"
+      - "seb-evalpro/src/main.js"
+      - "seb-evalpro/src/preload.js"
+      - "seb-evalpro/scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js"
+      - "seb-evalpro/scripts/kaloneo-builder-preview-electron-smoke-main.js"
+      - ".github/workflows/audit-r157-builder-dropdowns.yml"
   workflow_dispatch:
 concurrency:
   group: kaloneo-r157-dropdown-audit-${{ github.ref }}
@@ -27,5 +35,7 @@ jobs:
         run: |
           node scripts/build-kaltest-pilot2-data.js
           npm run prepare:web
-      - name: Audit V1 real Electron selects, dropdown hit targets and color persistence
+      - name: R197 verify cancellation of an already running mini-preview worker
+        run: node scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
+      - name: R157 + R197 real Windows mouse: insert block 10 and edit Type / Zone before Aperçu
         run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
