@@ -1807,7 +1807,7 @@ function getKaloneoMiniPreviewWorker() {
 // R200 — Une boîte de confirmation Windows peut rendre le focus OS à
 // la miniature masquée : focaliser un <select> DOM ne suffit alors pas.
 // N'autoriser le retour de focus que pour la vraie page Builder Admin.
-ipcMain.handle('kaloneo-builder:refocus-editor', event => {
+ipcMain.handle('kaloneo-builder:refocus-editor', async (event, reason='') => {
   if(!adminSessionUnlocked||!mainWindow||mainWindow.isDestroyed()||
      event.sender!==mainWindow.webContents||getCandidateStore().getActiveCandidate()||
      mainWindow.isMinimized())return false;
@@ -1815,9 +1815,24 @@ ipcMain.handle('kaloneo-builder:refocus-editor', event => {
   try{page=decodeURIComponent(new URL(event.sender.getURL()).pathname||'');}
   catch(_){return false;}
   if(!page.endsWith('/kaloneo-builder/test-builder.html'))return false;
+  const afterDelete=reason==='after-delete';
   try{
     mainWindow.focus();
     mainWindow.webContents.focus();
+    if(afterDelete){
+      // Le retour de confirm() ferme un dialogue NATIVE Windows. Sa fermeture
+      // peut desactiver la BrowserWindow apres la premiere tentative de focus.
+      // Attendre la fin du cycle Windows avant de remettre le focus OS.
+      await new Promise(resolve=>setTimeout(resolve,180));
+      if(!mainWindow||mainWindow.isDestroyed()||!adminSessionUnlocked||
+         event.sender!==mainWindow.webContents||getCandidateStore().getActiveCandidate()||
+         mainWindow.isMinimized())return false;
+      if(!mainWindow.isFocused()){
+        mainWindow.moveTop();
+        mainWindow.focus();
+      }
+      mainWindow.webContents.focus();
+    }
     return mainWindow.isFocused();
   }catch(_){return false;}
 });
