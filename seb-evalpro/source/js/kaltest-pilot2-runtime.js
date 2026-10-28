@@ -4080,10 +4080,41 @@
     applyVisibleCorrection(test, host);
   }
 
+  // Sécurité candidat : les saisies sont contrôlées AVANT toute sauvegarde.
+  // Accepter les vrais noms internationaux, accents, espaces, apostrophes et
+  // traits d'union ; écarter chiffres, slashs et symboles de clavier.
+  const CANDIDATE_NAME_ALLOWED=/[^\\p{L}\\p{M} '\\u2019-]/gu;
+  const CANDIDATE_NAME_VALID=/^\\p{L}[\\p{L}\\p{M}]*(?:[ '\\u2019-]\\p{L}[\\p{L}\\p{M}]*)*$/u;
+
+  function cleanCandidateName(value) {
+    return String(value || '').normalize('NFC').replace(CANDIDATE_NAME_ALLOWED,'');
+  }
+
+  function installCandidateNameInput(fieldId, label) {
+    const field=document.getElementById(fieldId);
+    const status=document.getElementById('identity-status');
+    if(!field)return;
+    field.addEventListener('input',()=>{
+      const raw=field.value;
+      const cleaned=cleanCandidateName(raw);
+      if(cleaned!==raw){
+        const caret=field.selectionStart;
+        field.value=cleaned;
+        if(Number.isInteger(caret)){
+          const adjusted=cleanCandidateName(raw.slice(0,caret)).length;
+          try{field.setSelectionRange(adjusted,adjusted);}catch(_){}
+        }
+        if(status)status.textContent=label+' : caractères spéciaux ou chiffres refusés. Seuls les lettres, espaces, apostrophes et traits d’union sont autorisés.';
+      }else if(status && /caractères spéciaux ou chiffres refusés/i.test(status.textContent||'')){
+        status.textContent='';
+      }
+    });
+  }
+
   function validateIdentity() {
     const values = {
-      nom: document.getElementById('nom').value.trim(),
-      prenom: document.getElementById('prenom').value.trim(),
+      nom: document.getElementById('nom').value.normalize('NFC').trim(),
+      prenom: document.getElementById('prenom').value.normalize('NFC').trim(),
       civilite: document.querySelector('input[name="civilite"]:checked')?.value || '',
       personIdentifier: document.getElementById('personIdentifier').value.trim().toUpperCase(),
       lieu: document.getElementById('lieu').value.trim(),
@@ -4096,8 +4127,14 @@
     if (required.some(key => !values[key])) {
       return { ok:false, message:'Veuillez remplir tous les champs avant de commencer.' };
     }
+    for(const [field,label] of [['nom','Nom'],['prenom','Prénom']]){
+      const name=values[field];
+      if(name.length>80 || !CANDIDATE_NAME_VALID.test(name)){
+        return {ok:false,field,message:label+' : utilisez uniquement des lettres, espaces, apostrophes et traits d’union, sans symbole ni chiffre.'};
+      }
+    }
     if (!/^[A-Z0-9]{7}$/.test(values.personIdentifier)) {
-      return { ok:false, message:'Le N° identifiant doit contenir exactement 7 caractères : lettres ou chiffres.' };
+      return { ok:false, field:'personIdentifier', message:'Le N° identifiant doit contenir exactement 7 caractères : lettres ou chiffres.' };
     }
     return { ok:true, values };
   }
@@ -4344,15 +4381,21 @@
     document.getElementById('personIdentifier').addEventListener('input', event => {
       event.target.value = event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0,7);
     });
+    installCandidateNameInput('nom','Nom');
+    installCandidateNameInput('prenom','Prénom');
 
     document.getElementById('identity-next').addEventListener('click', () => {
       const validation = validateIdentity();
       const status = document.getElementById('identity-status');
       if (!validation.ok) {
         status.textContent = validation.message;
+        if(validation.field)document.getElementById(validation.field)?.focus();
         return;
       }
 
+      // Afficher sur le formulaire la valeur exacte qui sera enregistrée.
+      document.getElementById('nom').value=validation.values.nom;
+      document.getElementById('prenom').value=validation.values.prenom;
       status.textContent = '';
       const candidateData = {
         ...validation.values,
