@@ -1791,6 +1791,30 @@ function getKaloneoMiniPreviewWorker() {
   return kaloneoMiniPreviewWorker;
 }
 
+// R197 — Une insertion reconstruit les <select> natifs du Builder.
+// Annuler le travail Electron caché en cours AVANT de restaurer leur focus.
+// Seule la fenêtre Admin active peut interrompre sa propre miniature.
+ipcMain.handle('kaloneo-builder:cancel-mini-preview', async event => {
+  if(!adminSessionUnlocked||!mainWindow||mainWindow.isDestroyed()||
+     event.sender!==mainWindow.webContents||getCandidateStore().getActiveCandidate())
+    return {ok:false,error:'Miniature réservée au Builder Admin.'};
+  ++kaloneoMiniPreviewRequestSerial; // invalide aussi les captures en attente
+  const worker=kaloneoMiniPreviewWorker;
+  if(worker&&!worker.isDestroyed()){
+    try{worker.destroy();}
+    catch(error){return {ok:false,error:String(error?.message||error)};}
+    // Laisser la capture interrompue finir son finally sans bloquer l'éditeur.
+    let timer=null;
+    try{
+      await Promise.race([
+        kaloneoMiniPreviewJob.catch(()=>{}),
+        new Promise(resolve=>{timer=setTimeout(resolve,800);})
+      ]);
+    }finally{if(timer!==null)clearTimeout(timer);}
+  }
+  return {ok:true};
+});
+
 ipcMain.handle('kaloneo-builder:render-mini-preview', (event, definition, viewportMode='reference') => {
   if(!adminSessionUnlocked || !mainWindow || mainWindow.isDestroyed() ||
       event.sender!==mainWindow.webContents ||
