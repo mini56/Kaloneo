@@ -2156,6 +2156,7 @@ async function closeAdminBilanPage() {
 
 contextBridge.exposeInMainWorld('sebEvalPro', {
   kaloneoStartCandidateParcours: () => ipcRenderer.invoke('kaloneo:candidate-start-parcours'),
+  kaloneoIsAdminSession: () => ipcRenderer.invoke('admin:status'),
   save: () => saveNow(false),
   captureReplay: () => replayNavigationCapture.captureNow('kaltest-explicit'),
   closeTestsParcours: () => ipcRenderer.invoke('admin:close-tests-parcours'),
