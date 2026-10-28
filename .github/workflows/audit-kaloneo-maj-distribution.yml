@@ -1,0 +1,26 @@
+name: "KALONÉO — audit autonome de la synchronisation MAJ (sans Setup)"
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix-r186-kaltest-source-unique-20261027]
+    paths:
+      - ".github/scripts/verify-kaloneo-maj.sh"
+      - ".github/workflows/publish-kaloneo-next-version.yml"
+      - ".github/workflows/audit-kaloneo-maj-distribution.yml"
+permissions:
+  contents: read
+jobs:
+  verifier-miroir:
+    name: "Valider la dernière Release MAJ, les empreintes et les erreurs 404"
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vérifier la dernière Release sur les deux dépôts sans déclencher un Setup
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KALONEO_SKIP_MIRROR_DISPATCH: '1'
+          KALONEO_MAJ_MAX_ATTEMPTS: '3'
+          KALONEO_MAJ_DELAY_SECONDS: '5'
+        shell: bash
+        run: bash .github/scripts/verify-kaloneo-maj.sh
