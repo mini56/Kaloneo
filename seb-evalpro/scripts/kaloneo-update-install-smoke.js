@@ -15,7 +15,7 @@ async function test(){
   const ver='1.00.195',filename='KALONEO-Setup-'+ver+'.exe';
   const update={version:ver,tag:'kaloneo-'+ver,filename,sha256,size,url:'https://github.com/mini56/Kaloneo-MAJ/releases/download/kaloneo-'+ver+'/'+filename};
   const file=officialFile(update,root);
-  assert.equal(file,path.join(root,filename),'Use user's Downloads directly, no hidden updates folder');
+  assert.equal(file,path.join(root,filename),'Save in Downloads directly without creating a separate subfolder');
   assert.equal(updateDirectory(root),root,'Do not invent an additional folder in Downloads');
   const older=path.join(root,'KALONEO-Setup-1.00.194.exe');
   fs.writeFileSync(older,'previous setup retained by user');
