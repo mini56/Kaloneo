@@ -1323,6 +1323,10 @@ function createKaloneoLibrary(options = {}) {
     return { ok:true, details:parcoursDetails(value) };
   }
 
+  function isBundledFiveParcours(id) {
+    return BUNDLED_FIVE_PARCOURS.some(model=>model.id===String(id||''));
+  }
+
   function readSelectedParcoursSelection() {
     const saved = readJson(selectedParcoursFile) || {};
     const id = String(saved.id || '').trim();
@@ -1331,7 +1335,7 @@ function createKaloneoLibrary(options = {}) {
       id:selectedId,
       launchOptions:{
         // Règle KALONÉO : aucune correction pendant le parcours sauf choix explicite Admin.
-        showCorrectionsDuringParcours:saved.launchOptions?.showCorrectionsDuringParcours === true
+        showCorrectionsDuringParcours:!isBundledFiveParcours(selectedId) && saved.launchOptions?.showCorrectionsDuringParcours === true
       }
     };
   }
@@ -1359,7 +1363,7 @@ function createKaloneoLibrary(options = {}) {
     const value = findParcours(id);
     if (!value) return { ok:false, error:'Parcours introuvable.' };
     const launchOptions = {
-      showCorrectionsDuringParcours:options.showCorrectionsDuringParcours === true
+      showCorrectionsDuringParcours:!isBundledFiveParcours(value.id) && options.showCorrectionsDuringParcours === true
     };
     atomicWriteJson(selectedParcoursFile, {
       format:'kaloneo-selected-parcours',
@@ -1393,6 +1397,17 @@ function createKaloneoLibrary(options = {}) {
       const tests = (Array.isArray(value.tests) ? value.tests : []).map(ref => {
         const definition = JSON.parse(JSON.stringify(resolveDefinition(definitions, ref, 'test')));
         if (String(definition.id) === 'planning_cantine') definition.category = 'planification';
+        // La calculatrice est disponible pendant les cinq exercices Math.
+        // Modifier seulement la copie en memoire du parcours livre :
+        // les V1 officielles, leurs baremes et les autres parcours sont intacts.
+        if(value.id==='parcours-math-modele'){
+          definition.calculator={
+            ...(definition.calculator||{}),
+            compatible:true,
+            defaultEnabled:true,
+            brandLabel:'KALONÉO'
+          };
+        }
         return definition;
       });
       const fin = resolveDefinition(definitions, value.fin, 'fin');
@@ -1405,7 +1420,7 @@ function createKaloneoLibrary(options = {}) {
           title:String(value.name || value.id),
           creator:String(value.creator || ''),
           launchOptions:{
-            showCorrectionsDuringParcours:launchOptions.showCorrectionsDuringParcours === true
+            showCorrectionsDuringParcours:!isBundledFiveParcours(value.id) && launchOptions.showCorrectionsDuringParcours === true
           },
           maskScreen:value.maskScreen || defaultMaskRef(),
           maskScreenDefinition:mask.maskScreen,
