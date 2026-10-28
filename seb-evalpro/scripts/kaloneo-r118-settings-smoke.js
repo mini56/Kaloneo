@@ -37,6 +37,20 @@ try {
   assert(preload.includes('id="seb-evalpro-settings" type="button" hidden'));
   assert(preload.includes('settingsButton.hidden = !adminUnlocked'));
   assert(preload.includes('const APP_RELEASE_VERSION = ') && preload.includes('APP_BUILD_NUMBER'), 'Version Admin issue du numéro unique');
+  const settings=read(path.join(root,'src','kaloneo-admin-settings.js'));
+  const menu=['data-tab="about"','data-tab="admin"','data-tab="builder"','data-tab="passwords"'];
+  const positions=menu.map(tab=>settings.indexOf(tab));
+  assert(positions.every(position=>position>=0),'Les quatre boutons de Réglages doivent être présents');
+  assert(positions.every((position,index)=>index===0||position>positions[index-1]),
+    'Ordre des réglages : À propos, Aide programme, Aide Builder, Mots de passe');
+  assert(settings.includes('data-tab="about" aria-selected="true"'),
+    'À propos est le bouton actif au premier affichage');
+  assert(settings.includes('data-section="passwords" hidden'),
+    'Ne pas afficher la modification de mot de passe par défaut');
+  assert(settings.includes('data-section="about"><div class="settings-intro"'),
+    'À propos doit être visible dès l’ouverture');
+  assert(settings.includes("selectTab('about');"),
+    'L’ouverture des Réglages doit sélectionner À propos');
   const main=read(path.join(root,'src','main.js'));
   assert(main.includes("kaloneo-settings:change-password"));
   assert(main.includes("getCandidateStore().getActiveCandidate()"));
