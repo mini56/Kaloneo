@@ -929,7 +929,7 @@ async function createParcoursChoiceDialog() {
   let focusedDetails = null;
   // Les deux nouveaux parcours fournis sont toujours sans correction affichee.
   const isFixedNoCorrectionParcours = () =>
-    focused && ['parcours-math-modele','parcours-exp-ecrite-modele'].includes(String(focused.id));
+    focused && (['parcours-math-modele','parcours-exp-ecrite-modele'].includes(String(focused.id)) || ['Parcours Math','Parcours Exp-écrite'].includes(String(focused.name)));
 
   const refreshCorrectionChoice = () => {
     if(isFixedNoCorrectionParcours()) showCorrectionsDuringParcours=false;
