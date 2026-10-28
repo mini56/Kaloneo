@@ -29,7 +29,12 @@ const imageLibraryData = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns=
 const imageLibraryAlternativeData = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120"><rect width="180" height="120" fill="#e67e22"/></svg>').toString('base64');
 let win = null;
 let miniRenderCalls = 0;
+let miniCancelCalls = 0;
 const miniRenderModes=[];
+ipcMain.handle('kaloneo-builder:cancel-mini-preview',()=>{
+  miniCancelCalls++;
+  return {ok:true};
+});
 ipcMain.handle('kaloneo-builder:render-mini-preview',(_event,_definition,mode='reference')=>{
   miniRenderCalls++;
   miniRenderModes.push(mode);
@@ -2807,6 +2812,106 @@ app.whenReady().then(async()=>{
     console.log('KALONEO_R157_NATIVE_MENU_PREVIEW_RACE=OK',
       JSON.stringify({paused:miniRenderCalls===captureCountBeforeMenu+1,
         captureCountBeforeMenu,after:miniRenderCalls}));
+
+    // R197 — scénario utilisateur réel : bloc 9 -> « + Insérer ici »
+    // -> bloc 10, puis clics souris Windows sur Type et Zone, SANS Aperçu.
+    win.show();win.focus();
+    await wait(220);
+    const prepareNine=await win.webContents.executeJavaScript('('+function(){
+      window.confirm=()=>true;
+      document.getElementById('new-test').click();
+      const layout=document.getElementById('test-layout');
+      layout.value='50-50';
+      layout.dispatchEvent(new Event('change',{bubbles:true}));
+      for(let i=1;i<9;i++){
+        const buttons=[...document.querySelectorAll('.block-insert-divider .block-insert-here')];
+        buttons[buttons.length-1]?.click();
+      }
+      const blocks=[...document.querySelectorAll('.exercise-block')];
+      const buttons=[...document.querySelectorAll('.block-insert-divider .block-insert-here')];
+      const insert=buttons[buttons.length-1];
+      insert?.scrollIntoView({block:'center',inline:'nearest'});
+      const rect=insert?.getBoundingClientRect();
+      return {count:blocks.length,point:rect?{x:Math.round(rect.left+rect.width/2),
+        y:Math.round(rect.top+rect.height/2)}:null,
+        hit:!!insert&&document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2)===insert};
+    }.toString()+')()');
+    if(prepareNine.count!==9||!prepareNine.hit)
+      return fail('R197 : impossible de préparer le vrai clic Insérer ici après le bloc 9',prepareNine);
+    const clickNative=async point=>{
+      win.webContents.sendInputEvent({type:'mouseMove',x:point.x,y:point.y});
+      win.webContents.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,x:point.x,y:point.y});
+      win.webContents.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,x:point.x,y:point.y});
+      await wait(150);
+    };
+    await clickNative(prepareNine.point);
+    const afterInsertion=await win.webContents.executeJavaScript('('+function(){
+      const blocks=[...document.querySelectorAll('.exercise-block')];
+      const card=blocks[9];
+      const type=card?.querySelector('.block-type');
+      const zone=card?.querySelector('.block-zone');
+      const coords=select=>{
+        if(!select)return null;
+        select.scrollIntoView({block:'center',inline:'nearest'});
+        const r=select.getBoundingClientRect();
+        const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+        return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),
+          hit:hit===select||select.contains(hit)};
+      };
+      return {count:blocks.length,focus:document.activeElement===card,
+        documentFocus:document.hasFocus(),type:coords(type),zone:coords(zone),
+        typeDisabled:type?.disabled,zoneDisabled:zone?.disabled};
+    }.toString()+')()');
+    if(afterInsertion.count!==10||!afterInsertion.focus||!afterInsertion.documentFocus||
+       afterInsertion.typeDisabled||afterInsertion.zoneDisabled||
+       !afterInsertion.type?.hit||!afterInsertion.zone?.hit)
+      return fail('R197 : bloc 10 ou ses deux listes déroulantes inutilisables dès insertion',afterInsertion);
+    const miniBefore=miniRenderCalls;
+    await wait(1350);
+    if(miniRenderCalls!==miniBefore)
+      return fail('R197 : fenêtre de miniature lancée pendant la manipulation du bloc 10',
+        {miniBefore,miniRenderCalls});
+    await clickNative(afterInsertion.type);
+    win.webContents.sendInputEvent({type:'keyDown',keyCode:'Escape'});
+    win.webContents.sendInputEvent({type:'keyUp',keyCode:'Escape'});
+    const changedType=await win.webContents.executeJavaScript('('+function(){
+      const card=[...document.querySelectorAll('.exercise-block')][9];
+      const type=card.querySelector('.block-type');
+      const focused=document.activeElement===type;
+      type.value='question';type.dispatchEvent(new Event('change',{bubbles:true}));
+      return {focused,value:card.querySelector('.block-type').value,
+        uid:card.dataset.uid,hasFocus:document.hasFocus()};
+    }.toString()+')()');
+    if(!changedType.focused||changedType.value!=='question'||!changedType.hasFocus)
+      return fail('R197 : menu Type du bloc 10 non modifiable au premier clic',changedType);
+    const zonePoint=await win.webContents.executeJavaScript('('+function(){
+      const zone=[...document.querySelectorAll('.exercise-block')][9].querySelector('.block-zone');
+      zone.scrollIntoView({block:'center',inline:'nearest'});
+      const r=zone.getBoundingClientRect();
+      return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2)};
+    }.toString()+')()');
+    await clickNative(zonePoint);
+    win.webContents.sendInputEvent({type:'keyDown',keyCode:'Escape'});
+    win.webContents.sendInputEvent({type:'keyUp',keyCode:'Escape'});
+    const changedZone=await win.webContents.executeJavaScript('('+function(){
+      const card=[...document.querySelectorAll('.exercise-block')][9];
+      const zone=card.querySelector('.block-zone');
+      const focused=document.activeElement===zone;
+      zone.value='right';zone.dispatchEvent(new Event('change',{bubbles:true}));
+      document.getElementById('test-title').focus(); // quitte le bloc : relance la miniature
+      return {focused,zone:card.querySelector('.block-zone').value,
+        type:card.querySelector('.block-type').value,documentFocus:document.hasFocus()};
+    }.toString()+')()');
+    if(!changedZone.focused||changedZone.zone!=='right'||changedZone.type!=='question'||
+       !changedZone.documentFocus)
+      return fail('R197 : menu Zone du bloc 10 non modifiable sans Aperçu',changedZone);
+    await wait(1500);
+    if(miniRenderCalls<=miniBefore||miniCancelCalls<9)
+      return fail('R197 : la miniature ne reprend pas après l’édition ou annulation absente',
+        {miniBefore,miniRenderCalls,miniCancelCalls});
+    console.log('KALONEO_R197_INSERT_BLOCK10_NATIVE_DROPDOWNS=OK',
+      JSON.stringify({afterInsertion,changedType,changedZone,miniCancelCalls,
+        resumedMiniature:miniRenderCalls>miniBefore}));
 
     console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
