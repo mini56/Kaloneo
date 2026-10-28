@@ -1,0 +1,33 @@
+name: "KALONÉO — test réel du lancement Windows après clic Installer"
+on:
+  push:
+    branches: [fix-r186-kaltest-source-unique-20261027]
+    paths:
+      - "seb-evalpro/src/main.js"
+      - "seb-evalpro/src/kaloneo-update-install.js"
+      - "seb-evalpro/scripts/kaloneo-updater-shell-electron-smoke-main.js"
+      - ".github/workflows/audit-kaloneo-update-shell-windows.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  open-installer-with-windows-shell:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: seb-evalpro
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Installer Electron pour une verification Windows reelle
+        run: |
+          npm install --no-audit --no-fund
+          if($LASTEXITCODE -ne 0){throw 'Electron absent'}
+      - name: Verifier que Windows ouvre effectivement le fichier demandé
+        run: |
+          & npx electron --no-sandbox scripts/kaloneo-updater-shell-electron-smoke-main.js
+          if($LASTEXITCODE -ne 0){throw 'ShellExecute ne lance pas le fichier sur Windows'}
