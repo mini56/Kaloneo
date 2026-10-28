@@ -63,7 +63,8 @@ async function run(){
   assert.ok(settings.includes('data-download-update'));
   assert.ok(settings.includes('Vérifier les mises à jour'));
   assert.ok(settings.indexOf('data-kaloneo-about-logo')<settings.indexOf('data-check-update'),'bouton sous logo');
-  assert.ok(settings.includes('La mise à jour va être téléchargée dans le dossier sécurisé KALONEO-Updates'),'Indiquer le dossier sécurisé de téléchargement');
+  assert.ok(settings.includes('La mise à jour sera enregistrée dans votre dossier Téléchargements Windows'),'Indiquer le dossier Téléchargements de l’utilisateur');
+  assert.ok(settings.includes('vous pourrez les supprimer vous-même'),'Conserver les anciens installateurs à la discrétion de l’utilisateur');
   assert.ok(main.includes("event.sender.send('kaloneo-updates:download-started')"),'Émettre le signal de démarrage réel après le choix du fichier');
   assert.ok(main.includes("event.sender.send('kaloneo-updates:download-progress',progress)"),'Propagate genuine streaming progress');
   assert.ok(main.includes("event.sender.send('kaloneo-updates:download-phase',phase)"),'Separate SHA256 verification phase');
@@ -89,8 +90,9 @@ async function run(){
   assert.ok(main.includes("ipcMain.handle('kaloneo-updates:open-download-folder'"));
   assert.ok(main.includes("shell.showItemInFolder(filePath)"),'Afficher le fichier dans l’Explorateur');
   assert.ok(main.includes('lastVerifiedKaloneoSetupPath=result.filePath'),'N’autoriser que le fichier effectivement vérifié');
-  assert.ok(main.includes('stageVerifiedSetup(update,process.env.LOCALAPPDATA,{'),'Utiliser un dossier local dédié pour le Setup avec progression en temps réel');
-  assert.ok(main.includes('canInstallVerifiedUpdate(update,app.getVersion(),process.env.LOCALAPPDATA)'),'Revérifier SHA256 au moment de l’installation');
+  assert.ok(main.includes("stageVerifiedSetup(update,app.getPath('downloads'),{"),'Télécharger directement dans le dossier Téléchargements Windows avec progression');
+  assert.ok(main.includes("officialFile(result.latest,app.getPath('downloads'))"),'Détecter un Setup déjà téléchargé au bon endroit');
+  assert.ok(main.includes("canInstallVerifiedUpdate(update,app.getVersion(),app.getPath('downloads'))"),'Revérifier SHA256 dans Téléchargements au moment de l’installation');
   assert.ok(main.includes('if(!filePath||!fs.existsSync(filePath))'),'Ne pas proposer un fichier inexistant');
   assert.ok(!main.includes("ipcMain.handle('kaloneo-updates:open-download-folder',async(event,filePath)"),'Ne jamais autoriser un chemin arbitraire venant de l’interface');
   console.log('KALONEO_MAJ_UPDATER_SMOKE=SUCCESS : versions, sources authentifiées, 40 Mo SHA256, emplacement affiché, bouton dossier sécurisé, abandon protégé.');
