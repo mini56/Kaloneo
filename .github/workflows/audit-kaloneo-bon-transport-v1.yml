@@ -1,0 +1,26 @@
+name: "KALONÉO — contrôle du Bon de transport V1"
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix-r186-kaltest-source-unique-20261027]
+    paths:
+      - "TESTS_V1/l-1.0.0-test.json"
+      - "seb-evalpro/src/kaloneo-library-main.js"
+      - "seb-evalpro/scripts/kaloneo-bon-transport-v1-smoke.js"
+      - ".github/workflows/audit-kaloneo-bon-transport-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verifier-v1:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: "Vérifier la V1 : 3 images identiques, 5 questions, notation 4 points, bilan et prévisualisation de la définition"
+        shell: pwsh
+        run: |
+          node seb-evalpro/scripts/kaloneo-bon-transport-v1-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Bon de transport : la V1 ne doit pas être compilée'}
