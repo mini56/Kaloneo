@@ -1,0 +1,55 @@
+name: "KALONÉO R157 - Audit général des menus déroulants Builder V1 et futur"
+on:
+  push:
+    branches: [fix-r186-kaltest-source-unique-20261027]
+    paths:
+      - "kaloneo/test-builder.js"
+      - "seb-evalpro/overrides/admin-candidats.html"
+      - "seb-evalpro/source/js/kaloneo-candidate-welcome.js"
+      - "seb-evalpro/source/js/kaltest-pilot2-runtime.js"
+      - "seb-evalpro/source/kaltest-pilot2.html"
+      - "seb-evalpro/scripts/kaloneo-candidate-name-input-electron-smoke-main.js"
+      - "seb-evalpro/scripts/candidate-forward-anonymity-smoke.js"
+      - "seb-evalpro/scripts/kaloneo-welcome-role-electron-smoke-main.js"
+      - "seb-evalpro/scripts/kaloneo-welcome-role-test-preload.js"
+      - "seb-evalpro/src/main.js"
+      - "seb-evalpro/src/preload.js"
+      - "seb-evalpro/scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js"
+      - "seb-evalpro/scripts/kaloneo-builder-preview-electron-smoke-main.js"
+      - ".github/workflows/audit-r157-builder-dropdowns.yml"
+  workflow_dispatch:
+concurrency:
+  group: kaloneo-r157-dropdown-audit-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  builder-menus:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - name: Checkout same established work branch
+        uses: actions/checkout@v4
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install project dependencies
+        run: npm install --no-audit --no-fund
+      - name: Prepare 22 original candidate tests and official Builder web pages
+        run: |
+          node scripts/build-kaltest-pilot2-data.js
+          npm run prepare:web
+      - name: "Check candidate-only start button / never on administrator home"
+        run: npx electron --no-sandbox scripts/kaloneo-welcome-role-electron-smoke-main.js
+      - name: "Check real candidate name entry, symbols, accent and save protection"
+        run: npx electron --no-sandbox scripts/kaloneo-candidate-name-input-electron-smoke-main.js
+      - name: "Check encrypted candidate files, replay and USB exports (including existing symbol names)"
+        run: node scripts/candidate-forward-anonymity-smoke.js
+      - name: R197 verify cancellation of an already running mini-preview worker
+        run: node scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
+      - name: "R157 + R197 real Windows mouse: insert block 10 and edit Type / Zone before Aperçu"
+        run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
