@@ -368,8 +368,21 @@ function createCandidateTransfer(options = {}) {
     const identityParts=[identity.nom,identity.prenom||identity['prénom']]
       .map(v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim())
       .filter(Boolean);
+    // Noms techniques fixes crees par KALONEO, et jamais derives de l'identite.
+    // Ex.: le nom de famille Candidat ne doit pas bloquer donnees/candidat.json.
+    // Les autres chemins restent controles et les contenus toujours chiffres.
+    const technicalCandidateFiles=new Set([
+      'manifest.json',
+      'donnees/candidat.json',
+      'donnees/evaluation-state.json',
+      'donnees/progression.json',
+      'resultats/reponses.json',
+      'resultats/scores.json',
+      'trash-meta.json'
+    ]);
     function verifyOpaqueRelative(rel){
       if(!freshPrivate)return;
+      if(technicalCandidateFiles.has(String(rel||'').replace(/\\/g,'/').toLowerCase()))return;
       const folded=String(rel||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
       for(const privateName of identityParts){
         const secretToken=privateName.replace(/[^A-Z0-9]/g,'');
