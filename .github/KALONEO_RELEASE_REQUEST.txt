@@ -23,3 +23,5 @@ Nouvelle version demandée : téléchargement des mises à jour dans %LOCALAPPDA
 2026-10-27 : demande de nouvelle Release Windows après validation de la barre verte de progression réelle (octets/total et pourcentage), vérification SHA256 distincte, sans modifier la conservation des candidats ni les bilans ni les mots de passe.
 
 2026-10-28 : correction R197 des menus Type et Zone du bloc 10 après insertion sans Aperçu. Audit Electron Windows R157/R197 réussi (run 40650131522), annulation du worker miniature en cours et reprise après édition. Publier la prochaine version uniquement si les tests Windows, bilans, données chiffrées, mot de passe et mise à jour réelle réussissent.
+
+2026-10-28 : demande explicite de publier le prochain Setup après ajout de Zone de texte libre / commentaires, correction du focus sur tous les blocs après suppression, harmonisation du bouton Masquer l’écran d’accueil et mise à jour de l’aide Builder. Refuser publication si les tests de non-régression Windows, Builder, bilans ou conservation des données échouent.
