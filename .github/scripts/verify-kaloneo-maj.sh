@@ -49,7 +49,12 @@ if [[ -n "${KALONEO_MAJ_DISPATCH_TOKEN:-}" && "${KALONEO_SKIP_MIRROR_DISPATCH:-0
 fi
 
 for i in $(seq 1 "$attempts"); do
-  mirror="$(gh api "repos/mini56/Kaloneo-MAJ/releases/tags/$tag" 2>/dev/null || true)"
+  if [[ "${KALONEO_MAJ_TEST_404_ONCE:-0}" == "1" && "$i" == "1" ]]; then
+    # Test CI strict : reproduire le 404 JSON qui faisait planter jq.
+    mirror='{"message":"Not Found","status":"404"}'
+  else
+    mirror="$(gh api "repos/mini56/Kaloneo-MAJ/releases/tags/$tag" 2>/dev/null || true)"
+  fi
   # 404 avec corps JSON est NORMAL avant la synchronisation : pas de faux rouge.
   if jq -e --arg tag "$tag" 'type=="object" and .tag_name==$tag and (.assets|type=="array")' >/dev/null 2>&1 <<<"$mirror"; then
     dst_exe="$(jq -r --arg name "$exe" '[.assets[]? | select(.name==$name) | .digest] | first // ""' <<<"$mirror")"
