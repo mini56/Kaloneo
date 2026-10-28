@@ -1348,7 +1348,7 @@ function createKaloneoLibrary(options = {}) {
       id:selectedId,
       launchOptions:{
         // Règle KALONÉO : aucune correction pendant le parcours sauf choix explicite Admin.
-        showCorrectionsDuringParcours:!isBundledFiveParcours(selectedId) && saved.launchOptions?.showCorrectionsDuringParcours === true
+        showCorrectionsDuringParcours:saved.launchOptions?.showCorrectionsDuringParcours === true
       }
     };
   }
@@ -1376,7 +1376,7 @@ function createKaloneoLibrary(options = {}) {
     const value = findParcours(id);
     if (!value) return { ok:false, error:'Parcours introuvable.' };
     const launchOptions = {
-      showCorrectionsDuringParcours:!isBundledFiveParcours(value.id) && options.showCorrectionsDuringParcours === true
+      showCorrectionsDuringParcours:options.showCorrectionsDuringParcours === true
     };
     atomicWriteJson(selectedParcoursFile, {
       format:'kaloneo-selected-parcours',
@@ -1433,7 +1433,7 @@ function createKaloneoLibrary(options = {}) {
           title:String(value.name || value.id),
           creator:String(value.creator || ''),
           launchOptions:{
-            showCorrectionsDuringParcours:!isBundledFiveParcours(value.id) && launchOptions.showCorrectionsDuringParcours === true
+            showCorrectionsDuringParcours:launchOptions.showCorrectionsDuringParcours === true
           },
           maskScreen:value.maskScreen || defaultMaskRef(),
           maskScreenDefinition:mask.maskScreen,
