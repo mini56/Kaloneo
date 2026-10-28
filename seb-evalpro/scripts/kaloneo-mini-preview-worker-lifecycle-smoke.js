@@ -7,7 +7,10 @@ const {inspectCandidateOverflow}=require('../src/kaloneo-layout-diagnostics');
 // Exécuter le vrai handler IPC de main.js avec des moteurs Electron simulés
 // sur des définitions inédites (ni ID ni V1 du catalogue utilisés).
 const main=fs.readFileSync(path.join(__dirname,'..','src','main.js'),'utf8');
+const cancelStart=main.indexOf("ipcMain.handle('kaloneo-builder:cancel-mini-preview',");
 const start=main.indexOf("ipcMain.handle('kaloneo-builder:render-mini-preview',");
+assert(cancelStart>=0&&cancelStart<start,'Annulation de miniature R197 absente.');
+const cancelSource=main.slice(cancelStart,start);
 const stop=main.indexOf("\nipcMain.handle('kaloneo-builder:get-preview',",start);
 assert(start>=0&&stop>start,'Handler de miniature introuvable.');
 const handlerSource=main.slice(start,stop);
@@ -26,9 +29,11 @@ const harness=[
   'const getCandidateStore=()=>({getActiveCandidate:()=>null});',
   'const getKaloneoMiniPreviewWorker=()=>{const w=makeWorker();kaloneoMiniPreviewWorker=w;return w;};',
   'const __dirname=directory;',
+  cancelSource,
   handlerSource,
   'return {',
   '  invoke:(definition,sender=mainWindow.webContents)=>registry.get("kaloneo-builder:render-mini-preview")({sender},definition),',
+  '  cancel:(sender=mainWindow.webContents)=>registry.get("kaloneo-builder:cancel-mini-preview")({sender}),',
   '  getCurrentWorker:()=>kaloneoMiniPreviewWorker,',
   '  getCurrentDefinition:()=>kaloneoMiniPreviewDefinition',
   '};'
@@ -116,5 +121,25 @@ const engine=build(path,path.join(__dirname,'..','src'),makeWorker,inspectCandid
   const rejected=await engine.invoke(fixtures[0],{});
   assert.equal(rejected.ok,false,'Un expéditeur externe ne doit pas produire de capture');
   assert.equal(workers.length,6,'Une capture non autorisée a créé un worker');
+
+  // R197 : insertion d'un bloc pendant une vraie capture déjà en cours.
+  const inFlight=engine.invoke({id:'new-block',title:'Insertion au bloc 9',
+    presentation:{layout:'50-50'}});
+  await new Promise(resolve=>setTimeout(resolve,2));
+  assert.equal(workers.length,7,'Le worker concurrent doit avoir démarré');
+  const deniedCancel=await engine.cancel({});
+  assert.equal(deniedCancel.ok,false,'Un autre renderer ne peut annuler la capture');
+  const canceled=await engine.cancel();
+  assert.equal(canceled.ok,true,'Le Builder Admin doit pouvoir interrompre la capture');
+  const canceledResult=await inFlight;
+  assert.equal(canceledResult.ok,false,'La capture annulée ne doit pas être publiée');
+  assert(workers[6].isDestroyed(),'Le worker déjà en cours doit être fermé avant le nouveau focus');
+  assert.equal(working,0,'Aucune BrowserWindow cachée active après annulation');
+  const resumed=await engine.invoke({id:'after-insertion',title:'Miniature après édition',
+    presentation:{layout:'50-50'}});
+  assert.equal(resumed.ok,true,'La miniature doit reprendre après édition');
+  assert.equal(workers.length,8,'La nouvelle miniature doit utiliser un worker propre');
+  assert.equal(engine.getCurrentDefinition(),null);
+  console.log('KALONEO_R197_INSERT_CANCEL_RUNNING_MINI_PREVIEW=OK');
   console.log('KALONEO_GENERIC_MINI_PREVIEW_WORKER_LIFECYCLE=OK');
 })().catch(error=>{console.error(error);process.exitCode=1;});
