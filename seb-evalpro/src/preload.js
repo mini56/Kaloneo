@@ -334,8 +334,15 @@ function createPasswordDialog() {
     backdrop.querySelector('#seb-admin-ok').addEventListener('click', async () => {
       const ok = await ipcRenderer.invoke('admin:verify', input.value);
       input.value = '';
-      if (ok) finish(true);
-      else {
+      if (ok) {
+        // Dès le déverrouillage, masquer/supprimer la commande candidate.
+        // L'accueil Admin est ensuite chargé par la navigation normale.
+        document.getElementById('seb-candidate-start')?.remove();
+        document.body.classList.remove('candidate-welcome');
+        const title=document.getElementById('seb-welcome-title');
+        if(title) title.textContent='Espace administrateur';
+        finish(true);
+      } else {
         error.textContent = 'Mot de passe incorrect.';
         input.focus();
       }
