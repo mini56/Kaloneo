@@ -31,10 +31,16 @@ let win = null;
 let miniRenderCalls = 0;
 let miniCancelCalls = 0;
 let builderRefocusCalls = 0;
-ipcMain.handle('kaloneo-builder:refocus-editor',()=>{
+ipcMain.handle('kaloneo-builder:refocus-editor',async(_event,reason='')=>{
   builderRefocusCalls++;
   if(!win||win.isDestroyed())return false;
   win.focus();win.webContents.focus();
+  if(reason==='after-delete'){
+    await new Promise(resolve=>setTimeout(resolve,180));
+    if(!win||win.isDestroyed())return false;
+    if(!win.isFocused()){win.moveTop();win.focus();}
+    win.webContents.focus();
+  }
   return win.isFocused();
 });
 const miniRenderModes=[];
