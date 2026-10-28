@@ -1174,6 +1174,49 @@ function createKaloneoLibrary(options = {}) {
     atomicWriteJson(path.join(parcoursRoot, base.id + '.json'), base);
   }
 
+  // Deux parcours de cinq tests V1 livres avec KALONÉO.
+  // Aucun test n'est duplique ni modifie : uniquement ses references id/version.
+  const BUNDLED_FIVE_PARCOURS = Object.freeze([
+    {
+      id:'parcours-exp-ecrite-modele',
+      name:'Parcours Exp-écrite',
+      tests:['genre_nombre','paronymes_rapport','texte_a_trous_stage_logistique',
+        'dictee_professionnelle','autoevaluation_savoirs']
+    },
+    {
+      id:'parcours-math-modele',
+      name:'Parcours Math',
+      tests:['calcul_arithmetique','grille_operations','affiche_promotions_prix',
+        'carre_magique_15','gratte_ciel']
+    }
+  ]);
+
+  function ensureBundledFiveParcours() {
+    const existing=readAllParcours();
+    const definitions=scanLatestDefinitions();
+    const intro=[...definitions.values()].find(record=>roleOf(record.definition)==='introduction');
+    const fin=[...definitions.values()].find(record=>roleOf(record.definition)==='fin');
+    if(!intro||!fin)return;
+    for(const model of BUNDLED_FIVE_PARCOURS){
+      // Ne jamais remplacer les parcours que l'utilisateur a deja crees,
+      // et eviter un doublon par nom sur les installations existantes.
+      if(existing.some(item=>item.id===model.id||
+        safeNameKey(item.name)===safeNameKey(model.name)))continue;
+      const records=model.tests.map(id=>definitions.get(id));
+      if(records.some(record=>!record||roleOf(record.definition)!=='test'))continue;
+      const stamp=now().toISOString();
+      atomicWriteJson(path.join(parcoursRoot,model.id+'.json'),{
+        format:'kaloneo-parcours',schemaVersion:2,
+        id:model.id,name:model.name,creator:'KALONÉO',systemProvided:true,
+        createdAt:stamp,updatedAt:stamp,
+        maskScreen:baseParcoursMaskRef(),
+        introduction:refFor(intro.definition),
+        tests:records.map(record=>refFor(record.definition)),
+        fin:refFor(fin.definition)
+      });
+    }
+  }
+
   function ensureSeed() {
     ensureDirectory(root);
     ensureDirectory(testsRoot);
@@ -1198,6 +1241,7 @@ function createKaloneoLibrary(options = {}) {
     ensureDefaultMaskScreen();
     ensureFeaturedStaticMask();
     ensureBaseParcours();
+    ensureBundledFiveParcours();
     return true;
   }
 
