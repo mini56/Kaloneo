@@ -3,7 +3,6 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const crypto=require('node:crypto');
-const {spawn}=require('node:child_process');
 const {compareVersions,validateDownload,downloadVerified}=require('./kaloneo-update-checker');
 
 function updateDirectory(downloadsDirectory){
@@ -48,22 +47,6 @@ async function stageVerifiedSetup(update,downloadsDirectory,options={}){
     throw new Error('Un fichier portant ce nom existe déjà dans Téléchargements mais ne correspond pas au Setup officiel. Renommez-le ou supprimez-le vous-même, puis réessayez.');
   return downloadVerified(update,filename,options);
 }
-function buildWaitAndStartCommand(setup,pid){
-  if(!Number.isSafeInteger(pid)||pid<=0||!path.isAbsolute(setup))throw new Error('Lancement invalide.');
-  // PowerShell reçoit une commande encodée UTF16LE: aucun chemin utilisateur
-  // n'est interprété par cmd.exe, et le Setup ne démarre qu'après la fermeture.
-  const quoted=setup.replace(/'/g,"''");
-  const script=`$ErrorActionPreference='Stop'; $old=Get-Process -Id ${pid} -ErrorAction SilentlyContinue; if($old){$old.WaitForExit(90000)|Out-Null; if(-not $old.HasExited){exit 2}}; Start-Process -FilePath '${quoted}'`;
-  return Buffer.from(script,'utf16le').toString('base64');
-}
-function startAfterApplicationExit(setup,pid,options={}){
-  const encoded=buildWaitAndStartCommand(setup,pid);
-  const powerShell=options.powerShell||path.join(process.env.SystemRoot||'C:\\Windows','System32','WindowsPowerShell','v1.0','powershell.exe');
-  const proc=(options.spawn||spawn)(powerShell,['-NoProfile','-NonInteractive','-WindowStyle','Hidden','-EncodedCommand',encoded],
-    {detached:true,windowsHide:true,stdio:'ignore'});
-  proc.unref();
-  return true;
-}
 async function canInstallVerifiedUpdate(update,installedVersion,downloadsDirectory){
   const file=officialFile(update,downloadsDirectory);
   if(compareVersions(update.version,installedVersion)<=0)
@@ -73,4 +56,4 @@ async function canInstallVerifiedUpdate(update,installedVersion,downloadsDirecto
   return file;
 }
 module.exports={updateDirectory,officialFile,isVerifiedFile,stageVerifiedSetup,
-  buildWaitAndStartCommand,startAfterApplicationExit,canInstallVerifiedUpdate};
+  canInstallVerifiedUpdate};
