@@ -1056,6 +1056,9 @@
   function installNativeSelectPickers() {
     document.addEventListener('pointerdown',event=>{
       if(event.button!==0||event.pointerType==='touch')return;
+      // Cliquer sur Annuler / Supprimer dans notre dialogue ne doit PAS
+      // relancer le worker de miniature ni libérer la protection de focus.
+      if($('block-delete-dialog')?.open){releaseBuilderSelect();return;}
       // Laisser l'utilisateur manipuler Type et Zone avant toute nouvelle
       // fenêtre cachée. Un clic hors du bloc libère la capture différée.
       if(miniPreviewInsertionGuardUid &&
@@ -1093,6 +1096,9 @@
       if(event.target?.matches?.('select'))setTimeout(releaseBuilderSelect,0);
     },{capture:true});
     document.addEventListener('focusin',event=>{
+      // showModal() donne le focus à Annuler. Ce focus reste DANS la même
+      // fenêtre Builder et ne doit pas relancer la miniature pendant le choix.
+      if($('block-delete-dialog')?.open)return;
       // Tab clavier hors du bloc : la miniature peut à nouveau se calculer.
       if(miniPreviewInsertionGuardUid &&
          (miniPreviewWholeEditorGuard
