@@ -2871,9 +2871,15 @@
       }
       frag.querySelector('.remove-block').addEventListener('click',()=>{
         if(!confirm('Supprimer le bloc complet '+(index+1)+' ? Tout le contenu de ce bloc sera perdu.')) return;
+        // La suppression reconstruit tous les controles natifs du Builder.
+        // Comme pour une insertion, interrompre d'abord la miniature Electron
+        // pour qu'elle ne vole pas le focus aux menus Type / Zone restants.
+        const survivor=state.blocks[index+1]||state.blocks[index-1]||null;
+        const cancellation=survivor?beginInsertedBlockGuard(survivor.uid):null;
         collapsedBlockUids.delete(block.uid);
         selectedBlockUids.delete(block.uid);
         state.blocks.splice(index,1);changed();renderBlocks();
+        if(survivor)focusInsertedBlock(survivor.uid,cancellation);
       });
 
       const blockBody=article.querySelector('.block-body');
