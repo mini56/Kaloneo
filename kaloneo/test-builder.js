@@ -997,6 +997,12 @@
         return;
       }
       builderSelectInteracting=true;
+      // R197 : showPicker() suivi de preventDefault() annule le focus natif
+      // du pointerdown. Donner le focus au SELECT réellement cliqué AVANT
+      // d'ouvrir son popup, sinon Type / Zone restent inertes après insertion.
+      if(document.activeElement!==control){
+        try{control.focus({preventScroll:true});}catch(_){control.focus();}
+      }
       // Le menu n'est pas un changement de test : ne pas effacer la miniature.
       if(miniPreviewTimer){clearTimeout(miniPreviewTimer);miniPreviewTimer=null;miniPreviewWaitingForSelect=true;}
       if(typeof control.showPicker!=='function')return;
