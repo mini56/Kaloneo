@@ -37,5 +37,5 @@ jobs:
           npm run prepare:web
       - name: R197 verify cancellation of an already running mini-preview worker
         run: node scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
-      - name: R157 + R197 real Windows mouse: insert block 10 and edit Type / Zone before Aperçu
+      - name: "R157 + R197 real Windows mouse: insert block 10 and edit Type / Zone before Aperçu"
         run: npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
