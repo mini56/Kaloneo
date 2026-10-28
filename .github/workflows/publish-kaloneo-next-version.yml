@@ -84,8 +84,14 @@ jobs:
           $ErrorActionPreference='Stop'
           node scripts/build-kaltest-pilot2-data.js
           if($LASTEXITCODE -ne 0){throw 'Définitions KALTEST manquantes'}
+          node scripts/kaloneo-bon-transport-v1-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Bon de transport : images originales, questions, notation ou bilan invalides'}
           npm run prepare:web
           if($LASTEXITCODE -ne 0){throw 'Préparation ou contrôle bloquant invalide'}
+          $transport='app/web/kaltest/tests/l/1.0.0/test.json'
+          if(!(Test-Path -LiteralPath $transport)){throw 'Bon de transport V1 manquant dans le Setup préparé'}
+          $candidate=Get-Content -Raw -LiteralPath $transport | ConvertFrom-Json
+          if($candidate.id -ne 'l' -or $candidate.title -ne 'Bon de transport.' -or @($candidate.questions).Count -ne 5){throw 'Bon de transport V1 différent du test validé'}
           node scripts/kaloneo-release-version.js --verify
           if($LASTEXITCODE -ne 0){throw 'Différence de version avant Setup'}
           node scripts/kaltest-single-source-guard.js
