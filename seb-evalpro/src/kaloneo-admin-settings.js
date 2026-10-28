@@ -172,10 +172,11 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
       '<div class="kaloneo-settings-card" role="dialog" aria-modal="true" aria-label="Réglages internes de KALONÉO">'+
       '<header class="settings-header"><div class="settings-header-title"><img data-settings-header-icon width="28" height="28" alt=""><div><h2>Réglages internes de KALONÉO</h2><p>Administration et documentation du programme</p></div></div><div class="settings-header-actions"><button class="settings-close" type="button" data-close>× Fermer</button></div></header>'+
       '<div class="settings-layout"><nav class="settings-nav" aria-label="Rubriques"><p class="settings-nav-caption">MENU DES RÉGLAGES</p>'+
-      '<button type="button" data-tab="passwords" aria-selected="true">Mots de passe</button>'+
+      '<button type="button" data-tab="about" aria-selected="true">À propos</button>'+
       '<button type="button" data-tab="admin">Aide du programme</button>'+
       '<button type="button" data-tab="builder">Aide du Builder</button>'+
-      '<button type="button" data-tab="about">À propos</button><div class="settings-nav-brand"><img data-kaloneo-about-logo alt="Logo KALONÉO"></div>'+
+      '<button type="button" data-tab="passwords">Mots de passe</button>'+
+      '<div class="settings-nav-brand"><img data-kaloneo-about-logo alt="Logo KALONÉO"></div>'+
       '<div class="settings-update-actions"><button type="button" data-check-update>Vérifier les mises à jour</button>'+
       '<p data-update-status role="status" aria-live="polite"></p>'+
       '<div data-update-progress-area class="settings-update-progress" hidden><progress data-update-progress max="100" value="0" aria-label="Progression du téléchargement"></progress><span data-update-progress-label>0 %</span></div>'+
@@ -183,7 +184,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
       '<button type="button" data-install-update hidden>Installer maintenant</button>'+
       '<button type="button" data-open-downloaded-setup-folder hidden>Ouvrir le dossier du Setup</button></div></nav>'+
       '<div class="settings-main" role="region" aria-label="Contenu des réglages">'+
-      '<section data-section="passwords"><div class="settings-intro"><h3>Gestion des accès</h3>'+
+      '<section data-section="passwords" hidden><div class="settings-intro"><h3>Gestion des accès</h3>'+
       '<p>Modifiez séparément le mot de passe Administrateur ou Développeur, après vérification de celui actuellement utilisé.</p></div>'+
       '<form id="kaloneo-setting-form">'+
       '<label>Accès<select name="role"><option value="admin">Administrateur</option><option value="developer">Développeur</option></select></label>'+
@@ -197,7 +198,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
       '<iframe title="Manuel administrateur" loading="lazy"></iframe></section>'+
       '<section class="settings-help" data-section="builder" hidden><div class="settings-help-head"><h3>Aide du Builder KALONÉO</h3><p>Mode d’emploi illustré de la création de tests</p></div>'+
       '<iframe title="Manuel du Builder" loading="lazy"></iframe></section>'+
-      '<section data-section="about" hidden><div class="settings-intro"><h3>À propos de KALONÉO</h3><p>Informations sur la version installée et les ressources du programme.</p></div><dl class="settings-about">'+
+      '<section data-section="about"><div class="settings-intro"><h3>À propos de KALONÉO</h3><p>Informations sur la version installée et les ressources du programme.</p></div><dl class="settings-about">'+
       '<div class="settings-property"><dt>Application</dt><dd>KALONÉO</dd></div>'+ 
       '<div class="settings-property"><dt>Créateur et développeur</dt><dd id="kaloneo-setting-author"></dd></div>'+
       '<div class="settings-property settings-wide"><dt>Structure associée :</dt><dd><ul class="settings-structure-list" data-associated-structures></ul></dd></div>'+ 
@@ -404,7 +405,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
     layer.addEventListener('click',event=>{if(event.target===layer)close();});
     layer.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();if(photoZoom)closeHelpZoom();else close();}});
     layer.querySelectorAll('[data-tab]').forEach(btn=>btn.addEventListener('click',()=>selectTab(btn.dataset.tab)));
-    selectTab('passwords');
+    selectTab('about');
     const form=layer.querySelector('#kaloneo-setting-form');
     form.addEventListener('submit',async event=>{
       event.preventDefault();
