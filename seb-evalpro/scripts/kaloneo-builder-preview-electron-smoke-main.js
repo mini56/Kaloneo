@@ -1979,6 +1979,8 @@ app.whenReady().then(async()=>{
     // Régression R107 : un bloc Image neuf doit retrouver un thème fonctionnel
     // après remplacement puis suppression, sans modifier le catalogue V1.
     await win.loadFile(builder);
+    // Le test R203 doit employer le vrai confirm() natif, sans sa simulation.
+    await win.webContents.executeJavaScript('window.__kaloneoNativeConfirm=window.confirm.bind(window); true');
     await wait(650);
     const postRemovalTheme=await win.webContents.executeJavaScript(`(async()=>{
       window.confirm=()=>true;
@@ -2975,6 +2977,74 @@ app.whenReady().then(async()=>{
       }
     }
     console.log('KALONEO_R199_DELETE_ALL_BLOCK_SELECTS=OK',JSON.stringify(removeTen));
+
+    // R203 : dialog JavaScript NATIF Windows, et clic souris sur Supprimer.
+    // Les tests R199/R200 simulaient window.confirm=()=>true et rataient
+    // le vol de focus OS observé par l'utilisateur après confirmation.
+    const debug=win.webContents.debugger;
+    let nativeDialogSeen=0;
+    let nativeDialogError=null;
+    const onNativeDialog=(_event,method,params)=>{
+      if(method!=='Page.javascriptDialogOpening')return;
+      nativeDialogSeen++;
+      void debug.sendCommand('Page.handleJavaScriptDialog',{accept:true})
+        .catch(err=>{nativeDialogError=String(err?.message||err);});
+    };
+    debug.attach('1.3');
+    debug.on('message',onNativeDialog);
+    try{
+      await debug.sendCommand('Page.enable');
+      await win.webContents.executeJavaScript('window.confirm=window.__kaloneoNativeConfirm; true');
+      const removeReal=await win.webContents.executeJavaScript('('+function(){
+        const card=[...document.querySelectorAll('.exercise-block')][4];
+        const button=card?.querySelector('.remove-block');
+        button?.scrollIntoView({block:'center'});
+        const r=button?.getBoundingClientRect();
+        return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),
+          hit:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)===button};
+      }.toString()+')()');
+      if(!removeReal.hit)return fail('R203 : bouton Supprimer intermédiaire masqué',removeReal);
+      await clickNative(removeReal);
+      await wait(450);
+      if(nativeDialogError||nativeDialogSeen!==1)
+        return fail('R203 : confirmation native Windows non acceptée',{nativeDialogSeen,nativeDialogError});
+      const afterRealDelete=await win.webContents.executeJavaScript('('+function(){
+        const cards=[...document.querySelectorAll('.exercise-block')];
+        const select=cards[4]?.querySelector('.block-type');
+        return {count:cards.length,hasFocus:document.hasFocus(),
+          focused:document.activeElement===select,
+          active:document.activeElement?.className,
+          typeEnabled:!!select&&!select.disabled};
+      }.toString()+')()');
+      if(afterRealDelete.count!==8||!afterRealDelete.hasFocus||
+         !afterRealDelete.typeEnabled||!afterRealDelete.focused)
+        return fail('R203 : vraie confirmation Windows supprime le focus Type / Zone sans Aperçu',
+          {afterRealDelete,nativeDialogSeen,builderRefocusCalls});
+      for(const className of ['block-type','block-zone']){
+        const point=await win.webContents.executeJavaScript('('+function(cls){
+          const c=[...document.querySelectorAll('.exercise-block')][4]?.querySelector('.'+cls);
+          c.scrollIntoView({block:'center'});
+          const r=c.getBoundingClientRect();
+          return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),
+            hit:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)===c};
+        }.toString()+')('+JSON.stringify(className)+')');
+        if(!point.hit)return fail('R203 : menu masqué après vraie confirmation',{className,point});
+        await clickNative(point);
+        win.webContents.sendInputEvent({type:'keyDown',keyCode:'Escape'});
+        win.webContents.sendInputEvent({type:'keyUp',keyCode:'Escape'});
+        const active=await win.webContents.executeJavaScript('('+function(cls){
+          const c=[...document.querySelectorAll('.exercise-block')][4]?.querySelector('.'+cls);
+          return document.activeElement===c;
+        }.toString()+')('+JSON.stringify(className)+')');
+        if(!active)return fail('R203 : popup natif sans focus après vraie confirmation',
+          {className,point,nativeDialogSeen});
+      }
+      console.log('KALONEO_R203_NATIVE_WINDOWS_CONFIRM_DELETE_FOCUS=OK',
+        JSON.stringify({nativeDialogSeen,afterRealDelete}));
+    }finally{
+      debug.removeListener('message',onNativeDialog);
+      if(debug.isAttached())debug.detach();
+    }
 
     console.log('KALONEO_PROTECTED_V1_UI=OK');
     console.log('KALONEO_ADMIN_V1_SAVE_DIRECT=1.0.0');
