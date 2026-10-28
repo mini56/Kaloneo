@@ -1323,8 +1323,21 @@ function createKaloneoLibrary(options = {}) {
     return { ok:true, details:parcoursDetails(value) };
   }
 
+  function fiveParcoursModel(value) {
+    if(!value)return null;
+    // Reconnaitre aussi les parcours deja crees par l'Admin et montres
+    // dans l'ecran de selection, sans modifier leurs fichiers ni les V1.
+    return BUNDLED_FIVE_PARCOURS.find(model=>
+      model.id===String(value.id||'') ||
+      (safeNameKey(value.name)===safeNameKey(model.name) &&
+       Array.isArray(value.tests)&&value.tests.length===model.tests.length &&
+       value.tests.every((ref,i)=>String(ref?.id||'')===model.tests[i]))
+    )||null;
+  }
+
   function isBundledFiveParcours(id) {
-    return BUNDLED_FIVE_PARCOURS.some(model=>model.id===String(id||''));
+    const parcours=readAllParcours().find(value=>String(value.id)===String(id||''));
+    return Boolean(fiveParcoursModel(parcours));
   }
 
   function readSelectedParcoursSelection() {
@@ -1400,7 +1413,7 @@ function createKaloneoLibrary(options = {}) {
         // La calculatrice est disponible pendant les cinq exercices Math.
         // Modifier seulement la copie en memoire du parcours livre :
         // les V1 officielles, leurs baremes et les autres parcours sont intacts.
-        if(value.id==='parcours-math-modele'){
+        if(fiveParcoursModel(value)?.id==='parcours-math-modele'){
           definition.calculator={
             ...(definition.calculator||{}),
             compatible:true,
