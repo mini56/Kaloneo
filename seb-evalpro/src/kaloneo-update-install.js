@@ -1,21 +1,22 @@
 'use strict';
-// Mises à jour: zone locale distincte du répertoire du programme et des dossiers candidats.
+// Mises à jour dans le dossier Téléchargements personnel de Windows. Aucun Setup complet n'est effacé automatiquement.
 const fs=require('node:fs');
 const path=require('node:path');
 const crypto=require('node:crypto');
 const {spawn}=require('node:child_process');
 const {compareVersions,validateDownload,downloadVerified}=require('./kaloneo-update-checker');
 
-function updateDirectory(localAppData){
-  if(!localAppData||!path.isAbsolute(localAppData))throw new Error('Dossier local Windows introuvable.');
-  return path.join(localAppData,'KALONEO-Updates');
+function updateDirectory(downloadsDirectory){
+  if(!downloadsDirectory||!path.isAbsolute(downloadsDirectory))
+    throw new Error('Dossier Téléchargements Windows introuvable.');
+  return downloadsDirectory;
 }
-function officialFile(update,localAppData){
+function officialFile(update,downloadsDirectory){
   validateDownload(update);
   const name='KALONEO-Setup-'+update.version+'.exe';
   if(update.filename!==name||!/^KALONEO-Setup-\d+\.\d+\.\d+\.exe$/.test(name))
     throw new Error('Nom de Setup non reconnu.');
-  return path.join(updateDirectory(localAppData),name);
+  return path.join(updateDirectory(downloadsDirectory),name);
 }
 async function isVerifiedFile(update,file){
   try{
@@ -29,15 +30,22 @@ async function isVerifiedFile(update,file){
     throw error;
   }
 }
-async function stageVerifiedSetup(update,localAppData,options={}){
-  const filename=officialFile(update,localAppData);
+async function stageVerifiedSetup(update,downloadsDirectory,options={}){
+  const filename=officialFile(update,downloadsDirectory);
   await fs.promises.mkdir(path.dirname(filename),{recursive:true});
-  // Un téléchargement interrompu ne devient jamais un Setup exécutable.
+  // Réutiliser le Setup déjà téléchargé uniquement si son SHA256 est exact.
   if(await isVerifiedFile(update,filename))
     return {ok:true,filePath:filename,sha256:update.sha256.toLowerCase(),bytes:update.size,reused:true};
-  // Dans le dossier KALONEO-Updates uniquement: anciens fichiers incomplets.
+  // Téléchargements appartient à l'utilisateur : jamais écraser ou supprimer
+  // un EXE qui porte déjà le nom attendu (même s'il est invalide).
+  const existing=await fs.promises.stat(filename).catch(error=>{
+    if(error.code==='ENOENT')return null;
+    throw error;
+  });
+  if(existing)
+    throw new Error('Un fichier portant ce nom existe déjà dans Téléchargements mais ne correspond pas au Setup officiel. Renommez-le ou supprimez-le vous-même, puis réessayez.');
+  // Seule une copie partielle .kaloneo-download peut être nettoyée à la reprise.
   await fs.promises.rm(filename+'.kaloneo-download',{force:true});
-  await fs.promises.rm(filename,{force:true});
   return downloadVerified(update,filename,options);
 }
 function buildWaitAndStartCommand(setup,pid){
@@ -56,8 +64,8 @@ function startAfterApplicationExit(setup,pid,options={}){
   proc.unref();
   return true;
 }
-async function canInstallVerifiedUpdate(update,installedVersion,localAppData){
-  const file=officialFile(update,localAppData);
+async function canInstallVerifiedUpdate(update,installedVersion,downloadsDirectory){
+  const file=officialFile(update,downloadsDirectory);
   if(compareVersions(update.version,installedVersion)<=0)
     throw new Error('Cette mise à jour n’est pas plus récente que KALONÉO.');
   if(!await isVerifiedFile(update,file))
