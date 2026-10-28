@@ -959,6 +959,11 @@
   // Une suppression recrée les SELECT de TOUS les blocs, et non d'un seul.
   // Protéger l'éditeur entier jusqu'au prochain geste hors de la liste.
   let miniPreviewWholeEditorGuard=false;
+  // Après une confirmation système de suppression, Windows peut restaurer
+  // le focus de la fenêtre seulement APRES le retour du handler click.
+  // Garder un unique bloc restant en attente de restauration.
+  let pendingRemovedBlockFocusUid=null;
+  function clearRemovedBlockFocus(){pendingRemovedBlockFocusUid=null;}
   function releaseInsertedBlockGuard(){
     if(!miniPreviewInsertionGuardUid)return;
     miniPreviewInsertionGuardUid=null;
@@ -983,7 +988,7 @@
     miniPreviewWholeEditorGuard=true;
     return cancellation;
   }
-  function focusInsertedBlock(uid,cancellation){
+  function focusInsertedBlock(uid,cancellation,afterDeletion=false){
     // R199 : renderBlocks() a DEJA reconstruit toute la liste.
     // Après le clic / la confirmation Windows, réactiver un véritable SELECT
     // natif du bloc restant au lieu de viser seulement la carte non interactive.
@@ -1010,7 +1015,15 @@
            &&active!==host&&!host.contains(active))return;
         const control=card.querySelector('.block-type:not(:disabled),.block-zone:not(:disabled)');
         if(!control)return;
+        // Le clic sur un AUTRE contrôle après suppression est prioritaire.
+        if(afterDeletion && active && host.contains(active) &&
+           active.matches?.('input,textarea,select') && active!==control){
+          clearRemovedBlockFocus();
+          return;
+        }
         try{control.focus({preventScroll:true});}catch(_){control.focus();}
+        if(afterDeletion && document.hasFocus() && document.activeElement===control)
+          clearRemovedBlockFocus();
       }));
     });
   }
@@ -1079,6 +1092,23 @@
       if(miniPreviewTimer){clearTimeout(miniPreviewTimer);miniPreviewTimer=null;miniPreviewWaitingForSelect=true;}
     });
     window.addEventListener('focus',()=>{
+      // Le confirm() natif peut rendre le focus OS avec un délai après la
+      // suppression. Reviser le SELECT du bloc restant, sans ouvrir Aperçu.
+      if(pendingRemovedBlockFocusUid &&
+         miniPreviewInsertionGuardUid===pendingRemovedBlockFocusUid){
+        const uid=pendingRemovedBlockFocusUid;
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          if(pendingRemovedBlockFocusUid!==uid)return;
+          const card=Array.from($('blocks-editor')?.querySelectorAll('.exercise-block')||[])
+            .find(node=>node.dataset.uid===uid);
+          const select=card?.querySelector('.block-type:not(:disabled),.block-zone:not(:disabled)');
+          const active=document.activeElement;
+          if(!select || (active && active!==document.body && active!==document.documentElement
+             && active!==select))return;
+          try{select.focus({preventScroll:true});}catch(_){select.focus();}
+          if(document.activeElement===select)clearRemovedBlockFocus();
+        }));
+      }
       if(miniPreviewWaitingForSelect){
         miniPreviewWaitingForSelect=false;
         scheduleMiniPreviewCapture();
@@ -2915,16 +2945,20 @@
         });
       }
       frag.querySelector('.remove-block').addEventListener('click',()=>{
-        if(!confirm('Supprimer le bloc complet '+(index+1)+' ? Tout le contenu de ce bloc sera perdu.')) return;
-        // La suppression reconstruit tous les controles natifs du Builder.
-        // Comme pour une insertion, interrompre d'abord la miniature Electron
-        // pour qu'elle ne vole pas le focus aux menus Type / Zone restants.
+        // R203 : AVANT confirm() suspendre la miniature native et arrêter
+        // le worker en cours. Sinon son retour de focus se fait pendant le
+        // dialogue Windows et les listes Type / Zone paraissent inertes.
         const survivor=state.blocks[index+1]||state.blocks[index-1]||null;
         const cancellation=survivor?beginWholeEditorGuard(survivor.uid):null;
+        if(!confirm('Supprimer le bloc complet '+(index+1)+' ? Tout le contenu de ce bloc sera perdu.')){
+          if(survivor)releaseInsertedBlockGuard();
+          return;
+        }
+        if(survivor)pendingRemovedBlockFocusUid=survivor.uid;
         collapsedBlockUids.delete(block.uid);
         selectedBlockUids.delete(block.uid);
         state.blocks.splice(index,1);changed();renderBlocks();
-        if(survivor)focusInsertedBlock(survivor.uid,cancellation);
+        if(survivor)focusInsertedBlock(survivor.uid,cancellation,true);
       });
 
       const blockBody=article.querySelector('.block-body');
