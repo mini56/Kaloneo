@@ -943,15 +943,20 @@
   // disponibles sans qu'une BrowserWindow de miniature vole leur focus.
   // La capture fidèle reprend quand l'édition quitte le nouveau bloc.
   let miniPreviewInsertionGuardUid=null;
+  // Une suppression recrée les SELECT de TOUS les blocs, et non d'un seul.
+  // Protéger l'éditeur entier jusqu'au prochain geste hors de la liste.
+  let miniPreviewWholeEditorGuard=false;
   function releaseInsertedBlockGuard(){
     if(!miniPreviewInsertionGuardUid)return;
     miniPreviewInsertionGuardUid=null;
+    miniPreviewWholeEditorGuard=false;
     if(miniPreviewWaitingForSelect&&!builderSelectInteracting){
       miniPreviewWaitingForSelect=false;
       scheduleMiniPreviewCapture();
     }
   }
   function beginInsertedBlockGuard(uid){
+    miniPreviewWholeEditorGuard=false;
     miniPreviewInsertionGuardUid=uid;
     miniPreviewWaitingForSelect=true;
     if(miniPreviewTimer){clearTimeout(miniPreviewTimer);miniPreviewTimer=null;}
@@ -959,6 +964,11 @@
     // L'IPC est facultative dans les anciens environnements de tests.
     try{return window.sebEvalPro?.kaloneoCancelMiniPreview?.();}
     catch(_){return null;}
+  }
+  function beginWholeEditorGuard(uid){
+    const cancellation=beginInsertedBlockGuard(uid);
+    miniPreviewWholeEditorGuard=true;
+    return cancellation;
   }
   function focusInsertedBlock(uid,cancellation){
     // Attendre l'arrêt du worker Windows avant de rendre le focus à l'éditeur.
@@ -988,7 +998,9 @@
       // Laisser l'utilisateur manipuler Type et Zone avant toute nouvelle
       // fenêtre cachée. Un clic hors du bloc libère la capture différée.
       if(miniPreviewInsertionGuardUid &&
-         event.target?.closest?.('.exercise-block')?.dataset?.uid!==miniPreviewInsertionGuardUid)
+         (miniPreviewWholeEditorGuard
+           ? !event.target?.closest?.('#blocks-editor')
+           : event.target?.closest?.('.exercise-block')?.dataset?.uid!==miniPreviewInsertionGuardUid))
         releaseInsertedBlockGuard();
       const control=event.target?.closest?.('select');
       if(!control || !control.closest('.builder-editor,.builder-preview,.modal,.test-library-dialog,.image-library-dialog') ||
@@ -1022,7 +1034,9 @@
     document.addEventListener('focusin',event=>{
       // Tab clavier hors du bloc : la miniature peut à nouveau se calculer.
       if(miniPreviewInsertionGuardUid &&
-         event.target?.closest?.('.exercise-block')?.dataset?.uid!==miniPreviewInsertionGuardUid)
+         (miniPreviewWholeEditorGuard
+           ? !event.target?.closest?.('#blocks-editor')
+           : event.target?.closest?.('.exercise-block')?.dataset?.uid!==miniPreviewInsertionGuardUid))
         releaseInsertedBlockGuard();
     },{capture:true});
     document.addEventListener('keydown',event=>{
@@ -2875,7 +2889,7 @@
         // Comme pour une insertion, interrompre d'abord la miniature Electron
         // pour qu'elle ne vole pas le focus aux menus Type / Zone restants.
         const survivor=state.blocks[index+1]||state.blocks[index-1]||null;
-        const cancellation=survivor?beginInsertedBlockGuard(survivor.uid):null;
+        const cancellation=survivor?beginWholeEditorGuard(survivor.uid):null;
         collapsedBlockUids.delete(block.uid);
         selectedBlockUids.delete(block.uid);
         state.blocks.splice(index,1);changed();renderBlocks();
