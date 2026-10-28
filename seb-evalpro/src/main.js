@@ -28,7 +28,7 @@ const kaloneoFullParcoursRoute = require('./kaloneo-full-parcours-route');
 const { buildBilanDocxBuffer, decryptBilanDocxBuffer } = require('./bilan-docx-main');
 const { createPasswordStore } = require('./kaloneo-passwords');
 const {checkUpdates}=require('./kaloneo-update-checker');
-const {officialFile,isVerifiedFile,stageVerifiedSetup,startAfterApplicationExit,canInstallVerifiedUpdate}=require('./kaloneo-update-install');
+const {officialFile,isVerifiedFile,stageVerifiedSetup,canInstallVerifiedUpdate}=require('./kaloneo-update-install');
 let pendingKaloneoUpdate=null;
 let lastVerifiedKaloneoSetupPath=null;
 let kaloneoUpdateInstallationStarting=false;
@@ -1073,9 +1073,13 @@ ipcMain.handle('kaloneo-updates:install',async(event)=>{
   try{
     // Recontrôler le fichier après la confirmation, avant de quitter.
     verifiedSetup=await canInstallVerifiedUpdate(update,app.getVersion(),app.getPath('downloads'));
-    startAfterApplicationExit(verifiedSetup,process.pid);
+    // ShellExecute ouvre le Setup en fenêtre normale et renvoie une erreur si
+    // Windows refuse de le lancer. Ne jamais fermer l'application avant succès.
+    const launchError=await shell.openPath(verifiedSetup);
+    if(launchError)throw new Error(launchError);
     kaloneoUpdateInstallationStarting=true;
-    setTimeout(()=>app.quit(),150);
+    // Laisser à Windows le temps de créer la fenêtre NSIS avant de quitter.
+    setTimeout(()=>app.quit(),500);
     return {ok:true,closing:true};
   }catch(error){
     return {ok:false,error:'Impossible de démarrer l’installateur : '+String(error.message||error)};
