@@ -963,6 +963,7 @@
   function focusInsertedBlock(uid,cancellation){
     // Attendre l'arrêt du worker Windows avant de rendre le focus à l'éditeur.
     Promise.resolve(cancellation).catch(()=>{}).then(()=>requestAnimationFrame(()=>{
+      if(miniPreviewInsertionGuardUid!==uid)return; // Une insertion plus récente a priorité.
       if(!document.hasFocus())return; // Ne jamais voler le focus d'une autre application.
       const card=Array.from($('blocks-editor').querySelectorAll('.exercise-block'))
         .find(node=>node.dataset.uid===uid);
