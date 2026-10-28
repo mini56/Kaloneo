@@ -1804,6 +1804,24 @@ function getKaloneoMiniPreviewWorker() {
   return kaloneoMiniPreviewWorker;
 }
 
+// R200 — Une boîte de confirmation Windows peut rendre le focus OS à
+// la miniature masquée : focaliser un <select> DOM ne suffit alors pas.
+// N'autoriser le retour de focus que pour la vraie page Builder Admin.
+ipcMain.handle('kaloneo-builder:refocus-editor', event => {
+  if(!adminSessionUnlocked||!mainWindow||mainWindow.isDestroyed()||
+     event.sender!==mainWindow.webContents||getCandidateStore().getActiveCandidate()||
+     mainWindow.isMinimized())return false;
+  let page='';
+  try{page=decodeURIComponent(new URL(event.sender.getURL()).pathname||'');}
+  catch(_){return false;}
+  if(!page.endsWith('/kaloneo-builder/test-builder.html'))return false;
+  try{
+    mainWindow.focus();
+    mainWindow.webContents.focus();
+    return mainWindow.isFocused();
+  }catch(_){return false;}
+});
+
 // R197 — Une insertion reconstruit les <select> natifs du Builder.
 // Annuler le travail Electron caché en cours AVANT de restaurer leur focus.
 // Seule la fenêtre Admin active peut interrompre sa propre miniature.
