@@ -2879,8 +2879,10 @@ app.whenReady().then(async()=>{
       const type=card.querySelector('.block-type');
       const focused=document.activeElement===type;
       type.value='question';type.dispatchEvent(new Event('change',{bubbles:true}));
-      return {focused,value:card.querySelector('.block-type').value,
-        uid:card.dataset.uid,hasFocus:document.hasFocus()};
+      const current=[...document.querySelectorAll('.exercise-block')][9];
+      return {focused,value:current?.querySelector('.block-type')?.value,
+        uid:current?.dataset.uid,connected:current?.isConnected,
+        hasFocus:document.hasFocus()};
     }.toString()+')()');
     if(!changedType.focused||changedType.value!=='question'||!changedType.hasFocus)
       return fail('R197 : menu Type du bloc 10 non modifiable au premier clic',changedType);
