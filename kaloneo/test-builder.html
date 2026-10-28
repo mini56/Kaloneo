@@ -467,6 +467,17 @@
     </article>
   </template>
 
+  <!-- Confirmation dans la fenêtre Builder : aucun popup OS ne peut voler
+       le focus des listes Type / Zone après la suppression d'un bloc. -->
+  <dialog id="block-delete-dialog" class="block-delete-dialog" aria-labelledby="block-delete-title" aria-describedby="block-delete-message">
+    <h2 id="block-delete-title">Supprimer un bloc</h2>
+    <p id="block-delete-message">Le contenu de ce bloc sera perdu.</p>
+    <form method="dialog" class="block-delete-actions">
+      <button id="block-delete-cancel" type="submit" value="cancel" class="mini-btn" autofocus>Annuler</button>
+      <button id="block-delete-confirm" type="submit" value="delete" class="mini-btn danger">Supprimer le bloc</button>
+    </form>
+  </dialog>
+
   <dialog id="text-color-dialog" class="text-color-dialog">
     <div class="dialog-head">
       <div>
