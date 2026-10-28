@@ -180,6 +180,19 @@
   }
 
   function baseBlock(type='text') {
+    // R198 : raccourci de creation, sans nouveau type JSON ou moteur candidat.
+    // Le texte libre reste une Question standard evaluee manuellement.
+    if(type==='free-text'){
+      const block=baseBlock('question');
+      block.question.id=nextQuestionId();
+      block.question.prompt='Votre commentaire :';
+      block.question.responseType='free-text';
+      block.question.manualEvaluation=true;
+      block.question.points=0;
+      block.question.acceptedAnswers='';
+      block.question.answerHeightLines=5;
+      return block;
+    }
     const styled=block=>Object.assign({fontSize:'',backgroundColor:'',backgroundImage:'',backgroundFit:'decorative',backgroundPosition:'right bottom',backgroundOpacity:100},block);
     if(type==='image-selection')return styled({
       uid:uid('selection'),type,zone:'left',label:'Sélectionnez les images',
@@ -2819,7 +2832,8 @@
       frag.querySelector('.block-index').textContent=String(index+1);
 
       const type=frag.querySelector('.block-type');
-      type.value=block.type;
+      type.value=block.type==='question'&&block.question?.responseType==='free-text'
+        ? 'free-text' : block.type;
       type.addEventListener('change',()=>{
         const replacement=baseBlock(type.value);
         replacement.uid=block.uid;
