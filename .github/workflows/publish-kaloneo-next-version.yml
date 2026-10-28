@@ -135,7 +135,7 @@ jobs:
           node scripts/kaloneo-mini-preview-worker-lifecycle-smoke.js
           if($LASTEXITCODE -ne 0){throw 'R197 : une capture Electron cachee vole le focus du Builder'}
           & npx electron --no-sandbox scripts/kaloneo-builder-preview-electron-smoke-main.js
-          if($LASTEXITCODE -ne 0){throw 'R197 : Type / Zone du nouveau bloc inaccessibles sans Apercu, Setup refuse'}
+          if($LASTEXITCODE -ne 0){throw 'R205 : Type / Zone inaccessibles apres insertion ou suppression de bloc sans Apercu ; Setup refuse'}
 
       - name: Préparer le mot de passe secret et la licence
         env:
