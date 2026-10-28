@@ -2234,7 +2234,7 @@ contextBridge.exposeInMainWorld('sebEvalPro', {
   kaloneoOpenPreview: (definition,editorHistory) => ipcRenderer.invoke('kaloneo-builder:open-preview', definition,editorHistory),
   kaloneoRenderMiniPreview: (definition, viewportMode='reference') => ipcRenderer.invoke('kaloneo-builder:render-mini-preview', definition, viewportMode),
   kaloneoCancelMiniPreview: () => ipcRenderer.invoke('kaloneo-builder:cancel-mini-preview'),
-  kaloneoRefocusBuilder: () => ipcRenderer.invoke('kaloneo-builder:refocus-editor'),
+  kaloneoRefocusBuilder: (reason='') => ipcRenderer.invoke('kaloneo-builder:refocus-editor',reason),
   kaloneoGetPreviewDefinition: () => ipcRenderer.invoke('kaloneo-builder:get-preview'),
   kaloneoConsumePreviewDefinition: () => ipcRenderer.invoke('kaloneo-builder:consume-preview'),
   kaloneoClosePreview: () => ipcRenderer.invoke('kaloneo-builder:close-preview'),
