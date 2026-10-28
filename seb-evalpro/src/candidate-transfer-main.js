@@ -380,9 +380,20 @@ function createCandidateTransfer(options = {}) {
       'resultats/scores.json',
       'trash-meta.json'
     ]);
+    const technicalCandidateDirs=new Set([
+      'donnees','resultats','replay','bilan','bilan/historique','bilan/exports'
+    ]);
+    // Noms de Replay produits par le moteur à partir des identifiants de tests,
+    // et non du nom du candidat : le prénom Test peut y figurer dans KALTEST.
+    // Garder le rejet de tous les fichiers inattendus ou non chiffrés.
+    const generatedReplayPath=/^replay\/REPLAY-[A-Z0-9-]+(?:\/manifest\.json|\/slides(?:\/\d{3}_[A-Z0-9-]+\.sebimg)?)?$/i;
+    const generatedBilanPath=/^bilan\/(?:historique\/BILAN_CAND-[A-F0-9]{32}\.json|exports\/Evaluation_CAND-[A-F0-9]{24,32}\.(?:docx|sebdoc|sebword))$/i;
     function verifyOpaqueRelative(rel){
       if(!freshPrivate)return;
-      if(technicalCandidateFiles.has(String(rel||'').replace(/\\/g,'/').toLowerCase()))return;
+      const normalized=String(rel||'').replace(/\\/g,'/');
+      if(technicalCandidateFiles.has(normalized.toLowerCase()) ||
+        technicalCandidateDirs.has(normalized.toLowerCase()) ||
+        generatedReplayPath.test(normalized) || generatedBilanPath.test(normalized))return;
       const folded=String(rel||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
       for(const privateName of identityParts){
         const secretToken=privateName.replace(/[^A-Z0-9]/g,'');
