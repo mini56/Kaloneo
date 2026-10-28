@@ -2946,11 +2946,14 @@ app.whenReady().then(async()=>{
         resumedMiniature:miniRenderCalls>miniBefore}));
 
     // R199 : suppression du bloc 10, puis menus des AUTRES blocs, sans Apercu.
-    const removeTen=await win.webContents.executeJavaScript('('+function(){
+    const removeTen=await win.webContents.executeJavaScript('('+async function(){
       const cards=[...document.querySelectorAll('.exercise-block')];
       const button=cards[9]?.querySelector('.remove-block');
-      window.confirm=()=>true;
       button?.click();
+      const modal=document.getElementById('block-delete-dialog');
+      if(!modal?.open)return {count:-1,typeControls:0,zoneControls:0};
+      modal.querySelector('#block-delete-confirm').click();
+      await new Promise(resolve=>setTimeout(resolve,70));
       return {count:document.querySelectorAll('.exercise-block').length,
         typeControls:[...document.querySelectorAll('.exercise-block .block-type')].length,
         zoneControls:[...document.querySelectorAll('.exercise-block .block-zone')].length};
@@ -2984,24 +2987,19 @@ app.whenReady().then(async()=>{
     }
     console.log('KALONEO_R199_DELETE_ALL_BLOCK_SELECTS=OK',JSON.stringify(removeTen));
 
-    // R203 : dialog JavaScript NATIF Windows, et clic souris sur Supprimer.
-    // Les tests R199/R200 simulaient window.confirm=()=>true et rataient
-    // le vol de focus OS observé par l'utilisateur après confirmation.
+    // R205 : la confirmation intégrée au Builder reste dans la même
+    // BrowserWindow. Vérifier les vrais clics Annuler / Supprimer, puis
+    // les menus Type et Zone, sans Aperçu ni fenêtre native Windows.
     const debug=win.webContents.debugger;
     let nativeDialogSeen=0;
-    let nativeDialogError=null;
-    const onNativeDialog=(_event,method,params)=>{
-      if(method!=='Page.javascriptDialogOpening')return;
-      nativeDialogSeen++;
-      void debug.sendCommand('Page.handleJavaScriptDialog',{accept:true})
-        .catch(err=>{nativeDialogError=String(err?.message||err);});
+    const onNativeDialog=(_event,method)=>{
+      if(method==='Page.javascriptDialogOpening')nativeDialogSeen++;
     };
     debug.attach('1.3');
     debug.on('message',onNativeDialog);
     try{
       await debug.sendCommand('Page.enable');
-      await win.webContents.executeJavaScript('window.confirm=window.__kaloneoNativeConfirm; true');
-      const removeReal=await win.webContents.executeJavaScript('('+function(){
+      const block5=()=>win.webContents.executeJavaScript('('+function(){
         const card=[...document.querySelectorAll('.exercise-block')][4];
         const button=card?.querySelector('.remove-block');
         button?.scrollIntoView({block:'center'});
@@ -3009,22 +3007,47 @@ app.whenReady().then(async()=>{
         return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),
           hit:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)===button};
       }.toString()+')()');
-      if(!removeReal.hit)return fail('R203 : bouton Supprimer intermédiaire masqué',removeReal);
+      const actionPoint=id=>win.webContents.executeJavaScript('('+function(id){
+        const dialog=document.getElementById('block-delete-dialog');
+        const button=dialog?.querySelector('#'+id);
+        const r=button?.getBoundingClientRect();
+        return {open:!!dialog?.open,x:Math.round(r.left+r.width/2),
+          y:Math.round(r.top+r.height/2),
+          hit:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)===button};
+      }.toString()+')('+JSON.stringify(id)+')');
+      const removeReal=await block5();
+      if(!removeReal.hit)return fail('R205 : bouton Supprimer intermédiaire masqué',removeReal);
       await clickNative(removeReal);
-      await wait(450);
-      if(nativeDialogError||nativeDialogSeen!==1)
-        return fail('R203 : confirmation native Windows non acceptée',{nativeDialogSeen,nativeDialogError});
+      const cancelPoint=await actionPoint('block-delete-cancel');
+      if(!cancelPoint.open||!cancelPoint.hit)
+        return fail('R205 : confirmation intégrée inaccessible',cancelPoint);
+      await clickNative(cancelPoint);
+      const canceled=await win.webContents.executeJavaScript('('+function(){
+        return {count:document.querySelectorAll('.exercise-block').length,
+          open:document.getElementById('block-delete-dialog').open};
+      }.toString()+')()');
+      if(canceled.count!==9||canceled.open)return fail('R205 : Annuler a supprimé le bloc',canceled);
+      const removeAgain=await block5();
+      await clickNative(removeAgain);
+      const acceptPoint=await actionPoint('block-delete-confirm');
+      if(!acceptPoint.open||!acceptPoint.hit)
+        return fail('R205 : confirmation Supprimer non cliquable',acceptPoint);
+      await clickNative(acceptPoint);
+      await wait(420);
+      if(nativeDialogSeen!==0)
+        return fail('R205 : un ancien dialogue natif vole encore le focus', {nativeDialogSeen});
       const afterRealDelete=await win.webContents.executeJavaScript('('+function(){
         const cards=[...document.querySelectorAll('.exercise-block')];
         const select=cards[4]?.querySelector('.block-type');
         return {count:cards.length,hasFocus:document.hasFocus(),
           focused:document.activeElement===select,
           active:document.activeElement?.className,
-          typeEnabled:!!select&&!select.disabled};
+          typeEnabled:!!select&&!select.disabled,
+          dialogOpen:document.getElementById('block-delete-dialog').open};
       }.toString()+')()');
       if(afterRealDelete.count!==8||!afterRealDelete.hasFocus||
-         !afterRealDelete.typeEnabled||!afterRealDelete.focused)
-        return fail('R203 : vraie confirmation Windows supprime le focus Type / Zone sans Aperçu',
+         !afterRealDelete.typeEnabled||!afterRealDelete.focused||afterRealDelete.dialogOpen)
+        return fail('R205 : suppression du bloc 5 a perdu le focus Type / Zone',
           {afterRealDelete,nativeDialogSeen,builderRefocusCalls});
       for(const className of ['block-type','block-zone']){
         const point=await win.webContents.executeJavaScript('('+function(cls){
@@ -3034,19 +3057,18 @@ app.whenReady().then(async()=>{
           return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),
             hit:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)===c};
         }.toString()+')('+JSON.stringify(className)+')');
-        if(!point.hit)return fail('R203 : menu masqué après vraie confirmation',{className,point});
+        if(!point.hit)return fail('R205 : menu masqué après suppression',{className,point});
         await clickNative(point);
-        win.webContents.sendInputEvent({type:'keyDown',keyCode:'Escape'});
-        win.webContents.sendInputEvent({type:'keyUp',keyCode:'Escape'});
         const active=await win.webContents.executeJavaScript('('+function(cls){
           const c=[...document.querySelectorAll('.exercise-block')][4]?.querySelector('.'+cls);
           return document.activeElement===c;
         }.toString()+')('+JSON.stringify(className)+')');
-        if(!active)return fail('R203 : popup natif sans focus après vraie confirmation',
-          {className,point,nativeDialogSeen});
+        if(!active)return fail('R205 : menu sans focus après suppression',{className,point});
+        win.webContents.sendInputEvent({type:'keyDown',keyCode:'Escape'});
+        win.webContents.sendInputEvent({type:'keyUp',keyCode:'Escape'});
       }
-      console.log('KALONEO_R203_NATIVE_WINDOWS_CONFIRM_DELETE_FOCUS=OK',
-        JSON.stringify({nativeDialogSeen,afterRealDelete}));
+      console.log('KALONEO_R205_INLINE_CONFIRM_DELETE_NATIVE_DROPDOWNS=OK',
+        JSON.stringify({nativeDialogSeen,afterRealDelete,canceled}));
     }finally{
       debug.removeListener('message',onNativeDialog);
       if(debug.isAttached())debug.detach();
