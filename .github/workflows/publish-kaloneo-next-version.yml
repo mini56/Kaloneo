@@ -278,8 +278,20 @@ jobs:
           # Le miroir est independant : sa synchronisation est programmee toutes
           # les cinq minutes. Ne jamais considerer une Release source comme
           # distribuable tant que son Setup verifie n'est pas sur Kaloneo-MAJ.
-          source=$(gh api 'repos/mini56/Kaloneo/releases?per_page=20' --jq '[.[] | select(.draft == false and (.tag_name | startswith("kaloneo-1.00.")))] | first')
-          tag=$(jq -r '.tag_name' <<<"$source")
+          # GitHub peut mettre plusieurs secondes a rendre une nouvelle Release
+          # visible apres gh release create. Ne pas echouer sur une liste vide.
+          source=''
+          tag=''
+          for source_attempt in $(seq 1 12); do
+            source=$(gh api 'repos/mini56/Kaloneo/releases?per_page=20' |
+              jq -c '[.[] | select(.draft == false and (.tag_name | startswith("kaloneo-1.00.")))] | .[0] // empty')
+            if [[ -n "$source" ]]; then
+              tag=$(jq -r '.tag_name // empty' <<<"$source")
+              if [[ -n "$tag" ]]; then break; fi
+            fi
+            echo "Release source non encore visible dans API (essai $source_attempt/12)"
+            sleep 15
+          done
           if [[ -z "$tag" || "$tag" == "null" ]]; then
             echo "::error::Aucune Release KALONEO officielle verifiable"
             exit 1
