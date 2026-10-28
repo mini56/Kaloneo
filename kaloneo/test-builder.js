@@ -988,6 +988,24 @@
     miniPreviewWholeEditorGuard=true;
     return cancellation;
   }
+  function confirmBlockRemoval(number){
+    // Un confirm() JavaScript ouvre une fenêtre native Windows qui peut
+    // reprendre le focus système à la fermeture (bug Type / Zone R203).
+    // Un <dialog> reste dans la même fenêtre Electron : aucun vol de focus OS.
+    const dialog=$('block-delete-dialog');
+    if(!dialog || typeof dialog.showModal!=='function')return Promise.resolve(false);
+    if(dialog.open)return Promise.resolve(false);
+    $('block-delete-message').textContent=
+      'Supprimer le bloc complet '+number+' ? Tout le contenu de ce bloc sera perdu.';
+    dialog.returnValue='';
+    return new Promise(resolve=>{
+      dialog.addEventListener('close',()=>{
+        resolve(dialog.returnValue==='delete');
+      },{once:true});
+      try{dialog.showModal();}
+      catch(error){dialog.close();resolve(false);}
+    });
+  }
   function focusInsertedBlock(uid,cancellation,afterDeletion=false){
     // R199 : renderBlocks() a DEJA reconstruit toute la liste.
     // Après le clic / la confirmation Windows, réactiver un véritable SELECT
@@ -2944,21 +2962,29 @@
           state.blocks=next;changed();renderBlocks();
         });
       }
-      frag.querySelector('.remove-block').addEventListener('click',()=>{
-        // R203 : AVANT confirm() suspendre la miniature native et arrêter
-        // le worker en cours. Sinon son retour de focus se fait pendant le
-        // dialogue Windows et les listes Type / Zone paraissent inertes.
+      frag.querySelector('.remove-block').addEventListener('click',async()=>{
+        // Bloquer uniquement la miniature avant le dialogue intégré,
+        // sans perdre le focus de la BrowserWindow à cause d'un confirm natif.
         const survivor=state.blocks[index+1]||state.blocks[index-1]||null;
-        const cancellation=survivor?beginWholeEditorGuard(survivor.uid):null;
-        if(!confirm('Supprimer le bloc complet '+(index+1)+' ? Tout le contenu de ce bloc sera perdu.')){
-          if(survivor)releaseInsertedBlockGuard();
+        const cancellation=beginWholeEditorGuard(survivor?.uid||block.uid);
+        const accepted=await confirmBlockRemoval(index+1);
+        if(!accepted){
+          releaseInsertedBlockGuard();
           return;
         }
-        if(survivor)pendingRemovedBlockFocusUid=survivor.uid;
+        // Le dialogue pouvait rester ouvert pendant une action de navigation :
+        // ne jamais effacer un autre bloc à la place de celui confirmé.
+        const actualIndex=state.blocks.findIndex(item=>item.uid===block.uid);
+        if(actualIndex<0){releaseInsertedBlockGuard();return;}
         collapsedBlockUids.delete(block.uid);
         selectedBlockUids.delete(block.uid);
-        state.blocks.splice(index,1);changed();renderBlocks();
-        if(survivor)focusInsertedBlock(survivor.uid,cancellation,true);
+        state.blocks.splice(actualIndex,1);changed();renderBlocks();
+        if(survivor)focusInsertedBlock(survivor.uid,cancellation);
+        else{
+          releaseInsertedBlockGuard();
+          const add=$('add-block');
+          try{add?.focus({preventScroll:true});}catch(_){add?.focus();}
+        }
       });
 
       const blockBody=article.querySelector('.block-body');
