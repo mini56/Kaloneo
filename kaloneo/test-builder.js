@@ -988,8 +988,15 @@
     // Après le clic / la confirmation Windows, réactiver un véritable SELECT
     // natif du bloc restant au lieu de viser seulement la carte non interactive.
     // Deux frames laissent Electron terminer le cycle de focus du dialogue.
-    Promise.resolve(cancellation).catch(()=>{}).then(()=>requestAnimationFrame(()=>
-      requestAnimationFrame(()=>{
+    Promise.resolve(cancellation).catch(()=>{}).then(async()=>{
+      if(miniPreviewInsertionGuardUid!==uid)return;
+      // Après une boîte de confirmation native Windows, Electron peut laisser
+      // la fenêtre Admin sans focus OS : .focus() sur un SELECT ne suffit pas.
+      // Réactiver uniquement la fenêtre Builder qui vient d'insérer/supprimer.
+      if(!document.hasFocus()){
+        try{await window.sebEvalPro?.kaloneoRefocusBuilder?.();}catch(_){}
+      }
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
         if(miniPreviewInsertionGuardUid!==uid)return;
         const host=$('blocks-editor');
         const card=Array.from(host.querySelectorAll('.exercise-block'))
@@ -1004,7 +1011,8 @@
         const control=card.querySelector('.block-type:not(:disabled),.block-zone:not(:disabled)');
         if(!control)return;
         try{control.focus({preventScroll:true});}catch(_){control.focus();}
-      })));
+      }));
+    });
   }
   function releaseBuilderSelect() {
     if(!builderSelectInteracting)return;
