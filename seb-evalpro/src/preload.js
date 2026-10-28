@@ -927,15 +927,11 @@ async function createParcoursChoiceDialog() {
   const correctionsYesButton = layer.querySelector('#pc-corrections-yes');
   let focused = null;
   let focusedDetails = null;
-  // Les deux nouveaux parcours fournis sont toujours sans correction affichee.
-  const isFixedNoCorrectionParcours = () =>
-    focused && (['parcours-math-modele','parcours-exp-ecrite-modele'].includes(String(focused.id)) || ['Parcours Math','Parcours Exp-écrite'].includes(String(focused.name)));
+  const isBundledFiveParcours = meta => Boolean(meta &&
+    (['parcours-math-modele','parcours-exp-ecrite-modele'].includes(String(meta.id)) ||
+     ['Parcours Math','Parcours Exp-écrite'].includes(String(meta.name))));
 
   const refreshCorrectionChoice = () => {
-    if(isFixedNoCorrectionParcours()) showCorrectionsDuringParcours=false;
-    correctionsYesButton.disabled=Boolean(isFixedNoCorrectionParcours());
-    correctionsYesButton.title=correctionsYesButton.disabled
-      ? 'Corrections désactivées pour ce parcours fourni' : '';
     correctionsNoButton.classList.toggle('active', !showCorrectionsDuringParcours);
     correctionsYesButton.classList.toggle('active', showCorrectionsDuringParcours);
     correctionsNoButton.setAttribute('aria-pressed', showCorrectionsDuringParcours ? 'false' : 'true');
@@ -957,7 +953,12 @@ async function createParcoursChoiceDialog() {
   const renderDetails = async (meta) => {
     focused = meta;
     focusedDetails = null;
-    if(isFixedNoCorrectionParcours())showCorrectionsDuringParcours=false;
+    // Non par défaut pour les deux modèles, sauf si l'Admin a explicitement
+    // sélectionné ce parcours avec Oui. Les deux boutons restent actifs.
+    if(isBundledFiveParcours(meta)) {
+      showCorrectionsDuringParcours =
+        String(meta.id)===selectedId ? selectedShowCorrections : false;
+    }
     refreshCorrectionChoice();
     openButton.disabled = !meta;
     refreshChooseState();
@@ -1014,7 +1015,6 @@ async function createParcoursChoiceDialog() {
     refreshChooseState();
   });
   correctionsYesButton.addEventListener('click', () => {
-    if(isFixedNoCorrectionParcours())return;
     showCorrectionsDuringParcours = true;
     refreshCorrectionChoice();
     refreshChooseState();
