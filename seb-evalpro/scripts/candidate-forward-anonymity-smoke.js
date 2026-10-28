@@ -132,13 +132,19 @@ function audit(rootDir){
     writeJsonFile(path.join(folder,'donnees','progression.json'),{lastPage:'FIN'});
     writeJsonFile(path.join(folder,'resultats','reponses.json'),{});
     writeJsonFile(path.join(folder,'resultats','scores.json'),{});
+    // La capture de test est chiffrée ; son nom contient KALTEST et TEST
+    // (ce qui provoquait un second rejet du prénom « Test »).
+    const replaySlides=path.join(folder,'replay','REPLAY-202610280000','slides');
+    fs.mkdirSync(replaySlides,{recursive:true});
+    fs.writeFileSync(path.join(replaySlides,'001_KALTEST-PILOT2-HTML-TEST-DICTEE.sebimg'),
+      encryptLocalFileBuffer(Buffer.from('simulation-image-test-chiffree')));
   }
   const regularUsb=path.join(root,'USB-regular',createPrivateExportFolderName());
   fs.mkdirSync(regularUsb,{recursive:true});
   const regularExport=transfer.exportSelected(regularUsb,'MOT-DE-PASSE-USB-UNIQUE',regularIds);
   assert.strictEqual(regularExport.added,2,'Deux évaluations de Candidat Test doivent être exportables.');
   assert.strictEqual(regularExport.invalidSkipped,0,'Candidat Test : faux rejet du nom technique candidat.json.');
-  assert.strictEqual(regularExport.verifiedFiles,12,'Tous les JSON chiffrés des deux évaluations doivent être vérifiés.');
+  assert.strictEqual(regularExport.verifiedFiles,14,'Les six JSON et la capture Replay de chaque évaluation doivent être vérifiés.');
   for(const exported of regularExport.copied){
     const text=fs.readFileSync(path.join(regularUsb,exported.filename),'utf8');
     assert(!text.includes('Candidat')&&!text.includes('Test'),
