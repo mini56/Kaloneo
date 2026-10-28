@@ -33,6 +33,8 @@ async function isVerifiedFile(update,file){
 async function stageVerifiedSetup(update,downloadsDirectory,options={}){
   const filename=officialFile(update,downloadsDirectory);
   await fs.promises.mkdir(path.dirname(filename),{recursive:true});
+  // Supprimer uniquement un ancien fragment temporaire produit par KALONÉO.
+  await fs.promises.rm(filename+'.kaloneo-download',{force:true});
   // Réutiliser le Setup déjà téléchargé uniquement si son SHA256 est exact.
   if(await isVerifiedFile(update,filename))
     return {ok:true,filePath:filename,sha256:update.sha256.toLowerCase(),bytes:update.size,reused:true};
@@ -44,8 +46,6 @@ async function stageVerifiedSetup(update,downloadsDirectory,options={}){
   });
   if(existing)
     throw new Error('Un fichier portant ce nom existe déjà dans Téléchargements mais ne correspond pas au Setup officiel. Renommez-le ou supprimez-le vous-même, puis réessayez.');
-  // Seule une copie partielle .kaloneo-download peut être nettoyée à la reprise.
-  await fs.promises.rm(filename+'.kaloneo-download',{force:true});
   return downloadVerified(update,filename,options);
 }
 function buildWaitAndStartCommand(setup,pid){
