@@ -385,7 +385,7 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
     }
   });
   function historicalWordDir() {
-    return path.join(app.getPath('documents'), 'SEB EvalPro');
+    return path.join(root, 'Bilans', 'Word');
   }
 
   function historicalWordArchiveDir(candidate) {
