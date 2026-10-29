@@ -7,6 +7,7 @@ process.env.SEB_EVALPRO_EDITION = 'admin';
 
 const APP_NAME = 'KALONÉO';
 
+let storageReady = false;
 try {
   app.setName(APP_NAME);
   const appData = app.getPath('appData');
@@ -18,6 +19,14 @@ try {
   require('node:fs').mkdirSync(documentsRoot,{recursive:true});
   app.setPath('userData', isolatedRoot);
   app.setPath('documents', documentsRoot);
-} catch (_) {}
+  storageReady = true;
+} catch (error) {
+  // Never start with Electron's default package-name profile: that could
+  // silently recreate the old seb-evalpro directory outside KALONEO.
+  const { dialog } = require('electron');
+  dialog.showErrorBox('KALONÉO — démarrage impossible',
+    'Impossible d’accéder au dossier de données KALONEO. Aucun autre emplacement ne sera utilisé. Vérifiez les droits d’accès du compte Windows.');
+  app.exit(1);
+}
 
-require('./main');
+if (storageReady) require('./main');
