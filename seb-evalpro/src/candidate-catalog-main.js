@@ -44,7 +44,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   let adminBilanWorkspace = null;
   let adminResultsWorkspace = null;
 
-  const wordTempRoot = path.join(app.getPath('temp'), 'SEB EvalPro', 'Word');
+  const wordTempRoot = path.join(app.getPath('temp'), 'KALONEO', 'Word');
   function cleanupWordTemp(maxAgeMs = 0) {
     try {
       if (!fs.existsSync(wordTempRoot)) return;
