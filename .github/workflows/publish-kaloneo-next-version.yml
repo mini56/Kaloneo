@@ -268,7 +268,7 @@ jobs:
           # En revanche, une modification fonctionnelle concurrente impose de retester.
           git fetch origin "refs/heads/$env:GITHUB_REF_NAME"
           if($LASTEXITCODE -ne 0){throw 'Impossible de lire la branche distante'}
-          $changed=@(git diff --name-only HEAD "origin/$env:GITHUB_REF_NAME" | Where-Object { $_ })
+          $changed=@(git diff --name-only $env:GITHUB_SHA "origin/$env:GITHUB_REF_NAME" | Where-Object { $_ })
           $unsafe=@($changed | Where-Object { $_ -notmatch '^(docs/|README\\.md$|\\.github/KALONEO_RELEASE_REQUEST\\.txt$)' })
           if($unsafe.Count -gt 0){throw ('Code modifie pendant les tests : une nouvelle compilation est obligatoire : '+($unsafe -join ', '))}
           if($changed.Count -gt 0){
