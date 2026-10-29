@@ -46,6 +46,7 @@ article{scroll-margin-top:87px;background:#fff;border:1px solid #d5e3eb;border-r
  padding:23px 25px;margin-bottom:17px;box-shadow:0 3px 13px #08334a08}
 article[hidden]{display:none}article:target{border-color:#2d9563;box-shadow:0 0 0 2px #2d95631d}
 article h2{font-size:21px;line-height:1.33;color:#074767;display:flex;align-items:start;gap:10px;margin:0 0 15px}
+article h3{margin:20px 0 9px;font-size:16px;line-height:1.4;color:#075c7b;font-weight:750}
 .number{color:#fff;background:#167a52;border-radius:8px;padding:5px 7px;flex:none;font-size:13px;min-width:30px;text-align:center}
 article p,article li,article dd{font-size:14px;line-height:1.72;color:#283c49}
 article p{margin:11px 0}article strong{font-weight:750}article ol,article ul{margin:11px 0;padding-left:24px}
