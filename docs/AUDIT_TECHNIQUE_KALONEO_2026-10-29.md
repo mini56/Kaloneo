@@ -74,3 +74,9 @@ Aucun de ces commits ne publie de nouveau Setup. Les fichiers candidats, les bil
 4. Ajouter des tests systématiques du manifeste V1, des chemins et des médias, puis neutraliser les anciens workflows publiables en préservant leurs contrôles.
 5. Vérifier le mode candidat et la touche Windows sur de vrais PC Windows 10/11.
 6. Recompiler et publier uniquement après une exécution entièrement verte du workflow officiel et une copie SHA256 validée sur MAJ.
+
+## Vérification différentielle avec la Release 1.00.208
+
+La comparaison GitHub `kaloneo-1.00.208...fix-r186-kaltest-source-unique-20261027` confirme que les changements postérieurs à cette Release se limitent aux guides, au workflow officiel (commentaires), à `seb-evalpro/package.json` et à `seb-evalpro/src/main.js`. **Aucun fichier de définition de test V1, de bilan, de stockage candidat ou d'installateur NSIS n'a été modifié dans cet intervalle.**
+
+Après les correctifs, plusieurs contrôles CI déclenchés sur le dépôt privé (notamment 40941406187, 40941406157 et 40941406075) ont tous échoué avec `runner_id=0` et **zéro étape exécutée**. Ils ne valident ni n'invalident les corrections ; leur exécution sur un runner fonctionnel est obligatoire.
