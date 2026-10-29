@@ -1,0 +1,44 @@
+name: KALONÉO - Setup Windows deux V1
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths: ['.github/workflows/build-two-v1-setup.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  setup:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Synchroniser les V1 officielles depuis main
+        run: node scripts/build-kaltest-pilot2-data.js
+      - name: Controler la présence des deux V1
+        shell: pwsh
+        run: |
+          if (-not (Test-Path '../TESTS_V1/offre-1.0.0-test.json')) { throw 'Offre du magasin Topy absente' }
+          if (-not (Test-Path '../TESTS_V1/planning_trimestriel-1.0.0-test.json')) { throw 'Planning trimestriel absent' }
+      - name: Préparer le Builder et les tests
+        run: npm run prepare:web
+      - name: Vérifier le module principal
+        run: |
+          node --check src/main.js
+          node --check ../kaloneo/test-builder.js
+      - name: Construire le Setup Windows
+        run: npx electron-builder --win nsis --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KALONEO-Setup-Windows-2V1
+          path: seb-evalpro/dist/*.exe
+          if-no-files-found: error
