@@ -4110,3 +4110,17 @@ body[data-seb-kaltest-id="conversions_atelier_expedition"]
 .kaltest-mail-workspace-image{display:block;width:100%;height:auto;max-height:25%;object-fit:contain;margin:auto auto 0;padding-top:6px;box-sizing:border-box}
 .kaltest-mail-send{align-self:flex-start;min-width:115px;margin-top:4px}
 @media(max-height:760px){.kaltest-mail-workspace-image{max-height:18%}}
+
+/* Réponse durée en deux champs, activée uniquement sur les questions concernées. */
+.kaloneo-duration-parts{
+  display:inline-flex;gap:9px;align-items:flex-end;flex-wrap:wrap;
+  min-width:0;max-width:100%;
+}
+.kaloneo-duration-part{
+  display:inline-flex;flex-direction:column;align-items:flex-start;
+  gap:3px;min-width:0;font-size:12px;font-weight:600;white-space:nowrap;
+}
+.kaloneo-duration-part>input.step{
+  display:block;width:6ch!important;min-width:0!important;max-width:100%!important;
+  box-sizing:border-box;text-align:center;font-size:16px;min-height:34px;margin:0;
+}
