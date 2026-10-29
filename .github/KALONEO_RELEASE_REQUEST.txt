@@ -53,3 +53,5 @@ Nouvelle version demandée : téléchargement des mises à jour dans %LOCALAPPDA
 2026-10-29 : source unique des V1 sur la branche de compilation fix-r186 : suppression définitive du git fetch main et de l'effacement des JSON dans le script kaloneo-testsv1.js. Offre Topy et Planning trimestriel copiés sur cette branche. Bon de transport et autres V1 conservés. Recompiler uniquement si toutes validations réussissent.
 
 2026-10-29 : reprise après correction du chemin canonique planning-trimestriel (ID planning_trimestriel) dans le contrôle bloquant des V1. Ne modifier aucune V1. Vérifier compilation, données candidates, signature SHA256, distribution MAJ.
+
+2026-10-29 : relance après réussite des vérifications Windows 1.00.208 mais échec du git push final dû à un commit concurrent. Workflow renforcé : accepter seulement les modifications documentaires et imposer retest en cas de changement fonctionnel. Publier uniquement si toutes les étapes sont vertes.
