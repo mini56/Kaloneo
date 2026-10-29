@@ -48,18 +48,18 @@
         "title": "Au départ.",
         "type": "image",
         "text": "",
-        "imageData": "kaloneo-asset:1c87d47d54e698ef084be6d15c87fd620b1b5429ccc46edb59f750cc3c619fba.png",
-        "imageName": "Horloge — 33 8h00.png",
-        "imageAlt": "Document 1"
+        "imageData": "kaloneo-supplied:horaires/04H00.png",
+        "imageName": "Illustration du départ",
+        "imageAlt": "Horloge du départ"
       },
       {
         "id": "document_r9t1i2fwd",
         "title": "A l'arrivée.",
         "type": "image",
         "text": "",
-        "imageData": "kaloneo-asset:eb983d8efc68121f45a49f89721e6924e6a2d2f92a99838032de84570ef7535a.png",
-        "imageName": "Horloge — 42 10h15.png",
-        "imageAlt": "Document 2"
+        "imageData": "kaloneo-supplied:horaires/06H15.png",
+        "imageName": "Illustration de l’arrivée",
+        "imageAlt": "Horloge de l’arrivée"
       }
     ],
     "builderContent": [
@@ -707,15 +707,15 @@
     "modifiedAt": "2026-10-28T13:36:31.955Z",
     "imageSources": [
       {
-        "name": "Horloge — 33 8h00.png",
-        "sha256": "1c87d47d54e698ef084be6d15c87fd620b1b5429ccc46edb59f750cc3c619fba",
-        "sourcePath": "horaires/33_8h00.png",
+        "name": "Illustration du départ",
+        "sourcePath": "horaires/04H00.png",
+        "gitBlobSha1": "680dc5470cbc5b476717f554d78da87f9fe6412e",
         "mime": "image/png"
       },
       {
-        "name": "Horloge — 42 10h15.png",
-        "sha256": "eb983d8efc68121f45a49f89721e6924e6a2d2f92a99838032de84570ef7535a",
-        "sourcePath": "horaires/42_10h15.png",
+        "name": "Illustration de l’arrivée",
+        "sourcePath": "horaires/06H15.png",
+        "gitBlobSha1": "224070a2f5ecd3ee0e1a621b801abad93f39ef89",
         "mime": "image/png"
       },
       {
