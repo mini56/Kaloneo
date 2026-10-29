@@ -1,0 +1,76 @@
+# KALONÉO — Audit technique du 29 octobre 2026
+
+## Portée et limite de validation
+
+Audit statique du dépôt privé mini56/Kaloneo, branche fix-r186-kaltest-source-unique-20261027 : arborescence de 1 649 éléments, 86 workflows GitHub, configuration de build, installation NSIS, stockage/chiffrement candidats, moteur de mise à jour, intégrateur V1, gestionnaire de bibliothèque, IPC et accès Admin, configuration Electron. Comparaison avec le dernier Setup 1.00.208.
+
+**Cet audit ne certifie pas que les 1 649 éléments ont tous été exécutés ni que chaque interaction d'interface a été testée.** La dernière Release validée correspond au run 40936787058, avant les correctifs du présent audit. Les nouveaux essais sur dépôt privé échouent AVANT attribution d'un runner Windows ; pas de test réel disponible après ces changements.
+
+## Résultats positifs prouvés
+
+- Release 1.00.208 : GitHub Actions run 40936787058 **SUCCESS**, incluant contrôles des V1 et bilans, installation Windows et conservation des données chiffrées.
+- Publication 1.00.208 : EXE et SHA256 présents sur mini56/Kaloneo ET mini56/Kaloneo-MAJ, tailles et empreintes GitHub identiques (SHA256 EXE a62b357b2e43c32b93d13c100ac7b5839d264b8b16dfb11ed3f7c6a93914c2ba).
+- Le moteur local chiffre les données candidats en AES-256-GCM ; clé protégée par safeStorage Windows/DPAPI ; export/import protégé avec mot de passe.
+- L'installation NSIS conserve les données par défaut ; suppression complète soumise à confirmation, mot de passe obligatoire, y compris /S.
+- Le téléchargement des MAJ valide le nom, la taille, le domaine HTTPS et le SHA256 avant exécution, après confirmation administrateur.
+- Les définitions V1 de la branche active ont une source unique, sans écrasement automatique depuis main.
+
+## Anomalies et risques prioritaires
+
+### A01 — CRITIQUE — runners Windows non attribués sur le dépôt privé — À RÉSOUDRE CÔTÉ GITHUB
+
+Runs 40940973633, 40940973534, 40940973525 : échec en environ 3 secondes, steps=[], runner_id=0, temps Windows facturé 0 ms, journaux inexistants (BlobNotFound). **Ce ne sont pas des échecs démontrés du code.** Causes probables : quota GitHub Actions du dépôt privé, plafond/budget, facturation ou blocage de provisionnement. Vérifier GitHub Settings > Billing and licensing > Actions et repository Settings > Actions. Envisager un runner Windows auto-hébergé sur PC dédié. Ne pas considérer le code postérieur à 1.00.208 comme validé tant qu'un runner n'a pas exécuté les tests.
+
+### A02 — CRITIQUE — synchronisation MAJ depuis le dépôt principal devenu privé — NON RÉSOLU
+
+Le workflow public mini56/Kaloneo-MAJ/.github/workflows/synchroniser-releases.yml utilise le GITHUB_TOKEN **du dépôt MAJ**, qui ne donne pas automatiquement le droit de lire les Releases d'un autre dépôt privé. Le run 40888603851 a déjà donné HTTP 404 pour mini56/Kaloneo lorsqu'il n'était pas accessible avec ce jeton. La copie de 1.00.208 a été réalisée avant que le dépôt principal ne repasse en privé. **La future Release risque de ne pas parvenir à l'outil de mise à jour.** Prévoir sur MAJ un jeton limité à lecture du seul dépôt privé source (secret de dépôt GitHub Actions, pas de mot de passe en clair) OU une copie déclenchée depuis le dépôt privé avec jeton MAJ à permissions minimales. Tester le scénario privé de bout en bout, EXE et SHA256.
+
+### A03 — ÉLEVÉ — verrou natif Windows candidat désactivé — NON RÉSOLU
+
+seb-evalpro/src/main.js définit TEMP_ALLOW_WINDOWS_RECOVERY=true et startCandidateKeyGuard() s'arrête sans démarrer le verrou. La configuration officielle de Setup n'embarque pas candidate-keyguard.exe. Le mode Electron kiosk et les filtres de touches ne suffisent pas à prouver le blocage de la touche Windows côté système. Risque d'accès au bureau Windows pendant l'évaluation. **Ne pas inverser simplement le booléen** : conserver une sortie de secours administrateur et tester sur Windows 10/11 avant tout déploiement.
+
+### A04 — ÉLEVÉ — ancienne configuration electron-builder dans package.json — PARTIELLEMENT CORRIGÉ
+
+seb-evalpro/package.json possède toujours un bloc build avec appId fr.sauvegarde56.sebevalpro, icône build/app-icon.ico et artefact SEB-eval-PRO. Une invocation brute de electron-builder sans --config peut générer une mauvaise identité ou échouer. Le script npm dist:win a été corrigé pour utiliser explicitement build/kaloneo-auto-release.yml, préparer les ressources et refuser un Setup sans le secret ; le risque des appels directs reste à éliminer après validation sur runner. Ne pas modifier le bloc historique au hasard sans audit de ses consommateurs.
+
+### A05 — ÉLEVÉ — remplacement d'une V1 système possible depuis la session Admin — CORRIGÉ, TESTS À REFAIRE
+
+seb-evalpro/src/main.js : l'IPC kaloneo-library:save-test utilisait allowSeedOverwrite avec le seul état adminSessionUnlocked, alors que la bibliothèque exige un privilège spécial pour modifier une V1 officielle. Corrigé commit 27067ae : exigence supplémentaire developerSessionUnlocked. Protéger avec un test IPC Electron Admin ≠ Développeur ; vérifier également l'import, l'export et les versions personnalisées.
+
+### A06 — ÉLEVÉ — démarrage local différent du Setup officiel — CORRIGÉ, TESTS À REFAIRE
+
+seb-evalpro/package.json pointait sur src/main.js pendant que la Release Windows démarre par src/kaltest-pilot21-main.js (qui initialise le dossier KALONEO, le mode Admin et les parcours). Corrigé commit e0b83cc : même point d'entrée dans les deux contextes. Vérifier npm start et l'absence de dossiers historiques au prochain run Windows.
+
+### A07 — ÉLEVÉ — multiplicité d'anciens workflows de publication — NON RÉSOLU
+
+86 workflows sont conservés ; plusieurs audit-r172…r185-final-setup.yml et les anciens publish-kaloneo-v1-00-189 / 190 possèdent encore workflow_dispatch, contents:write et des commandes gh release create. Ils peuvent théoriquement être lancés manuellement malgré leur ancienneté. Conserver leurs tests de non-régression, mais retirer progressivement les pouvoirs de publication des workflows historiques, après relevé exhaustif des usages ; une seule chaîne officielle publiable.
+
+### A08 — MOYEN — contrôles V1 liés à des chemins codés en dur — NON RÉSOLU
+
+publish-kaloneo-next-version.yml vérifie explicitement offre et planning_trimestriel, en calculant le dossier via remplacement de l'underscore. Une autre V1 peut suivre une convention différente ; TESTS_V1-manifest.json contient pourtant le chemin exact et le SHA256. Remplacer les suppositions par une vérification générique du manifeste, des fichiers préparés, de leurs IDs, versions, sommes et images ; conserver en plus le contrôle du Bon de transport.
+
+### A09 — MOYEN — procédures de dépôt V1 contradictoires — CORRIGÉ
+
+TESTS_V1/README.md demandait encore de déposer les V1 sur main puis de synchroniser la branche. Corrigé commit 4bc1c107 : la branche de compilation active est la seule source intégrée. Le guide ne doit plus prescrire un écrasement de source.
+
+### A10 — MOYEN — durcissement Electron à contrôler — À TESTER
+
+La fenêtre candidate utilise contextIsolation=true, nodeIntegration=false, bloque les URL réseau et interdit les nouvelles fenêtres, ce qui est positif. Elle conserve toutefois sandbox=false afin de permettre le preload historique. Tester sur des contenus Builder malformés / importés et documenter les exceptions de sécurité avant d'envisager sandbox=true ; ne pas l'activer sans tests de compatibilité.
+
+## Modifications réalisées pendant cet audit
+
+- 4bc1c107 : corriger les consignes de dépôt/synchronisation TESTS_V1.
+- a8fa6a84 : rediriger npm run dist:win vers la configuration officielle et les préparatifs nécessaires.
+- 27067ae9 : interdire l'écrasement d'une V1 officielle en mode simple Admin.
+- e0b83cc9 : unifier le point d'entrée Electron local et celui du Setup.
+
+Aucun de ces commits ne publie de nouveau Setup. Les fichiers candidats, les bilans et les définitions V1 n'ont pas été modifiés par ces correctifs.
+
+## Suite indispensable avant prochaine publication
+
+1. Rétablir l'exécution des runners GitHub sur dépôt privé, ou configurer le runner Windows local.
+2. Tester les quatre corrections ci-dessus dans un audit Electron Windows, avec vérification complète des bilans, des dossiers chiffrés, du Builder et de la modification V1 Admin/Développeur.
+3. Corriger la lecture inter-dépôts privés pour Kaloneo-MAJ et tester une mise à jour de bout en bout.
+4. Ajouter des tests systématiques du manifeste V1, des chemins et des médias, puis neutraliser les anciens workflows publiables en préservant leurs contrôles.
+5. Vérifier le mode candidat et la touche Windows sur de vrais PC Windows 10/11.
+6. Recompiler et publier uniquement après une exécution entièrement verte du workflow officiel et une copie SHA256 validée sur MAJ.
