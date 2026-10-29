@@ -204,9 +204,45 @@
         <p class="warning">Les identifiants doivent rester cohérents. Une sortie mal reliée peut produire une rubrique vide ou un résultat au mauvais endroit.</p>
       </article>
 
+      <article id="controle-avant-generation" data-group="Évaluer et enregistrer"
+        data-tags="contrôle avant génération controle validation erreur enregistrer enregistrement impossible bloqué refus bloc question manquant champs obligatoires rouge à corriger bilan sortie"
+        data-controls="toggle-validation-section">
+        <h2><span class="number">20</span> Contrôle avant génération : débloquer l’enregistrement</h2>
+        <p><strong>Cette rubrique est essentielle :</strong> si un champ obligatoire manque ou si une règle du test est incohérente, KALONÉO refuse d’enregistrer le test pour éviter de créer un exercice incomplet. Le contrôle indique précisément ce qu’il faut corriger.</p>
+        <h3>Où trouver le contrôle et comment lire les messages ?</h3>
+        <ol>
+          <li>Dans la <strong>colonne de gauche du Builder</strong>, descendez après les blocs d’exercice jusqu’à <strong>Contrôle avant génération</strong>.</li>
+          <li>Cliquez sur le bouton <strong>+</strong> à droite du titre pour déplier la section.</li>
+          <li>Lisez la liste : <strong>OK —</strong> indique un élément conforme ; <strong>À corriger —</strong> indique ce qui empêche l’enregistrement.</li>
+          <li>Revenez au champ ou au bloc concerné, complétez-le ou rectifiez sa configuration. Répétez pour chaque ligne <strong>À corriger —</strong>.</li>
+          <li>Cliquez de nouveau sur <strong>Enregistrer</strong> : le contrôle obligatoire est relancé. Si toutes les règles sont satisfaites, le test peut être enregistré dans la bibliothèque.</li>
+        </ol>
+        <p class="warning"><strong>Message « Le test contient encore des éléments obligatoires à corriger » :</strong> ce message ne signifie pas que le Builder a perdu votre travail. Dépliez le contrôle, recherchez les lignes « À corriger — » et corrigez-les une par une avant de réessayer. Un brouillon local n’est pas encore un test enregistré dans la bibliothèque.</p>
+        <h3>Les erreurs les plus fréquentes et leur solution</h3>
+        <dl>
+          <dt>Titre, identifiant, scénario ou consigne manquants</dt>
+          <dd>Renseignez le <strong>titre</strong> et créez l’<strong>ID du test</strong>. Pour un exercice ordinaire, ajoutez un <strong>scénario</strong> et une <strong>consigne</strong>. Les pages spéciales « Introduction de parcours » et « Fin de parcours » n’exigent pas ces deux textes, mais doivent contenir une présentation visible et ne pas comporter de questions notées.</dd>
+          <dt>Bloc d’exercice ou contenu absent</dt>
+          <dd>Vérifiez qu’au moins un bloc approprié existe. Un bloc média vide peut être ignoré lors de l’enregistrement : ne comptez pas sur une image ou une vidéo non renseignée pour constituer le contenu de l’exercice.</dd>
+          <dt>Question incomplète ou barème incorrect</dt>
+          <dd>Renseignez le <strong>texte de la question</strong>. Pour une question notée à correction automatique, vérifiez les <strong>points supérieurs à zéro</strong> et au moins une <strong>réponse attendue</strong>, ou la durée attendue pour une question de durée. Une réponse libre évaluée manuellement ne fonctionne pas comme une question notée automatiquement.</dd>
+          <dt>Sélection d’images, grille ou tableau de réponses</dt>
+          <dd>Contrôlez la consigne, les identifiants de réponse, le nombre d’éléments et le nombre à sélectionner. Dans une grille notée, chaque cellule de réponse doit être correctement identifiée et posséder la réponse attendue. Les médias intégrés aux grilles doivent être réellement présents.</dd>
+          <dt>Liaison au bilan ou sortie incorrecte</dt>
+          <dd>Dans <strong>Sorties et Bilan</strong>, vérifiez la <strong>ligne officielle</strong> sélectionnée pour un nouveau test, ainsi que les identifiants, types et liaisons nécessaires. Corrigez la ligne mentionnée par le contrôle sans inventer une autre rubrique de bilan.</dd>
+          <dt>Fenêtre complémentaire ou bouton documentaire incorrect</dt>
+          <dd>Donnez un titre et un contenu à chaque fenêtre complémentaire. Vérifiez qu’un bouton documentaire renvoie à une fenêtre existante et que son libellé est renseigné. Pour un bouton inséré dans un texte, son repère doit encore être présent au bon endroit.</dd>
+          <dt>Options particulières du test</dt>
+          <dd>Si le compteur ou le chronomètre est activé, vérifiez ses limites. Si vous imposez une intervention Administrateur ou du matériel extérieur, complétez les explications demandées. En présentation libre, vérifiez les largeurs des colonnes.</dd>
+        </dl>
+        <h3>Et si tout indique « OK » mais que l’enregistrement échoue ?</h3>
+        <p>Le contrôle vérifie la <strong>définition du test</strong>. Une erreur de bibliothèque, de numéro de version ou d’accès au stockage peut produire un <strong>autre message</strong> après validation. Lisez alors le message exact affiché à l’enregistrement : ne supprimez pas vos blocs pour tenter de le faire disparaître.</p>
+        <p class="tip"><strong>À distinguer :</strong> le bouton « Vérifier les réponses et le barème » ouvre une <strong>simulation de notation</strong> ; ce n’est pas la même chose que la liste des champs obligatoires. Pour la notation, consultez la rubrique suivante « Vérifier les réponses et le barème ». Pour reprendre la sauvegarde, consultez aussi « Enregistrer un test et corriger les erreurs ».</p>
+      </article>
+
       <article id="barème" data-group="Évaluer et enregistrer" data-tags="barème bareme verifier vérifier points notation unité bonnes mauvaises réponses scoring calcul"
-        data-controls="toggle-validation-section audit-test-scoring close-scoring-audit">
-        <h2><span class="number">20</span> Vérifier les réponses et le barème</h2>
+        data-controls="audit-test-scoring close-scoring-audit">
+        <h2><span class="number">21</span> Vérifier les réponses et le barème</h2>
         <ol><li>Dépliez <strong>Contrôle avant génération</strong>.</li><li>Cliquez sur <strong>Vérifier les réponses et le barème</strong>.</li><li>Lisez les vérifications de bonnes et mauvaises réponses, des points et des unités.</li><li>Corrigez les questions signalées, puis recommencez.</li></ol>
         <figure class="help-photo"><img src="captures/B07.png" alt="Capture réelle B07 de KALONÉO : écran réel du programme." loading="lazy"><figcaption>Capture B07 — écran réel du programme. Cliquez sur l'image pour l'agrandir.</figcaption></figure>
         <p class="warning">Le contrôle automatique couvre les questions standards. Un exercice doté d’un moteur de correction spécialisé doit aussi être contrôlé dans Electron ; un rapport vert ne remplace pas cet essai.</p>
@@ -214,7 +250,7 @@
 
       <article id="apercu" data-group="Évaluer et enregistrer" data-tags="aperçu electron visuel rendu actualisation candidat grand ecran retour navigateur"
         data-controls="open-electron-preview">
-        <h2><span class="number">21</span> Comprendre l’aperçu du candidat</h2>
+        <h2><span class="number">22</span> Comprendre l’aperçu du candidat</h2>
         <p>La colonne droite affiche un <strong>aperçu simplifié immédiat</strong> pendant la saisie. Après une pause, elle reçoit une image de la <strong>véritable page candidat Electron</strong>.</p>
         <figure class="help-photo"><img src="captures/B11.png" alt="Capture réelle B11 de KALONÉO : Aperçu candidat réel dans Electron." loading="lazy"><figcaption>Capture B11 — Aperçu candidat réel dans Electron. Cliquez sur l'image pour l'agrandir.</figcaption></figure>
         <p>Cliquez sur le bouton <strong>Aperçu</strong> pour ouvrir la version interactive en grand. Vérifiez les colonnes, les tableaux, les réponses et les images, puis utilisez la commande de fermeture de l’aperçu pour revenir au Builder.</p>
@@ -223,15 +259,15 @@
 
       <article id="enregistrer" data-group="Évaluer et enregistrer" data-tags="enregistrer sauver sauvegarder obligatoire erreur test incomplet validation brouillon refus message"
         data-controls="save-draft">
-        <h2><span class="number">22</span> Enregistrer un test et corriger les erreurs</h2>
-        <ol><li>Vérifiez le titre, l’ID, les questions, les bonnes réponses et les autres champs obligatoires.</li><li>Cliquez sur <strong>Enregistrer</strong> dans la barre supérieure.</li><li>Si une anomalie subsiste, le Builder <strong>refuse l’enregistrement</strong> et affiche un message. Dépliez <strong>Contrôle avant génération</strong> pour lire les erreurs.</li><li>Corrigez les éléments indiqués puis relancez l’enregistrement.</li></ol>
+        <h2><span class="number">23</span> Enregistrer un test et corriger les erreurs</h2>
+        <ol><li>Vérifiez le titre, l’ID, les questions, les bonnes réponses et les autres champs obligatoires.</li><li>Cliquez sur <strong>Enregistrer</strong> dans la barre supérieure.</li><li>Si une anomalie subsiste, le Builder <strong>refuse l’enregistrement</strong> et affiche un message. Dépliez <strong>Contrôle avant génération</strong> pour lire les lignes « À corriger — » ; la <a href="#controle-avant-generation">rubrique 20</a> explique leur signification et les solutions.</li><li>Corrigez les éléments indiqués puis relancez l’enregistrement.</li></ol>
         <p>Le statut de brouillon vous aide à distinguer un travail en cours d’un test enregistré. Les brouillons locaux ne doivent pas être confondus avec un test enregistré dans la bibliothèque.</p>
         <p class="tip">Il n’est pas nécessaire de placer automatiquement le curseur dans un champ manquant : le message explique ce qu’il faut corriger, et vous choisissez où intervenir.</p>
       </article>
 
       <article id="bibliotheque-tests" data-group="Évaluer et enregistrer" data-tags="bibliotheque bibliothèque test retrouver ouvrir recherche modifier v1 v2 import exporter fichier json ordinateur"
         data-controls="open-library-test close-test-library">
-        <h2><span class="number">23</span> Retrouver, modifier, importer ou exporter un test</h2>
+        <h2><span class="number">24</span> Retrouver, modifier, importer ou exporter un test</h2>
         <p>Le bouton <strong>Bibliothèque de tests</strong> permet de rechercher et d’ouvrir un test existant. Le Builder travaille avec des définitions au format <strong>KALTEST / JSON</strong> ; les commandes d’import et d’export disponibles dans KALONÉO permettent de transférer les tests avec leurs ressources prises en charge.</p>
         <figure class="help-photo"><img src="captures/B12.png" alt="Capture réelle B12 de KALONÉO : Page Import / Export des tests, parcours et images." loading="lazy"><figcaption>Capture B12 — Page Import / Export des tests, parcours et images. Cliquez sur l'image pour l'agrandir.</figcaption></figure>
         <figure class="help-photo"><img src="captures/B02.png" alt="Capture réelle B02 de KALONÉO : Bibliothèque avec recherche, ouverture et catégories." loading="lazy"><figcaption>Capture B02 — Bibliothèque avec recherche, ouverture et catégories. Cliquez sur l'image pour l'agrandir.</figcaption></figure>
@@ -240,23 +276,23 @@
 
       <article id="historique" data-group="Évaluer et enregistrer" data-tags="annuler rétablir historique retour arriere undo redo clavier ctrl z ctrl y"
         data-controls="undo-change redo-change">
-        <h2><span class="number">24</span> Annuler et rétablir vos changements</h2>
+        <h2><span class="number">25</span> Annuler et rétablir vos changements</h2>
         <p><strong>↶ Annuler</strong> revient sur une modification du test. <strong>↷ Rétablir</strong> réapplique la modification annulée. Les boutons peuvent être grisés lorsque l’historique ne contient aucune action possible.</p>
         <p>Dans un champ de texte actif, <strong>Ctrl + Z</strong> conserve son comportement normal pour annuler la saisie, sans déclencher une annulation globale du test. En dehors d’un champ de texte, les raccourcis globaux du Builder peuvent gérer l’historique.</p>
       </article>
 
       <article id="developpeur" data-group="Évaluer et enregistrer" data-tags="mode developpeur développeur mot de passe v1 test valide proteger protection export officiel"
         data-controls="developer-unlock developer-export-v1 developer-unlock-cancel developer-unlock-confirm">
-        <h2><span class="number">25</span> Mode Développeur et versions officielles V1</h2>
+        <h2><span class="number">26</span> Mode Développeur et versions officielles V1</h2>
         <p>Le <strong>Mode Développeur</strong> est un accès protégé réservé aux opérations particulières sur les versions officielles. Il n’est <strong>pas nécessaire</strong> pour créer un test ordinaire.</p>
         <p>Les versions originales V1 sont sensibles : un export officiel vers <strong>TESTS_V1</strong> exige le mode prévu à cet effet. Ne remplacez pas une V1 validée par inadvertance ; conservez des copies de sécurité et respectez les règles de version du projet.</p>
       </article>
 
       <article id="depannage" data-group="Évaluer et enregistrer" data-tags="aide assistance depannage problème curseur focus perdu chargement aperçu image erreur formulaire installation"
         data-controls="back-tests">
-        <h2><span class="number">26</span> Résoudre les problèmes fréquents</h2>
+        <h2><span class="number">27</span> Résoudre les problèmes fréquents</h2>
         <dl>
-          <dt>Je ne peux pas enregistrer.</dt><dd>Ouvrez « Contrôle avant génération », lisez les erreurs, remplissez les éléments obligatoires et réessayez.</dd>
+          <dt>Je ne peux pas enregistrer.</dt><dd>Ouvrez « Contrôle avant génération », repérez les lignes « À corriger — » et consultez la <a href="#controle-avant-generation">rubrique dédiée au contrôle avant génération</a> pour corriger les champs obligatoires avant de réessayer.</dd>
           <dt>Je ne vois pas mes options.</dt><dd>Vérifiez si la section est repliée : le bouton « + » déplie le contenu. Il peut être nécessaire de descendre dans le panneau de gauche.</dd>
           <dt>Mon image n’apparaît pas dans un test exporté.</dt><dd>Vérifiez qu’elle est réellement présente dans la bibliothèque ou embarquée, puis utilisez les commandes de transfert KALTEST prévues.</dd>
           <dt>L’aperçu semble différent pendant la saisie.</dt><dd>L’affichage immédiat est simplifié. Attendez la capture fidèle ou cliquez sur « Aperçu » pour la version interactive.</dd>
