@@ -73,6 +73,8 @@ function verifyPacked(){
   if(!fs.existsSync(asarPath))throw Error('app.asar Windows non disponible');
   const asar=require('@electron/asar');
   const pkg=JSON.parse(asar.extractFile(asarPath,'package.json').toString('utf8'));
+  if(pkg.name!=='kaloneo')
+    throw Error('Nom technique du programme installe different de kaloneo : '+pkg.name);
   if(pkg.sebBuildNumber!==n||pkg.sebReleaseVersion!==versionFor(n)||pkg.version!==electronVersionFor(n))
     throw Error('Version affichée dans le vrai KALONEO.exe différente du Setup : '+JSON.stringify({
       build:pkg.sebBuildNumber,release:pkg.sebReleaseVersion,electron:pkg.version
