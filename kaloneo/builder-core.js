@@ -80,6 +80,7 @@
           ?q.answerHeightLines:'',
         manualEvaluation:Boolean(q.manualEvaluation)||String(q.response?.type||'')==='free-text',
         normalizer:q.response?.normalizer||'',
+        splitHoursMinutes:q.response?.splitHoursMinutes===true,
         acceptedAnswers:q.response?.type==='multiple-choice'
           ? ((Array.isArray(q.acceptedAnswers?.[0])?q.acceptedAnswers[0]:q.acceptedAnswers)||[]).join('; ')
           : (q.acceptedAnswers||[]).join('; '),
@@ -444,6 +445,7 @@
     const options=splitValues(q.options);
     if(options.length) response.options=options;
     if(q.normalizer) response.normalizer=q.normalizer;
+    if(response.type==='duration'&&q.splitHoursMinutes===true) response.splitHoursMinutes=true;
     const manual=response.type==='free-text'||q.manualEvaluation===true;
     const out={
       id,
