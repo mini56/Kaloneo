@@ -9,7 +9,7 @@ function readInstalledEdition() {
 function getEditionCapabilities() {
   return {
     edition: 'unified',
-    label: 'SEB EvalPro',
+    label: 'KALONÉO',
     canBilan: true,
     canAi: true,
     canImport: true,
