@@ -28,6 +28,18 @@ for(const file of indexed){
   assert.equal(file.sha1,blob,'Empreinte de la nouvelle horloge incorrecte : '+file.path);
   assert.equal(file.bytes,bytes.length,'Taille de la nouvelle horloge incorrecte : '+file.path);
 }
+// Aide administrateur : l'image fournie doit représenter la rubrique Candidats,
+// sans altérer l'image A01 de la rubrique Accueil.
+const helpHtml=fs.readFileSync(path.join(repo,'kaloneo','admin-help','index.html'),'utf8');
+const candidateSection=helpHtml.split('<h2>Retrouver un candidat</h2>')[1]?.split('</article>')[0]||'';
+assert(candidateSection.includes('src="captures/A09.png"'),
+  'Aide Candidats : la capture A09 n’est pas utilisée');
+assert(!candidateSection.includes('src="captures/A01.png"'),
+  'Aide Candidats : capture d’accueil encore présente');
+const helpImage=fs.readFileSync(path.join(repo,'kaloneo','admin-help','captures','A09.png'));
+assert(helpImage.length>1000 && helpImage.subarray(0,8).equals(Buffer.from('89504e470d0a1a0a','hex')),
+  'Image A09 absente ou invalide');
+
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'kaloneo-transport-v1-'));
 try{
   const original=JSON.parse(fs.readFileSync(src,'utf8'));
