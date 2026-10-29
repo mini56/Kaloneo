@@ -98,12 +98,12 @@ function applyAdminWindowMode(unlocked) {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   const isUnlocked = !!unlocked;
   if(isUnlocked && kaloneoBuilderPreviewFullscreenActive) {
-    // R48.6 — exactement la surface candidat, sans chrome ni barre Windows.
-    // Reste dans le contexte Admin : aucun verrou candidat/session activé.
+    // Aperçu Builder : plein écran réel, mais fenêtre ADMIN accessible depuis
+    // la barre des tâches et Alt+Tab. Ne pas appliquer le kiosk candidat.
     try { mainWindow.setAlwaysOnTop(false); } catch (_) {}
-    try { mainWindow.setSkipTaskbar(true); } catch (_) {}
+    try { mainWindow.setKiosk(false); } catch (_) {}
+    try { mainWindow.setSkipTaskbar(false); } catch (_) {}
     try { mainWindow.setFullScreen(true); } catch (_) {}
-    try { mainWindow.setKiosk(true); } catch (_) {}
     try { mainWindow.setMenuBarVisibility(false); } catch (_) {}
     try { mainWindow.focus(); } catch (_) {}
     return;
