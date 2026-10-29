@@ -62,7 +62,7 @@ function createCandidateLocalProtection(options = {}) {
     const protectedBytes = Buffer.from(String(wrapper.protectedKey || ''), 'base64');
     const keyBase64 = safeStorage.decryptString(protectedBytes);
     const key = Buffer.from(keyBase64, 'base64');
-    if (key.length !== 32) throw new Error('Clé locale SEB EvalPro invalide.');
+    if (key.length !== 32) throw new Error('Clé locale KALONÉO invalide.');
     return key;
   }
 
