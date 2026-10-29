@@ -1878,6 +1878,10 @@
     }
   }
 
+  window.addEventListener('kaloneo-online-images-imported',()=>{
+    reloadImageLibrary().catch(error=>console.warn('Actualisation des images :',error));
+  });
+
   async function reloadImageLibrary() {
     const result=await window.sebEvalPro?.kaloneoListImages?.();
     if(!result||result.ok!==true) throw new Error(result?.error||'Bibliothèque d’images inaccessible');
