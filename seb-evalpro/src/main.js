@@ -243,7 +243,7 @@ function initializeCandidateSecurity() {
   }
   migrateJsonFile(stateFilePath());
   protection.backupState();
-  console.log('SEB EvalPro confidentialité candidat: clé locale Windows protégée et sauvegardée, dossiers codés=' + folders.renamed + ', JSON chiffrés=' + migrated.files + '.');
+  console.log('KALONÉO confidentialité candidat: clé locale Windows protégée et sauvegardée, dossiers codés=' + folders.renamed + ', JSON chiffrés=' + migrated.files + '.');
 }
 
 function getCandidateStore() {
@@ -575,7 +575,7 @@ function forceCandidateWindowLockAfterWindowsReturn(reason = 'windows-return') {
     if (typeof win.moveTop === 'function') win.moveTop();
     win.focus();
   } catch (error) {
-    console.warn('SEB EvalPro : réaffirmation kiosk après retour Windows impossible (' + reason + ').', error);
+    console.warn('KALONÉO : réaffirmation kiosk après retour Windows impossible (' + reason + ').', error);
   }
 
   // Plusieurs passes couvrent le délai de réinitialisation de l'Explorer Windows
@@ -850,7 +850,7 @@ function createWindow() {
 
 function showStartupSecurityError(error) {
   const message = String(error && error.message ? error.message : error || 'Erreur de sécurité inconnue.');
-  console.error('SEB EvalPro démarrage sécurisé impossible:', message);
+  console.error('KALONÉO démarrage sécurisé impossible:', message);
 
   if (splashWindow && !splashWindow.isDestroyed()) {
     try { splashWindow.close(); } catch (_) {}
