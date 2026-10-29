@@ -2,7 +2,7 @@
   "name": "seb-evalpro",
   "version": "1.0.208",
   "description": "KALONÉO - évaluation locale des compétences",
-  "main": "src/main.js",
+  "main": "src/kaltest-pilot21-main.js",
   "author": "KALONÉO",
   "kaloneoCreator": "Claude LESPAGNOL",
   "license": "UNLICENSED",
