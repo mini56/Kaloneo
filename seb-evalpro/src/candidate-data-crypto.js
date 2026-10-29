@@ -10,7 +10,7 @@ let localKey = null;
 
 function configureLocalKey(key) {
   const buffer = Buffer.isBuffer(key) ? Buffer.from(key) : Buffer.from(String(key || ''), 'base64');
-  if (buffer.length !== 32) throw new Error('Clé locale SEB EvalPro invalide.');
+  if (buffer.length !== 32) throw new Error('Clé locale KALONÉO invalide.');
   localKey = buffer;
   return true;
 }
