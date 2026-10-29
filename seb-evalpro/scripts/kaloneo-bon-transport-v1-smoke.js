@@ -95,9 +95,9 @@ try{
       actual.presentation.builderContent[1].resource.data;
     assert(got.startsWith('data:image/png;base64,'),'Image manquante dans le rendu : '+i);
     const bytes=Buffer.from(got.split(',')[1],'base64');
-    const actual=i<2?crypto.createHash('sha1')
+    const actualDigest=i<2?crypto.createHash('sha1')
       .update(Buffer.from('blob '+bytes.length+'\0')).update(bytes).digest('hex'):sha(bytes);
-    assert.equal(actual,expected[i][1],'Image non identique dans le rendu : '+i);
+    assert.equal(actualDigest,expected[i][1],'Image non identique dans le rendu : '+i);
   }
   assert.deepEqual(actual.questions,original.questions,'Réponses ou barèmes modifiés');
   assert.deepEqual(actual.presentation.builderContent.map(b=>b.type),
