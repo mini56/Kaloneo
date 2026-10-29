@@ -88,8 +88,8 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Bon de transport : images originales, questions, notation ou bilan invalides'}
           npm run prepare:web
           if($LASTEXITCODE -ne 0){throw 'Préparation ou contrôle bloquant invalide'}
-          # La branche main est la source officielle des V1 : synchronisation
-          # effectuee par build-kaltest-pilot2-data.js avant cette verification.
+          # Les V1 proviennent exclusivement de TESTS_V1 sur la branche compilee.
+          # Aucune synchronisation depuis main ni ecrasement de V1 validee.
           foreach($id in @('offre','planning_trimestriel')){
             $directory=$id.Replace('_','-')
             $test=Join-Path 'app/web/kaltest/tests' ($directory+'/1.0.0/test.json')
