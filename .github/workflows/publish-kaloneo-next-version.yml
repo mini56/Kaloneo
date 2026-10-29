@@ -91,7 +91,8 @@ jobs:
           # La branche main est la source officielle des V1 : synchronisation
           # effectuee par build-kaltest-pilot2-data.js avant cette verification.
           foreach($id in @('offre','planning_trimestriel')){
-            $test=Join-Path 'app/web/kaltest/tests' ($id+'/1.0.0/test.json')
+            $directory=$id.Replace('_','-')
+            $test=Join-Path 'app/web/kaltest/tests' ($directory+'/1.0.0/test.json')
             if(!(Test-Path -LiteralPath $test)){throw "Nouvelle V1 $id absente du package prepare. Publication bloquee."}
             $definition=Get-Content -Raw -LiteralPath $test | ConvertFrom-Json
             if($definition.id -ne $id -or @($definition.questions).Count -lt 1){throw "Nouvelle V1 $id invalide. Publication bloquee."}
