@@ -721,7 +721,34 @@ function createKaloneoLibrary(options = {}) {
   // On réhydrate uniquement la définition réellement demandée par le candidat,
   // l'éditeur ou un export ; aucune image n'est dans les listes/metadata.
   function hydrateLibraryDefinition(definition) {
-    return hydrate(definition,path.join(imagesRoot,'v1-assets'),(digest,extension)=>{
+    // Ressources des deux horloges du Bon de transport, identifiées par leur
+    // chemin et leur empreinte Git SHA-1 ; aucune heure transmise en texte.
+    let input=definition;
+    const windows=definition?.presentation?.supplementaryWindows;
+    if(Array.isArray(windows)&&windows.some(w=>String(w?.imageData||'').startsWith('kaloneo-supplied:'))){
+      input=JSON.parse(JSON.stringify(definition));
+      const sources=Array.isArray(input?.kaloneoLibrary?.imageSources)
+        ? input.kaloneoLibrary.imageSources : [];
+      for(const windowItem of input.presentation.supplementaryWindows){
+        const ref=String(windowItem?.imageData||'');
+        if(!ref.startsWith('kaloneo-supplied:'))continue;
+        const match=ref.match(/^kaloneo-supplied:(horaires\/(?:0[0-9]|1[01])H(?:00|15|30|45)\.png)$/);
+        if(!match)throw new Error('Référence horaire interdite : '+ref);
+        const source=sources.find(s=>s?.sourcePath===match[1]&&s?.mime==='image/png'&&
+          /^[a-f0-9]{40}$/.test(String(s?.gitBlobSha1||'')));
+        const image=suppliedImages.find(s=>s.sourceName===match[1]);
+        if(!source||!image)throw new Error('Horloge manquante : '+match[1]);
+        const bytes=fs.readFileSync(image.absolute);
+        const blobHash=crypto.createHash('sha1')
+          .update(Buffer.from('blob '+bytes.length+'\0')).update(bytes).digest('hex');
+        if(blobHash!==source.gitBlobSha1 ||
+           image.id!=='kaloneo-fournie-'+blobHash.slice(0,32) ||
+           bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a')
+          throw new Error('Horloge altérée ou illisible : '+match[1]);
+        windowItem.imageData='data:image/png;base64,'+bytes.toString('base64');
+      }
+    }
+    return hydrate(input,path.join(imagesRoot,'v1-assets'),(digest,extension)=>{
       const id='img-'+digest.slice(0,32);
       const record=findImageRecord(id);
       if(record)return fs.readFileSync(record.binary);
