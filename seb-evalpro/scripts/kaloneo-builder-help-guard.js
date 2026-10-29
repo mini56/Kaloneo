@@ -38,9 +38,23 @@ const groups=new Set(articles.map(a=>a.opening.match(/\bdata-group="([^"]+)"/)?.
 if(groups.size<4||groups.has(undefined))fail('Rubriques mal organisées');
 const keywords=['premiers-pas','nouveau-test','definition','presentation','ajouter-bloc','gerer-blocs',
   'inserer-dupliquer','ensembles','questions','unites','tableaux','images','selection-images',
-  'icones','multimedia','texte-et-style','options-test','sorties-bilan','barème','apercu',
+  'icones','multimedia','texte-et-style','options-test','sorties-bilan','controle-avant-generation','barème','apercu',
   'enregistrer','bibliotheque-tests','historique','developpeur','depannage'];
 for(const id of keywords)if(!articles.some(a=>a.id===id))fail('Rubrique de référence non documentée : '+id);
+// Le contrôle bloquant à l'enregistrement doit rester une rubrique autonome,
+// accessible dans le sommaire et depuis les rubriques Enregistrer / Dépannage.
+const validationStart=page.indexOf('<article id="controle-avant-generation"');
+const validationEnd=page.indexOf('</article>',validationStart);
+if(validationStart===-1||validationEnd<=validationStart)fail('Rubrique contrôle avant génération absente');
+const validationArticle=page.slice(validationStart,validationEnd);
+for(const phrase of ['Contrôle avant génération : débloquer l’enregistrement',
+  'À corriger —','OK —','Liaison au bilan','Fenêtre complémentaire',
+  'test peut être enregistré']){
+  if(!validationArticle.includes(phrase))fail('Explication du contrôle avant génération manquante : '+phrase);
+}
+if(!page.includes('href="#controle-avant-generation"'))fail('Lien depuis la sauvegarde ou le dépannage manquant');
+if(!validationArticle.includes('data-controls="toggle-validation-section"'))
+  fail('La rubrique de validation ne décrit pas le bouton du contrôle');
 // Chaque nouveau bouton statique doit être rattaché à un chapitre d'aide,
 // faute de quoi la compilation Windows est bloquée.
 const documentedControls=new Set(articles.flatMap(x=>
