@@ -11,7 +11,6 @@ const { createCandidateStore } = require('./candidate-store-main');
 const { createCandidateTransfer } = require('./candidate-transfer-main');
 const { createPrivateExportFolderName } = require('./candidate-anonymous-paths');
 const { createKaloneoLibrary } = require('./kaloneo-library-main');
-const kaloneoOnlineImages = require('./kaloneo-online-images');
 const { createRenderImageOptimizer } = require('./kaloneo-render-image-cache');
 // Copies réduites réservées au rendu ; ne pas les enregistrer dans les tests.
 const kaloneoRenderImages=createRenderImageOptimizer({
@@ -1376,17 +1375,6 @@ ipcMain.handle('kaloneo-library:get-image', (_event, id) => {
   } catch (error) {
     return { ok:false, error:error && error.message ? error.message : String(error) };
   }
-});
-
-ipcMain.handle('kaloneo-online:list', async () => {
-  if (!adminSessionUnlocked || getCandidateStore().getActiveCandidate()) return {ok:false,error:'Session administrateur sans candidat actif requise.'};
-  try { return await kaloneoOnlineImages.listOnline(); }
-  catch (error) { return {ok:false,error:error.message}; }
-});
-ipcMain.handle('kaloneo-online:download', async (_event, ids) => {
-  if (!adminSessionUnlocked || getCandidateStore().getActiveCandidate()) return {ok:false,error:'Session administrateur sans candidat actif requise.'};
-  try { return await kaloneoOnlineImages.downloadSelected(ids,getKaloneoLibrary()); }
-  catch (error) { return {ok:false,error:error.message}; }
 });
 
 ipcMain.handle('kaloneo-library:save-image', (_event, payload) => {
