@@ -7,7 +7,24 @@ const crypto = require('crypto');
 const CATALOGUE = 'https://raw.githubusercontent.com/mini56/Kaloneo-MAJ/main/bibliotheque-images/catalogue.json';
 const BASE = 'https://raw.githubusercontent.com/mini56/Kaloneo-MAJ/main/bibliotheque-images/';
 const MAX_CATALOGUE = 4 * 1024 * 1024;
-const MAX_IMAGE = 30 * 1024 * 1024;
+const MAX_IMAGE = 10 * 1024 * 1024;
+const MAX_PIXELS = 20_000_000;
+const {nativeImage} = require('electron');
+function safeImage(bytes, url) {
+  const pathname=new URL(url).pathname.toLowerCase();
+  let mime;
+  if (pathname.endsWith('.png') && bytes.subarray(0,8).equals(Buffer.from('89504e470d0a1a0a','hex'))) mime='image/png';
+  else if (/\.jpe?g$/.test(pathname) && bytes[0]===0xff && bytes[1]===0xd8 && bytes[2]===0xff) mime='image/jpeg';
+  else if (pathname.endsWith('.webp') && bytes.toString('ascii',0,4)==='RIFF' && bytes.toString('ascii',8,12)==='WEBP') mime='image/webp';
+  else throw new Error('Format réel invalide ou non autorisé (PNG, JPEG, WebP uniquement).');
+  const picture=nativeImage.createFromBuffer(bytes);
+  if (picture.isEmpty()) throw new Error('Image illisible ou invalide.');
+  const {width,height}=picture.getSize();
+  if (!width || !height || width>8192 || height>8192 || width*height>MAX_PIXELS) throw new Error('Dimensions d’image non autorisées.');
+  const sanitized=picture.toPNG();
+  if (!sanitized.length || sanitized.length>MAX_IMAGE*4) throw new Error('Image décodée trop volumineuse.');
+  return {buffer:sanitized,mime:'image/png'};
+}
 function getBytes(url, maxBytes) {
   return new Promise((resolve, reject) => {
     const target = new URL(url);
@@ -46,7 +63,7 @@ function originalUrl(item) {
   const parsed=new URL(url);
   if (parsed.hostname!=='raw.githubusercontent.com' ||
       !parsed.pathname.startsWith('/mini56/Kaloneo-MAJ/main/')) throw new Error('Image hors du dépôt autorisé.');
-  if (!/\.(png|jpe?g|webp|gif|bmp)$/i.test(parsed.pathname)) throw new Error('Format non autorisé.');
+  if (!/\.(png|jpe?g|webp)$/i.test(parsed.pathname)) throw new Error('Format non autorisé.');
   return url;
 }
 async function listOnline() {
@@ -72,11 +89,11 @@ async function downloadSelected(ids, library) {
       const bytes=await getBytes(originalUrl(item),MAX_IMAGE);
       if(bytes.length!==item.taille_octets || crypto.createHash('sha256').update(bytes).digest('hex')!==item.sha256)
         throw new Error('Intégrité de l’image incorrecte.');
-      const ext=new URL(originalUrl(item)).pathname.toLowerCase();
-      const mime=ext.endsWith('.png')?'image/png':ext.endsWith('.webp')?'image/webp':
-        ext.endsWith('.gif')?'image/gif':ext.endsWith('.bmp')?'image/bmp':'image/jpeg';
-      const saved=library.saveImage({name:String(item.titre||id).slice(0,180),category:String(item.categorie||'Images en ligne'),
-        mime,data:'data:'+mime+';base64,'+bytes.toString('base64')});
+      // Ne jamais conserver directement le fichier distant : décoder puis
+      // réencoder en PNG afin d'éliminer les données annexes.
+      const clean=safeImage(bytes,originalUrl(item));
+      const saved=library.saveImage({name:String(item.titre||id).slice(0,170)+'.png',category:String(item.categorie||'Images en ligne'),
+        mime:clean.mime,data:'data:'+clean.mime+';base64,'+clean.buffer.toString('base64')});
       results.push({id,ok:!!saved.ok,alreadyPresent:!!saved.duplicate,error:saved.error||null});
     } catch(error) {results.push({id,ok:false,error:error.message});}
   }
