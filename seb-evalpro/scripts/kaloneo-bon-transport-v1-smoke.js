@@ -45,7 +45,45 @@ try{
   assert.equal(original.presentation.builderContent[0].table.rows,6);
   assert.equal(original.presentation.builderContent[0].table.cols,6);
   assert.deepEqual(original.questions[0].acceptedAnswers,['200','200.00','200,00']);
-  assert.deepEqual(original.questions[1].acceptedAnswers,['2h15','2H15']);
+  // Même barème /4, mais deux cases numériques pour la durée 2 h 15.
+  const durationQuestion=original.questions[1];
+  assert.equal(durationQuestion.id,'ID2_l');
+  assert.equal(durationQuestion.response.type,'duration');
+  assert.equal(durationQuestion.response.normalizer,'duration-fr');
+  assert.equal(durationQuestion.response.splitHoursMinutes,true);
+  assert.equal(durationQuestion.acceptedMinutes,135);
+  assert.equal(durationQuestion.points,1);
+  assert.equal(durationQuestion.acceptedAnswers,undefined);
+
+  // La transformation Builder aller-retour conserve les deux champs.
+  const Core=require('../../kaloneo/builder-core.js');
+  const model=Core.definitionToModel(original);
+  const durationBlock=model.blocks.find(block=>block.type==='question'&&block.question?.id==='ID2_l');
+  assert(durationBlock&&durationBlock.question.splitHoursMinutes===true,
+    'Le Builder a perdu la présentation Heures/Minutes');
+  const rebuilt=Core.modelToDefinition(model);
+  const roundtrip=rebuilt.questions.find(question=>question.id==='ID2_l');
+  assert.equal(roundtrip?.response?.type,'duration');
+  assert.equal(roundtrip?.response?.splitHoursMinutes,true);
+  assert.equal(roundtrip?.acceptedMinutes,135);
+
+  // Tester le véritable normaliseur extrait du runtime candidat, et non
+  // une copie divergente de ses règles de correction.
+  const runtime=fs.readFileSync(path.join(repo,'seb-evalpro','source','js','kaltest-pilot2-runtime.js'),'utf8');
+  const start=runtime.indexOf('  function normalizeText(value) {');
+  const end=runtime.indexOf('  function showCorrectionDuringParcours()',start);
+  assert(start>=0&&end>start,'Normaliseur candidat introuvable');
+  const grader=new Function(runtime.slice(start,end)+'; return {parseDurationFr,evaluateQuestion};')();
+  for(const answer of ['2h15','2H15','2 h 15','2 H 15','2 heures 15 minutes','2:15']){
+    assert.equal(grader.parseDurationFr(answer),135,'Durée incorrecte : '+answer);
+    assert.equal(grader.evaluateQuestion(durationQuestion,answer),true,'Réponse refusée : '+answer);
+  }
+  for(const wrong of ['2h14','2h60','3h15','','h15','2h']){
+    assert.equal(grader.evaluateQuestion(durationQuestion,wrong),false,'Réponse incorrecte acceptée : '+wrong);
+  }
+  assert(runtime.includes("group.className = 'kaloneo-duration-parts';"));
+  assert(runtime.includes("hoursInput = addPart('Heures', hoursValue, false);"));
+  assert(runtime.includes("minutesInput = addPart('Minutes', minutesValue, true);"));
   assert.deepEqual(original.questions[2].acceptedAnswers,['43.25','43,25']);
   assert.deepEqual(original.questions[3].acceptedAnswers,['7.5','7,5','7.50','7,50']);
   assert.equal(original.calculator.defaultEnabled,false);
