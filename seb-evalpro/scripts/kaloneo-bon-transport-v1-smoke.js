@@ -13,6 +13,21 @@ const expected=[
   ['horaires/06H15.png','224070a2f5ecd3ee0e1a621b801abad93f39ef89'],
   ['02_fin_stage_01/05.png','c814aeab09b343b4b44fd03c1df583c8771a96dd4091e399776a2a4314605bc8']
 ];
+// Vérifier chaque nouvelle horloge dans le catalogue sans se fier à son nom seul.
+const catalogue=JSON.parse(fs.readFileSync(path.join(supplied,'catalogue-images.json'),'utf8'));
+const indexed=catalogue.files.filter(file=>file.path.startsWith('horaires/'));
+assert.equal(indexed.length,48,'La bibliothèque doit contenir exactement 48 horloges');
+const expectedNames=[];
+for(let hour=0;hour<12;hour++)for(const minute of ['00','15','30','45'])
+  expectedNames.push('horaires/'+String(hour).padStart(2,'0')+'H'+minute+'.png');
+assert.deepEqual(indexed.map(file=>file.path).sort(),expectedNames.sort());
+for(const file of indexed){
+  const bytes=fs.readFileSync(path.join(supplied,...file.path.split('/')));
+  const blob=crypto.createHash('sha1')
+    .update(Buffer.from('blob '+bytes.length+'\\0')).update(bytes).digest('hex');
+  assert.equal(file.sha1,blob,'Empreinte de la nouvelle horloge incorrecte : '+file.path);
+  assert.equal(file.bytes,bytes.length,'Taille de la nouvelle horloge incorrecte : '+file.path);
+}
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'kaloneo-transport-v1-'));
 try{
   const original=JSON.parse(fs.readFileSync(src,'utf8'));
