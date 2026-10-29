@@ -1,0 +1,51 @@
+name: KALONÉO - Setup test Images en ligne
+
+on:
+  push:
+    branches:
+      - fix-r60-tri-rearm-only-20261011
+    paths:
+      - '.github/workflows/build-online-images-setup.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  setup-images-en-ligne:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: seb-evalpro
+    steps:
+      - name: Sources de la branche de développement
+        uses: actions/checkout@v4
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Dépendances
+        run: npm install --no-audit --no-fund
+      - name: Vérifier les scripts de la bibliothèque distante
+        run: |
+          node --check src/kaloneo-online-images.js
+          node --check src/main.js
+          node --check src/preload.js
+          node --check ../kaloneo/online-image-gallery.js
+          node --check ../kaloneo/test-builder.js
+      - name: Préparer l'application
+        run: npm run prepare:web
+      - name: Vérifier intégration du bouton dans le Builder généré
+        shell: pwsh
+        run: |
+          if (-not (Select-String -Quiet -Path 'app/web/kaloneo-builder/test-builder.html' -Pattern 'Images en ligne Kalonéo')) { throw 'Bouton Images en ligne absent du Builder généré' }
+          if (-not (Test-Path 'app/web/kaloneo-builder/online-image-gallery.js')) { throw 'Script galerie absent du Builder généré' }
+      - name: Compiler Setup Windows
+        run: npx electron-builder --win nsis --publish never
+      - name: Conserver Setup comme artefact de test
+        uses: actions/upload-artifact@v4
+        with:
+          name: KALONEO-Setup-Images-en-ligne-Test
+          path: seb-evalpro/dist/*.exe
+          if-no-files-found: error
