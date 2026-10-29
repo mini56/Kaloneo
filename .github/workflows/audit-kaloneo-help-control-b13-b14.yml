@@ -1,0 +1,52 @@
+name: "KALONÉO — Contrôle illustrations B13/B14 de l'aide Builder (sans Setup)"
+on:
+  push:
+    branches:
+      - fix-r186-kaltest-source-unique-20261027
+    paths:
+      - "kaloneo/help/**"
+      - "seb-evalpro/scripts/kaloneo-builder-help-guard.js"
+      - "seb-evalpro/src/kaloneo-admin-settings.js"
+      - ".github/workflows/audit-kaloneo-help-control-b13-b14.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit-documentation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Contrôle de cohérence complet de l'aide du Builder et des 14 captures
+        run: node seb-evalpro/scripts/kaloneo-builder-help-guard.js
+      - name: Vérifier les deux images, leurs dimensions, leurs légendes et le zoom
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const assert=require('node:assert/strict');
+          const page=fs.readFileSync('kaloneo/help/index.html','utf8');
+          const settings=fs.readFileSync('seb-evalpro/src/kaloneo-admin-settings.js','utf8');
+          const start=page.indexOf('<article id="controle-avant-generation"');
+          const end=page.indexOf('</article>',start);
+          assert(start>=0&&end>start,'Chapitre 20 absent');
+          const article=page.slice(start,end);
+          let last=-1;
+          for(const n of ['B13','B14']){
+            const file='kaloneo/help/captures/'+n+'.png';
+            const buf=fs.readFileSync(file);
+            assert.equal(buf.subarray(0,8).toString('hex'),'89504e470d0a1a0a','PNG invalide : '+n);
+            const width=buf.readUInt32BE(16),height=buf.readUInt32BE(20);
+            assert(width>=300&&height>=150,'Capture trop petite : '+n+' '+width+'x'+height);
+            const current=article.indexOf('src="captures/'+n+'.png"');
+            assert(current>last,'Image absente ou ordre incorrect : '+n);
+            last=current;
+            assert(article.includes('Capture '+n+' —'),'Légende absente : '+n);
+            assert(settings.includes("'"+n+"'"),'Agrandissement plein écran interdit : '+n);
+            console.log('CAPTURE_'+n+'_VALIDEE='+width+'x'+height+' ('+buf.length+' octets)');
+          }
+          console.log('KALONEO_HELP_CONTROL_GENERATION_IMAGES_ET_ZOOM=OK');
+          NODE
