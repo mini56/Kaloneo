@@ -9,7 +9,7 @@ directories:
 
 extraMetadata:
   main: src/kaltest-pilot21-main.js
-  version: 1.0.205
+  version: 1.0.206
 files:
   - src/**/*
   - app/**/*
@@ -40,4 +40,4 @@ nsis:
   uninstallerSidebar: build/pilot-resources/installerSidebar.bmp
   include: build/installer.nsh
   deleteAppDataOnUninstall: false
-  artifactName: "KALONEO-Setup-1.00.205.${ext}"
+  artifactName: "KALONEO-Setup-1.00.206.${ext}"
