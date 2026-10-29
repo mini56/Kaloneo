@@ -8,6 +8,7 @@ directories:
   buildResources: build/pilot-resources
 
 extraMetadata:
+  name: kaloneo
   main: src/kaltest-pilot21-main.js
   version: 1.0.206
 files:
