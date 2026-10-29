@@ -1146,6 +1146,21 @@ function injectAdminBar() {
     #seb-evalpro-topbar .seb-admin-right-actions{gap:4px!important;margin-left:4px!important;padding-left:6px!important}
     #seb-evalpro-topbar button:hover{background:#f5f9fd!important;box-shadow:0 2px 5px rgba(0,0,0,.18),inset 0 1px 0 #fff!important;transform:none!important}
     #seb-evalpro-topbar button:active{transform:none!important;box-shadow:inset 0 1px 3px rgba(0,0,0,.20)!important}
+    /* Réglages : roue dentée sur fond bleu très clair, assorti à l'aide Admin.
+       Règles prioritaires après le style commun des boutons, afin d'éviter
+       le fond blanc imposé par SEB_ADMIN_BUTTON_POLISH. */
+    #seb-evalpro-topbar #seb-evalpro-settings{
+      padding:3px!important;
+      background:#e7f3f9!important;
+      border:1px solid #a5c5d6!important;
+      border-radius:8px!important;
+      box-shadow:none!important;
+    }
+    #seb-evalpro-topbar #seb-evalpro-settings:hover{
+      background:#d9edf7!important;
+      border-color:#7faec5!important;
+      box-shadow:0 2px 5px rgba(0,0,0,.16)!important;
+    }
     /* Fenêtres Export / Import : même style léger que la barre Admin. */
     #seb-evalpro-export-destination-dialog button,
     #seb-evalpro-transfer-password-dialog button,
