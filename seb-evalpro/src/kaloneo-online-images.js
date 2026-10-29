@@ -77,7 +77,7 @@ async function downloadSelected(ids, library) {
         ext.endsWith('.gif')?'image/gif':ext.endsWith('.bmp')?'image/bmp':'image/jpeg';
       const saved=library.saveImage({name:String(item.titre||id).slice(0,180),category:String(item.categorie||'Images en ligne'),
         mime,data:'data:'+mime+';base64,'+bytes.toString('base64')});
-      results.push({id,ok:!!saved.ok,alreadyPresent:!!saved.alreadyExists,error:saved.error||null});
+      results.push({id,ok:!!saved.ok,alreadyPresent:!!saved.duplicate,error:saved.error||null});
     } catch(error) {results.push({id,ok:false,error:error.message});}
   }
   return {ok:results.every(x=>x.ok),results};
