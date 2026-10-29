@@ -1,65 +1,15 @@
-# Controle des V1 uniquement. Ne jamais compiler avec package.json par defaut.
-# Les setups publiables passent obligatoirement par le workflow officiel de release.
-name: "KALONÉO - Vérification des tests V1 (sans Setup)"
+# ARCHIVE : workflow de test créé par erreur sur une branche historique.
+# Ne plus le lancer : cette branche ne contient pas les V1 ajoutées plus tard.
+# La publication officielle est gérée par publish-kaloneo-next-version.yml
+# sur la branche fix-r186-kaltest-source-unique-20261027.
+name: "ARCHIVE — ancien contrôle V1 (désactivé)"
 on:
-  push:
-    branches: [fix-r60-tri-rearm-only-20261011]
-    paths:
-      - 'TESTS_V1/**'
-      - '.github/workflows/build-two-v1-setup.yml'
   workflow_dispatch:
 permissions:
   contents: read
-concurrency:
-  group: kaloneo-validation-v1-${{ github.ref }}
-  cancel-in-progress: true
 jobs:
-  validate-v1:
-    runs-on: windows-latest
-    timeout-minutes: 25
-    defaults:
-      run:
-        working-directory: seb-evalpro
+  archive:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Installer les dépendances
-        run: |
-          npm install --no-audit --no-fund
-          python -m pip install --disable-pip-version-check Pillow==11.3.0 imageio-ffmpeg==0.6.0
-      - name: Valider les fichiers officiels et leurs noms
-        shell: pwsh
-        run: |
-          $tests = @(Get-ChildItem ../TESTS_V1 -Filter '*-test.json' -File)
-          if ($tests.Count -lt 2) { throw 'Catalogue V1 absent' }
-          foreach ($file in $tests) {
-            try {
-              $null = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json -ErrorAction Stop
-            } catch { throw "V1 invalide : $($file.Name) : $_" }
-          }
-          if (-not (Test-Path ../TESTS_V1/offre-1.0.0-test.json)) { throw 'Offre Topy absente' }
-          if (-not (Test-Path ../TESTS_V1/planning_trimestriel-1.0.0-test.json)) { throw 'Planning trimestriel absent' }
-          Write-Host "V1_JSON_VALIDES=$($tests.Count)"
-      - name: Préparer les ressources officielles
-        run: |
-          python scripts/kaloneo-r125-branding.py
-          python scripts/r158-build-installer-intro.py
-          node scripts/r158-installer-intro-smoke.js
-          node scripts/build-kaltest-pilot2-data.js
-          npm run prepare:web
-      - name: Contrôler les tests et l'aide
-        run: |
-          node --check src/main.js
-          node --check ../kaloneo/test-builder.js
-      - name: Interdire la compilation historique par défaut
-        shell: pwsh
-        run: |
-          $official = 'build/kaloneo-r185-final-setup.yml'
-          if (-not (Test-Path $official)) { throw 'Configuration officielle absente' }
-          if (-not (Test-Path 'build/pilot-resources/kaloneo.ico')) { throw 'Icone officielle non generee' }
-          Write-Host 'CONTROLE_V1=OK; SETUP_NON_PUBLIE=YES'
+      - run: echo "Workflow historique désactivé. Utiliser la chaîne officielle."
