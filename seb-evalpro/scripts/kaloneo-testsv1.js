@@ -15,32 +15,16 @@ function readJson(file){return JSON.parse(fs.readFileSync(file,'utf8'));}
 function sha256(s){return crypto.createHash('sha256').update(s,'utf8').digest('hex');}
 function fail(msg){throw new Error('TESTS_V1: '+msg);}
 
+// Compatibilite avec les appels historiques : ne plus recuperer main.
+// La branche compilee contient toutes les V1 validees. Aucune suppression
+// ni ecrasement par une autre branche n'est autorise.
 function syncFromMainInCi(repoRoot){
-  if(process.env.GITHUB_ACTIONS!=='true')return {synced:false};
-  // Ne jamais laisser un runner Windows bloqué par git fetch réseau/identification.
-  // En cas d'indisponibilité de main : échec explicite, aucune Release.
-  const run=(args)=>cp.execFileSync('git',args,{
-    cwd:repoRoot,encoding:'utf8',maxBuffer:20*1024*1024,
-    timeout:120000,
-    env:{...process.env,GIT_TERMINAL_PROMPT:'0',GCM_INTERACTIVE:'never'}
-  });
-  run(['fetch','--no-tags','--depth=1','origin','main']);
-  const revision=run(['rev-parse','FETCH_HEAD']).trim();
-  const entries=run(['ls-tree','-r','--name-only','FETCH_HEAD','TESTS_V1'])
-    .split(/\r?\n/).filter(Boolean);
-  if(!entries.includes('TESTS_V1/README.md'))fail('dossier officiel absent de main');
-  const directory=path.join(repoRoot,'TESTS_V1');
-  fs.mkdirSync(directory,{recursive:true});
-  for(const existing of fs.readdirSync(directory)){
-    if(existing.endsWith('.json'))fs.rmSync(path.join(directory,existing),{force:true});
-  }
-  for(const file of entries){
-    if(!/^TESTS_V1\/[A-Za-z0-9_.-]+\.json$/.test(file))continue;
-    const src=run(['show','FETCH_HEAD:'+file]);
-    fs.writeFileSync(path.join(repoRoot,file),src,'utf8');
-  }
-  console.log('TESTS_V1: références de main synchronisées, révision '+revision.substring(0,12));
-  return {synced:true,revision};
+  const folder=path.join(repoRoot,'TESTS_V1');
+  if(!fs.existsSync(folder))fail('dossier TESTS_V1 absent de la branche compilee');
+  const count=fs.readdirSync(folder).filter(file=>file.endsWith('.json')).length;
+  if(count===0)fail('aucune V1 dans la branche compilee');
+  console.log('TESTS_V1: source locale unique, '+count+' definition(s), sans import de main');
+  return {synced:false,source:'checked-out-branch',count};
 }
 
 function collectSeedPaths(sourceTestsDir){
