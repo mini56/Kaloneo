@@ -155,7 +155,7 @@ function installAdminSettings({ipcRenderer,bar,button,buildNumber,releaseVersion
     if(tab!=='admin'&&tab!=='builder')return;
     const frame=layer.querySelector('[data-section="'+tab+'"] iframe');
     if(!frame||ev.source!==frame.contentWindow)return;
-    const allowed=tab==='admin'?['A01','A02','A03','A04','A06','A07','A08']:
+    const allowed=tab==='admin'?['A01','A02','A03','A04','A05','A06','A07','A08']:
       ['B01','B02','B03','B04','B05','B06','B07','B08','B09','B10','B11','B12'];
     if(typeof ev.data.src!=='string'||!allowed.some(id=>ev.data.src==='captures/'+id+'.png'))return;
     openHelpZoom(frame,ev.data.src,String(ev.data.alt||'').slice(0,300));
