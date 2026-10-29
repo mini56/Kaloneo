@@ -1383,7 +1383,8 @@ ipcMain.handle('kaloneo-library:save-test', (_event, payload) => {
   try {
     return getKaloneoLibrary().saveTest(payload && payload.definition, {
       overwrite:payload && payload.overwrite === true,
-      allowSeedOverwrite:payload?.overwrite===true && adminSessionUnlocked
+      // Une V1 officielle ne peut être remplacée qu'en mode Développeur explicite.
+      allowSeedOverwrite:payload?.overwrite===true && adminSessionUnlocked && developerSessionUnlocked
     });
   } catch (error) {
     return { ok:false, error:error && error.message ? error.message : String(error) };
