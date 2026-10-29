@@ -24,7 +24,7 @@ assert.deepEqual(indexed.map(file=>file.path).sort(),expectedNames.sort());
 for(const file of indexed){
   const bytes=fs.readFileSync(path.join(supplied,...file.path.split('/')));
   const blob=crypto.createHash('sha1')
-    .update(Buffer.from('blob '+bytes.length+'\\0')).update(bytes).digest('hex');
+    .update(Buffer.from('blob '+bytes.length+'\0')).update(bytes).digest('hex');
   assert.equal(file.sha1,blob,'Empreinte de la nouvelle horloge incorrecte : '+file.path);
   assert.equal(file.bytes,bytes.length,'Taille de la nouvelle horloge incorrecte : '+file.path);
 }
