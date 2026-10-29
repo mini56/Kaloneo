@@ -781,6 +781,47 @@
       return group;
     }
 
+    // Opt-in pour les questions de durée : deux cases, mais UNE seule
+    // réponse KALTEST enregistrée et notée en minutes (rétrocompatibilité).
+    if (type === 'duration' && question.response?.splitHoursMinutes === true) {
+      const group = document.createElement('div');
+      group.className = 'kaloneo-duration-parts';
+      group.dataset.questionId = question.id;
+      const stored = String(testState.answers[question.id] ?? '').trim();
+      const parts = stored.match(/^(\\d*)\\s*h\\s*(\\d*)\\s*m?$/i);
+      const total = parts ? null : parseDurationFr(stored);
+      const hoursValue = parts ? parts[1] : (total === null ? '' : String(Math.floor(total / 60)));
+      const minutesValue = parts ? parts[2] : (total === null ? '' : String(total % 60));
+      let hoursInput, minutesInput;
+      function addPart(label, value, isMinute) {
+        const part = document.createElement('label');
+        part.className = 'kaloneo-duration-part';
+        const caption = document.createElement('span');
+        caption.textContent = label;
+        const input = document.createElement('input');
+        input.className = 'step';
+        input.type = 'text';
+        input.inputMode = 'numeric';
+        input.autocomplete = 'off';
+        input.maxLength = isMinute ? 2 : 3;
+        input.setAttribute('aria-label', label);
+        input.value = value;
+        input.addEventListener('input', () => {
+          const digits = input.value.replace(/\\D/g, '').slice(0, input.maxLength);
+          if (input.value !== digits) input.value = digits;
+          const hours = hoursInput.value;
+          const minutes = minutesInput.value;
+          saveAnswer(test, question.id, hours || minutes ? hours + 'h' + minutes : '');
+        });
+        part.append(caption, input);
+        group.appendChild(part);
+        return input;
+      }
+      hoursInput = addPart('Heures', hoursValue, false);
+      minutesInput = addPart('Minutes', minutesValue, true);
+      return group;
+    }
+
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'step';
@@ -3426,6 +3467,7 @@
         wrap.appendChild(window.KaloneoSharedPresentation.renderQuestion({
           doc:document,question,
           className:'kaltest-builder-question',
+          rowTag:question.response?.type==='duration'&&question.response?.splitHoursMinutes===true?'div':'label',
           makeAnswer:()=>makeInput(test,question)
         }));
       }
