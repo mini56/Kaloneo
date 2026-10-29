@@ -613,15 +613,14 @@
       "id": "ID2_l",
       "prompt": "Déterminez, en heure et minute, la durée du parcours.",
       "response": {
-        "type": "text"
+        "type": "duration",
+        "normalizer": "duration-fr",
+        "splitHoursMinutes": true
       },
+      "acceptedMinutes": 135,
       "points": 1,
       "example": false,
       "answerLayout": "inline",
-      "acceptedAnswers": [
-        "2h15",
-        "2H15"
-      ],
       "unitInput": true
     },
     {
