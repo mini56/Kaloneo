@@ -264,6 +264,17 @@ jobs:
             git commit -m ("chore(release): synchronize KALONÉO "+$env:KALONEO_PUBLIC_VERSION)
             if($LASTEXITCODE -ne 0){throw 'Impossible de figer les versions dans GitHub'}
           }
+          # Une modification documentaire concurrente ne doit pas bloquer le Setup valide.
+          # En revanche, une modification fonctionnelle concurrente impose de retester.
+          git fetch origin "refs/heads/$env:GITHUB_REF_NAME"
+          if($LASTEXITCODE -ne 0){throw 'Impossible de lire la branche distante'}
+          $changed=@(git diff --name-only HEAD "origin/$env:GITHUB_REF_NAME" | Where-Object { $_ })
+          $unsafe=@($changed | Where-Object { $_ -notmatch '^(docs/|README\\.md$|\\.github/KALONEO_RELEASE_REQUEST\\.txt$)' })
+          if($unsafe.Count -gt 0){throw ('Code modifie pendant les tests : une nouvelle compilation est obligatoire : '+($unsafe -join ', '))}
+          if($changed.Count -gt 0){
+            git rebase "origin/$env:GITHUB_REF_NAME"
+            if($LASTEXITCODE -ne 0){git rebase --abort; throw 'Rebase documentaire impossible : publication interdite'}
+          }
           git push origin "HEAD:refs/heads/$env:GITHUB_REF_NAME"
           if($LASTEXITCODE -ne 0){throw 'Push du code testé impossible : Release interdite'}
           $commit=(git rev-parse HEAD).Trim()
