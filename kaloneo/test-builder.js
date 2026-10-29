@@ -168,6 +168,7 @@
       answerSuffix: '',
       manualEvaluation: false,
       normalizer: '',
+      splitHoursMinutes: false,
       acceptedAnswers: '',
       units: '',
       points: 1,
@@ -1298,6 +1299,7 @@
       body.appendChild(inputField('Choix proposés',q.options,value=>{q.options=value;changed();},{placeholder:'Choix 1; Choix 2; Choix 3'}));
     }
     if (q.responseType==='duration') {
+      body.appendChild(checkboxField('Deux cases séparées : Heures et Minutes',q.splitHoursMinutes===true,value=>{q.splitHoursMinutes=value;changed();renderBlocks();}));
       body.appendChild(inputField('Normalisation',q.normalizer||'duration-fr',value=>{q.normalizer=value;changed();},{placeholder:'duration-fr'}));
     }
 
@@ -3028,6 +3030,7 @@
     return window.KaloneoSharedPresentation.renderQuestion({
       doc:document,question:q,example:Boolean(q.example),
       className:'preview-question',
+      rowTag:q.responseType==='duration'&&q.splitHoursMinutes===true?'div':'label',
       makeAnswer:()=>{
         if(['single-choice','select','boolean'].includes(q.responseType)){
           const select=document.createElement('select');
@@ -3045,6 +3048,23 @@
           const input=document.createElement('textarea');input.rows=5;
           input.className='preview-free-text';input.placeholder='Votre réponse';
           return input;
+        }
+        if(q.responseType==='duration'&&q.splitHoursMinutes===true){
+          const group=document.createElement('div');
+          group.className='kaloneo-duration-parts';
+          for(const name of ['Heures','Minutes']){
+            const field=document.createElement('label');
+            field.className='kaloneo-duration-part';
+            const caption=document.createElement('span');
+            caption.textContent=name;
+            const input=document.createElement('input');
+            input.className='step';input.type='text';input.inputMode='numeric';
+            input.maxLength=name==='Minutes'?2:3;
+            input.setAttribute('aria-label',name);
+            field.append(caption,input);
+            group.appendChild(field);
+          }
+          return group;
         }
         const input=document.createElement('input');
         input.type='text';
