@@ -1,0 +1,36 @@
+name: "KALONÉO — réparer les horloges sans Setup"
+on:
+  push:
+    branches: [fix-r186-kaltest-source-unique-20261027]
+    paths:
+      - ".github/workflows/repair-kaloneo-horloges.yml"
+      - "seb-evalpro/scripts/kaloneo-repair-horloges.js"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  corriger-et-verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Calculer les empreintes réelles des 48 PNG et relier les deux fenêtres
+        run: node seb-evalpro/scripts/kaloneo-repair-horloges.js
+      - name: Vérifier les images et la notation du Bon de transport V1
+        run: node seb-evalpro/scripts/kaloneo-bon-transport-v1-smoke.js
+      - name: Enregistrer uniquement le catalogue, le test et son contrôle
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- TESTS_V1/l-1.0.0-test.json seb-evalpro/source/bibliotheque-images/catalogue-images.json seb-evalpro/scripts/kaloneo-bon-transport-v1-smoke.js
+          git diff --cached --check
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Bon de transport : horloges départ 04h00 et arrivée 06h15"
+          git push origin HEAD:fix-r186-kaltest-source-unique-20261027
