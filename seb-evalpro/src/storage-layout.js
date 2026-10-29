@@ -123,7 +123,7 @@ function documentsWordRoot(documentsPath) {
 }
 
 function migrateLegacyDocumentsStorage({ documentsPath, userDataPath }) {
-  if (!documentsPath || !userDataPath) throw new Error('Chemins de migration SEB EvalPro incomplets.');
+  if (!documentsPath || !userDataPath) throw new Error('Chemins de migration KALONÉO incomplets.');
 
   const legacyRoot = documentsWordRoot(documentsPath);
   const internalRoot = internalStorageRoot(userDataPath);
