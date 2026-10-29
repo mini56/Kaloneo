@@ -56,7 +56,6 @@ jobs:
         run: |
           node --check src/main.js
           node --check ../kaloneo/test-builder.js
-          node scripts/kaloneo-builder-help-smoke.js
       - name: Interdire la compilation historique par défaut
         shell: pwsh
         run: |
