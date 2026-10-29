@@ -23,6 +23,8 @@ assert(!/catch\s*\([^)]*\)\s*\{\s*\}/.test(read(bootstrap)), 'Démarrage silenci
 const setup = 'build/kaloneo-auto-release.yml';
 mustContain(setup, 'appId: fr.sauvegarde56.kaloneo');
 mustContain(setup, 'productName: "KALONÉO"');
+mustContain(setup, '  name: kaloneo');
+mustContain('build/kaloneo-v1-00-190-final-setup.yml', '  name: kaloneo');
 mustContain(setup, 'main: src/kaltest-pilot21-main.js');
 mustContain(setup, 'executableName: KALONEO');
 mustContain(setup, 'artifactName: "KALONEO-Setup-');
