@@ -53,6 +53,10 @@ for(const phrase of ['Contrôle avant génération : débloquer l’enregistreme
   if(!validationArticle.includes(phrase))fail('Explication du contrôle avant génération manquante : '+phrase);
 }
 if(!page.includes('href="#controle-avant-generation"'))fail('Lien depuis la sauvegarde ou le dépannage manquant');
+for(const name of ['B13.png','B14.png']) {
+  if(!validationArticle.includes('src="captures/'+name+'"'))
+    fail('Illustration '+name+' manquante dans Contrôle avant génération');
+}
 if(!validationArticle.includes('data-controls="toggle-validation-section"'))
   fail('La rubrique de validation ne décrit pas le bouton du contrôle');
 // Chaque nouveau bouton statique doit être rattaché à un chapitre d'aide,
@@ -87,10 +91,10 @@ for(const label of optionLabels){
   if(!normalized.includes(normalize(stem)))
     fail('Nouveau type de bloc sans explication : '+label);
 }
-// Les 12 captures validées doivent exister et rester hors ligne.
+// Les 14 captures validées doivent exister et rester hors ligne.
 const screenshots=[...page.matchAll(/<img\b[^>]*src="(captures\/B\d{2}\.png)"[^>]*>/g)];
 const unique=new Set(screenshots.map(m=>m[1]));
-for(let i=1;i<=12;i++){
+for(let i=1;i<=14;i++){
  const name='captures/B'+String(i).padStart(2,'0')+'.png';
  if(!unique.has(name))fail('Capture Builder absente : '+name);
 }
