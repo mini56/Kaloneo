@@ -1,0 +1,26 @@
+name: KALONÉO - Audit sécurité images en ligne
+on:
+  push:
+    branches: [fix-r60-tri-rearm-only-20261011]
+    paths:
+      - 'seb-evalpro/scripts/online-images-security-smoke.js'
+      - 'seb-evalpro/src/kaloneo-online-images.js'
+      - '.github/workflows/audit-online-images-security.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Syntaxe du module
+        run: node --check seb-evalpro/src/kaloneo-online-images.js
+      - name: Exécuter les tests d'images malveillantes
+        run: node seb-evalpro/scripts/online-images-security-smoke.js
+      - name: Vérifier accès désactivé dans Builder
+        shell: bash
+        run: grep -q 'id="open-online-images".*disabled' kaloneo/test-builder.html
