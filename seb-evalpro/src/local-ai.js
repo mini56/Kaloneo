@@ -25,7 +25,7 @@ function createLocalAiService({ app }) {
   function runtimeDir() {
     if (!app.isPackaged) return path.join(__dirname, '..', 'ai-runtime');
     const programData = process.env.ProgramData || process.env.PROGRAMDATA || 'C:\\ProgramData';
-    return path.join(programData, 'SEB EvalPro', 'IA');
+    return path.join(programData, 'KALONEO', 'IA');
   }
 
   function runtimePaths() {
@@ -109,7 +109,7 @@ function createLocalAiService({ app }) {
     const exitCode = Number(lastExitCode);
     const missingDll = exitCode === -1073741515 || exitCode === 3221225781;
     if (missingDll || /VCRUNTIME|MSVCP|Visual C\+\+/i.test(lastLogs + ' ' + lastStartError)) {
-      return 'Le composant Microsoft Visual C++ x64 requis par l’IA locale est absent ou endommagé. Réinstallez SEB EvalPro afin de réparer ce composant.';
+      return 'Le composant Microsoft Visual C++ x64 requis par l’IA locale est absent ou endommagé. Réinstallez KALONÉO afin de réparer ce composant.';
     }
     return '';
   }
@@ -359,7 +359,7 @@ function createLocalAiService({ app }) {
   }
 
   function stop() {
-    cancelCurrent('Arrêt de SEB EvalPro');
+    cancelCurrent('Arrêt de KALONÉO');
   }
 
   return { status, rewrite, cancelCurrent, stop };
