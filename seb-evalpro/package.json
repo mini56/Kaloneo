@@ -1,6 +1,6 @@
 {
   "name": "seb-evalpro",
-  "version": "1.0.208",
+  "version": "1.0.209",
   "description": "KALONÉO - évaluation locale des compétences",
   "main": "src/kaltest-pilot21-main.js",
   "author": "KALONÉO",
@@ -115,6 +115,6 @@
       "artifactName": "SEB-eval-PRO-${version}-Linux.${ext}"
     }
   },
-  "sebBuildNumber": 208,
-  "sebReleaseVersion": "1.00.208"
+  "sebBuildNumber": 209,
+  "sebReleaseVersion": "1.00.209"
 }
