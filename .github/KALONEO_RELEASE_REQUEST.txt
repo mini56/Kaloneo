@@ -55,3 +55,5 @@ Nouvelle version demandée : téléchargement des mises à jour dans %LOCALAPPDA
 2026-10-29 : reprise après correction du chemin canonique planning-trimestriel (ID planning_trimestriel) dans le contrôle bloquant des V1. Ne modifier aucune V1. Vérifier compilation, données candidates, signature SHA256, distribution MAJ.
 
 2026-10-29 : relance après réussite des vérifications Windows 1.00.208 mais échec du git push final dû à un commit concurrent. Workflow renforcé : accepter seulement les modifications documentaires et imposer retest en cas de changement fonctionnel. Publier uniquement si toutes les étapes sont vertes.
+
+2026-10-30 : Release après audit de numérotation, MAJ/SHA256 et KALTEST Windows verts (runs 41018534788, 41018534716, 41127031106). Contrôle générique des 8 V1 et des médias, y compris les images déjà présentes dans la bibliothèque. Conserver toutes les données candidats, les bilans, le fonctionnement offline et les V1 validées. Publication uniquement après contrôle du Setup et du miroir Kaloneo-MAJ.
