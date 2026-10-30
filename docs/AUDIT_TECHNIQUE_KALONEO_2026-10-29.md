@@ -45,7 +45,7 @@ seb-evalpro/package.json pointait sur src/main.js pendant que la Release Windows
 
 86 workflows sont conservés ; plusieurs audit-r172…r185-final-setup.yml et les anciens publish-kaloneo-v1-00-189 / 190 possèdent encore workflow_dispatch, contents:write et des commandes gh release create. Ils peuvent théoriquement être lancés manuellement malgré leur ancienneté. Conserver leurs tests de non-régression, mais retirer progressivement les pouvoirs de publication des workflows historiques, après relevé exhaustif des usages ; une seule chaîne officielle publiable.
 
-### A08 — MOYEN — contrôles V1 liés à des chemins codés en dur — NON RÉSOLU
+### A08 — MOYEN — contrôles V1 liés à des chemins codés en dur — CORRIGÉ DANS LE CODE, TEST WINDOWS À REFAIRE
 
 publish-kaloneo-next-version.yml vérifie explicitement offre et planning_trimestriel, en calculant le dossier via remplacement de l'underscore. Une autre V1 peut suivre une convention différente ; TESTS_V1-manifest.json contient pourtant le chemin exact et le SHA256. Remplacer les suppositions par une vérification générique du manifeste, des fichiers préparés, de leurs IDs, versions, sommes et images ; conserver en plus le contrôle du Bon de transport.
 
@@ -80,3 +80,9 @@ Aucun de ces commits ne publie de nouveau Setup. Les fichiers candidats, les bil
 La comparaison GitHub `kaloneo-1.00.208...fix-r186-kaltest-source-unique-20261027` confirme que les changements postérieurs à cette Release se limitent aux guides, au workflow officiel (commentaires), à `seb-evalpro/package.json` et à `seb-evalpro/src/main.js`. **Aucun fichier de définition de test V1, de bilan, de stockage candidat ou d'installateur NSIS n'a été modifié dans cet intervalle.**
 
 Après les correctifs, plusieurs contrôles CI déclenchés sur le dépôt privé (notamment 40941406187, 40941406157 et 40941406075) ont tous échoué avec `runner_id=0` et **zéro étape exécutée**. Ils ne valident ni n'invalident les corrections ; leur exécution sur un runner fonctionnel est obligatoire.
+
+## Correctif V1 vérifiable sans runner
+
+Le 30 octobre 2026, un contrôle générique `seb-evalpro/scripts/kaloneo-official-v1-manifest-smoke.js` a été ajouté à la publication officielle et à `npm run dist:win`. Il lit `TESTS_V1-manifest.json`, vérifie chaque V1 depuis son vrai chemin, compare intégralement le JSON généré à la définition issue de la source, puis contrôle les SHA256 des médias référencés. Il conserve l'exigence explicite des trois V1 `l`, `offre` et `planning_trimestriel` ; le smoke spécialisé Bon de transport demeure indépendant.
+
+Une simulation locale Node a été exécutée sans runner GitHub : préparation correcte acceptée, fichier V1 absent détecté, contenu JSON altéré détecté et média altéré détecté. Le test réel de compilation Windows reste nécessaire avant toute publication. **Aucun nouveau Setup n'a été déclenché.**
