@@ -88,20 +88,10 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Bon de transport : images originales, questions, notation ou bilan invalides'}
           npm run prepare:web
           if($LASTEXITCODE -ne 0){throw 'Préparation ou contrôle bloquant invalide'}
-          # Les V1 proviennent exclusivement de TESTS_V1 sur la branche compilee.
-          # Aucune synchronisation depuis main ni ecrasement de V1 validee.
-          foreach($id in @('offre','planning_trimestriel')){
-            $directory=$id.Replace('_','-')
-            $test=Join-Path 'app/web/kaltest/tests' ($directory+'/1.0.0/test.json')
-            if(!(Test-Path -LiteralPath $test)){throw "Nouvelle V1 $id absente du package prepare. Publication bloquee."}
-            $definition=Get-Content -Raw -LiteralPath $test | ConvertFrom-Json
-            if($definition.id -ne $id -or @($definition.questions).Count -lt 1){throw "Nouvelle V1 $id invalide. Publication bloquee."}
-            Write-Host "KALONEO_NEW_V1_INCLUDED=$id ; questions=$(@($definition.questions).Count)"
-          }
-          $transport='app/web/kaltest/tests/l/1.0.0/test.json'
-          if(!(Test-Path -LiteralPath $transport)){throw 'Bon de transport V1 manquant dans le Setup préparé'}
-          $candidate=Get-Content -Raw -LiteralPath $transport | ConvertFrom-Json
-          if($candidate.id -ne 'l' -or $candidate.title -ne 'Bon de transport.' -or @($candidate.questions).Count -ne 5){throw 'Bon de transport V1 différent du test validé'}
+          # Verifier le manifeste genere : tous les IDs, chemins, contenus et medias V1.
+          # Ne jamais construire les chemins depuis les identifiants.
+          node scripts/kaloneo-official-v1-manifest-smoke.js
+          if($LASTEXITCODE -ne 0){throw 'Controle bloquant : V1 officielle absente, alteree ou image manquante'}
           node scripts/kaloneo-release-version.js --verify
           if($LASTEXITCODE -ne 0){throw 'Différence de version avant Setup'}
           node scripts/kaltest-single-source-guard.js
