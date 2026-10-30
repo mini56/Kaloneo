@@ -18,6 +18,8 @@ function check() {
   const preparedRoot = path.join(appRoot, 'app', 'web', 'kaltest');
   const testsRoot = path.join(preparedRoot, 'tests');
   const assetsRoot = path.join(preparedRoot, 'v1-assets');
+  const suppliedSource = path.join(appRoot, 'source', 'bibliotheque-images');
+  const suppliedPackaged = path.join(appRoot, 'app', 'web', 'bibliotheque-images');
   const manifestPath = path.join(preparedRoot, 'TESTS_V1-manifest.json');
   if (!fs.existsSync(manifestPath)) fail('manifeste absent (lancer prepare:web).');
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
@@ -69,9 +71,35 @@ function check() {
       }
       collect(actual);
       for (const name of refs) {
-        const asset = path.join(assetsRoot, name);
-        if (!fs.existsSync(asset)) fail('media absent pour ' + id + ' : ' + name);
-        if (sha256(fs.readFileSync(asset)) !== name.slice(0, 64)) fail('media altere pour ' + id + ' : ' + name);
+        const expectedHash = name.slice(0, 64);
+        const embedded = path.join(assetsRoot, name);
+        if (fs.existsSync(embedded)) {
+          if (sha256(fs.readFileSync(embedded)) !== expectedHash) {
+            fail('media extrait altere pour ' + id + ' : ' + name);
+          }
+          continue;
+        }
+        // Une V1 peut reutiliser une image deja presente dans la bibliotheque
+        // standard, sans copier une seconde fois son contenu dans v1-assets.
+        // Exemple valide : Bon de transport / 02_fin_stage_01/05.png.
+        const sources = record.definition.kaloneoLibrary?.imageSources || [];
+        const entry = sources.find(source => source.sha256 === expectedHash);
+        if (!entry || typeof entry.sourcePath !== 'string') {
+          fail('media introuvable dans les ressources et le catalogue : ' + id + ' : ' + name);
+        }
+        const fromSource = path.resolve(suppliedSource, entry.sourcePath);
+        const fromPackage = path.resolve(suppliedPackaged, entry.sourcePath);
+        if (!fromSource.startsWith(suppliedSource + path.sep) ||
+            !fromPackage.startsWith(suppliedPackaged + path.sep)) {
+          fail('chemin image non autorise pour ' + id);
+        }
+        if (!fs.existsSync(fromSource) || !fs.existsSync(fromPackage)) {
+          fail('image de bibliotheque non fournie avec le Setup pour ' + id);
+        }
+        if (sha256(fs.readFileSync(fromSource)) !== expectedHash ||
+            sha256(fs.readFileSync(fromPackage)) !== expectedHash) {
+          fail('image bibliotheque absente ou alteree pour ' + id);
+        }
       }
       imageCount += refs.size;
       console.log('KALONEO_V1_VALIDEE=' + id + ' ; fichier=' + relative + ' ; images=' + refs.size);
