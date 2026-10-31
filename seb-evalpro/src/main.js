@@ -27,7 +27,7 @@ const { internalStorageRoot, documentsWordRoot, migrateLegacyDocumentsStorage } 
 const kaloneoFullParcoursRoute = require('./kaloneo-full-parcours-route');
 const { buildBilanDocxBuffer, decryptBilanDocxBuffer } = require('./bilan-docx-main');
 const { createPasswordStore } = require('./kaloneo-passwords');
-const {isTrustedAdminSender}=require('./kaloneo-ipc-sender-guard');
+const {isTrustedAdminSender,isApprovedRendererNavigation}=require('./kaloneo-ipc-sender-guard');
 const {checkUpdates}=require('./kaloneo-update-checker');
 const {officialFile,isVerifiedFile,stageVerifiedSetup,canInstallVerifiedUpdate}=require('./kaloneo-update-install');
 let pendingKaloneoUpdate=null;
@@ -828,13 +828,16 @@ function createWindow() {
     }
   });
 
-  // SEB_RUNTIME_OFFLINE : le plateau candidat ne doit jamais dépendre d'Internet.
+  // Les chargements gérés par Electron (loadFile) ne sont pas des liens de
+  // navigation du rendu. Une page de test importée ne peut donc pas ouvrir
+  // par elle-même une page Admin, même en aperçu et pendant une session Admin.
   mainWindow.webContents.on('will-navigate', (event, url) => {
-    try {
-      if (new URL(url).protocol !== 'file:') event.preventDefault();
-    } catch (_) {
-      event.preventDefault();
-    }
+    if(!isApprovedRendererNavigation({
+      fromUrl:mainWindow.webContents.getURL(),toUrl:url,
+      webRoot:path.join(__dirname,'..','app','web'),
+      adminUnlocked:adminSessionUnlocked,
+      adminResultsMode:adminCandidateResultsMode
+    })) event.preventDefault();
   });
   mainWindow.webContents.session.webRequest.onBeforeRequest(
     { urls: ['http://*/*', 'https://*/*'] },
