@@ -85,4 +85,27 @@ Après les correctifs, plusieurs contrôles CI déclenchés sur le dépôt priv�
 
 Le 30 octobre 2026, un contrôle générique `seb-evalpro/scripts/kaloneo-official-v1-manifest-smoke.js` a été ajouté à la publication officielle et à `npm run dist:win`. Il lit `TESTS_V1-manifest.json`, vérifie chaque V1 depuis son vrai chemin, compare intégralement le JSON généré à la définition issue de la source, puis contrôle les SHA256 des médias référencés. Il conserve l'exigence explicite des trois V1 `l`, `offre` et `planning_trimestriel` ; le smoke spécialisé Bon de transport demeure indépendant.
 
-Une simulation locale Node a été exécutée sans runner GitHub : préparation correcte acceptée, fichier V1 absent détecté, contenu JSON altéré détecté et média altéré détecté. Le test réel de compilation Windows reste nécessaire avant toute publication. **Aucun nouveau Setup n'a été déclenché.**
+Le contrôle a ensuite été corrigé pour reconnaître les images présentes dans la bibliothèque existante, sans duplication. Il a été exécuté avec succès par GitHub Actions sous Windows (run 41127031106), puis intégré à la compilation officielle et validé dans la Release 1.00.209 (run 41127345796). Les essais locaux évoqués antérieurement ne disposaient pas de trace d'exécution vérifiable et ne sont pas retenus comme preuve.
+
+## Actualisation du 31 octobre 2026 — suite à la Release 1.00.209
+
+**État de référence :** `kaloneo-1.00.209`, compilation et distribution entièrement vertes, run `41127345796`. Le dépôt de distribution publique contient le Setup et son SHA256 identiques à la source.
+
+**Correctifs enregistrés APRÈS cette Release** (ils ne sont pas encore dans le Setup 1.00.209) :
+
+- **Aperçu Builder** : `seb-evalpro/src/main.js`, `setSkipTaskbar(false)` réservé à l'aperçu Administrateur ; le mode candidat conserve `setSkipTaskbar(true)`. Commit `d03571e`. Contrôle d'interface Windows à faire sur PC utilisateur.
+- **Anciens workflows** : 16 workflows historiques de publication R172–R184, R185 et 1.00.189/190 en `contents: read`, avec étape `gh release create` explicitement désactivée (`if: false`). Les tests préexistants restent actifs. **Le workflow officiel n'est pas désactivé.**
+- **Configuration electron-builder de secours** : `seb-evalpro/package.json` réaligné avec `fr.sauvegarde56.kaloneo`, le point d'entrée KALONÉO, les ressources et l'icône. Les artefacts construits hors du workflow officiel portent le nom `KALONEO-NON-VALIDE` ; seul le workflow officiel peut publier une version reconnue par le moteur de mise à jour.
+- **Antirégression** : nouveau `seb-evalpro/scripts/kaloneo-release-safety-guard.js`, exécuté dans `npm run prepare:web`. Il vérifie l'icône d'aperçu, la protection des V1 et les 16 workflows historiques.
+- **MAJ depuis un dépôt privé** : le workflow du dépôt public `mini56/Kaloneo-MAJ` accepte le secret facultatif `KALONEO_SOURCE_READ_TOKEN`, jeton fine-grained limité à la lecture de `mini56/Kaloneo`. Le fonctionnement de copie depuis le dépôt public demeure inchangé. **Ce secret doit être configuré par le propriétaire avant de rendre la source privée si l'on veut continuer les nouvelles synchronisations.**
+
+**Contrôles Windows automatiques après modifications** : runs `41185367446` (KALTEST), `41185367323` (numérotation) et `41185367279` (MAJ / SHA256) tous **success**. Ces audits ne remplacent pas une installation manuelle et ne constituent pas un nouveau Setup.
+
+**Restent à traiter avec validation Windows et précautions** :
+- verrou natif de la touche Windows pendant l'évaluation : `TEMP_ALLOW_WINDOWS_RECOVERY=true` actuellement ; ne pas activer brutalement le verrou sans mécanisme de secours opérationnel ;
+- étude du passage des fenêtres utilisant `sandbox:false` vers un contexte plus isolé : tests d'import JSON, Builder, images et preload nécessaires ;
+- confirmer sur Windows 10/11 que l'aperçu apparaît bien dans la barre des tâches et restitue la navigation au Builder ;
+- configuration réelle du jeton de lecture avant passage du dépôt principal en privé, et test de synchronisation des Releases privées ;
+- validation finale des bilans Word, Replay et candidats sur les deux PC après la prochaine version.
+
+**Aucune nouvelle Release ne doit être demandée automatiquement par ces modifications** : déclencher le workflow officiel uniquement après vérifications fonctionnelles.
