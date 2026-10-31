@@ -6,7 +6,7 @@ on:
       - '.github/workflows/publish-kaloneo-v1-00-189-release.yml'
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
   actions: read
 jobs:
   publish-verified-windows:
@@ -40,6 +40,8 @@ jobs:
           if($hash -ne '1C387333F1FA58F82B3EDB0BB41558D621C308AC17D2D7253F291ABCC4AA5930'){throw "Unexpected SHA256 $hash"}
           Write-Host "KALONEO_100189_EXACT_SETUP_VERIFIED=OK SHA256=$hash"
       - name: Publish GitHub Release without rebuilding or changing executable
+        # Historique en lecture seule : les controles restent disponibles.
+        if: ${{ false }}
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
