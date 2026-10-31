@@ -27,6 +27,7 @@ const { internalStorageRoot, documentsWordRoot, migrateLegacyDocumentsStorage } 
 const kaloneoFullParcoursRoute = require('./kaloneo-full-parcours-route');
 const { buildBilanDocxBuffer, decryptBilanDocxBuffer } = require('./bilan-docx-main');
 const { createPasswordStore } = require('./kaloneo-passwords');
+const {isTrustedAdminSender}=require('./kaloneo-ipc-sender-guard');
 const {checkUpdates}=require('./kaloneo-update-checker');
 const {officialFile,isVerifiedFile,stageVerifiedSetup,canInstallVerifiedUpdate}=require('./kaloneo-update-install');
 let pendingKaloneoUpdate=null;
@@ -518,6 +519,16 @@ function calculateAdaptiveZoom() {
 function applyAdaptiveZoom() {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   mainWindow.webContents.setZoomFactor(calculateAdaptiveZoom());
+}
+
+// Les commandes administratives ne doivent jamais provenir de l'aperçu
+// KALTEST, d'une iframe ou d'une fenêtre secondaire, même si l'Admin est ouvert.
+function isTrustedAdminIpcSender(event) {
+  return isTrustedAdminSender(event,{
+    mainWindow,adminUnlocked:adminSessionUnlocked,
+    adminResultsMode:adminCandidateResultsMode,
+    webRoot:path.join(__dirname,'..','app','web')
+  });
 }
 
 // SEB_CANDIDATE_KIOSK_GUARD
@@ -1114,6 +1125,7 @@ ipcMain.handle('kaloneo-developer:status', () => ({
   unlocked:adminSessionUnlocked && developerSessionUnlocked
 }));
 ipcMain.handle('kaloneo-developer:unlock', (_event,password) => {
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if(!adminSessionUnlocked)return {ok:false,error:'Ouvrez d’abord la session Administrateur.'};
   if(getCandidateStore().getActiveCandidate())
     return {ok:false,error:'Impossible pendant une évaluation active.'};
@@ -1123,6 +1135,7 @@ ipcMain.handle('kaloneo-developer:unlock', (_event,password) => {
   return {ok:true,unlocked:true};
 });
 ipcMain.handle('kaloneo-developer:export-v1', async (_event,definition)=>{
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if(!adminSessionUnlocked || !developerSessionUnlocked)
     return {ok:false,error:'Mode Développeur requis.'};
   if(getCandidateStore().getActiveCandidate())
@@ -1170,6 +1183,7 @@ ipcMain.handle('admin:lock', () => {
 });
 
 ipcMain.handle('candidate:set-admin-export-context', (_event, candidateId) => {
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!adminSessionUnlocked) return false;
   const root = path.join(sebInternalRoot(), 'Candidats');
   const record = getCandidateTransfer().listCandidateRecords(root, false)
@@ -1208,6 +1222,7 @@ ipcMain.handle('candidate:complete-active', (_event, mode) => {
 });
 
 ipcMain.handle('admin:export-candidates', async (event, password, destinationOptions = {}) => {
+  if (!isTrustedAdminIpcSender(event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!mainWindow || !adminSessionUnlocked) return { ok: false, error: 'Accès administrateur requis.' };
   try {
     const mode = String(destinationOptions && destinationOptions.mode || 'existing');
@@ -1278,6 +1293,7 @@ ipcMain.handle('admin:export-candidates', async (event, password, destinationOpt
 });
 
 ipcMain.handle('admin:import-candidates', async (_event, password) => {
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!editionCapabilities.canImport) return { ok:false, error:'Import réservé à la version Administrateur.' };
   if (!mainWindow || !adminSessionUnlocked) return { ok: false, error: 'Accès administrateur requis.' };
   try {
@@ -1359,6 +1375,7 @@ ipcMain.handle('kaloneo-library:list-tests', () => {
 });
 
 ipcMain.on('kaloneo-library:test-metadata-sync', (event) => {
+  if (!isTrustedAdminIpcSender(event)) { event.returnValue={ok:false,error:'Page Administrateur requise.'}; return; }
   if (!adminSessionUnlocked) {
     event.returnValue = { ok:false, error:'Accès administrateur requis.' };
     return;
@@ -1381,6 +1398,7 @@ ipcMain.handle('kaloneo-library:get-test', (_event, payload) => {
 });
 
 ipcMain.handle('kaloneo-library:save-test', (_event, payload) => {
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!adminSessionUnlocked) return { ok:false, error:'Accès administrateur requis.' };
   if (getCandidateStore().getActiveCandidate()) return { ok:false, error:'Impossible de modifier les tests pendant une évaluation active.' };
   try {
@@ -1395,6 +1413,7 @@ ipcMain.handle('kaloneo-library:save-test', (_event, payload) => {
 });
 
 ipcMain.handle('kaloneo-library:delete-test', (_event, payload) => {
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!adminSessionUnlocked) return { ok:false, error:'Accès administrateur requis.' };
   if (getCandidateStore().getActiveCandidate()) return { ok:false, error:'Impossible de supprimer un test pendant une évaluation active.' };
   try {
@@ -1405,6 +1424,7 @@ ipcMain.handle('kaloneo-library:delete-test', (_event, payload) => {
 });
 
 ipcMain.handle('kaloneo-transfer:export-test', async (_event, payload) => {
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!adminSessionUnlocked) return { ok:false, error:'Accès administrateur requis.' };
   if (getCandidateStore().getActiveCandidate()) return { ok:false, error:'Impossible d’exporter pendant une évaluation active.' };
   try {
@@ -1424,7 +1444,8 @@ ipcMain.handle('kaloneo-transfer:export-test', async (_event, payload) => {
   }
 });
 
-ipcMain.handle('kaloneo-transfer:import-test', async () => {
+ipcMain.handle('kaloneo-transfer:import-test', async (event) => {
+  if (!isTrustedAdminIpcSender(event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!adminSessionUnlocked) return { ok:false, error:'Accès administrateur requis.' };
   if (getCandidateStore().getActiveCandidate()) return { ok:false, error:'Impossible d’importer pendant une évaluation active.' };
   try {
@@ -1447,6 +1468,7 @@ ipcMain.handle('kaloneo-transfer:import-test', async () => {
 });
 
 ipcMain.handle('kaloneo-transfer:export-parcours', async (_event, id) => {
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!adminSessionUnlocked) return { ok:false, error:'Accès administrateur requis.' };
   if (getCandidateStore().getActiveCandidate()) return { ok:false, error:'Impossible d’exporter pendant une évaluation active.' };
   try {
@@ -1468,7 +1490,8 @@ ipcMain.handle('kaloneo-transfer:export-parcours', async (_event, id) => {
   }
 });
 
-ipcMain.handle('kaloneo-transfer:import-parcours', async () => {
+ipcMain.handle('kaloneo-transfer:import-parcours', async (event) => {
+  if (!isTrustedAdminIpcSender(event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!adminSessionUnlocked) return { ok:false, error:'Accès administrateur requis.' };
   if (getCandidateStore().getActiveCandidate()) return { ok:false, error:'Impossible d’importer pendant une évaluation active.' };
   try {
@@ -1506,6 +1529,7 @@ ipcMain.handle('kaloneo-library:get-image', (_event, id) => {
 });
 
 ipcMain.handle('kaloneo-library:save-image', (_event, payload) => {
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!adminSessionUnlocked) return { ok:false, error:'Accès administrateur requis.' };
   if (getCandidateStore().getActiveCandidate()) return { ok:false, error:'Impossible de modifier la bibliothèque d’images pendant une évaluation active.' };
   try {
@@ -1515,7 +1539,8 @@ ipcMain.handle('kaloneo-library:save-image', (_event, payload) => {
   }
 });
 
-ipcMain.handle('kaloneo-library:export-image-zip', async () => {
+ipcMain.handle('kaloneo-library:export-image-zip', async (event) => {
+  if (!isTrustedAdminIpcSender(event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!adminSessionUnlocked) return { ok:false, error:'Accès administrateur requis.' };
   if (getCandidateStore().getActiveCandidate()) return { ok:false, error:'Impossible d’exporter les images pendant une évaluation active.' };
   try {
@@ -1534,7 +1559,8 @@ ipcMain.handle('kaloneo-library:export-image-zip', async () => {
   }
 });
 
-ipcMain.handle('kaloneo-library:import-image-zip', async () => {
+ipcMain.handle('kaloneo-library:import-image-zip', async (event) => {
+  if (!isTrustedAdminIpcSender(event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!adminSessionUnlocked) return { ok:false, error:'Accès administrateur requis.' };
   if (getCandidateStore().getActiveCandidate()) return { ok:false, error:'Impossible de modifier la bibliothèque d’images pendant une évaluation active.' };
   try {
@@ -1569,6 +1595,7 @@ ipcMain.handle('kaloneo-library:get-mask-screen', (_event, ref) => {
 });
 
 ipcMain.handle('kaloneo-library:save-mask-screen', (_event, payload) => {
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!adminSessionUnlocked) return { ok:false, error:'Accès administrateur requis.' };
   if (getCandidateStore().getActiveCandidate()) return { ok:false, error:'Impossible de modifier les écrans de masquage pendant une évaluation active.' };
   try {
@@ -1617,6 +1644,7 @@ ipcMain.handle('kaloneo-library:get-selected-parcours', () => {
 });
 
 ipcMain.handle('kaloneo-library:select-parcours', (_event, payload) => {
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!adminSessionUnlocked) return { ok:false, error:'Accès administrateur requis.' };
   if (getCandidateStore().getActiveCandidate()) return { ok:false, error:'Impossible de changer de parcours pendant une évaluation active.' };
   try {
@@ -1683,6 +1711,7 @@ ipcMain.on('kaloneo-library:selected-runtime-sync', (event) => {
 });
 
 ipcMain.handle('kaloneo-library:save-parcours', (_event, payload) => {
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!adminSessionUnlocked) return { ok:false, error:'Accès administrateur requis.' };
   if (getCandidateStore().getActiveCandidate()) return { ok:false, error:'Impossible de modifier les parcours pendant une évaluation active.' };
   try {
@@ -1693,6 +1722,7 @@ ipcMain.handle('kaloneo-library:save-parcours', (_event, payload) => {
 });
 
 ipcMain.handle('kaloneo-mask:open-preview', (_event, definition) => {
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!mainWindow || mainWindow.isDestroyed() || !adminSessionUnlocked) {
     return { ok:false, error:'Accès administrateur requis.' };
   }
@@ -1747,6 +1777,7 @@ ipcMain.handle('kaloneo-mask:close-preview', () => {
 });
 
 ipcMain.handle('kaloneo-builder:open-preview', (_event, definition, editorHistory) => {
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!mainWindow || mainWindow.isDestroyed() || !adminSessionUnlocked) {
     return { ok:false, error:'Accès administrateur requis.' };
   }
@@ -2024,6 +2055,7 @@ ipcMain.handle('kaloneo-builder:close-preview', () => {
 });
 
 ipcMain.handle('admin:export-bilan-docx', async (_event, payload) => {
+  if (!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
   if (!editionCapabilities.canBilan || !adminSessionUnlocked) {
     return { ok:false, error:'Accès administrateur requis.' };
   }
