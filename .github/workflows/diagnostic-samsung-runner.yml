@@ -2,11 +2,6 @@ name: Diagnostic Samsung KALONEO-RUNNERS
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/diagnostic-samsung-runner.yml'
 
 permissions:
   contents: read
@@ -32,3 +27,4 @@ jobs:
             if errorlevel 1 (echo %%T : ABSENT) else (echo %%T : PRESENT)
           )
           echo Diagnostic termine. Aucun changement sur le PC.
+          exit /b 0
