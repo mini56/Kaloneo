@@ -1,0 +1,72 @@
+name: "Samsung runner — installer outils de compilation"
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/samsung-runner-prepare.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: samsung-runner-prepare
+  cancel-in-progress: false
+
+jobs:
+  prepare-samsung:
+    name: "Preparer Git et Node uniquement sur Samsung"
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 30
+    steps:
+      - name: "Verifier l'ordinateur et les outils de telechargement"
+        shell: cmd
+        run: |
+          if /I not "%RUNNER_NAME%"=="KALONEO-RUNNERS" exit /b 2
+          echo Ordinateur : %RUNNER_NAME%
+          where curl.exe || exit /b 3
+          where tar.exe || exit /b 4
+          where powershell.exe || exit /b 5
+          echo Preparation limitee au dossier actions-runner\runner-tools.
+
+      - name: "Installer Git portable, SHA256 verifie"
+        shell: cmd
+        run: |
+          set "TOOLS=%USERPROFILE%\actions-runner\runner-tools"
+          if not exist "%TOOLS%\git\cmd\git.exe" (
+            curl.exe --fail --location --retry 2 --connect-timeout 30 --output "%RUNNER_TEMP%\kaloneo-mingit.zip" "https://github.com/git-for-windows/git-snapshots/releases/download/2.56.0.4/MinGit-2.56.0.4-64-bit.zip"
+            if errorlevel 1 exit /b 10
+            powershell.exe -NoProfile -NonInteractive -Command "if ((Get-FileHash -LiteralPath (Join-Path $env:RUNNER_TEMP 'kaloneo-mingit.zip') -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'e3bf78351fe777fba47ddee5950082f8a98bb0f02604fdc7ba3ee2cb68ffa877') { exit 11 }"
+            if errorlevel 1 exit /b 11
+            if not exist "%TOOLS%\git" mkdir "%TOOLS%\git"
+            tar.exe -xf "%RUNNER_TEMP%\kaloneo-mingit.zip" -C "%TOOLS%\git"
+            if errorlevel 1 exit /b 12
+          )
+          "%TOOLS%\git\cmd\git.exe" --version
+          if errorlevel 1 exit /b 13
+
+      - name: "Installer Node.js 24 LTS et npm portables, SHA256 verifie"
+        shell: cmd
+        run: |
+          set "TOOLS=%USERPROFILE%\actions-runner\runner-tools"
+          if not exist "%TOOLS%\node-v24.22.0-win-x64\node.exe" (
+            curl.exe --fail --location --retry 2 --connect-timeout 30 --output "%RUNNER_TEMP%\kaloneo-node.zip" "https://nodejs.org/dist/v24.22.0/node-v24.22.0-win-x64.zip"
+            if errorlevel 1 exit /b 20
+            powershell.exe -NoProfile -NonInteractive -Command "if ((Get-FileHash -LiteralPath (Join-Path $env:RUNNER_TEMP 'kaloneo-node.zip') -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'f9683a19877e12a9b167305c8db71040d812876359de21f0d2e97c3f321f80c3') { exit 21 }"
+            if errorlevel 1 exit /b 21
+            if not exist "%TOOLS%" mkdir "%TOOLS%"
+            tar.exe -xf "%RUNNER_TEMP%\kaloneo-node.zip" -C "%TOOLS%"
+            if errorlevel 1 exit /b 22
+          )
+          "%TOOLS%\node-v24.22.0-win-x64\node.exe" --version
+          if errorlevel 1 exit /b 23
+          call "%TOOLS%\node-v24.22.0-win-x64\npm.cmd" --version
+          if errorlevel 1 exit /b 24
+
+      - name: "Ajouter les outils au PATH utilisateur, sans droits administrateur"
+        shell: cmd
+        run: |
+          powershell.exe -NoProfile -NonInteractive -Command "$root=Join-Path $env:USERPROFILE 'actions-runner\runner-tools'; $dirs=@((Join-Path $root 'git\cmd'),(Join-Path $root 'node-v24.22.0-win-x64')); $p=[Environment]::GetEnvironmentVariable('Path','User'); if($null -eq $p){$p=''}; foreach($d in $dirs){if(($p -split ';') -notcontains $d){$p=($p.TrimEnd(';')+';'+$d).TrimStart(';')}}; [Environment]::SetEnvironmentVariable('Path',$p,'User'); Write-Host 'PATH utilisateur configure. Relancer le runner pour appliquer.'"
+          if errorlevel 1 exit /b 30
+          echo SUCCES : Git, Node.js et npm presents. Aucun fichier KALONEO modifie.
