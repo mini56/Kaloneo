@@ -5,7 +5,7 @@ const { listCandidateDirs, selectCandidate } = require('./candidate-folder-utils
 const { readJsonFile, encodeJson, migrateJsonTree, encryptLocalFileBuffer, decryptLocalFileBuffer, isEncryptedLocalFileBuffer } = require('./candidate-data-crypto');
 const { computeArchiveIntegrity } = require('./replay-archive-integrity');
 
-module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlocked, getActiveCandidate = null, buildNumber, dataRoot = null }) {
+module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlocked, isTrustedAdminIpcSender = () => true, getActiveCandidate = null, buildNumber, dataRoot = null }) {
   const BUILD = String(buildNumber || 'DEV');
   const TYPE = 'SEB_EVALPRO_PARCOURS_ARCHIVE';
   const SCHEMA_VERSION = 2;
@@ -584,11 +584,13 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
   }
 
   ipcMain.handle('admin:load-candidate-parcours', (_event, candidateId, requestedName) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     return loadCandidateArchive(candidateId, requestedName);
   });
 
   ipcMain.handle('admin:get-candidate-parcours-slide', (_event, candidateId, requestedName, requestedFile) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     const loaded = loadCandidateArchive(candidateId, requestedName);
     if (!loaded || !loaded.ok || loaded.legacy) return loaded && !loaded.ok ? loaded : { ok:false, error:'Replay visuel indisponible.' };
@@ -612,7 +614,8 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
     }
   });
 
-  ipcMain.handle('admin:list-parcours', () => {
+  ipcMain.handle('admin:list-parcours', (event) => {
+    if(!isTrustedAdminIpcSender(event)) return [];
     if (!getAdminUnlocked()) return [];
     try {
       ensureParcoursDir();
@@ -664,6 +667,7 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
   });
 
   ipcMain.handle('admin:load-parcours', (_event, requestedName) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok: false, error: 'Accès administrateur requis.' };
     const name = path.basename(String(requestedName || ''));
     if (!name) return { ok: false, error: 'Archive invalide.' };
@@ -713,6 +717,7 @@ module.exports = function registerCandidateReplay({ app, ipcMain, getAdminUnlock
   });
 
   ipcMain.handle('admin:get-parcours-slide', (_event, requestedName, requestedFile) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok: false, error: 'Accès administrateur requis.' };
     const name = path.basename(String(requestedName || ''));
     const file = path.basename(String(requestedFile || ''));
