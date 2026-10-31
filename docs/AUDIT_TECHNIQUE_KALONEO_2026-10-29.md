@@ -109,3 +109,28 @@ Le contrôle a ensuite été corrigé pour reconnaître les images présentes da
 - validation finale des bilans Word, Replay et candidats sur les deux PC après la prochaine version.
 
 **Aucune nouvelle Release ne doit être demandée automatiquement par ces modifications** : déclencher le workflow officiel uniquement après vérifications fonctionnelles.
+
+## Contrôle Electron et IPC — 31 octobre 2026
+
+**Périmètre :** `src/main.js`, `src/preload.js`, `src/candidate-catalog-main.js`, `src/replay-main.js`, `src/bilan-history-main.js`, `src/session-close.js`, fenêtres Builder, aperçu KALTEST et gestion des navigations.
+
+**Constat confirmé :** l'isolation `contextIsolation:true` et `nodeIntegration:false` est déjà active, mais certaines commandes IPC sensibles contrôlaient uniquement le booléen global `adminSessionUnlocked`. La fenêtre principale charge également les pages d'aperçu candidat avec le preload général. Un contenu d'aperçu ne doit pas pouvoir profiter d'une session Admin ouverte pour appeler des commandes réservées aux pages Admin.
+
+**Correctifs ajoutés au dépôt (postérieurs à la 1.00.209) :**
+
+- `src/kaloneo-ipc-sender-guard.js` : validation du WebContents principal, de son cadre principal (pas d'iframe), de l'URL `file:` et du chemin exact des pages Administrateur dans `app/web`. Le moteur candidat `kaltest-pilot2.html` et l'accueil `candidateWelcome=1` n'ont jamais droit aux commandes privilégiées, même pendant un aperçu Admin. `qcmv1.0.html` n'est autorisé qu'en contexte explicite de résultats administratifs.
+- `src/main.js` : filtrage de 20 commandes sensibles (V1, images, import/export, parcours, Word, prévisualisations) et d'un canal synchrone de métadonnées ; conservation du passage Admin normal et des fonctions candidat.
+- `src/candidate-catalog-main.js` : filtrage des opérations portant sur les identités, les bilans, les Word, les sauvegardes et la corbeille, y compris les IPC synchrones de sauvegarde.
+- `src/replay-main.js`, `src/bilan-history-main.js`, `src/session-close.js` : filtrage des demandes de lecture Replay, de sauvegarde de bilans et d'arrêt de l'application depuis une page non administrative.
+- Navigation locale : les pages de tests ne peuvent plus forcer `window.location` vers le Builder ou une page Admin ; le retour à la page d'accueil candidat reste permis. Les appels `mainWindow.loadFile()` du programme ne sont pas modifiés.
+- `scripts/kaloneo-ipc-security-smoke.js` : test sans navigateur des refus de demandes depuis un test, une iframe, une fenêtre secondaire, un fichier local non autorisé ou un site Web ; vérification du maintien des parcours Admin légitimes. Le contrôle est intégré à `npm run prepare:web`.
+
+**Vérifications automatiques exécutées sous Windows :**
+
+- <https://github.com/mini56/Kaloneo/actions/runs/41187901570> : **SUCCESS** ; préparation web, nouveau contrôle IPC, intégration KALTEST et véritables essais Electron.
+- <https://github.com/mini56/Kaloneo/actions/runs/41187845451> : **SUCCESS** ; menus Builder Type / Zone et insertion de blocs avec souris, fichiers candidats chiffrés, protection des exports et aperçu miniature.
+- Aucun JSON de test V1, aucun barème, aucune grille de bilan et aucun contenu de la page Builder n'a été modifié.
+
+**Limites restantes :** ce contrôle ne constitue pas un audit d'intrusion complet, ne prouve pas l'impossibilité de tout XSS provenant d'un test ou d'un champ libre, et ne remplace pas les essais manuels sur les deux PC Windows. `sandbox:false` reste nécessaire au preload existant tant qu'il utilise `require` et les modules Node liés aux dossiers/replay. Ne pas activer le sandbox sans refonte dédiée du preload et tests de régression. Les canaux candidat autorisés (état de parcours, Replay en cours) conservent leur architecture ; ils pourront faire l'objet d'une revue plus fine séparée.
+
+**Publication :** aucun nouveau Setup n'a été demandé. La Release publique 1.00.209 demeure la version distribuée ; les corrections de sécurité sont dans la branche de développement uniquement.
