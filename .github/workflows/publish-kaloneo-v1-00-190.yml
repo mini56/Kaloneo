@@ -2,7 +2,7 @@ name: "KALONÉO 1.00.190 — Setup Windows testé et nouvelle Release"
 on:
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
   actions: read
 concurrency:
   group: kaloneo-release-1-00-190
@@ -138,6 +138,8 @@ jobs:
           compression-level: 0
           retention-days: 30
       - name: Publish one GitHub Release from the exact tested executable
+        # Historique en lecture seule : les controles restent disponibles.
+        if: ${{ false }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
