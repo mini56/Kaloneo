@@ -73,7 +73,7 @@
     "electron-builder": "26.15.3"
   },
   "build": {
-    "appId": "fr.sauvegarde56.sebevalpro",
+    "appId": "fr.sauvegarde56.kaloneo",
     "productName": "KALONÉO",
     "asar": true,
     "compression": "store",
@@ -84,15 +84,16 @@
     ],
     "extraResources": [
       {
-        "from": "build/candidate-keyguard.exe",
-        "to": "candidate-keyguard.exe"
+        "from": "build/pilot-resources/kaloneo.ico",
+        "to": "kaloneo-taskbar.ico"
       }
     ],
     "win": {
       "target": [
         "nsis"
       ],
-      "icon": "build/app-icon.ico"
+      "icon": "build/pilot-resources/kaloneo.ico",
+      "executableName": "KALONEO"
     },
     "nsis": {
       "oneClick": false,
@@ -100,19 +101,25 @@
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "shortcutName": "KALONÉO",
-      "installerIcon": "build/app-icon.ico",
-      "uninstallerIcon": "build/app-icon.ico",
-      "installerHeader": "build/installerHeader.bmp",
+      "installerIcon": "build/pilot-resources/kaloneo.ico",
+      "uninstallerIcon": "build/pilot-resources/kaloneo.ico",
+      "installerHeader": "build/pilot-resources/installerHeader.bmp",
       "include": "build/installer.nsh",
       "deleteAppDataOnUninstall": false,
-      "artifactName": "SEB-eval-PRO-${version}-Windows-Setup.${ext}"
+      "artifactName": "KALONEO-NON-VALIDE-${version}-Windows-Setup.${ext}",
+      "installerSidebar": "build/pilot-resources/installerSidebar.bmp",
+      "uninstallerSidebar": "build/pilot-resources/installerSidebar.bmp"
     },
     "linux": {
       "target": [
         "AppImage"
       ],
       "category": "Education",
-      "artifactName": "SEB-eval-PRO-${version}-Linux.${ext}"
+      "artifactName": "KALONEO-NON-VALIDE-${version}-Linux.${ext}"
+    },
+    "extraMetadata": {
+      "name": "kaloneo",
+      "main": "src/kaltest-pilot21-main.js"
     }
   },
   "sebBuildNumber": 209,
