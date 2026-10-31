@@ -44,4 +44,35 @@ function isTrustedAdminSender(event,options={}){
     return false;
   return true;
 }
-module.exports={isTrustedAdminSender,ADMIN_PAGES};
+
+// Une page test ne doit pas pouvoir s'attribuer les autorisations Admin en
+// naviguant simplement vers un fichier HTML d'administration via file://.
+function isApprovedRendererNavigation({fromUrl,toUrl,adminUnlocked=false,adminResultsMode=false,webRoot}={}){
+  if(!webRoot)return false;
+  const relativeFor=urlText=>{
+    try{
+      const parsed=new URL(urlText);
+      if(parsed.protocol!=='file:')return null;
+      const relative=path.relative(path.resolve(webRoot),path.resolve(fileURLToPath(parsed)))
+        .split(path.sep).join('/');
+      if(relative==='..'||relative.startsWith('../')||path.isAbsolute(relative))return null;
+      return {relative,url:parsed};
+    }catch(_){return null;}
+  };
+  const destination=relativeFor(toUrl);
+  if(!destination)return false;
+  const target=destination.relative;
+  const privileged=ADMIN_PAGES.has(target);
+  if(!privileged)return true;
+  if(target==='admin-candidats.html'&&
+      destination.url.searchParams.get('candidateWelcome')==='1')return true;
+  if(!adminUnlocked)return false;
+  const source=relativeFor(fromUrl);
+  if(!source)return false;
+  if(source.relative==='admin-candidats.html' &&
+      source.url.searchParams.get('candidateWelcome')==='1')return false;
+  return ADMIN_PAGES.has(source.relative) ||
+    (source.relative==='qcmv1.0.html'&&adminResultsMode===true);
+}
+
+module.exports={isTrustedAdminSender,isApprovedRendererNavigation,ADMIN_PAGES};
