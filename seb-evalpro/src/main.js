@@ -2150,6 +2150,7 @@ require('./candidate-catalog-main')({
   app,
   ipcMain,
   getAdminUnlocked: () => adminSessionUnlocked,
+  isTrustedAdminIpcSender,
   getAdminDocumentPassword: () => adminSessionDocumentPassword,
   getActiveCandidate: () => getCandidateStore().getActiveCandidate(),
   dataRoot: sebInternalRoot()
