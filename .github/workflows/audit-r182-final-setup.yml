@@ -7,7 +7,7 @@ on:
       - '.github/workflows/audit-r182-final-setup.yml'
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
   actions: read
 concurrency:
   group: kaloneo-r182-data-protection-${{ github.ref }}
@@ -320,6 +320,8 @@ jobs:
         run: |
           Write-Host 'R60_V1_COMPLETE_REGRESSION=SUCCESS: required workflow job r60-integrated already green'
       - name: Publish single R182 Build 185 Windows Setup after all tests
+        # Historique en lecture seule : les controles restent disponibles.
+        if: ${{ false }}
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
