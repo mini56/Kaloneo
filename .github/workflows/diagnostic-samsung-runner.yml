@@ -1,0 +1,33 @@
+name: Diagnostic Samsung KALONEO-RUNNERS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic-samsung:
+    name: Verifier runner Samsung
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 8
+    steps:
+      - name: Connexion au runner attendu
+        shell: powershell
+        run: |
+          if ($env:RUNNER_NAME -ne 'KALONEO-RUNNERS') {
+            throw "Runner inattendu: $env:RUNNER_NAME"
+          }
+          Write-Host "Runner KALONEO-RUNNERS connecte avec succes."
+
+      - name: Inventaire des outils de compilation (sans installation)
+        shell: powershell
+        run: |
+          foreach ($tool in @('git', 'node', 'npm', 'python', 'makensis')) {
+            if (Get-Command $tool -ErrorAction SilentlyContinue) {
+              Write-Host "$tool : PRESENT"
+            } else {
+              Write-Host "$tool : ABSENT"
+            }
+          }
+          Write-Host "Diagnostic termine. Aucun changement sur le PC."
