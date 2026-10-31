@@ -106,7 +106,10 @@ function applyAdminWindowMode(unlocked) {
     // R48.6 — exactement la surface candidat, sans chrome ni barre Windows.
     // Reste dans le contexte Admin : aucun verrou candidat/session activé.
     try { mainWindow.setAlwaysOnTop(false); } catch (_) {}
-    try { mainWindow.setSkipTaskbar(true); } catch (_) {}
+    // Aperçu dans une session Admin : garder l'icône KALONÉO dans la barre
+    // des tâches pour retrouver cette fenêtre même après changement d'application.
+    // Le mode candidat réel conserve setSkipTaskbar(true) et son verrouillage.
+    try { mainWindow.setSkipTaskbar(false); } catch (_) {}
     try { mainWindow.setFullScreen(true); } catch (_) {}
     try { mainWindow.setKiosk(true); } catch (_) {}
     try { mainWindow.setMenuBarVisibility(false); } catch (_) {}
