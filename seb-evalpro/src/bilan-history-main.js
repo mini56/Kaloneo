@@ -9,7 +9,7 @@ const { readJsonFile, encodeJson, encryptLocalFileBuffer, decryptLocalFileBuffer
 const { opaqueCandidateName } = require('./candidate-private-documents');
 const {discardOldWordExports,pruneReplacedBilans,hasCurrentOnlyArchive}=require('./candidate-bilan-current');
 
-module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked, buildNumber, getBilanTestMetadata = () => [], dataRoot = null }) {
+module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked, isTrustedAdminIpcSender = () => true, buildNumber, getBilanTestMetadata = () => [], dataRoot = null }) {
   const CURRENT_BUILD = String(buildNumber || 'DEV');
   const TYPE = 'SEB_EVALPRO_BILAN_ARCHIVE';
   const documentsPath = app.getPath('documents');
@@ -279,6 +279,7 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
   }
 
   ipcMain.handle('bilan-history:save-current', (_event, payload) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     try {
       const candidateId = String(payload && payload.candidateId || '').trim();
@@ -311,7 +312,8 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
     }
   });
 
-  ipcMain.handle('bilan-history:list', () => {
+  ipcMain.handle('bilan-history:list', (event) => {
+    if(!isTrustedAdminIpcSender(event)) return [];
     if (!getAdminUnlocked()) return [];
     return listArchivesRaw().map((item) => {
       const a = item.archive || {};
@@ -331,6 +333,7 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
   });
 
   ipcMain.handle('bilan-history:load', (_event, filename) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     try {
       const loaded = readArchive(filename);
@@ -341,6 +344,7 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
   });
 
   ipcMain.handle('bilan-history:delete-revision', (_event, filename) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     try {
       const loaded = readArchive(filename);
@@ -354,6 +358,7 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
   });
 
   ipcMain.handle('bilan-history:save-revision', (_event, payload) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     try {
       const loaded = readArchive(payload && payload.sourceFilename);
@@ -418,6 +423,7 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
   }
 
   ipcMain.on('bilan-history:write-word-sync', (event, payload) => {
+    if(!isTrustedAdminIpcSender(event)){ event.returnValue={ok:false,error:'Page Administrateur requise.'}; return; }
     if (!getAdminUnlocked()) {
       event.returnValue = { ok: false, error: 'Accès administrateur requis.' };
       return;
@@ -447,6 +453,7 @@ module.exports = function registerBilanHistory({ app, ipcMain, getAdminUnlocked,
   });
 
   ipcMain.on('bilan-history:get-word-template-sync', (event) => {
+    if(!isTrustedAdminIpcSender(event)){ event.returnValue={ok:false,error:'Page Administrateur requise.'}; return; }
     if (!getAdminUnlocked()) {
       event.returnValue = { ok: false, error: 'Accès administrateur requis.' };
       return;
