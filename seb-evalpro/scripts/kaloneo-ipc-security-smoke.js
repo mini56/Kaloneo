@@ -66,4 +66,26 @@ for(const [source,channels] of [
       'Aucun controle de la page appelante sur '+channel);
   }
 }
+const replay=fs.readFileSync(path.join(__dirname,'../src/replay-main.js'),'utf8');
+const history=fs.readFileSync(path.join(__dirname,'../src/bilan-history-main.js'),'utf8');
+const session=fs.readFileSync(path.join(__dirname,'../src/session-close.js'),'utf8');
+for(const [source,channels] of [
+  [replay,['admin:load-candidate-parcours','admin:get-candidate-parcours-slide',
+    'admin:list-parcours','admin:load-parcours']],
+  [history,['bilan-history:save-current','bilan-history:load','bilan-history:save-revision']],
+  [session,['admin:quit-application','admin:close-session']]
+]){
+  for(const channel of channels){
+    const start=source.indexOf("ipcMain.handle('"+channel+"'");
+    assert(start>=0,'Commande sensible absente : '+channel);
+    assert(source.slice(start,start+450).includes('isTrustedAdminIpcSender('),
+      'Commande Admin sans validation du demandeur : '+channel);
+  }
+}
+for(const mod of ["./replay-main","./bilan-history-main","./candidate-catalog-main","./session-close"]){
+  const i=main.indexOf("require('"+mod+"')");
+  assert(i>=0&&main.slice(i,i+700).includes('isTrustedAdminIpcSender,'),
+    'IPC du module non protege en production : '+mod);
+}
+
 console.log('KALONEO_ELECTRON_IPC_SECURITY=SUCCESS ; fenetres Admin, iframe et candidat separes');
