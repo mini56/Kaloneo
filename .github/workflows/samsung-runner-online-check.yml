@@ -1,0 +1,23 @@
+name: "Samsung runner - verification de connexion"
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/samsung-runner-online-check.yml'
+permissions:
+  contents: read
+jobs:
+  ping:
+    name: "PING KALONEO-RUNNERS"
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 5
+    steps:
+      - name: "Verifier la connexion au Samsung"
+        shell: cmd
+        run: |
+          if /I not "%RUNNER_NAME%"=="KALONEO-RUNNERS" exit /b 1
+          echo SAMSUNG_RUNNER_CONNECTED=YES
+          echo RUNNER_NAME=%RUNNER_NAME%
+          echo DATE=%DATE% HEURE=%TIME%
+          exit /b 0
