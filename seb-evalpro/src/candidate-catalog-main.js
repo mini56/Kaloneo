@@ -30,7 +30,7 @@ const {
   enrichCandidatePersonIdentity
 } = require('./candidate-person-identity');
 
-module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnlocked, getAdminDocumentPassword, getActiveCandidate, getBilanTestMetadata = () => [], dataRoot = null }) {
+module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnlocked, isTrustedAdminIpcSender = () => true, getAdminDocumentPassword, getActiveCandidate, getBilanTestMetadata = () => [], dataRoot = null }) {
   const editionCapabilities = getEditionCapabilities();
   const documentsPath = app.getPath('documents');
   const root = dataRoot || path.join(documentsPath, 'SEB EvalPro');
@@ -789,6 +789,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     return {directory,saved,current};
   }
   ipcMain.handle('candidate-catalog:general-bilan',(_event,personId)=>{
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if(!getAdminUnlocked()||!editionCapabilities.canBilan)return {ok:false,error:'Acces administrateur requis.'};
     try{
       const data=computePersonGeneralBilan(personId);
@@ -797,6 +798,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     }catch(error){return {ok:false,error:String(error.message||error)}}
   });
   ipcMain.handle('candidate-catalog:generate-general-synthesis',(_event,personId,digest)=>{
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if(!getAdminUnlocked()||!editionCapabilities.canBilan)return {ok:false,error:'Accès administrateur requis.'};
     try{
       const current=computePersonGeneralBilan(personId);
@@ -806,6 +808,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     }catch(error){return {ok:false,error:String(error.message||error)}}
   });
   ipcMain.handle('candidate-catalog:save-general-bilan',(_event,personId,summary,digest)=>{
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if(!getAdminUnlocked()||!editionCapabilities.canBilan)return {ok:false,error:'Acces administrateur requis.'};
     try{
       const result=saveGeneralBilan(personId,summary,digest);
@@ -818,6 +821,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     }catch(error){return {ok:false,error:String(error.message||error)}}
   });
   ipcMain.handle('candidate-catalog:export-general-bilan',async(_event,personId,summary,digest)=>{
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if(!getAdminUnlocked()||!editionCapabilities.canBilan)return {ok:false,error:'Acces administrateur requis.'};
     try{
       const secret=String(getAdminDocumentPassword&&getAdminDocumentPassword()||'');
@@ -845,6 +849,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     }catch(error){return {ok:false,error:String(error.message||error)}}
   });
   ipcMain.handle('candidate-catalog:open-general-word',async(_event,personId)=>{
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if(!getAdminUnlocked()||!editionCapabilities.canBilan)return {ok:false,error:'Acces administrateur requis.'};
     try{
       const data=computePersonGeneralBilan(personId);
@@ -910,6 +915,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   }
 
   ipcMain.handle('candidate-catalog:begin-bilan', (_event, candidateId) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!editionCapabilities.canBilan) return { ok:false, error:'Le bilan est disponible uniquement sur le PC Administrateur.' };
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     synchronize();
@@ -927,6 +933,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   });
 
   ipcMain.on('candidate-catalog:workspace-load-sync', (event) => {
+    if(!isTrustedAdminIpcSender(event)){ event.returnValue={ok:false,error:'Page Administrateur requise.'}; return; }
     if (!getAdminUnlocked() || !adminBilanWorkspace) {
       event.returnValue = { ok:false };
       return;
@@ -940,6 +947,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   });
 
   ipcMain.on('candidate-catalog:workspace-save-sync', (event, state) => {
+    if(!isTrustedAdminIpcSender(event)){ event.returnValue={ok:false,error:'Page Administrateur requise.'}; return; }
     if (!getAdminUnlocked() || !adminBilanWorkspace) {
       event.returnValue = { ok:false, error:'Aucun candidat sélectionné pour le bilan.' };
       return;
@@ -953,6 +961,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   });
 
   ipcMain.handle('candidate-catalog:workspace-save', (_event, state) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked() || !adminBilanWorkspace) return { ok:false, error:'Aucun candidat sélectionné pour le bilan.' };
     try {
       const saved = saveCandidateWorkspaceState(adminBilanWorkspace, state || {});
@@ -968,6 +977,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   });
 
   ipcMain.handle('candidate-catalog:begin-results', (_event, candidateId) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     synchronize();
     const record = findById(candidateId);
@@ -983,6 +993,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   });
 
   ipcMain.on('candidate-catalog:results-workspace-load-sync', (event) => {
+    if(!isTrustedAdminIpcSender(event)){ event.returnValue={ok:false,error:'Page Administrateur requise.'}; return; }
     if (!getAdminUnlocked() || !adminResultsWorkspace) {
       event.returnValue = { ok:false };
       return;
@@ -1161,12 +1172,14 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     return target;
   }
 
-  ipcMain.handle('candidate-catalog:trash-list', () => {
+  ipcMain.handle('candidate-catalog:trash-list', (event) => {
+    if(!isTrustedAdminIpcSender(event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     return { ok:true, entries:listTrashEntries() };
   });
 
   ipcMain.handle('candidate-catalog:trash-restore', (_event, candidateId) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     const record = listCandidateDirs(candidateTrashRoot, false)
       .find((item) => String(item.candidateId || '') === String(candidateId || ''));
@@ -1180,7 +1193,8 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     }
   });
 
-  ipcMain.handle('candidate-catalog:trash-empty', () => {
+  ipcMain.handle('candidate-catalog:trash-empty', (event) => {
+    if(!isTrustedAdminIpcSender(event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     const trashRecords = listCandidateDirs(candidateTrashRoot, false);
     const currentRecords = listCandidateDirs(candidatesRoot, false);
@@ -1211,7 +1225,8 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     }
   });
 
-  ipcMain.handle('candidate-catalog:list', () => {
+  ipcMain.handle('candidate-catalog:list', (event) => {
+    if(!isTrustedAdminIpcSender(event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return [];
     synchronize();
     return listCandidateDirs(candidatesRoot, false)
@@ -1219,13 +1234,15 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
       .sort((a,b) => [a.nom,a.prenom,a.date].join('|').localeCompare([b.nom,b.prenom,b.date].join('|'), 'fr', { sensitivity:'base' }));
   });
 
-  ipcMain.handle('candidate-catalog:list-persons', () => {
+  ipcMain.handle('candidate-catalog:list-persons', (event) => {
+    if(!isTrustedAdminIpcSender(event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return [];
     synchronize();
     return listPersonGroups();
   });
 
   ipcMain.handle('candidate-catalog:person-detail', (_event, personId) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     synchronize();
     const person = findPersonById(personId);
@@ -1234,6 +1251,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   });
 
   ipcMain.handle('candidate-catalog:delete', (_event, candidateId) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     synchronize();
     const record = findById(candidateId);
@@ -1251,6 +1269,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   });
 
   ipcMain.handle('candidate-catalog:delete-person', (_event, personId) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     synchronize();
     const person = findPersonById(personId);
@@ -1276,6 +1295,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   });
 
   ipcMain.handle('candidate-catalog:detail', (_event, candidateId) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     synchronize();
     const record = findById(candidateId);
@@ -1290,6 +1310,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   });
 
   ipcMain.handle('candidate-catalog:load-bilan', (_event, candidateId, filename) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     synchronize();
     const record = findById(candidateId);
@@ -1305,6 +1326,7 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
   });
 
   ipcMain.handle('candidate-catalog:open-export', async (_event, candidateId, filename) => {
+    if(!isTrustedAdminIpcSender(_event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     const record = findById(candidateId);
     if (!record) return { ok:false, error:'Candidat introuvable.' };
@@ -1363,7 +1385,8 @@ module.exports = function registerCandidateCatalog({ app, ipcMain, getAdminUnloc
     }
   });
 
-  ipcMain.handle('candidate-catalog:sync', () => {
+  ipcMain.handle('candidate-catalog:sync', (event) => {
+    if(!isTrustedAdminIpcSender(event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return { ok:false, error:'Accès administrateur requis.' };
     return { ok:true, ...synchronize() };
   });
