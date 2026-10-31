@@ -7,7 +7,7 @@ on:
       - '.github/workflows/audit-r185-final-setup.yml'
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
   actions: read
 concurrency:
   group: kaloneo-r185-data-protection-${{ github.ref }}
