@@ -7,7 +7,7 @@ on:
       - '.github/workflows/audit-r177-final-setup.yml'
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
   actions: read
 concurrency:
   group: kaloneo-r177-data-protection-${{ github.ref }}
@@ -275,6 +275,8 @@ jobs:
         run: |
           Write-Host 'R60_V1_COMPLETE_REGRESSION=SUCCESS: required workflow job r60-integrated already green'
       - name: Publish single R177 Build 180 Windows Setup after all tests
+        # Workflow historique : conserver les audits, interdire toute publication.
+        if: ${{ false }}
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
