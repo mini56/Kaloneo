@@ -2,7 +2,7 @@ name: "KALONÉO R173 - Setup final, tests Puzzle et grilles, conservation des do
 on:
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
   actions: read
 concurrency:
   group: kaloneo-r173-data-protection-${{ github.ref }}
@@ -116,6 +116,8 @@ jobs:
             Start-Sleep -Seconds 20
           }while($true)
       - name: Publish single R173 Build 176 Windows Setup after all tests
+        # Workflow historique : conserver les audits, interdire toute publication.
+        if: ${{ false }}
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
