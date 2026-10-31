@@ -2134,6 +2134,7 @@ const candidateReplayHandlers = require('./replay-main')({
   app,
   ipcMain,
   getAdminUnlocked: () => adminSessionUnlocked,
+  isTrustedAdminIpcSender,
   getActiveCandidate: () => getCandidateStore().getActiveCandidate(),
   buildNumber: APP_BUILD_NUMBER
 });
@@ -2142,6 +2143,7 @@ require('./bilan-history-main')({
   app,
   ipcMain,
   getAdminUnlocked: () => adminSessionUnlocked,
+  isTrustedAdminIpcSender,
   buildNumber: APP_BUILD_NUMBER
 });
 
@@ -2161,6 +2163,7 @@ require('./session-close')({
   ipcMain,
   getMainWindow: () => mainWindow,
   getAdminUnlocked: () => adminSessionUnlocked,
+  isTrustedAdminIpcSender,
   setAdminUnlocked: (value) => {
     adminSessionUnlocked = !!value;
     if (!adminSessionUnlocked) adminSessionDocumentPassword = '';
