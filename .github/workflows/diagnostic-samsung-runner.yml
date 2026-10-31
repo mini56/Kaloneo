@@ -10,24 +10,20 @@ jobs:
   diagnostic-samsung:
     name: Verifier runner Samsung
     runs-on: [self-hosted, Windows, X64]
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - name: Connexion au runner attendu
-        shell: powershell
+        shell: cmd
         run: |
-          if ($env:RUNNER_NAME -ne 'KALONEO-RUNNERS') {
-            throw "Runner inattendu: $env:RUNNER_NAME"
-          }
-          Write-Host "Runner KALONEO-RUNNERS connecte avec succes."
+          echo Runner : %RUNNER_NAME%
+          if /I not "%RUNNER_NAME%"=="KALONEO-RUNNERS" exit /b 1
+          echo Runner KALONEO-RUNNERS connecte avec succes.
 
       - name: Inventaire des outils de compilation (sans installation)
-        shell: powershell
+        shell: cmd
         run: |
-          foreach ($tool in @('git', 'node', 'npm', 'python', 'makensis')) {
-            if (Get-Command $tool -ErrorAction SilentlyContinue) {
-              Write-Host "$tool : PRESENT"
-            } else {
-              Write-Host "$tool : ABSENT"
-            }
-          }
-          Write-Host "Diagnostic termine. Aucun changement sur le PC."
+          for %%T in (git node npm python makensis) do (
+            where %%T >nul 2>nul
+            if errorlevel 1 (echo %%T : ABSENT) else (echo %%T : PRESENT)
+          )
+          echo Diagnostic termine. Aucun changement sur le PC.
