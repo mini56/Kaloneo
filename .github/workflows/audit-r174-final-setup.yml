@@ -7,7 +7,7 @@ on:
       - '.github/workflows/audit-r174-final-setup.yml'
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
   actions: read
 concurrency:
   group: kaloneo-r174-data-protection-${{ github.ref }}
@@ -132,6 +132,8 @@ jobs:
             Start-Sleep -Seconds 20
           }while($true)
       - name: Publish single R174 Build 177 Windows Setup after all tests
+        # Workflow historique : conserver les audits, interdire toute publication.
+        if: ${{ false }}
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
