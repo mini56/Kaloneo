@@ -6,7 +6,7 @@ on:
       - '.github/workflows/publish-r185-tested-release.yml'
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
   actions: read
 jobs:
   publish-validated-r185:
@@ -36,6 +36,8 @@ jobs:
           if($hash -ne '4CB68087A68940AE214FCCEBC66BC2B9DC13FFBD8F76B7C2D2E664AB83CC1AD5'){throw "Unexpected setup SHA256: $hash"}
           Write-Host "R185_SETUP_VERIFIED=OK bytes=$($file.Length) SHA256=$hash"
       - name: Publish actual GitHub Release R185 with checked executable
+        # Historique en lecture seule : les controles restent disponibles.
+        if: ${{ false }}
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
