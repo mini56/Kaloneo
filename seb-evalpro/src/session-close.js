@@ -3,9 +3,11 @@ module.exports = function registerSessionClose({
   ipcMain,
   getMainWindow,
   getAdminUnlocked,
+  isTrustedAdminIpcSender = () => true,
   setAdminUnlocked
 }) {
-  ipcMain.handle('admin:quit-application', async () => {
+  ipcMain.handle('admin:quit-application', async (event) => {
+    if(!isTrustedAdminIpcSender(event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return false;
 
     // Quitter ferme uniquement SEB EvalPro. Le parcours actif, son pointeur
@@ -14,7 +16,8 @@ module.exports = function registerSessionClose({
     return true;
   });
 
-  ipcMain.handle('admin:close-session', async () => {
+  ipcMain.handle('admin:close-session', async (event) => {
+    if(!isTrustedAdminIpcSender(event)) return {ok:false,error:'Page Administrateur requise.'};
     if (!getAdminUnlocked()) return false;
 
     // Le parcours candidat actif est clôturé par le preload avant cet appel.
