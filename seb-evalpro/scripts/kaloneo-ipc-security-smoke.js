@@ -5,7 +5,7 @@ const assert=require('node:assert/strict');
 const path=require('node:path');
 const fs=require('node:fs');
 const {pathToFileURL}=require('node:url');
-const {isTrustedAdminSender}=require('../src/kaloneo-ipc-sender-guard');
+const {isTrustedAdminSender,isApprovedRendererNavigation}=require('../src/kaloneo-ipc-sender-guard');
 const root=path.resolve(__dirname,'../app/web');
 const frameFor=(page,query='')=>({url:pathToFileURL(path.join(root,page)).href+query});
 const mainFrame=frameFor('admin-candidats.html');
@@ -47,7 +47,37 @@ assert.equal(isTrustedAdminSender({sender:contents,senderFrame:outside},{
   mainWindow:win,webRoot:root,adminUnlocked:true
 }),false,'Fichier externe au programme autorise');
 
+const to=(page,query='')=>pathToFileURL(path.join(root,page)).href+query;
+const navigation=(from,toPage,options={})=>isApprovedRendererNavigation({
+  fromUrl:to(from,options.fromQuery||''),
+  toUrl:to(toPage,options.toQuery||''),
+  webRoot:root,adminUnlocked:options.unlocked!==false,
+  adminResultsMode:options.results===true
+});
+assert.equal(navigation('kaltest-pilot2.html','admin-bilan.html'),false,
+  'Un test en aperçu peut ouvrir une page Admin');
+assert.equal(navigation('qcmv1.0.html','kaloneo-builder/test-builder.html'),false,
+  'Un parcours candidat peut ouvrir le Builder');
+assert.equal(navigation('admin-candidats.html','kaloneo-builder/test-builder.html'),true,
+  'Navigation du menu Admin vers le Builder bloquee');
+assert.equal(navigation('admin-candidats.html','qcmv1.0.html'),true,
+  'Navigation locale vers les tests bloquee');
+assert.equal(navigation('qcmv1.0.html','admin-candidats.html',{results:true}),true,
+  'Retour des Resultats Admin bloque');
+assert.equal(navigation('admin-candidats.html','admin-tests-parcours.html',{unlocked:false}),false,
+  'Ecran candidat peut acceder aux pages Admin');
+assert.equal(navigation('admin-candidats.html','admin-tests-parcours.html',{fromQuery:'?candidateWelcome=1'}),false,
+  'Accueil candidat accede au Builder');
+assert.equal(navigation('kaltest-pilot2.html','admin-candidats.html',{toQuery:'?candidateWelcome=1'}),true,
+  'Retour a l accueil candidat bloque');
+assert.equal(isApprovedRendererNavigation({
+  fromUrl:to('kaltest-pilot2.html'),toUrl:'https://example.org/',webRoot:root,
+  adminUnlocked:true
+}),false,'Une page web externe peut etre chargee');
+
 const main=fs.readFileSync(path.join(__dirname,'../src/main.js'),'utf8');
+assert(main.includes('isApprovedRendererNavigation({'),
+  'La navigation non autorisee vers les pages Admin n est pas bloquee');
 const catalog=fs.readFileSync(path.join(__dirname,'../src/candidate-catalog-main.js'),'utf8');
 for(const [source,channels] of [
   [main,['kaloneo-library:save-test','kaloneo-library:delete-test',
